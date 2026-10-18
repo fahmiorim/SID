@@ -1,11 +1,13 @@
-# Sistem Informasi Desa (SID) — Rebuild Modern
+# Sistem Informasi Desa (SID) — Tiruan Modern
 
-Rebuild [OpenSID](https://github.com/OpenSID/OpenSID) (PHP/CodeIgniter) menjadi
-aplikasi **fullstack Next.js + TypeScript** yang bersih, bertipe kuat, dan mudah
-dirawat. Repositori ini berisi **fondasi**: autentikasi, RBAC, kerangka admin,
-lapisan data, dan satu irisan vertikal lengkap (Wilayah Administratif).
+Aplikasi **fullstack Next.js + TypeScript** yang bersih, bertipe kuat, dan mudah
+dirawat, dibangun sebagai **tiruan** (reimplementasi) fitur
+[OpenSID](https://github.com/OpenSID/OpenSID) (PHP/CodeIgniter) — **bukan**
+migrasi data OpenSID. Repositori ini berisi **fondasi**: autentikasi, RBAC,
+kerangka admin, lapisan data, dan satu irisan vertikal lengkap (Wilayah
+Administratif).
 
-> Status: **fondasi** — belum seluruh modul OpenSID dipindahkan. Lihat
+> Status: **fondasi** — belum seluruh fitur OpenSID dibangun. Lihat
 > [Peta Jalan](#peta-jalan).
 
 ## Tumpukan Teknologi
@@ -16,7 +18,7 @@ lapisan data, dan satu irisan vertikal lengkap (Wilayah Administratif).
 | Bahasa     | TypeScript (strict)                                                |
 | Database   | MySQL / MariaDB via Drizzle ORM (+ mysql2)                         |
 | Auth       | better-auth (login **username**, sesi 7 hari)                      |
-| RBAC       | Model izin OpenSID (0/1/3/7) dengan pewarisan induk→anak           |
+| RBAC       | Tabel sendiri `roles`/`modules`/`role_permissions` (akses `read`/`write`/`manage`) dengan pewarisan induk ← anak |
 | UI         | Tailwind CSS v4 + shadcn/ui (radix-nova) + lucide-react              |
 | Validasi   | zod                                                                |
 | Notifikasi | sonner                                                             |
@@ -103,11 +105,12 @@ src/
 
 - **Login memakai username** (kebiasaan OpenSID); email opsional.
 - Sesi disimpan sebagai cookie `HttpOnly` berlaku **7 hari**.
-- **RBAC** memakai kembali model OpenSID: tabel `setting_modul` (katalog modul),
-  `user_grup` (role), dan `grup_akses` (matriks izin) dengan kode akses
-  `0` (tidak ada), `1` (baca), `3` (baca+ubah), `7` (penuh).
-- Izin **diwarisi** dari induk ke anak: bila salah satu anak punya akses > 0,
-  induknya otomatis diberi akses penuh agar menunya tampil.
+- **RBAC** memakai tabel sendiri: `modules` (katalog modul/menu), `roles`
+  (role), dan `role_permissions` (matriks izin). Tingkat akses bernama —
+  `read` (lihat), `write` (lihat + tambah/ubah), `manage` (semuanya, termasuk
+  hapus).
+- Izin **diwarisi** dari anak ke induk: bila salah satu anak punya akses, modul
+  grup induknya otomatis dapat dibaca agar menunya tampil.
 - Role dengan `slug = "administrator"` adalah **super admin** (melewati semua
   pemeriksaan). Modul `beranda` selalu dapat dibaca.
 - Otorisasi ditegakkan **di dalam use-case aplikasi** (`requirePermission`),
@@ -127,14 +130,11 @@ src/
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arsitektur, konvensi, keputusan.
 - [`docs/README-ANALISIS-OPENSID.md`](docs/README-ANALISIS-OPENSID.md) — indeks
-  hasil analisis sistem lama (laporan utama + 13 lampiran).
-- [`docs/`](docs/) — laporan analisis, ERD, matriks modul, `openapi.yaml`,
-  draf skema & skrip impor data.
+  hasil analisis sistem lama (laporan utama + lampiran), dipakai sebagai
+  **referensi fitur** yang hendak ditiru.
 
 ## Peta Jalan
 
 1. **Fondasi** ✅ — auth, RBAC, kerangka admin, lapisan data, irisan Wilayah.
-2. Impor katalog penuh 137 modul + matriks akses dari OpenSID.
-3. Migrasi data master (penduduk, keluarga, wilayah, surat).
-4. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
-5. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
+2. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
+3. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.

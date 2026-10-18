@@ -4,6 +4,14 @@ Paket dokumentasi hasil analisis repo **OpenSID** (`D:\laragon\www\opensid`) dan
 
 Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
+> **Catatan arah proyek (diperbarui).** Paket ini adalah **analisis historis**
+> OpenSID yang tetap disimpan sebagai **referensi fitur**. Aplikasi baru dibangun
+> sebagai **tiruan bersih** (skema & nama sendiri), **bukan** migrasi data
+> OpenSID. Karena itu artefak khusus migrasi data P0 telah dihapus:
+> `LAMPIRAN-04-MAPPING-MIGRASI-P0.md`, `drizzle/schema.ts`, dan
+> `migration/p0-import.sql`. Rujukan ke berkas-berkas tersebut di bawah ini
+> ditandai agar tidak menyesatkan.
+
 ## Daftar Dokumen
 
 | Dokumen | Ukuran | Isi ringkas |
@@ -12,7 +20,6 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 | [LAMPIRAN-01-PERSURATAN.md](./LAMPIRAN-01-PERSURATAN.md) | ~51 KB | Deep-dive mesin persuratan (template, kode-isian, syarat, verifikasi, TTE, penomoran). |
 | [LAMPIRAN-02-RBAC.md](./LAMPIRAN-02-RBAC.md) | ~58 KB | Deep-dive RBAC/Role/Permission/Modul/wilayah scoping/auth. |
 | [LAMPIRAN-03-ENUM-REFERENSI.md](./LAMPIRAN-03-ENUM-REFERENSI.md) | ~66 KB | Katalog enum + tabel referensi + isinya. |
-| [LAMPIRAN-04-MAPPING-MIGRASI-P0.md](./LAMPIRAN-04-MAPPING-MIGRASI-P0.md) | ~31 KB | Mapping migrasi data P0 (penduduk, keluarga, surat, log). |
 | [LAMPIRAN-05-ERD-LENGKAP.md](./LAMPIRAN-05-ERD-LENGKAP.md) | ~82 KB | ERD + katalog skema seluruh ±260 tabel & 282 FK. |
 | [LAMPIRAN-06-SPESIFIKASI-OUTPUT.md](./LAMPIRAN-06-SPESIFIKASI-OUTPUT.md) | ~41 KB | Spesifikasi output cetak/PDF/Excel/laporan. |
 | [LAMPIRAN-07-MATRIKS-MODUL.md](./LAMPIRAN-07-MATRIKS-MODUL.md) | ~37 KB | **Matriks ketertelusuran** 137 modul → controller → model → tabel (+ hierarki menu, controller orfan, tabel per prefiks). |
@@ -28,23 +35,24 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 | Artefak | Ukuran | Isi |
 |---|---|---|
 | **[openapi.yaml](./openapi.yaml)** | ~33 KB | Kontrak REST API lengkap **OpenAPI 3.1.0** untuk modul P0 (auth/RBAC, penduduk, keluarga, wilayah, referensi, surat, laporan, pengaturan). |
-| [drizzle/schema.ts](./drizzle/schema.ts) | ~27 KB | Skema **Drizzle ORM** (MySQL/MariaDB) Opsi A — nama tabel/kolom legacy dipertahankan + kolom audit. Siap `drizzle-kit generate`. |
-| [migration/p0-import.sql](./migration/p0-import.sql) | ~15 KB | Skrip impor data P0 (OpenSID lama → skema baru), FK-safe, dengan transformasi tanggal/enum/JSON. |
-| [drizzle/README.md](./drizzle/README.md) | — | Petunjuk setup Drizzle + urutan impor + pemetaan permission. |
+
+> Skema Drizzle Opsi A (`drizzle/schema.ts`), petunjuknya (`drizzle/README.md`),
+> dan skrip impor (`migration/p0-import.sql`) **dihapus** karena proyek tidak lagi
+> memakai strategi migrasi data. Skema aplikasi ini ditulis mandiri di
+> `src/db/schema/` (lihat [`ARCHITECTURE.md`](./ARCHITECTURE.md) §3).
 
 ## Ringkasan Keputusan
 
 - **Stack final:** Next.js 15 (App Router, TypeScript strict) + Server Actions/Route Handlers + Drizzle ORM + MySQL/MariaDB + better-auth + shadcn/ui + Tailwind v4 + react-hook-form/zod + TanStack Query/Table + exceljs/pdf-lib (atau puppeteer). Deploy **standalone di VPS**.
 - **Model arsitektur:** **Fullstack Next.js** (opsi A) — bukan Next.js + API terpisah — karena beban kerja dominan CRUD + form + laporan dan skala desa.
-- **Kompatibilitas data:** pertahankan MySQL/MariaDB + `config_id` (multi-desa) dan ID numerik lama agar migrasi data aman.
+- **Kompatibilitas data:** ~~pertahankan `config_id` (multi-desa) dan ID numerik lama agar migrasi data aman.~~ *(Revisi: proyek memilih **tiruan bersih** tanpa migrasi data; `config_id` lama diganti `village_id`, dan model izin 1/3/7 diganti level bernama.)*
 - **Verdict:** rebuild **layak**, dengan syarat target VPS dan tim mampu TypeScript; migrasi desa bertahap.
 
 ## Cara Pakai
 
 1. Baca **ANALISIS-OPENSID-REBUILD-NEXTJS.md** untuk gambaran menyeluruh dan rencana.
 2. Sebelum coding modul tertentu, buka lampiran terkait (persuratan/RBAC/enum/output).
-3. Sebelum impor data, pakai **LAMPIRAN-04** + **LAMPIRAN-05**.
-4. Item bertanda `[perlu verifikasi]` = perlu dikonfirmasi langsung ke data/kode sebelum produksi.
+3. Item bertanda `[perlu verifikasi]` = perlu dikonfirmasi langsung ke data/kode sebelum produksi.
 
 ## Catatan Keamanan (temuan saat analisis)
 
@@ -62,14 +70,11 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 |---|---|
 | Business rules inti (NIK/KK, SHDK, penomoran surat, wilayah) | Dokumen utama §9 + LAMPIRAN-01 + LAMPIRAN-02 |
 | Skema database & relasi | LAMPIRAN-05 (+ ERD di dokumen utama §5.4) |
-| Migrasi data lama | LAMPIRAN-04 |
 | Enum & data referensi untuk seed | LAMPIRAN-03 |
 | Hak akses & permission matrix | LAMPIRAN-02 |
 | Mesin surat & template | LAMPIRAN-01 |
 | Cetak PDF/Excel & laporan | LAMPIRAN-06 |
 | Kontrak API (OpenAPI 3.1.0) | [openapi.yaml](./openapi.yaml) + dokumen utama §10.5 |
-| Skema ORM siap pakai | [drizzle/schema.ts](./drizzle/schema.ts) |
-| Impor data P0 | [migration/p0-import.sql](./migration/p0-import.sql) + LAMPIRAN-04 |
 | Ketertelusuran modul→controller→tabel | LAMPIRAN-07 |
 | Alur bisnis tiap domain (beyond 3 alur dasar) | LAMPIRAN-08 |
 | Integrasi pihak ketiga & audit keamanan | LAMPIRAN-09 |
@@ -80,12 +85,12 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
 ---
 
-> Paket ini terdiri atas **1 dokumen utama + 13 lampiran + 1 indeks** (dokumen ini) **+ 3 artefak kode** (`openapi.yaml`, `drizzle/schema.ts`, `migration/p0-import.sql`).
+> Paket ini terdiri atas **1 dokumen utama + 12 lampiran + 1 indeks** (dokumen ini) **+ 1 artefak kode** (`openapi.yaml`).
 
 ## Langkah Lanjut yang Disarankan
 
 1. **Scaffold aplikasi:** `create-next-app` (TS, App Router, Tailwind v4) + shadcn/ui + Drizzle + better-auth.
-2. **Generate migrasi:** `npx drizzle-kit generate` dari `drizzle/schema.ts`, lalu impor dengan `migration/p0-import.sql`.
-3. **Seed referensi:** isi tabel `ref_*` dari LAMPIRAN-03.
-4. **Implementasi RBAC:** permission gate mengikuti matrix LAMPIRAN-02 (akses 1/3/7 + pewarisan parent).
+2. **Skema & migrasi:** tulis skema di `src/db/schema/`, lalu `npm run db:generate` dan `npm run db:migrate`.
+3. **Seed referensi:** isi tabel referensi (lihat LAMPIRAN-03) sesuai kebutuhan.
+4. **Implementasi RBAC:** permission gate mengikuti matrix LAMPIRAN-02 (level `read`/`write`/`manage` + pewarisan anak→induk).
 5. **Modul berurutan (P0):** Penduduk → Keluarga → Wilayah → Persuratan → Laporan.

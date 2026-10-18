@@ -16,8 +16,9 @@ kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
 3. **Satu sumber kebenaran.** Environment divalidasi sekali (`src/lib/env.ts`),
    slug modul dipusatkan (`src/features/rbac/domain/resources.ts`), nama
    aplikasi di `src/lib/app-config.ts`.
-4. **Kompatibel dengan data lama.** Nama tabel & kolom mengikuti OpenSID
-   (lihat §4) agar migrasi data menjadi salinan 1:1, bukan penerjemahan.
+4. **Tiruan bersih, bukan migrasi.** Aplikasi ini adalah reimplementasi fitur
+   OpenSID; skema dirancang sendiri (lihat §3) tanpa terikat nama tabel/kolom
+   sistem lama. Dokumen analisis OpenSID hanya dipakai sebagai **referensi fitur**.
 5. **Dokumen riset hanya di `docs/`.** Akar repositori dijaga tetap rapi.
 
 ---
@@ -45,7 +46,7 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 | Berkas               | Tanggung jawab                                                    |
 | -------------------- | ----------------------------------------------------------------- |
 | `env.ts`             | Validasi `process.env` saat start (fail fast). Tanpa `server-only` agar bisa dipakai skrip. |
-| `app-config.ts`      | Nilai aman-client (`NEXT_PUBLIC_*`).                              |
+| `app-config.ts`      | Nama & deskripsi aplikasi (aman dipakai server maupun client).   |
 | `auth.ts`            | Konfigurasi better-auth (server).                                 |
 | `auth-client.ts`     | Klien better-auth (browser).                                      |
 | `dal.ts`             | **Satu-satunya** pintu sesi/pengguna/izin di server.              |
@@ -66,7 +67,7 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 ## 3. Konvensi Lapisan Data
 
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
-  domain (`auth.ts`, `rbac.ts`, `tenant.ts`, `wilayah.ts`) dan digabung di
+  domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`) dan digabung di
   `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
@@ -82,37 +83,48 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
   `domain/*.ts`; tipe TypeScript diturunkan dari skema (`z.infer`), bukan
   ditulis dua kali.
 
-### Pemetaan tabel (Opsi A — Kompatibel)
+### Nama Tabel & Kolom
 
-| Domain      | Tabel                                                          | Id          |
-| ----------- | -------------------------------------------------------------- | ----------- |
-| Identitas   | `users`, `sessions`, `accounts`, `verifications`                | string      |
-| RBAC        | `user_grup`, `setting_modul`, `grup_akses`                      | numerik     |
-| Tenant      | `config`                                                        | numerik     |
-| Wilayah     | `tweb_wil_clusterdesa`                                          | numerik     |
+Bahasa **Inggris** untuk lapisan data (tabel & kolom), sedangkan kode domain dan
+antarmuka tetap berbahasa **Indonesia**. Pemetaan antar keduanya terjadi di
+lapisan `infrastructure` (repository), sehingga kosakata produk tetap utuh tanpa
+membocorkan detail penyimpanan ke lapisan atas.
 
-Identitas memakai tabel **plural khas better-auth** (id string dikelola
-better-auth); RBAC mempertahankan **nama & id asli** OpenSID agar matriks akses
-(137 modul) dapat diimpor apa adanya. Kebersihan kode dijaga di lapisan kode,
-bukan dengan mengganti nama tabel.
+Istilah administratif yang tidak punya padanan baku (`dusun`, `rw`, `rt`)
+dipertahankan apa adanya.
+
+| Domain    | Tabel                                            | Id      |
+| --------- | ------------------------------------------------ | ------- |
+| Identitas | `users`, `sessions`, `accounts`, `verifications` | string  |
+| Desa      | `villages`                                       | numerik |
+| RBAC      | `roles`, `modules`, `role_permissions`           | numerik |
+| Wilayah   | `regions`                                        | numerik |
+
+Tabel identitas memakai **plural khas better-auth** dengan id string yang
+dikelola better-auth. Tabel lain dirancang mandiri: `roles` (dulu `user_grup`),
+`modules` (dulu `setting_modul`), `role_permissions` (dulu `grup_akses`), dan
+`villages` (dulu `config`). Kunci antar-tabel memakai `village_id` (tenant).
 
 ---
 
 ## 4. Model RBAC
 
-- Kode akses legacy: `0` tidak ada, `1` baca, `3` baca+ubah, `7` penuh
-  (`src/features/rbac/domain/permission.ts`).
+- Tingkat akses bernama per (role × modul), disimpan di `role_permissions.access`:
+  `read` (lihat), `write` (lihat + tambah/ubah), `manage` (semuanya, termasuk
+  hapus). Definisi & helper ada di `src/features/rbac/domain/permission.ts`.
 - `hasPermission(permissions, resource, action)` dengan `action` ∈
-  `read | update | delete`.
+  `read | update | delete`. `read` butuh ≥ `read`, `update` butuh ≥ `write`,
+  `delete` butuh `manage`.
 - **Super admin** = role dengan `slug === "administrator"`; semua pemeriksaan
   dilewati.
 - **Modul `beranda` selalu dapat dibaca.**
-- **Pewarisan induk→anak:** bila salah satu anak berakses > 0, induk dipaksa
-  berakses penuh agar grup menunya ikut tampil.
+- **Pewarisan anak→induk:** bila minimal satu anak punya akses, modul grup
+  induknya otomatis dapat dibaca agar grup menunya ikut tampil (tingkat anak
+  tidak dinaikkan).
 - Izin efektif dihitung sekali per permintaan (`computeEffectivePermissions`
   dibungkus `cache()` React).
 - Slug resource dipusatkan di `src/features/rbac/domain/resources.ts` dan
-  **wajib sama** dengan `setting_modul.slug`.
+  **wajib sama** dengan `modules.slug`.
 
 ---
 
@@ -170,7 +182,8 @@ bukan dengan mengganti nama tabel.
 | `cacheComponents: false`                         | Aplikasi admin yang selalu dinamis per pengguna nyaris tidak mengambil untung dari caching rute; menghindari kerumitan `use cache`/Suspense. |
 | `middleware.ts` → `proxy.ts`                     | Perubahan Next.js 16 (runtime Node).                                   |
 | Autentikasi via username (plugin better-auth)    | Meniru kebiasaan login OpenSID; email opsional.                        |
-| Tabel identitas plural, RBAC bernama legacy      | Menghormati konvensi better-auth **dan** kemudahan impor data lama.    |
+| Lapisan data berbahasa Inggris, domain Indonesia | Konvensi kode/storage yang umum **dan** tetap nyaman bagi tim Indonesia. |
+| Akses sebagai level bernama (`read`/`write`/`manage`) | Lebih terbaca daripada kode bitmask; pemetaan ke aksi eksplisit.   |
 | Otorisasi di use case, bukan hanya di halaman    | Menutup celah pemanggilan langsung (Route Handler/skrip).              |
 | Server Action + `useActionState` (tanpa RHF)     | Satu pola untuk semua formulir, tetap jalan tanpa JavaScript.          |
 | Slug modul dipusatkan di `resources.ts`          | Salah ketik slug = celah otorisasi/menu hilang; dipusatkan agar aman.  |
