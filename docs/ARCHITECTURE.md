@@ -214,13 +214,25 @@ Contoh: modul "Bantuan Sosial" dengan slug `bantuan`.
 
 ## 10. QA & Verifikasi
 
-`npm run check` menjalankan typecheck, lint, dan cek format. Sebelum sebuah
-perubahan dianggap selesai, pastikan juga:
+`npm run check` menjalankan typecheck, lint, cek format, **dan pengujian unit**.
+Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 
 - `npm run build` berhasil.
 - Perubahan otorisasi diuji untuk **dua peran**: super admin dan peran terbatas
   (menu yang tampil serta akses langsung ke URL modul yang tidak diizinkan).
 - Perubahan skema disertai berkas migrasi yang ikut di-commit.
+
+### Pengujian
+
+- Perkakas: **Vitest** (`vitest.config.mts`), berkas uji bernama `*.test.ts`
+  bersebelahan dengan sumbernya.
+- Cakupan sasaran: **logika murni** — aturan domain, utilitas, dan validasi.
+  Jangan menguji lapisan `infrastructure`/`presentation` yang butuh database,
+  sesi, atau `next/headers`; itu diuji lewat smoke test HTTP.
+- Karena `src/lib/env.ts` memvalidasi environment saat impor, variabel wajib
+  disuplai lewat `test.env` di konfigurasi Vitest.
+- CI (`.github/workflows/ci.yml`) menjalankan `npm run check` + `npm run build`
+  pada setiap push/PR.
 
 Perkakas browser otomatis (`chrome-devtools` MCP) tidak selalu tersedia; skrip
 smoke test berbasis HTTP di direktori sementara dapat dipakai sebagai gantinya.

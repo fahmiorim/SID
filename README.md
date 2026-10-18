@@ -19,6 +19,7 @@ autentikasi, RBAC, kerangka admin, lapisan data, dan satu irisan vertikal lengka
 | UI         | Tailwind CSS v4 + shadcn/ui (radix-nova) + lucide-react              |
 | Validasi   | zod                                                                |
 | Notifikasi | sonner                                                             |
+| Pengujian  | Vitest (logika murni) + GitHub Actions CI                          |
 
 ## Kebutuhan
 
@@ -61,11 +62,13 @@ Buka `http://localhost:3000` → dialihkan ke `/masuk`.
 | `npm run dev`          | Server pengembangan                                        |
 | `npm run build`        | Build produksi                                             |
 | `npm run start`        | Jalankan hasil build                                       |
-| `npm run check`        | Typecheck + lint + cek format (jalankan sebelum commit)    |
+| `npm run check`        | Typecheck + lint + cek format + test (jalankan sebelum commit) |
 | `npm run typecheck`    | Typegen Next.js + `tsc --noEmit`                           |
 | `npm run lint`         | ESLint                                                     |
 | `npm run format`       | Prettier (menulis)                                         |
 | `npm run format:check` | Prettier (memeriksa saja)                                  |
+| `npm run test`         | Jalankan pengujian unit (Vitest, sekali jalan)             |
+| `npm run test:watch`   | Pengujian unit mode pantau                                 |
 | `npm run db:create`    | Buat database dari `DATABASE_URL`                          |
 | `npm run db:generate`  | Hasilkan berkas migrasi dari perubahan skema               |
 | `npm run db:migrate`   | Terapkan migrasi                                           |
@@ -118,10 +121,26 @@ src/
 - Tidak ada kredensial yang di-hardcode. Secret dibaca dari environment dan
   divalidasi saat aplikasi start (`src/lib/env.ts`).
 - Pengalihan setelah login divalidasi (menolak URL eksternal / `//`).
-- **Catatan:** `npm audit` melaporkan 4 kerentanan *moderate* pada dependensi
-  transitif `drizzle-kit` (`esbuild` dev-server). Hanya berdampak pada alat
-  pengembangan lokal; perbaikannya menuntut penurunan versi besar, jadi belum
-  diambil. Tidak menyentuh runtime produksi.
+- **Catatan `npm audit`:** seluruh temuan bersumber dari **dependensi
+  pengembangan** (dev-only) yang transitif, dan **tidak ada** pada dependensi
+  produksi. Perbaikannya menuntut penurunan versi besar (breaking) sehingga
+  sengaja belum diambil:
+  - `esbuild` (moderate) lewat `drizzle-kit` — hanya dev-server alat migrasi.
+  - `braces` (high) lewat `fast-glob` → `micromatch` pada `eslint-config-next`
+    dan `shadcn`; `3.0.3` adalah rilis terbaru dan tetap terdampak, jadi belum
+    ada versi yang bisa dipakai. Dipantau otomatis oleh Dependabot.
+
+## Pengujian
+
+Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
+database/`next/headers`): model izin RBAC, pembentukan menu, validasi wilayah,
+pemetaan kesalahan, dan validasi environment. CI menjalankan
+typecheck + lint + format + test + build pada setiap push/PR.
+
+```bash
+npm run test        # sekali jalan
+npm run test:watch  # mode pantau
+```
 
 ## Dokumentasi
 
@@ -132,6 +151,6 @@ src/
 ## Peta Jalan
 
 1. **Fondasi** ✅ — auth, RBAC, kerangka admin, lapisan data, irisan Wilayah.
-2. Fondasi mutu: pengujian otomatis + CI.
+2. **Fondasi mutu** ✅ — pengujian unit (Vitest) + CI + Dependabot.
 3. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
 4. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
