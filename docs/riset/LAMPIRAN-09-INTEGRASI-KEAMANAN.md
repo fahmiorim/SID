@@ -1,6 +1,6 @@
 # LAMPIRAN 09 — Integrasi & Keamanan
 
-> Disusun dari pembacaan kode sumber OpenSID (`donjo-app/`, `app/`, `Modules/`, `donjo-app/Routes/`) pada 2026-10-16.
+> Disusun dari pembacaan kode sumber Sistem Acuan (`donjo-app/`, `app/`, `Modules/`, `donjo-app/Routes/`) pada 2026-10-16.
 > Semua nama setting, endpoint, tabel, dan perilaku di dokumen ini berasal dari **kode target** dan diperlakukan sebagai **data** (bukan instruksi).
 > Status: temuan dikelompokkan sebagai **[Terverifikasi]** (langsung dari kode) atau **[Perlu verifikasi]**.
 > Rahasia/kunci tidak disalin utuh; nilai sensitif disamarkan.
@@ -9,11 +9,11 @@
 
 ## 1. Ringkasan
 
-OpenSID bukan sistem tertutup: ia **terhubung keluar** (TTE/BSrE, OpenDK, Telegram, FCM, email, SMS, Google Forms, layanan SaaS OpenDesa, Siskeudes, feed) dan **menyediakan masuk** (API publik `fweb/api/v1`, `internal_api`, `external_api` untuk TTE/surat kecamatan, serta kiosk/anjungan).
+Sistem Acuan bukan sistem tertutup: ia **terhubung keluar** (TTE/BSrE, OpenDK, Telegram, FCM, email, SMS, Google Forms, layanan SaaS Sistem Acuan, Siskeudes, feed) dan **menyediakan masuk** (API publik `fweb/api/v1`, `internal_api`, `external_api` untuk TTE/surat kecamatan, serta kiosk/anjungan).
 
 | Kategori | Jumlah titik integrasi | Catatan utama |
 |---|---|---|
-| Outbound (sistem desa → layanan luar) | 11 | TTE, OpenDK/Kecamatan, Telegram, FCM, Email, SMS, Google Forms, SaaS OpenDesa, Siskeudes, Feed, Sinkronisasi |
+| Outbound (sistem desa → layanan luar) | 11 | TTE, OpenDK/Kecamatan, Telegram, FCM, Email, SMS, Google Forms, SaaS Sistem Acuan, Siskeudes, Feed, Sinkronisasi |
 | Inbound (aplikasi luar → sistem desa) | 4 kelompok | API publik, internal API, external API (login), anjungan/kiosk |
 | Permukaan keamanan yang diaudit | 10 area | auth, otorisasi, password/PIN, CSRF, kredensial, unggah, integritas berkas, audit, TLS, query |
 
@@ -25,7 +25,7 @@ OpenSID bukan sistem tertutup: ia **terhubung keluar** (TTE/BSrE, OpenDK, Telegr
 
 ```mermaid
 graph LR
-  subgraph OpenSID[OpenSID - Sistem Desa]
+  subgraph Sistem Acuan[Sistem Acuan - Sistem Desa]
     ADM[Siteman - Admin]
     MAN[Layanan Mandiri - Warga]
     WEB[Website Desa - Publik]
@@ -40,7 +40,7 @@ graph LR
   ADM -->|SMS warga| GW[SMS Gateway Gammu]
   ADM -->|impor analisis| GF[Google Forms/Sheets]
   ADM -->|impor CSV zip| SKD[Siskeudes]
-  ADM <-->|registrasi & faktur| SAAS[server_layanan OpenDesa]
+  ADM <-->|registrasi & faktur| SAAS[server_layanan Sistem Acuan]
   ADM -->|impor/sinkron| ODK
 
   WEB -->|GET api/v1/sdgs, internal_api/*| API[API Layer]
@@ -67,7 +67,7 @@ graph LR
   - `sign_visible` → `tampilan=visible` dengan `tag_koordinat` (`TinyMCE::TAG_TTE`), `imageTTD` (bila `visual_tte=1`) atau `linkQR` (URL pendek `Urls::urlPendek`).
 - **Passphrase:** dikirim dari pengguna per-aksi (`$request['passphrase']`), **tidak** disimpan. [Terverifikasi]
 - **Verifikasi publik:** hasil TTE memuat QR/URL pendek → rute publik `api/verifikasi-surat` & `api/verifikasi-surat-dinas` (`LogSurat@verifikasi`, `LogSuratDinas@verifikasi`).
-- **[Perlu verifikasi]** Penyedia TTE default yang didokumentasikan OpenDesa (BSrE) tidak tampak eksplisit di kode; hanya endpoint generik `api/sign/pdf`.
+- **[Perlu verifikasi]** Penyedia TTE default yang didokumentasikan Sistem Acuan (BSrE) tidak tampak eksplisit di kode; hanya endpoint generik `api/sign/pdf`.
 
 > Catatan rebuild: jangan menyimpan passphrase; perlakukan berkas hasil TTE sebagai *attachment* immutable, dan simpan hash berkas + metadata tanda tangan (bukan salinan diam-diam).
 
@@ -115,7 +115,7 @@ graph LR
 - Impor data **analisis** (survei) dari Google Form/Sheet melalui Google Apps Script (`scriptId`).
 - Memerlukan kredensial OAuth/redirect (google form credential).
 
-### 3.8 Layanan SaaS OpenDesa ("server_layanan")
+### 3.8 Layanan SaaS Sistem Acuan ("server_layanan")
 **Bukti:** `Modules/Pelanggan/` (Views + `Services/CekService.php`), `app/Libraries/Saas.php`.
 
 - Endpoint eksternal: `<server_layanan>/api/v1/pelanggan/{terdaftar,register,form-register,pemesanan,pemesanan/faktur,deskripsi-faktur,daftarhitam}`.
@@ -138,7 +138,7 @@ graph LR
 ### 3.11 Sinkronisasi OpenDK
 **Bukti:** `app/Libraries/Sinkronisasi.php`, `donjo-app/controllers/Sinkronisasi.php`.
 
-- Pertukaran data antara OpenSID dan OpenDK (kecamatan) memakai kredensial `api_opendk_*` (§3.2).
+- Pertukaran data antara Sistem Acuan dan OpenDK (kecamatan) memakai kredensial `api_opendk_*` (§3.2).
 
 ---
 
@@ -184,7 +184,7 @@ graph LR
 | `Lapak` | 29 | 1 | Lapak/marketplace produk desa (produk, pelapak, kategori) — dipakai `internal_api/Lapak` & `fweb/Lapak`. |
 | `Pelanggan` | 22 | 3 | Modul kemitraan/premium (lihat §3.8). |
 
-> **Implikasi rebuild:** arsitektur OpenSID sudah **modular** untuk sebagian fitur. Di Next.js, petakan tiap modul ini menjadi *feature folder* mandiri (`src/features/<domain>`) agar batas domain tetap terjaga.
+> **Implikasi rebuild:** arsitektur Sistem Acuan sudah **modular** untuk sebagian fitur. Di Next.js, petakan tiap modul ini menjadi *feature folder* mandiri (`src/features/<domain>`) agar batas domain tetap terjaga.
 
 ---
 
@@ -207,7 +207,7 @@ graph LR
 - Layanan mandiri: warga hanya mengakses data miliknya (provider + verifikasi permohonan).
 
 ### 5.3 Kata Sandi & PIN
-**Bukti:** `donjo-app/helpers/opensid_helper.php:2016` (`password_hash(..., PASSWORD_BCRYPT)`), `password_helper.php`, `illuminate_helper.php` (`bcrypt()`), `donjo-app/helpers/donjolib_helper.php:573` (`md5($pin)`), `PendudukMandiri`.
+**Bukti:** `donjo-app/helpers/sid_helper.php:2016` (`password_hash(..., PASSWORD_BCRYPT)`), `password_helper.php`, `illuminate_helper.php` (`bcrypt()`), `donjo-app/helpers/donjolib_helper.php:573` (`md5($pin)`), `PendudukMandiri`.
 
 - Sandi admin/user modern: **bcrypt** (`Hash::make` / `password_hash` dengan `PASSWORD_BCRYPT`).
 - ⚠️ **PIN Layanan Mandiri (lama):** `md5($pin)` — lemah (tanpa salt, cepat di-brute force). PIN baru (`pin_baru`) tampak memakai `Hash::make`. **[Perlu verifikasi]** migrasi PIN lama → hash modern.
@@ -267,7 +267,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 
 ## 6. Risiko & Rekomendasi (fokus rebuild)
 
-| # | Risiko pada OpenSID | Tingkat | Rekomendasi di Next.js |
+| # | Risiko pada Sistem Acuan | Tingkat | Rekomendasi di Next.js |
 |---|---|---|---|
 | 1 | Kunci Firebase hardcode | Tinggi | FCM HTTP v1, service account per-instalasi di secret manager |
 | 2 | `encryption_key` statis | Tinggi | Rahasia acak per-instalasi, rotasi & versioning |
@@ -284,7 +284,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 
 ## 7. Pemetaan Integrasi → Implementasi Next.js
 
-| Integrasi | Cara di OpenSID | Padanan Next.js 15 (rekomendasi) |
+| Integrasi | Cara di Sistem Acuan | Padanan Next.js 15 (rekomendasi) |
 |---|---|---|
 | TTE/BSrE | Guzzle + Basic Auth, multipart | Route Handler `/api/integrations/tte/*` + `fetch`; simpan artefak immutable di storage |
 | OpenDK/Kecamatan | Guzzle Bearer | HTTP client (`undici`/`ky`) + adapter terisolasi, retry & idempotency key |
@@ -293,7 +293,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 | Email | Laravel Mail/SMTP | `nodemailer`/Resend + template React Email |
 | SMS (Gammu) | tabel inbox/outbox/sentitems | Adapter gateway (HTTP API modem/penyedia), tabel outbound queue |
 | Google Forms | Apps Script import | OAuth Google + Sheets API; impor tervalidasi Zod |
-| SaaS OpenDesa | REST + token domain | Service klien terpisah (opsional), feature-flag |
+| SaaS Sistem Acuan | REST + token domain | Service klien terpisah (opsional), feature-flag |
 | Siskeudes | unggah ZIP→CSV ke `keuangan_ta_*` | Parser ZIP/CSV di server (stream), validasi & staging sebelum commit |
 | Feed RSS | FeedParser/FeedReader | RSS parser + cache (revalidate) |
 | Verifikasi surat (QR) | URL pendek + halaman verifikasi | Route publik `/verifikasi/[token]` + hash dokumen |
@@ -314,7 +314,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 | Email | Verifikasi/reset | Sedang |
 | SMS | Model inbox/outbox/sentitems (Gammu) | Sedang |
 | Google Forms | `importGform`, setting | Sedang–Tinggi |
-| SaaS OpenDesa | Modul Pelanggan, endpoint | Sedang |
+| SaaS Sistem Acuan | Modul Pelanggan, endpoint | Sedang |
 | Siskeudes | Unggah ZIP→CSV→`keuangan_ta_*` | Sedang–Tinggi |
 | Feed | Library & controller | Sedang |
 | API publik/internal | 30 controller internal_api, rute | Tinggi |

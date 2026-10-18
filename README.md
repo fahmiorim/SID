@@ -1,14 +1,11 @@
-# Sistem Informasi Desa (SID) — Tiruan Modern
+# Sistem Informasi Desa (SID)
 
-Aplikasi **fullstack Next.js + TypeScript** yang bersih, bertipe kuat, dan mudah
-dirawat, dibangun sebagai **tiruan** (reimplementasi) fitur
-[OpenSID](https://github.com/OpenSID/OpenSID) (PHP/CodeIgniter) — **bukan**
-migrasi data OpenSID. Repositori ini berisi **fondasi**: autentikasi, RBAC,
-kerangka admin, lapisan data, dan satu irisan vertikal lengkap (Wilayah
-Administratif).
+Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
+bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
+autentikasi, RBAC, kerangka admin, lapisan data, dan satu irisan vertikal lengkap
+(Wilayah Administratif).
 
-> Status: **fondasi** — belum seluruh fitur OpenSID dibangun. Lihat
-> [Peta Jalan](#peta-jalan).
+> Status: **fondasi** — modul fitur dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
 ## Tumpukan Teknologi
 
@@ -103,7 +100,7 @@ src/
 
 ## Autentikasi & Hak Akses
 
-- **Login memakai username** (kebiasaan OpenSID); email opsional.
+- **Login memakai username** (email opsional) — sesuai kebiasaan operator desa.
 - Sesi disimpan sebagai cookie `HttpOnly` berlaku **7 hari**.
 - **RBAC** memakai tabel sendiri: `modules` (katalog modul/menu), `roles`
   (role), dan `role_permissions` (matriks izin). Tingkat akses bernama —
@@ -129,12 +126,12 @@ src/
 ## Dokumentasi
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arsitektur, konvensi, keputusan.
-- [`docs/README-ANALISIS-OPENSID.md`](docs/README-ANALISIS-OPENSID.md) — indeks
-  hasil analisis sistem lama (laporan utama + lampiran), dipakai sebagai
-  **referensi fitur** yang hendak ditiru.
+- [`docs/riset/README.md`](docs/riset/README.md) — catatan riset internal
+  (analisis sistem rujukan + lampiran), dipakai sebagai **referensi fitur**.
 
 ## Peta Jalan
 
 1. **Fondasi** ✅ — auth, RBAC, kerangka admin, lapisan data, irisan Wilayah.
-2. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
-3. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
+2. Fondasi mutu: pengujian otomatis + CI.
+3. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
+4. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.

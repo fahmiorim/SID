@@ -16,9 +16,9 @@ kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
 3. **Satu sumber kebenaran.** Environment divalidasi sekali (`src/lib/env.ts`),
    slug modul dipusatkan (`src/features/rbac/domain/resources.ts`), nama
    aplikasi di `src/lib/app-config.ts`.
-4. **Tiruan bersih, bukan migrasi.** Aplikasi ini adalah reimplementasi fitur
-   OpenSID; skema dirancang sendiri (lihat §3) tanpa terikat nama tabel/kolom
-   sistem lama. Dokumen analisis OpenSID hanya dipakai sebagai **referensi fitur**.
+4. **Skema dirancang sendiri.** Tidak ada ketergantungan pada skema atau data
+   sistem lain; nama tabel/kolom ditentukan demi kejelasan, bukan demi
+   kompatibilitas (lihat §3).
 5. **Dokumen riset hanya di `docs/`.** Akar repositori dijaga tetap rapi.
 
 ---
@@ -181,7 +181,7 @@ dikelola better-auth. Tabel lain dirancang mandiri: `roles` (dulu `user_grup`),
 | ------------------------------------------------ | ---------------------------------------------------------------------- |
 | `cacheComponents: false`                         | Aplikasi admin yang selalu dinamis per pengguna nyaris tidak mengambil untung dari caching rute; menghindari kerumitan `use cache`/Suspense. |
 | `middleware.ts` → `proxy.ts`                     | Perubahan Next.js 16 (runtime Node).                                   |
-| Autentikasi via username (plugin better-auth)    | Meniru kebiasaan login OpenSID; email opsional.                        |
+| Autentikasi via username (plugin better-auth)    | Operator desa terbiasa login dengan username; email opsional.          |
 | Lapisan data berbahasa Inggris, domain Indonesia | Konvensi kode/storage yang umum **dan** tetap nyaman bagi tim Indonesia. |
 | Akses sebagai level bernama (`read`/`write`/`manage`) | Lebih terbaca daripada kode bitmask; pemetaan ke aksi eksplisit.   |
 | Otorisasi di use case, bukan hanya di halaman    | Menutup celah pemanggilan langsung (Route Handler/skrip).              |

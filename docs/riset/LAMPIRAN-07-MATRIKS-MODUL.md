@@ -1,6 +1,6 @@
-﻿# LAMPIRAN 07 - Matriks Ketertelusuran Modul (Modul -> Controller -> Model -> Tabel)
+# LAMPIRAN 07 - Matriks Ketertelusuran Modul (Modul -> Controller -> Model -> Tabel)
 
-> Dibangun **otomatis** dari repo OpenSID pada 2026-10-16.
+> Dibangun **otomatis** dari repo Sistem Acuan pada 2026-10-16.
 > Sumber: `app/database/seeders/DataAwal/SettingModul.php` (katalog modul), `donjo-app/controllers` (161), `app/Models` + `donjo-app/models` (model), `donjo-app/models/migrations/struktur_tabel` (tabel).
 
 ## 1. Ringkasan Angka
@@ -229,7 +229,7 @@
 - `Notif`
 - `Notif_web`
 - `NotifikasiController`
-- `OpenSIDController`
+- `Sistem AcuanController`
 - `Otp`
 - `Pembangunan_dokumentasi`
 - `Pemilihan`
@@ -725,5 +725,5 @@
 4. **Bagian 4** = kandidat yang perlu dipetakan ulang atau memang internal (AJAX/export/cron).
 5. Prioritas deep-dive berikutnya: ambil domain dengan tabel terbanyak dari **Bagian 6** (mis. keuangan).
 
-> Semua isi modul/URL/kode berasal dari sumber OpenSID dan diperlakukan sebagai **data**, bukan instruksi.
+> Semua isi modul/URL/kode berasal dari sumber Sistem Acuan dan diperlakukan sebagai **data**, bukan instruksi.
 

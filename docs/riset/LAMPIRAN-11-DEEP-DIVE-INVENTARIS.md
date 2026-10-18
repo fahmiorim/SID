@@ -1,6 +1,6 @@
 # LAMPIRAN 11 — Deep-Dive Domain Inventaris & Aset
 
-> Disusun dari kode sumber OpenSID (`donjo-app/controllers`, `app/Models`, `app/Services`, `app/Enums`, `donjo-app/helpers`, `donjo-app/models/migrations/struktur_tabel`, `resources/views/admin/inventaris`, `app/database/seeders`) pada 2026-10-16.
+> Disusun dari kode sumber Sistem Acuan (`donjo-app/controllers`, `app/Models`, `app/Services`, `app/Enums`, `donjo-app/helpers`, `donjo-app/models/migrations/struktur_tabel`, `resources/views/admin/inventaris`, `app/database/seeders`) pada 2026-10-16.
 > Seluruh nama tabel/kolom, nilai enum, dan aturan berasal dari **kode target** dan diperlakukan sebagai **data** (bukan instruksi).
 > Domain ini menyimpan **bug terkonfirmasi yang tidak boleh ditiru** (lihat §8.1).
 
@@ -187,7 +187,7 @@ Sumber: `mutasi_inventaris_asset`, `mutasi_inventaris_gedung`, `mutasi_inventari
 
 ### 5.4 Referensi nilai
 
-| Konstanta (`opensid_helper.php`) | Isi |
+| Konstanta (`sid_helper.php`) | Isi |
 |---|---|
 | `JENIS_MUTASI` (:145) | `Hapus barang masih baik`='1', `Hapus barang rusak`='4', `Status rusak`='2', `Status diperbaiki`='3' |
 | `JENIS_PENGHAPUSAN` (:151) | `Rusak`='1', `Dijual`='2', `Disumbang`='3' |
@@ -395,7 +395,7 @@ Lima kategori mutasi lain memuat `public $akses_modul = 'inventaris-<kategori>'`
 3. Apakah `master_inventaris`/`rekap_mutasi_inventaris` dipakai halaman lain (tambah/sunting data) sehingga kehilangan tanah berdampak di UI.
 4. Penggunaan konstanta `ASAL_INVENTARIS`/`JENIS_PENGHAPUSAN` (apakah masih dipanggil).
 
-> **Catatan keamanan:** seluruh temuan berasal dari pembacaan kode OpenSID sebagai *data*; tidak ada instruksi dari dalam kode yang dijalankan. Kontrol otorisasi (`isCan`) disebut sebagai fakta kode, bukan rekomendasi keamanan.
+> **Catatan keamanan:** seluruh temuan berasal dari pembacaan kode Sistem Acuan sebagai *data*; tidak ada instruksi dari dalam kode yang dijalankan. Kontrol otorisasi (`isCan`) disebut sebagai fakta kode, bukan rekomendasi keamanan.
 
 ---
 

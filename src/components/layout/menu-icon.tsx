@@ -17,8 +17,8 @@ import {
 /**
  * Registri nama ikon (string dari `modules.icon`) → komponen Lucide.
  *
- * OpenSID menyimpan nama ikon sebagai teks; di sini kita memetakan hanya ikon
- * yang dikenal agar bundle tetap ramping (tree-shakeable).
+ * Nama ikon disimpan sebagai teks di basis data. Di sini hanya ikon yang dikenal
+ * yang dipetakan, agar bundel tetap ramping (tree-shakeable).
  */
 const ICONS: Record<string, LucideIcon> = {
   "layout-dashboard": LayoutDashboard,

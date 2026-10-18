@@ -1,6 +1,6 @@
-# LAMPIRAN 03 — ENUM & TABEL REFERENSI OpenSID
+# LAMPIRAN 03 — ENUM & TABEL REFERENSI Sistem Acuan
 
-Dokumen ini merupakan hasil inventarisasi **semua ENUM** dan **tabel referensi** beserta isinya pada codebase OpenSID di `D:\laragon\www\opensid`, untuk dijadikan bahan seed pada aplikasi baru (Next.js + Drizzle).
+Dokumen ini merupakan hasil inventarisasi **semua ENUM** dan **tabel referensi** beserta isinya pada codebase Sistem Acuan di `repositori sumber`, untuk dijadikan bahan seed pada aplikasi baru (Next.js + Drizzle).
 
 Tanggal analisis: 2026-10-16. Repo sumber **tidak diubah**.
 
@@ -14,7 +14,7 @@ Tanggal analisis: 2026-10-16. Repo sumber **tidak diubah**.
 | Seeder enum → tabel | `app\database\seeders\DataAwal\StrukturTabelSeeder.php` (method `insertEnumToTable()` & `addDataMaster()`) | Menentukan tabel referensi mana diisi enum apa |
 | Seeder data awal | `app\database\seeders\DataAwal\DataAwalSeeder.php`, `RentangUmur.php`, `Twebaset.php`, `KeuanganManualRefKegiatan.php`, `SettingAplikasi.php`, `SettingModul.php`, `GisSimbol.php`, `GrupAkses.php` | Data master non-enum |
 | Struktur tabel | `donjo-app\models\migrations\struktur_tabel\2023_12_22_015242_create_*_table.php` | Definisi kolom |
-| Helper referensi | `donjo-app\helpers\opensid_helper.php` (fungsi `ref()`, ±baris 1797–1957) | Pemetaan kode referensi ke enum |
+| Helper referensi | `donjo-app\helpers\sid_helper.php` (fungsi `ref()`, ±baris 1797–1957) | Pemetaan kode referensi ke enum |
 | Impor klasifikasi surat | `app\Imports\KlasifikasiSuratImports.php` | Membaca `klasifikasi-surat.xlsx` (data tidak ada di source) |
 | Konstanta model | `app\Models\*.php` | Magic number (status surat, gizi, dll.) |
 
@@ -1565,7 +1565,7 @@ Sumber: konstanta `app\Models\*.php`.
 # BAGIAN 4 — REKOMENDASI SEED & SKEMA (Next.js + Drizzle)
 
 ## 4.1 Prinsip umum
-1. **Pertahankan ID persis** seperti OpenSID untuk semua tabel referensi. Banyak kolom FK (`agama_id`, `pekerjaan_id`, `pendidikan_kk_id`, `status_kawin`, `warganegara_id`, `golongan_darah_id`, `cacat_id`, `cara_kb_id`, `asuransi_id`, `status_dasar`, `kk_level`, `rtm_level`, `id_cluster`) mengandalkan nilai numerik tersebut. Mengubah ID = harus migrasi data lama.
+1. **Pertahankan ID persis** seperti Sistem Acuan untuk semua tabel referensi. Banyak kolom FK (`agama_id`, `pekerjaan_id`, `pendidikan_kk_id`, `status_kawin`, `warganegara_id`, `golongan_darah_id`, `cacat_id`, `cara_kb_id`, `asuransi_id`, `status_dasar`, `kk_level`, `rtm_level`, `id_cluster`) mengandalkan nilai numerik tersebut. Mengubah ID = harus migrasi data lama.
 2. **Pisahkan dua jenis** referensi:
    - **Enum stabil & kecil** (jenis kelamin, status dasar, status kawin, warganegara, golongan darah, cacat, hamil, asuransi, pendidikan KK, pendidikan sedang, status penduduk, status KTP, SHDK, hubungan RTM, keluarga sejahtera) → cocok jadi **`pgEnum`** atau **konstanta TypeScript** + tabel lookup tipis.
    - **Katalog besar & bisa ditambah** (pekerjaan 89, suku 262, kursus 44, bidang 21, wilayah dusun) → **tabel lookup** yang bisa diedit pengguna.
@@ -1573,7 +1573,7 @@ Sumber: konstanta `app\Models\*.php`.
 4. `status_rekam` di `tweb_status_ktp` **berbeda** dari id. Jangan campur `StatusKTPEnum` dengan id tabel.
 
 ## 4.2 Nama tabel yang disarankan
-| Tabel OpenSID | Nama baru disarankan | Strategi |
+| Tabel Sistem Acuan | Nama baru disarankan | Strategi |
 |---|---|---|
 | tweb_penduduk_agama | ref_agama | lookup (id,nama) |
 | tweb_penduduk_sex | ref_jenis_kelamin | pgEnum + lookup |
@@ -1618,7 +1618,7 @@ Sumber: konstanta `app\Models\*.php`.
 // db/schema/ref.ts
 import { pgTable, smallint, varchar, text, integer, boolean, pgEnum, time } from 'drizzle-orm/pg-core'
 
-// --- Enum stabil (nilai numeric tetap sama dengan OpenSID) ---
+// --- Enum stabil (nilai numeric tetap sama dengan Sistem Acuan) ---
 export const jenisKelaminEnum = pgEnum('jenis_kelamin', ['1', '2'])
 export const statusDasarEnum  = pgEnum('status_dasar',  ['1', '2', '3', '4', '6', '9'])
 export const statusKawinEnum  = pgEnum('status_kawin',  ['1', '2', '3', '4'])
@@ -1642,7 +1642,7 @@ export const refPekerjaan = pgTable('ref_pekerjaan', {
 })
 
 export const refSuku = pgTable('ref_suku', {
-  id: integer('id').primaryKey(),       // generated (OpenSID tidak punya id; pakai string)
+  id: integer('id').primaryKey(),       // generated (Sistem Acuan tidak punya id; pakai string)
   nama: varchar('nama', { length: 150 }).notNull().unique(),
 })
 
@@ -1694,7 +1694,7 @@ export const refStatusDasarData = [
 - **Jangan** menyalin `FirebaseEnum` (`SERVER_KEY`/`SENDER_ID`) ke aplikasi baru — nilainya adalah kredensial dan sudah terbuka di source. Gunakan environment variable.
 - Beberapa label PekerjaanEnum/PendidikanSedangEnum punya spasi ganda (mis. `SEDANG  D-1/SEDERAJAT`) dan SukuEnum punya trailing space. **Trim** saat seeding.
 - `tweb_cara_kb.sex` tidak terisi dari enum (semua NULL) — putuskan apakah kolom tetap dipertahankan atau di-drop.
-- `ref_penduduk_suku` **tidak pernah diisi** di OpenSID; pada aplikasi baru, seed dari `SukuEnum` (262 baris) sebagai sumber otoritatif.
+- `ref_penduduk_suku` **tidak pernah diisi** di Sistem Acuan; pada aplikasi baru, seed dari `SukuEnum` (262 baris) sebagai sumber otoritatif.
 - `Regsosek2022kEnum` sangat besar dan tidak ternamai; jika aplikasi baru tidak menangani DTKS/Regsosek, tabel terkait boleh dilewati.
 
 ---

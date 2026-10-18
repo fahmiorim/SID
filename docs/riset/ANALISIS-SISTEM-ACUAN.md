@@ -1,13 +1,13 @@
-# Analisis OpenSID & Rencana Rebuild ke Next.js 15+
+# Analisis Sistem Acuan & Rencana Rebuild ke Next.js 15+
 
-> Objek analisis: `D:\laragon\www\opensid` (OpenSID, GPL-3.0, dikelola Perkumpulan Desa Digital Terbuka / OpenDesa).
+> Objek analisis: sebuah aplikasi SID berbasis PHP (repositori sumber tempat kerja).
 > Tujuan dokumen: requirements + arsitektur target (Next.js App Router), bukan salinan kode PHP.
 
 ---
 
 ## 1. Overview
 
-**OpenSID** (Sistem Informasi Desa) adalah aplikasi manajemen pemerintahan desa yang dikembangkan terbuka dan kolaboratif sejak 2009. Awalnya berbasis SID CRI, sejak Mei 2016 dikelola di GitHub OpenSID. Aplikasi ini mengelola seluruh siklus administrasi desa: kependudukan, keluarga, surat-menyurat, keuangan, aset, publikasi web desa, hingga layanan mandiri warga.
+**Sistem Acuan** (Sistem Informasi Desa) adalah aplikasi manajemen pemerintahan desa yang dikembangkan terbuka dan kolaboratif sejak 2009. Awalnya berbasis SID CRI, sejak Mei 2016 dikelola terbuka di GitHub. Aplikasi ini mengelola seluruh siklus administrasi desa: kependudukan, keluarga, surat-menyurat, keuangan, aset, publikasi web desa, hingga layanan mandiri warga.
 
 **Tujuan:** membuat kantor desa efisien/efektif, mendorong transparansi & akuntabilitas, meningkatkan layanan publik, dan membuka akses informasi desa.
 
@@ -33,7 +33,7 @@
 | Framework utama | **CodeIgniter 3** (`codeigniter/framework ^3.1`) — routing, controller, config, session |
 | Framework tambahan | **Komponen Laravel 10** (`illuminate/* ^10`) — database/Eloquent, view (Blade), auth, validation, queue, notifications |
 | ORM | **Laravel Eloquent** di layer `app/Models` (172 model) + query builder CI3 di `donjo-app/models` (legacy) |
-| Router | Package eksternal **`opensid/router ^2403`** + file route gaya Laravel di `donjo-app/Routes/*` |
+| Router | Package eksternal **`sid/router ^2403`** + file route gaya Laravel di `donjo-app/Routes/*` |
 | Template/view | **Hybrid**: Blade (`resources/views/**`, folder `admin/`, `web/`, `layanan_mandiri/`) + view PHP lama (`donjo-app/views/`: `header.php`, `footer.php`, `print/`) |
 | Database | **MySQL / MariaDB** (default). Driver CI mendukung `mysql, mysqli, pgsql, sqlite, sqlsrv`. Query memakai backtick & fitur MySQL → praktis terikat MySQL/MariaDB |
 | Multi-desa | Kolom `config_id` (tabel `config`) di hampir seluruh tabel + `ConfigIdScope` (tenant scoping) |
@@ -44,7 +44,7 @@
 | Tooling | php-cs-fixer, Rector, PHPUnit 9, Prettier (blade), Playwright (e2e) |
 | Skala | ~438 file migrasi tabel, ratusan tabel domain |
 
-> Catatan penting: meski "CodeIgniter", aplikasi ini sebenarnya **hybrid CI3 + Laravel components + Blade + Eloquent**, dijembatani oleh `opensid/router`, helper global (`ci_auth()`, `setting()`, `identitas()`), dan base controller `donjo-app/core/*` (sebagian ter-obfuscate).
+> Catatan penting: meski "CodeIgniter", aplikasi ini sebenarnya **hybrid CI3 + Laravel components + Blade + Eloquent**, dijembatani oleh `sid/router`, helper global (`ci_auth()`, `setting()`, `identitas()`), dan base controller `donjo-app/core/*` (sebagian ter-obfuscate).
 
 ---
 
@@ -584,17 +584,17 @@ Strategi rendering per modul:
 
 **Opsi A — Fullstack Next.js (Route Handlers + Server Actions)**
 - ➕ Satu bahasa (TS), type-safety end-to-end, deploy tunggal (standalone), lebih murah & sederhana untuk maintain komunitas.
-- ➕ Cocok karena OpenSID form+report heavy dan logika CRUD; Server Actions mengurangi boilerplate API.
+- ➕ Cocok karena Sistem Acuan form+report heavy dan logika CRUD; Server Actions mengurangi boilerplate API.
 - ➖ Perlu hati-hati memisahkan logika domain agar bisa dipakai lintas entry (web, mobile nanti).
 - ➖ Long-running task (generate laporan besar, kirim notifikasi) sebaiknya via queue — Next.js bukan worker.
 
 **Opsi B — Next.js + Separate API (Go/FastAPI/Bun+Elysia)**
 - ➕ Performa & penskalaan terpisah; API bisa dipakai mobile/anjungan/klien lain.
 - ➕ Worker/queue natural (Go/FastAPI).
-- ➖ Dua stack, dua deploy, dua CI, overhead skill; tim komunitas OpenSID (umumnya PHP/JS ringan) sulit maintain.
+- ➖ Dua stack, dua deploy, dua CI, overhead skill; tim komunitas Sistem Acuan (umumnya PHP/JS ringan) sulit maintain.
 - ➖ Over-engineering untuk skala aplikasi desa.
 
-**Rekomendasi: Opsi A (Fullstack Next.js)**, dengan **pemisahan logika domain ke `lib/`/`features/*/service`** agar kelak bisa diekstrak ke API terpisah bila perlu. Alasan: konteks OpenSID adalah banyak desa dengan hosting sederhana, maintain oleh komunitas, dominan CRUD + laporan; satu codebase TypeScript menurunkan biaya operasional & learning curve dibanding memelihara dua service. Untuk kebutuhan berat, gunakan **queue ringan** (mis. BullMQ + Redis opsional) atau trigger eksternal.
+**Rekomendasi: Opsi A (Fullstack Next.js)**, dengan **pemisahan logika domain ke `lib/`/`features/*/service`** agar kelak bisa diekstrak ke API terpisah bila perlu. Alasan: konteks Sistem Acuan adalah banyak desa dengan hosting sederhana, maintain oleh komunitas, dominan CRUD + laporan; satu codebase TypeScript menurunkan biaya operasional & learning curve dibanding memelihara dua service. Untuk kebutuhan berat, gunakan **queue ringan** (mis. BullMQ + Redis opsional) atau trigger eksternal.
 
 ### 10.3 Tech Stack Rekomendasi
 
@@ -602,7 +602,7 @@ Strategi rendering per modul:
 |---|---|---|
 | Framework | **Next.js 15+ (App Router, TypeScript strict)** | SSR/RSC + Server Actions; standar industri; deploy standalone |
 | ORM | **Drizzle ORM** (utama) / Prisma (alternatif) | Drizzle: ringan, SQL-first, type-safe, mudah petakan skema legacy bertabekan; Prisma: DX tinggi tapi binary/engine lebih berat |
-| DB | **MySQL/MariaDB** (kompatibilitas migrasi data OpenSID), opsi PostgreSQL untuk greenfield | Mempermudah impor DB eksisting & dihosting desa |
+| DB | **MySQL/MariaDB** (kompatibilitas migrasi data Sistem Acuan), opsi PostgreSQL untuk greenfield | Mempermudah impor DB eksisting & dihosting desa |
 | Auth | **better-auth** (RBAC built-in) atau **Auth.js** | better-auth: session + organisasi(role) + plugin 2FA/OTP modern; Auth.js: ekosistem luas |
 | UI | **shadcn/ui + Tailwind CSS v4** | Komponen aksesibel, mudah dikustom, tanpa lock-in |
 | Forms | **react-hook-form + zod** | Form-heavy, validasi shared |
@@ -628,9 +628,9 @@ Prinsip: **type-safety end-to-end** (zod → Drizzle types → UI), maintainable
 ```yaml
 openapi: 3.1.0
 info:
-  title: OpenSID Modern API
+  title: Sistem Acuan Modern API
   version: 1.0.0
-  description: REST API untuk sistem informasi desa (hasil modernisasi OpenSID).
+  description: REST API untuk sistem informasi desa (hasil modernisasi Sistem Acuan).
 servers:
   - url: https://desa.example.id/api/v1
 security:
@@ -1193,8 +1193,8 @@ Catatan: contoh di atas menggabungkan `paths` + `components`; saat dipakai, gabu
 6. **Core Modules** – bangun berurutan: kependudukan → keluarga → surat (dengan nomor otomatis) → laporan.
 7. **Report Export** – generator PDF (puppeteer/pdf-lib) & Excel (exceljs) di route handler.
 8. **Testing** – manual test 3 alur utama + Playwright untuk regresi (login, tambah penduduk, buat surat).
-9. **Data Import Tool** – script membaca DB OpenSID lama (MySQL) → transformasi → insert ke skema baru (mapping langkah 5), dengan laporan baris gagal.
-10. **Pilot & Rollout** – deploy di 1 desa percontohan, bandingkan output surat/laporan dengan OpenSID lama sebelum migrasi massal.
+9. **Data Import Tool** – script membaca DB Sistem Acuan lama (MySQL) → transformasi → insert ke skema baru (mapping langkah 5), dengan laporan baris gagal.
+10. **Pilot & Rollout** – deploy di 1 desa percontohan, bandingkan output surat/laporan dengan Sistem Acuan lama sebelum migrasi massal.
 
 ---
 
@@ -1206,7 +1206,7 @@ Catatan: contoh di atas menggabungkan `paths` + `components`; saat dipakai, gabu
 - **Maintainability:** type-safe + modular feature-based menurunkan bug jangka panjang; butuh disiplin arsitektur + CI (typecheck, lint, test).
 - **UX:** jauh lebih modern (SPA-feel, loading states, responsif, aksesibel) dibanding AdminLTE/jQuery.
 - **Trade-off:** ada **build step** & toolchain Node; tidak bisa "upload .php lalu jalan". Perlu proses deploy yang jelas.
-- **Kapan Next.js kurang ideal:** jika teknisi desa hanya familier PHP dan terbiasa upload file langsung tanpa build pipeline, atau jika targetnya shared hosting murni tanpa Node — di situ Next.js merepotkan; opsi Laravel/Blade atau tetap OpenSID lebih realistis.
+- **Kapan Next.js kurang ideal:** jika teknisi desa hanya familier PHP dan terbiasa upload file langsung tanpa build pipeline, atau jika targetnya shared hosting murni tanpa Node — di situ Next.js merepotkan; opsi Laravel/Blade atau tetap Sistem Acuan lebih realistis.
 
 ---
 
@@ -1216,11 +1216,11 @@ Catatan: contoh di atas menggabungkan `paths` + `components`; saat dipakai, gabu
 > **Next.js 15 (App Router, TypeScript strict) + Server Actions/Route Handlers + Drizzle ORM + MySQL/MariaDB + better-auth (RBAC) + shadcn/ui + Tailwind v4 + react-hook-form/zod + TanStack Query/Table + exceljs/pdf-lib (atau puppeteer)**, deploy **standalone di VPS**.
 
 **Ya/Tidak layak rebuild ke Next.js?**
-- **Ya, layak** — untuk menghadirkan UX modern, type-safety, dan maintainability; sangat cocok karena OpenSID dominan CRUD + form + laporan.
+- **Ya, layak** — untuk menghadirkan UX modern, type-safety, dan maintainability; sangat cocok karena Sistem Acuan dominan CRUD + form + laporan.
 - **Dengan syarat:** target deployment adalah **VPS** dan tersedia (atau bisa dibina) tim/komunitas dengan kemampuan TypeScript. Untuk kebutuhan "hosting desa murni PHP", Next.js kurang praktis. Pendekatan paling aman: **bangun paralel**, jaga kompatibilitas data via MySQL + `config_id`, dan migrasikan desa secara bertahap.
 
 **Saran kunci sebelum mulai coding:**
-1. **Kunci business rules numerik/relasional lebih dulu** (penomoran surat 3 mode, SHDK/KK, unik NIK/KK/email, wilayah scope) — inilah "jiwa" OpenSID yang paling mahal jika salah.
+1. **Kunci business rules numerik/relasional lebih dulu** (penomoran surat 3 mode, SHDK/KK, unik NIK/KK/email, wilayah scope) — inilah "jiwa" Sistem Acuan yang paling mahal jika salah.
 2. **Rancang skema kompatibel-migrasi** (nama tabel/kolom & `config_id`) + buat **mapping field** dan **impor tool** sejak awal, jangan belakangan.
 3. **Putuskan model deployment** (VPS/Docker standalone) dan **RBAC multi-tenant yang exact setara `grup_akses` 1/3/7** sebelum membangun modul, agar tidak refactor besar di tengah jalan.
 
@@ -1245,6 +1245,6 @@ Analisis ini dilengkapi 13 dokumen lampiran teknis (semua di root project `D:\la
 | 12 | [`LAMPIRAN-12-BANTUAN-DTKS.md`](./LAMPIRAN-12-BANTUAN-DTKS.md) | Deep-dive bantuan & DTKS: program bantuan, peserta & kartu, statistik, suplemen, DTKS (Satu Data) + impor Regsosek2022k/DTKS, kaitan wilayah/penduduk/keluarga/RTM, output/cetak, catatan rebuild. |
 | 13 | [`LAMPIRAN-13-DEEP-DIVE-ANALISIS.md`](./LAMPIRAN-13-DEEP-DIVE-ANALISIS.md) | Deep-dive analisis (mesin survei): 13 tabel + 3 enum, alur instrumen→entri respon→laporan/statistik, mesin skor (bobot×nilai, akumulasi act_analisis), impor Excel/Google Forms/BDT, temuan (catch tak efektif, SQL mentah), desain rebuild. |
 
-> Lihat [`README-ANALISIS-OPENSID.md`](./README-ANALISIS-OPENSID.md) untuk daftar isi seluruh dokumen.
+> Lihat [`README.md`](./README.md) untuk daftar isi seluruh dokumen.
 > Item bertanda `[perlu verifikasi]` di lampiran menandakan bagian yang perlu dikonfirmasi langsung pada data/kode sebelum dipakai produksi.
 

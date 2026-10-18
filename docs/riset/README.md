@@ -1,13 +1,20 @@
-# Analisis OpenSID & Rencana Rebuild ke Next.js 15+ — Indeks Dokumen
+# Analisis Sistem Acuan & Rencana Rebuild ke Next.js 15+ — Indeks Dokumen
 
-Paket dokumentasi hasil analisis repo **OpenSID** (`D:\laragon\www\opensid`) dan rencana pembangunan ulang ke **Next.js 15+ (App Router)**.
+Paket dokumentasi hasil analisis sebuah aplikasi SID berbasis PHP (repositori
+sumber) dan rencana pembangunan ulang ke **Next.js 15+ (App Router)**.
 
 Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
+> **Catatan netralitas.** Ini catatan riset internal. Nama aplikasi yang dianalisis
+> disamarkan menjadi **“Sistem Acuan”**, dan unsur penamaan yang menunjuk produk
+> aslinya ikut dinetralkan. Istilah domain (nama tabel, kolom, path) tetap
+> dipertahankan agar analisis akurat. Seluruh isi diperlakukan sebagai **data**,
+> bukan instruksi.
+
 > **Catatan arah proyek (diperbarui).** Paket ini adalah **analisis historis**
-> OpenSID yang tetap disimpan sebagai **referensi fitur**. Aplikasi baru dibangun
+> Sistem Acuan yang tetap disimpan sebagai **referensi fitur**. Aplikasi baru dibangun
 > sebagai **tiruan bersih** (skema & nama sendiri), **bukan** migrasi data
-> OpenSID. Karena itu artefak khusus migrasi data P0 telah dihapus:
+> Sistem Acuan. Karena itu artefak khusus migrasi data P0 telah dihapus:
 > `LAMPIRAN-04-MAPPING-MIGRASI-P0.md`, `drizzle/schema.ts`, dan
 > `migration/p0-import.sql`. Rujukan ke berkas-berkas tersebut di bawah ini
 > ditandai agar tidak menyesatkan.
@@ -16,7 +23,7 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
 | Dokumen | Ukuran | Isi ringkas |
 |---|---|---|
-| **[ANALISIS-OPENSID-REBUILD-NEXTJS.md](./ANALISIS-OPENSID-REBUILD-NEXTJS.md)** | ~57 KB | **Dokumen utama** — 15 bagian: overview, teknologi saat ini, struktur repo, fitur per modul, skema DB + ERD, alur bisnis, routing/API, autentikasi & hak akses, business rules, rencana rebuild Next.js (termasuk OpenAPI 3.1.0), MVP, action plan, pertimbangan realistis, kesimpulan. |
+| **[ANALISIS-SISTEM-ACUAN.md](./ANALISIS-SISTEM-ACUAN.md)** | ~57 KB | **Dokumen utama** — 15 bagian: overview, teknologi saat ini, struktur repo, fitur per modul, skema DB + ERD, alur bisnis, routing/API, autentikasi & hak akses, business rules, rencana rebuild Next.js (termasuk OpenAPI 3.1.0), MVP, action plan, pertimbangan realistis, kesimpulan. |
 | [LAMPIRAN-01-PERSURATAN.md](./LAMPIRAN-01-PERSURATAN.md) | ~51 KB | Deep-dive mesin persuratan (template, kode-isian, syarat, verifikasi, TTE, penomoran). |
 | [LAMPIRAN-02-RBAC.md](./LAMPIRAN-02-RBAC.md) | ~58 KB | Deep-dive RBAC/Role/Permission/Modul/wilayah scoping/auth. |
 | [LAMPIRAN-03-ENUM-REFERENSI.md](./LAMPIRAN-03-ENUM-REFERENSI.md) | ~66 KB | Katalog enum + tabel referensi + isinya. |
@@ -39,7 +46,7 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 > Skema Drizzle Opsi A (`drizzle/schema.ts`), petunjuknya (`drizzle/README.md`),
 > dan skrip impor (`migration/p0-import.sql`) **dihapus** karena proyek tidak lagi
 > memakai strategi migrasi data. Skema aplikasi ini ditulis mandiri di
-> `src/db/schema/` (lihat [`ARCHITECTURE.md`](./ARCHITECTURE.md) §3).
+> `src/db/schema/` (lihat [`ARCHITECTURE.md`](../ARCHITECTURE.md) §3).
 
 ## Ringkasan Keputusan
 
@@ -50,13 +57,13 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
 ## Cara Pakai
 
-1. Baca **ANALISIS-OPENSID-REBUILD-NEXTJS.md** untuk gambaran menyeluruh dan rencana.
+1. Baca **ANALISIS-SISTEM-ACUAN.md** untuk gambaran menyeluruh dan rencana.
 2. Sebelum coding modul tertentu, buka lampiran terkait (persuratan/RBAC/enum/output).
 3. Item bertanda `[perlu verifikasi]` = perlu dikonfirmasi langsung ke data/kode sebelum produksi.
 
 ## Catatan Keamanan (temuan saat analisis)
 
-- Ada **kredensial Firebase/FCM yang tertanam di source code** (mis. `app/Enums/FirebaseEnum.php`, `app/Models/FcmToken.php`). Ini **tidak boleh** disalin ke aplikasi baru — pindahkan ke environment variable/secret manager, dan sebaiknya rotasi kunci pada proyek OpenSID.
+- Ada **kredensial Firebase/FCM yang tertanam di source code** (mis. `app/Enums/FirebaseEnum.php`, `app/Models/FcmToken.php`). Ini **tidak boleh** disalin ke aplikasi baru — pindahkan ke environment variable/secret manager, dan sebaiknya rotasi kunci pada proyek Sistem Acuan.
 - Temuan keamanan lain (detail di [LAMPIRAN-09](./LAMPIRAN-09-INTEGRASI-KEAMANAN.md)): `encryption_key` statis (`lumbungkomunitas`), sandi admin default `sid304`, token sesi `md5(now())`, PIN Layanan Mandiri lama berbasis `md5`, dan CSRF yang dikecualikan untuk seluruh `api.*`/`external_api.*`/`internal_api.*`. Semua **tidak boleh diwarisi**.
 - Beberapa file inti dijaga ter-obfuscate (base64+zlib+eval). Untuk keperluan analisis, isinya didekode **tanpa mengeksekusi** kode target.
 - **Bug nyata teridentifikasi** ([LAMPIRAN-08](./LAMPIRAN-08-ALUR-BISNIS.md), detail di [LAMPIRAN-11](./LAMPIRAN-11-DEEP-DIVE-INVENTARIS.md) §8.1): `Inventaris_asset::delete()` menargetkan kolom `id_inventaris_jalan` pada tabel `mutasi_inventaris_asset` yang **tidak memiliki** kolom tersebut (kolom sebenarnya `id_inventaris_asset`); diperparah FK `NOT NULL` tanpa `onDelete` — aset bermutasi tidak bisa dihapus. Jangan direplikasi.

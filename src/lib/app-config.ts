@@ -1,9 +1,10 @@
 /**
  * Konfigurasi aplikasi yang aman dipakai di **client maupun server**.
  *
- * Hanya berisi nilai yang boleh terekspos ke browser (berawalan `NEXT_PUBLIC_`).
- * Akses `process.env` di sini harus berupa properti statis (`process.env.X`)
- * agar Next.js dapat men-inline nilainya saat build.
+ * Berisi nama dan deskripsi aplikasi. Nilai yang berasal dari environment harus
+ * ditulis sebagai properti statis (`process.env.X`) agar Next.js dapat
+ * men-inline-nya saat build, dan hanya boleh berisi hal yang aman terekspos ke
+ * browser (berawalan `NEXT_PUBLIC_`).
  *
  * Nilai khusus server (rahasia, DSN database) ada di `@/lib/env` — modul itu
  * memvalidasi seluruh environment saat di-import dan **tidak boleh** diimpor

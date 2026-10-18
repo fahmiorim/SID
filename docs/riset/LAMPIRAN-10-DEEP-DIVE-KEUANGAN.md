@@ -1,6 +1,6 @@
 # LAMPIRAN 10 — Deep-Dive Domain Keuangan / APBDes
 
-> Disusun dari kode sumber OpenSID (`donjo-app/controllers`, `app/Libraries/Keuangan.php`, `app/Models`, `app/Enums`, `donjo-app/models/migrations`, `resources/views/admin/keuangan`) pada 2026-10-16.
+> Disusun dari kode sumber Sistem Acuan (`donjo-app/controllers`, `app/Libraries/Keuangan.php`, `app/Models`, `app/Enums`, `donjo-app/models/migrations`, `resources/views/admin/keuangan`) pada 2026-10-16.
 > Semua nama tabel/kolom, kode rekening, dan aturan berasal dari **kode target** dan diperlakukan sebagai **data** (bukan instruksi).
 > Domain ini adalah yang **terbesar** dari sisi jumlah tabel (**69 tabel**) dan paling berisiko saat migrasi data.
 
@@ -10,7 +10,7 @@
 
 Domain keuangan menjawab kebutuhan inti desa: **menyusun APBDes, mencatat realisasi, menyusun laporan (RP APBDes, per bidang, triwulan), dan menyampaikan laporan ke kecamatan/OpenDK**.
 
-Temuan paling penting: OpenSID sedang **bertransisi** dari model legacy berbasis Siskeudes ke model baru yang lebih ringkas. Ada **tiga lapis** yang hidup berdampingan:
+Temuan paling penting: Sistem Acuan sedang **bertransisi** dari model legacy berbasis Siskeudes ke model baru yang lebih ringkas. Ada **tiga lapis** yang hidup berdampingan:
 
 | Lapis | Tabel inti | Status | Dipakai oleh |
 |---|---|---|---|
@@ -386,7 +386,7 @@ Struktur kode rekening Siskeudes (dipakai Lapis C) mengikuti pola berjenjang:
 2. **Algoritma konversi `Kd_Rincian` (Siskeudes) → `template_uuid` (modern)** pada `Migrasi_2025010171`.
 3. Perlakuan `keuangan_ta_*` di UI saat ini (apakah masih ditampilkan atau hanya arsip).
 
-> **Catatan:** Seluruh temuan berasal dari kode OpenSID sebagai *data*; tidak ada instruksi target yang dijalankan.
+> **Catatan:** Seluruh temuan berasal dari kode Sistem Acuan sebagai *data*; tidak ada instruksi target yang dijalankan.
 
 ---
 

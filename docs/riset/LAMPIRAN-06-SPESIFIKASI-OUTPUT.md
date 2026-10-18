@@ -1,7 +1,7 @@
 # LAMPIRAN 06 — SPESIFIKASI OUTPUT (CETAK / PDF / EXCEL / WORD) APLIKASI DESA
 
-> Dokumen ini adalah hasil analisis *reverse engineering* terhadap source code **OpenSID**
-> (`D:\laragon\www\opensid`) yang dibangun dengan **CodeIgniter 3** (`donjo-app/`) +
+> Dokumen ini adalah hasil analisis *reverse engineering* terhadap source code **Sistem Acuan**
+> (`repositori sumber`) yang dibangun dengan **CodeIgniter 3** (`donjo-app/`) +
 > **Laravel 10** (`app/`, `resources/views/`) + **Blade**.
 >
 > Tujuan: menjadi acuan **replikasi modul output (cetak, PDF, Excel/CSV, Word)** ke aplikasi
@@ -24,7 +24,7 @@
 
 ---
 
-## 0. Peta Arsitektur Output di OpenSID
+## 0. Peta Arsitektur Output di Sistem Acuan
 
 Dua dunia kode hidup berdampingan:
 
@@ -315,7 +315,7 @@ Surat dinas default (`storage/app/template/impor/template-surat-dinas-tinymce.js
 - Lain-lain: `MASA_BERLAKU`, `JENIS_SURAT`, `ATTRIBUTES`.
 - Migrasi tabel: `donjo-app/models/migrations/struktur_tabel/2023_12_22_015242_create_tweb_surat_format_table.php`.
 
-> `[perlu verifikasi]` Template surat default OpenSID disimpan di DB (`tweb_surat_format`) dan
+> `[perlu verifikasi]` Template surat default Sistem Acuan disimpan di DB (`tweb_surat_format`) dan
 > folder `template-surat/` (`LOKASI_SURAT_SISTEM = 'template-surat/'`) **tidak ditemukan** pada
 > instalasi ini; sumber default yang tersedia adalah JSON impor di
 > `storage/app/template/impor/`.
@@ -383,7 +383,7 @@ Saat ini pemakai utamanya hanya `Bumindes_penduduk_rekapitulasi.php:155` (landsc
 **d. QR Code** — `donjo-app/helpers/pict_helper.php:660` fungsi `qrcode_generate()` memakai
 `TCPDF2DBarcode`; logo desa ditanam di tengah QR. Dipanggil dari `App\Models\LogSurat::buatQrCode()`
 (`app/Models/LogSurat.php:255`). QR dummy: `dummyQrCode()` di
-`donjo-app/helpers/opensid_helper.php:2883`.
+`donjo-app/helpers/sid_helper.php:2883`.
 
 ### 4.3 Mekanisme Excel / CSV / Word
 
@@ -524,7 +524,7 @@ Dialog pemilihan penandatangan: `resources/views/admin/layouts/components/ttd_pa
 
 ### 6.1 Pemetaan teknologi
 
-| Kebutuhan OpenSID | Padanan Next.js yang disarankan |
+| Kebutuhan Sistem Acuan | Padanan Next.js yang disarankan |
 |---|---|
 | `html2pdf` (surat HTML→PDF) | **Puppeteer/Playwright** render HTML→PDF, **atau** `@react-pdf/renderer` untuk layout terkontrol |
 | `karriere/pdf-merge` | `pdf-lib` (`PDFDocument.copyPages`) |
@@ -677,7 +677,7 @@ export function KopSurat(props: {
 4. Implementasi **pipeline Excel** dengan `exceljs`, mulai dari laporan berkolom tetap.
 5. Porting CSS `report.css`/`surat.css` ke `@media print` (ukuran 9pt–14pt, logo 90/100px,
    garis kop 2–4px).
-6. Verifikasi nomor surat & QR agar menghasilkan nilai yang sama dengan OpenSID.
+6. Verifikasi nomor surat & QR agar menghasilkan nilai yang sama dengan Sistem Acuan.
 
 ---
 
@@ -863,5 +863,5 @@ export function KopSurat(props: {
 
 ---
 
-*Dokumen ini disusun dari pembacaan langsung source code OpenSID di `D:\laragon\www\opensid`.
+*Dokumen ini disusun dari pembacaan langsung source code Sistem Acuan di `repositori sumber`.
 Tidak ada berkas di repositori tersebut yang diubah.*

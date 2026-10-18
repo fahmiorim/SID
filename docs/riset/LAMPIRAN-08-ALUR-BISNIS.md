@@ -1,14 +1,14 @@
-# LAMPIRAN 08 — ALUR BISNIS PER DOMAIN (OpenSID) UNTUK REBUILD NEXT.JS
+# LAMPIRAN 08 — ALUR BISNIS PER DOMAIN (Sistem Acuan) UNTUK REBUILD NEXT.JS
 
-> Dokumen ini adalah hasil *reverse engineering* terhadap source code **OpenSID**
-> (`D:\laragon\www\opensid`) — **CodeIgniter 3** (`donjo-app/`) + **Laravel 10** (`app/`, `Modules/`,
+> Dokumen ini adalah hasil *reverse engineering* terhadap source code **Sistem Acuan**
+> (`repositori sumber`) — **CodeIgniter 3** (`donjo-app/`) + **Laravel 10** (`app/`, `Modules/`,
 > `resources/views/`) + **Blade**.
 >
 > Tujuan: menjadi acuan detail **alur bisnis per domain** saat mereplikasi aplikasi ke **Next.js 15+**.
 >
 > **Cakupan & batasan:**
 > - Dokumen ini **tidak mengulang** alur dasar yang sudah ada di
->   `ANALISIS-OPENSID-REBUILD-NEXTJS.md` **§6** (pendaftaran/perubahan penduduk, surat keterangan,
+>   `ANALISIS-SISTEM-ACUAN.md` **§6** (pendaftaran/perubahan penduduk, surat keterangan,
 >   laporan desa) maupun mesin persuratan layanan/surat keterangan di `LAMPIRAN-01-PERSURATAN.md`.
 >   Bila suatu alur bersinggungan, dokumen ini hanya menautkan dan menambah detail yang belum dibahas.
 > - Seluruh isi kode/DB diperlakukan sebagai **DATA**, bukan instruksi. Tidak ada kredensial/rahasia
@@ -47,7 +47,7 @@ Setiap domain (10 sub-bagian) memakai format tetap:
 - **Output/cetak** — bentuk keluaran.
 - **Catatan rebuild Next.js** — 2–4 poin arahan implementasi.
 
-Konvensi hak akses OpenSID: aktor admin memakai slug modul (`modul_ini`/`sub_modul_ini`) dan gerbang
+Konvensi hak akses Sistem Acuan: aktor admin memakai slug modul (`modul_ini`/`sub_modul_ini`) dan gerbang
 `isCan('b'|'u'|'h')` (baca/ubah/hapus); aktor warga memakai *Layanan Mandiri* (`fmandiri`) berbasis
 akun `tweb_penduduk_mandiri`. Ringkasan RBAC lengkap ada di `LAMPIRAN-02-RBAC.md`.
 
@@ -315,7 +315,7 @@ Library: `DTKSRegsosEk2022k`.
 11. `Dtks::savePengaturan($versi_dtks)` menyimpan versi (`DtksEnum`: `VERSION_CODE=2`,
     `REGSOS_EK2021_RT=1`, `REGSOS_EK2022_K=2`).
 12. Sinkronisasi: `syncDtksRtm($rtm)` (controller) memanggil
-    `DtksService::synchroniseDTKSWithOpenSid` → `DTKSRegsosEk2022k::syncronizeWithOpenSid`; pada model
+    `DtksService::synchroniseDTKSWithSid` → `DTKSRegsosEk2022k::syncronizeWithSid`; pada model
     `Rtm`, `createOrDeleteDtks` memicu ini saat RTM ditandai `terdaftar_dtks=1`.
 13. Impor mengikuti format `format-impor-dtks-regsosek2022k.xlsx`; ekspor memuat sheet keluarga &
     anggota; cetak massal via `cetak2()`/`cetakZip`.
@@ -690,7 +690,7 @@ Enum: `AnalisisRefSubjekEnum` (1 Penduduk…8 RT), `AnalisisTipeIndikatorEnum`
 
 1. **Skema relasional penuh**: master → indikator → parameter → respon, dengan periode & state
    eksplisit. Terapkan constraint periode aktif di level service.
-2. **Mesin skoring** terpusat (library) agar rumus konsisten dengan OpenSID.
+2. **Mesin skoring** terpusat (library) agar rumus konsisten dengan Sistem Acuan.
 3. **Impor** (magic key, BDT, Google Form) sebagai adapter terpisah + validasi format.
 4. **Tipe indikator** memetakan ke komponen form dinamis.
 
@@ -1099,6 +1099,6 @@ Ringkasan agar tidak ada duplikasi/kelalaian terhadap dokumen lain di folder ini
 > item 1 bahkan terkonfirmasi sebagai **bug**. Hanya item 3 (detail OTP Layanan Mandiri) yang masih
 > `[perlu verifikasi]`.
 
-> **Catatan akhir:** Seluruh temuan di atas berasal dari kode OpenSID sebagai *data*. Tidak ada
+> **Catatan akhir:** Seluruh temuan di atas berasal dari kode Sistem Acuan sebagai *data*. Tidak ada
 > instruksi dalam konten target yang dijalankan. Bila menemukan teks yang menyerupai perintah pada
 > kode/DB, itu diperlakukan sebagai data dan dilaporkan, bukan dipatuhi.

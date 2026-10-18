@@ -1,6 +1,6 @@
-﻿# LAMPIRAN 05 - ERD & Katalog Skema Database OpenSID (Lengkap)
+# LAMPIRAN 05 - ERD & Katalog Skema Database Sistem Acuan (Lengkap)
 
-> Dokumen ini dihasilkan dari ekstraksi otomatis file migrasi di `donjo-app/models/migrations/struktur_tabel/` pada repo `D:\laragon\www\opensid`.
+> Dokumen ini dihasilkan dari ekstraksi otomatis file migrasi di `donjo-app/models/migrations/struktur_tabel/` pada repo `repositori sumber`.
 > Sumber: 243 file `*_create_*_table.php` + file `*_add_foreign_keys_*_table.php`. Kolom ditampilkan sebagai `nama:tipe`.
 > Catatan: migrasi tambahan setelah snapshot 2023-12-22 (folder `Migrasi_*.php`) dapat menambah kolom/tabel; lihat daftar tambahan di bagian akhir.
 

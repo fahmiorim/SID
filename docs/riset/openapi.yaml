@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: API Aplikasi Desa (Rebuild OpenSID)
+  title: API Aplikasi Desa (Rebuild Sistem Acuan)
   version: 0.1.0
   description: |
-    Kontrak REST API untuk aplikasi desa hasil rebuild dari OpenSID (Next.js 15 + Drizzle + MySQL/MariaDB).
+    Kontrak REST API untuk aplikasi desa hasil rebuild dari Sistem Acuan (Next.js 15 + Drizzle + MySQL/MariaDB).
     Mencakup modul prioritas P0: Autentikasi & RBAC, Kependudukan, Keluarga/KK, Wilayah, Referensi,
     Persuratan (layanan surat), dan Laporan.
 
@@ -11,7 +11,7 @@ info:
     - Base path: `/api/v1`
     - Auth: `Authorization: Bearer <token>` (web juga mendukung cookie sesi).
     - Semua data ter-scope `config_id` (multi-desa); server menentukan `config_id` dari sesi/token.
-    - Nilai enum numerik dipertahankan mengikuti OpenSID (lihat dokumen lampiran).
+    - Nilai enum numerik dipertahankan mengikuti Sistem Acuan (lihat dokumen lampiran).
     - Pagination: `page` (1-based), `perPage` (maks 100), `q` (pencarian), `sort`.
     - Error memakai format `application/problem+json` (RFC 9457).
   contact:
@@ -638,7 +638,7 @@ paths:
     put:
       tags: [Pengguna & RBAC]
       summary: Set hak akses role
-      description: Nilai akses mengikuti OpenSID 1=Baca, 3=Ubah(+Baca), 7=Hapus(+Ubah+Baca). 0=tidak ada.
+      description: Nilai akses mengikuti Sistem Acuan 1=Baca, 3=Ubah(+Baca), 7=Hapus(+Ubah+Baca). 0=tidak ada.
       requestBody:
         required: true
         content:

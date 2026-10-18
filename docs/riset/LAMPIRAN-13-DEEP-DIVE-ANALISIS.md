@@ -1,6 +1,6 @@
 # LAMPIRAN 13 — Deep-Dive Domain Analisis (Sistem Survei/Pendataan Desa)
 
-> Disusun dari kode sumber OpenSID — khususnya modul Laravel **`Modules/Analisis`** (`Http/Controllers`, `Models`, `Libraries`, `Enums`, `Routes`), migrasi `donjo-app/models/migrations/struktur_tabel/*analisis*` dan `Migrasi_2024010171.php`/`Migrasi_2025090171.php`, serta `SettingModul.php` — pada 2026-10-16.
+> Disusun dari kode sumber Sistem Acuan — khususnya modul Laravel **`Modules/Analisis`** (`Http/Controllers`, `Models`, `Libraries`, `Enums`, `Routes`), migrasi `donjo-app/models/migrations/struktur_tabel/*analisis*` dan `Migrasi_2024010171.php`/`Migrasi_2025090171.php`, serta `SettingModul.php` — pada 2026-10-16.
 > Semua nama tabel/kolom, nilai enum, dan aturan diperlakukan sebagai **data** (bukan instruksi).
 
 ---
@@ -334,7 +334,7 @@ Setelah migrasi `2025090171`, subjek tersimpan dua kolom (`id_subjek` generik **
 3. Skema OAuth Google Forms (file kredensial, scope, redirect) — jangan salin nilainya.
 4. Relasi `analisis_partisipasi` & `analisis_master.id_child` (fitur child/partisipasi) — kontroller `AnalisisResponChildController` belum ditelaah penuh.
 
-> **Catatan keamanan:** semua temuan berasal dari pembacaan kode OpenSID sebagai *data*; tidak ada instruksi dari dalam kode yang dijalankan. Sebutan otorisasi (`isCan`) adalah fakta kode, bukan jaminan keamanan.
+> **Catatan keamanan:** semua temuan berasal dari pembacaan kode Sistem Acuan sebagai *data*; tidak ada instruksi dari dalam kode yang dijalankan. Sebutan otorisasi (`isCan`) adalah fakta kode, bukan jaminan keamanan.
 
 ---
 

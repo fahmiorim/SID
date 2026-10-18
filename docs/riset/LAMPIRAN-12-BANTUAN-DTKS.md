@@ -1,7 +1,7 @@
-# LAMPIRAN 12 — BANTUAN SOSIAL & DTKS (OpenSID) UNTUK REBUILD NEXT.JS
+# LAMPIRAN 12 — BANTUAN SOSIAL & DTKS (Sistem Acuan) UNTUK REBUILD NEXT.JS
 
-> Dokumen ini adalah hasil *reverse engineering* terhadap source code **OpenSID**
-> (`D:\laragon\www\opensid`) — **CodeIgniter 3** (`donjo-app/`) + **Laravel 10** (`app/`, `resources/views/`) + **Blade**, disusun pada 2026-10-16.
+> Dokumen ini adalah hasil *reverse engineering* terhadap source code **Sistem Acuan**
+> (`repositori sumber`) — **CodeIgniter 3** (`donjo-app/`) + **Laravel 10** (`app/`, `resources/views/`) + **Blade**, disusun pada 2026-10-16.
 >
 > Tujuan: menjadi acuan detail **domain Bantuan Sosial & DTKS** saat mereplikasi aplikasi ke **Next.js 15+**.
 >
@@ -44,7 +44,7 @@ Setiap sub-bagian domain (`§1`–`§9`) memakai format tetap berikut:
 - **Output/cetak** — bentuk keluaran.
 - **Catatan rebuild Next.js** — 2–4 poin arahan implementasi.
 
-Konvensi hak akses OpenSID: aktor admin memakai slug modul (`modul_ini`/`sub_modul_ini`/`akses_modul`) dan gerbang
+Konvensi hak akses Sistem Acuan: aktor admin memakai slug modul (`modul_ini`/`sub_modul_ini`/`akses_modul`) dan gerbang
 `isCan('b'|'u'|'h')` (baca/ubah/hapus) di `donjo-app/helpers/general_helper.php:111`. Ringkasan RBAC lengkap ada di
 `LAMPIRAN-02-RBAC.md`. Kolom-kolom tabel diambil dari
 `donjo-app/models/migrations/struktur_tabel/*_create_<tabel>_table.php` (pola `$table->TYPE('kolom'`) dan perubahan
@@ -136,7 +136,7 @@ Unique: `program_peserta_program_id_kartu_id_pend_unique_config` pada `(config_i
 - **`kk_level`** (array JSON id `tweb_penduduk_hubungan`) hanya relevan saat `sasaran = 2` (Keluarga); selain itu `null`.
   Nilai default di `get_pilihan_kk()` = `['1','2','3','4']` (`Program_bantuan.php:439-460`).
 - **Inkonsistensi representasi `asaldana`** `[perlu verifikasi]`: UI select mem-posting **label teks** (mis.
-  `"Pusat"` hasil `unserialize(ASALDANA)`, `opensid_helper.php:118`), sedangkan jalur impor menyimpan **nilai numerik**
+  `"Pusat"` hasil `unserialize(ASALDANA)`, `sid_helper.php:118`), sedangkan jalur impor menyimpan **nilai numerik**
   via `AsalDanaEnum::valueOf()`. Perlu normalisasi saat migrasi data.
 - Enum sasaran: `SasaranEnum` — `PENDUDUK=1, KELUARGA=2, RUMAH_TANGGA=3, KELOMPOK=4`
   (`app/Enums/SasaranEnum.php:44-47`).
@@ -155,7 +155,7 @@ Unique: `program_peserta_program_id_kartu_id_pend_unique_config` pada `(config_i
 2. Simpan `sasaran` sebagai **integer enum** (bukan teks) dan `kk_level` sebagai array id (JSONB/`int[]`), bukan
    string JSON.
 3. Terapkan filter `config_id = tenant OR config_id IS NULL` sebagai *global scope* tenant, dengan flag `sumber`
-   eksplisit (`OpenSID` | `OpenKab`) alih-alih mengandalkan `config_id IS NULL`.
+   eksplisit (`Sistem Acuan` | `OpenKab`) alih-alih mengandalkan `config_id IS NULL`.
 4. Normalisasi `asaldana` ke enum numerik tunggal saat impor data lama `[perlu verifikasi]`.
 
 ---
@@ -349,7 +349,7 @@ kelompok rentan, penerima program khusus — dengan **form isian dinamis** dan i
 | `sasaran` | tinyInteger nullable | 1/2 saja |
 | `keterangan` | string(300) nullable | |
 | `status` | tinyInteger default 1 | `1 = Aktif, 0 = Nonaktif` (ditambah 2024-11) |
-| `sumber` | enum(`OpenSID`,`OpenKab`) default `OpenSID` | ditambah 2024-11 |
+| `sumber` | enum(`Sistem Acuan`,`OpenKab`) default `Sistem Acuan` | ditambah 2024-11 |
 | `form_isian` | longText nullable | definisi form dinamis (JSON/teks) |
 
 Unique: `slug_config` pada `(config_id, slug)`.
@@ -404,7 +404,7 @@ Unique: `slug_config` pada `(config_id, slug)`.
 
 ### Ringkasan
 
-**DTKS** (Data Terpadu Kesejahteraan Sosial) menjembatani data RTM/keluarga OpenSID dengan formulir
+**DTKS** (Data Terpadu Kesejahteraan Sosial) menjembatani data RTM/keluarga Sistem Acuan dengan formulir
 **Regsosek2022.K**. Berisi kuisioner keluarga (`dtks`) + anggota (`dtks_anggota`), lampiran foto, dan pengaturan
 pemetaan program bantuan.
 
@@ -426,7 +426,7 @@ pemetaan program bantuan.
 1. **Daftar RTM siap-DTKS** — `index()` (`:70`): menampilkan `tweb_rtm.terdaftar_dtks = 1` yang **belum** ada di
    `dtks`, memanggil `syncDtksRtm()` (`:463`).
 2. **Buat/lanjut DTKS** — `new($id_rtm)` (`:296`): cari `dtks` dengan `(id_rtm, versi_kuisioner=VERSION_CODE=2)`;
-   bila belum ada → buat (`is_draft=1`) lalu `DtksService::synchroniseDTKSWithOpenSid()` dalam transaksi.
+   bila belum ada → buat (`is_draft=1`) lalu `DtksService::synchroniseDTKSWithSid()` dalam transaksi.
    `latest($id_rtm)` (`:331`) membuka yang sudah ada.
 3. **Form** — `form($id)` (`:344`) → `DTKSRegsosEk2022k::form()` (`:289`). Mengisi kode wilayah 101–104 dari
    `identitas()->kode_desa_bps`.
@@ -478,13 +478,13 @@ target_field(text), created_at, updated_at`. Unique `(config_id, versi_kuisioner
 
 - **Versi DTKS**: `DtksEnum::VERSION_CODE=2`, `REGSOS_EK2021_RT=1`, `REGSOS_EK2022_K=2`
   (`app/Enums/Dtks/DtksEnum.php:43-49`). **Hanya versi 2 punya implementasi service** (2021 belum diimplementasikan).
-- `DtksService` mengarahkan berdasarkan `versi_kuisioner` ke `DTKSRegsosEk2022k::syncronizeWithOpenSid()`.
+- `DtksService` mengarahkan berdasarkan `versi_kuisioner` ke `DTKSRegsosEk2022k::syncronizeWithSid()`.
 - **Whitelist simpan** (`DTKSRegsosEk2022k::save()`, `:486-524`): `tipe_save` ∈
   `bagian1, bagian2, bagian3, bagian5, bagian6, bagian7_upload, bagian4_demografi, bagian4_pendidikan,
   bagian4_ketenagakerjaan, bagian4_kepemilikan_usaha, bagian4_kesehatan, bagian4_program_perlindungan_sosial,
   pengaturan_program` → metode `Str::camel('save_'.$tipe)`. Tipe lain → HTTP 406.
   `remove()` hanya menerima `lampiran` (`:531-546`).
-- **Sinkronisasi** `syncronizeWithOpenSid()` (`:398`) mengisi kode wilayah 101–106 dari `alamat_wilayah`;
+- **Sinkronisasi** `syncronizeWithSid()` (`:398`) mengisi kode wilayah 101–106 dari `alamat_wilayah`;
   `generateDefaultDtks()` (`:143`) melepas anggota non-HIDUP, membuat `dtks_anggota` baru, dan
   `syncKepesertaanProgramKeluarga()` (`:781`) memetakan program ke `id_bantuan`.
 - **Regsosek2022kEnum::getUsedFields()** membatasi kolom yang dibaca (< ~130 `dtks`, ~50 `dtks_anggota`);
@@ -569,7 +569,7 @@ Impor DTKS saat ini **hanya menyediakan unduhan template** (belum ada aksi impor
 1. Satukan impor dalam satu **mesin impor generik** (mapping kolom deklaratif per entitas: program, peserta,
    suplemen, terdata) dengan mode `create|update|replace`.
 2. Validasi baris per baris + laporan galat (baris→pesan) yang dapat diunduh; jangan gagal seluruh batch.
-3. Untuk DTKS: implementasikan impor **dari nol** (fitur belum ada di OpenSID) atau minimal pertahankan unduh
+3. Untuk DTKS: implementasikan impor **dari nol** (fitur belum ada di Sistem Acuan) atau minimal pertahankan unduh
    template; tandai sebagai fitur baru, bukan port `[perlu verifikasi]`.
 
 ---
@@ -696,7 +696,7 @@ Sumber data = tabel di §1–§5. Lokasi berkas: `LOKASI_DOKUMEN` (kartu, `desa/
 1. Pisahkan **generator dokumen** dari controller (queue untuk ekspor besar); hasilkan `.xlsx`/`.pdf`/`.zip`
    secara asinkron dengan status unduh (pola `status_file` pada `cetakZip`).
 2. Gunakan pustaka Excel/PDF di server (mis. `exceljs`, `puppeteer`/`pdf-lib`) dan streaming respons.
-3. Simpan berkas sementara di storage tenant-scoped; bersihkan berkala (OpenSID menyimpan PDF di folder upload).
+3. Simpan berkas sementara di storage tenant-scoped; bersihkan berkala (Sistem Acuan menyimpan PDF di folder upload).
 
 ---
 
@@ -743,8 +743,8 @@ agar interoperabel dengan template lama.
    hindari 138 kolom datar bila memungkinkan, tetapi sediakan *view* datar untuk ekspor.
 2. **Semua operasi tulis dalam transaksi** (khusus `Dtks::new` / sinkronisasi) — pertahankan perilaku
    `DB::beginTransaction()`.
-3. **Idempotensi & auditori**: catat `userid`/`updated_by` (OpenSID memakai *userstamps*).
-4. **Uji paralel**: bandingkan hasil ekspor/impor Next.js dengan OpenSID pada dataset uji yang sama untuk
+3. **Idempotensi & auditori**: catat `userid`/`updated_by` (Sistem Acuan memakai *userstamps*).
+4. **Uji paralel**: bandingkan hasil ekspor/impor Next.js dengan Sistem Acuan pada dataset uji yang sama untuk
    memverifikasi peta kolom (terutama `501a`+ dan `401`–`431f`).
 
 ---

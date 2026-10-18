@@ -1,6 +1,6 @@
-# LAMPIRAN-02 — RBAC & Hak Akses OpenSID
+# LAMPIRAN-02 — RBAC & Hak Akses Sistem Acuan
 
-> Dokumen ini mendeskripsikan **model otorisasi, peran, katalog modul, wilayah scoping, autentikasi, dan enforcement** pada aplikasi OpenSID (basis kode di `D:\laragon\www\opensid`), lalu merancang **RBAC usulan** untuk aplikasi Next.js + better-auth.
+> Dokumen ini mendeskripsikan **model otorisasi, peran, katalog modul, wilayah scoping, autentikasi, dan enforcement** pada aplikasi Sistem Acuan (basis kode di `repositori sumber`), lalu merancang **RBAC usulan** untuk aplikasi Next.js + better-auth.
 >
 > Catatan metodologi: Seluruh isi bersumber langsung dari kode (`donjo-app/`, `app/`, `config/`, `Modules/`). Dua file core dijaga ter-obfuscate (`base64 → zlib → eval` bertingkat) dan telah didekode secara aman **tanpa mengeksekusi kode target** (PowerShell/.NET `DeflateStream`). Klaim yang belum 100% pasti ditandai `[perlu verifikasi]`.
 
@@ -23,7 +23,7 @@
 
 ### 1.1 Ringkasan arsitektur
 
-OpenSID memakai model **RBAC klasik** yang disimpan di tabel relasi `grup_akses` dan ditegakkan lewat **Laravel Gate** di atas aplikasi CodeIgniter 3 (hybrid: CI3 untuk legacy, Laravel untuk bagian modern).
+Sistem Acuan memakai model **RBAC klasik** yang disimpan di tabel relasi `grup_akses` dan ditegakkan lewat **Laravel Gate** di atas aplikasi CodeIgniter 3 (hybrid: CI3 untuk legacy, Laravel untuk bagian modern).
 
 ```
 user ──id_grup──> user_grup (role)
@@ -491,7 +491,7 @@ public function scopeSuperAdmin(mixed $query)
 }
 ```
 
-- Helper: `donjo-app/helpers/opensid_helper.php`:
+- Helper: `donjo-app/helpers/sid_helper.php`:
 
 ```php
 function super_admin()          { return User::superAdmin()->id; }          // baris 1771
@@ -657,7 +657,7 @@ function ci_auth($params = null)
 ### 6.3 Sandi admin
 
 - Penyimpanan: **bcrypt** (`Hash::make`) — seeder admin memakai `Hash::make('sid304')`.
-- Dukungan legacy **MD5**: `AuthServiceProvider::registerMd5Hasher()` (baris 146–208) mendaftarkan hasher `md5` yang meniru algoritma lama OpenSID: input **wajib angka 6 digit**, `strrev`, `*77`, tambah `!#@$#%`, lalu `md5()`.
+- Dukungan legacy **MD5**: `AuthServiceProvider::registerMd5Hasher()` (baris 146–208) mendaftarkan hasher `md5` yang meniru algoritma lama Sistem Acuan: input **wajib angka 6 digit**, `strrev`, `*77`, tambah `!#@$#%`, lalu `md5()`.
 - **Syarat sandi admin** (`User::syaratSandi()`, dipakai `AuthenticatedSessionController`): minimal 8–20 karakter, wajib angka, huruf besar, huruf kecil, simbol, tanpa spasi — regex:
 
 ```
@@ -685,7 +685,7 @@ function ci_auth($params = null)
 
 Ada **dua mekanisme berbeda**:
 
-**(a) OTP login (email/telegram)** — modul OTP OpenSID:
+**(a) OTP login (email/telegram)** — modul OTP Sistem Acuan:
 
 - Layanan: `app/Services/OtpService.php`.
 - Model token: `App\Models\OtpToken` (tabel `otp_token`), kolom antara lain `user_id`, `token_hash`, `channel`, `identifier`, `purpose`, `expires_at`, `attempts`.
@@ -718,7 +718,7 @@ Ada **dua mekanisme berbeda**:
   - `nik` 16 digit (regex `/^\d{16}$/`) **atau** `tag_id_card` 10 digit (regex `/^\d{10}$/`) + `password` (PIN).
   - Mode e-KTP tanpa password (`authenticateEktp`, baris 180–210) — login via tap e-KTP.
   - Provider `App\Services\Auth\PendudukMandiriProvider` memverifikasi PIN (MD5 legacy vs bcrypt) dan replay-hash bila perlu (`Hash::needsRehash` → `forceFill(['pin' => Hash::make(...)])`).
-  - Sesi dapat dipulihkan via `mac_address` + `token_layanan` yang cocok `setting('layanan_opendesa_token')`.
+  - Sesi dapat dipulihkan via `mac_address` + `token_layanan` yang cocok `setting('layanan_desa_token')`.
   - Fitur layanan mandiri bisa dimatikan: `setting('layanan_mandiri') == 0` → `show_404()`.
 
 ---
@@ -749,9 +749,9 @@ Request
 | Helper `can()` | `donjo-app/helpers/general_helper.php` | L88–100 |
 | Helper `isCan()` | `donjo-app/helpers/general_helper.php` | L111–126 |
 | `ci_auth()` | `donjo-app/helpers/general_helper.php` | L474–483 |
-| `super_admin()` | `donjo-app/helpers/opensid_helper.php` | L1771–1774 |
-| `is_super_admin()` | `donjo-app/helpers/opensid_helper.php` | L1781–1785 |
-| `is_group_administrator()` | `donjo-app/helpers/opensid_helper.php` | L1791–1795 |
+| `super_admin()` | `donjo-app/helpers/sid_helper.php` | L1771–1774 |
+| `is_super_admin()` | `donjo-app/helpers/sid_helper.php` | L1781–1785 |
+| `is_group_administrator()` | `donjo-app/helpers/sid_helper.php` | L1791–1795 |
 | Scope super admin | `app/Models/User.php` | `scopeSuperAdmin()` L256–259 |
 | Scope wilayah | `app/Scopes/AccessWilayahScope.php` | `apply()` L51–65 |
 | Base controller admin | `donjo-app/core/Admin_Controller.php` | `__construct()` (auth gate, L74–79); file ter-obfuscate, dekode OK |
@@ -856,13 +856,13 @@ Hasil: `Admin_Controller` → class + `cek_identitas_desa()`; `AdminModulControl
 
 ## 8. Desain RBAC Usulan (Next.js + better-auth)
 
-> Tujuan: mereplikasi semantik OpenSID (role → modul → aksi 1/3/7, warisan parent, super admin, wilayah scoping, OTP/2FA) di stack **Next.js + better-auth + Prisma/PostgreSQL**, dengan model yang lebih eksplisit dan tidak menyimpan permission di kolom user.
+> Tujuan: mereplikasi semantik Sistem Acuan (role → modul → aksi 1/3/7, warisan parent, super admin, wilayah scoping, OTP/2FA) di stack **Next.js + better-auth + Prisma/PostgreSQL**, dengan model yang lebih eksplisit dan tidak menyimpan permission di kolom user.
 
 ### 8.1 Prinsip desain
 
 1. **Pisahkan** role, permission, dan assignment (RBAC murni, grant-based).
-2. **Permission granular** = `resource:action`, bukan angka ajaib. Angka 1/3/7 OpenSID dipetakan menjadi aksi `read`/`update`/`delete`.
-3. **Warisan parent→child** dihitung sebagai **derived/cached view** pada saat baca (bukan disimpan), agar konsisten dengan OpenSID; atau disimpan sebagai `effective_permission` yang di-recompute saat grant berubah.
+2. **Permission granular** = `resource:action`, bukan angka ajaib. Angka 1/3/7 Sistem Acuan dipetakan menjadi aksi `read`/`update`/`delete`.
+3. **Warisan parent→child** dihitung sebagai **derived/cached view** pada saat baca (bukan disimpan), agar konsisten dengan Sistem Acuan; atau disimpan sebagai `effective_permission` yang di-recompute saat grant berubah.
 4. **Scoping** (wilayah) dipisah dari RBAC → model `scope`/`data_scope` (ABAC/row-level).
 5. **Super admin** = flag role khusus (`is_superadmin`) dengan bypass wildcard.
 6. **2FA/OTP** ditangani di layer auth (better-auth plugin), bukan RBAC.
@@ -975,9 +975,9 @@ model UserDataScope {                   // pengganti batasi_wilayah + akses_wila
 // kolom batasi_wilayah → Boolean derived: user.dataScopes.length > 0
 ```
 
-### 8.3 Pemetaan OpenSID → usulan
+### 8.3 Pemetaan Sistem Acuan → usulan
 
-| OpenSID | Usulan Next.js | Catatan |
+| Sistem Acuan | Usulan Next.js | Catatan |
 |---|---|---|
 | `user_grup` | `Role` | tambah `isSuperadmin`, `isProtected` |
 | `user.id_grup` (tunggal) | `UserRole` (many-to-many) | lebih fleksibel; bisa 1 role untuk kompatibilitas |
@@ -999,7 +999,7 @@ model UserDataScope {                   // pengganti batasi_wilayah + akses_wila
 // lib/authz.ts
 export type Action = "read" | "update" | "delete";
 
-// Konversi akses OpenSID 0/1/3/7 → set aksi (untuk migrasi data)
+// Konversi akses Sistem Acuan 0/1/3/7 → set aksi (untuk migrasi data)
 export function aksesToActions(akses: number): Action[] {
   const a: Action[] = [];
   if (akses >= 1) a.push("read");
@@ -1047,7 +1047,7 @@ export function withInheritance(rows: { slug: string; parentSlug: string | null;
   return rows.map(r => {
     const children = byParent.get(r.slug) ?? [];
     const hasActiveChild = children.some(c => c.akses > 0);
-    return { ...r, akses: hasActiveChild ? 7 : r.akses }; // sama persis dengan OpenSID
+    return { ...r, akses: hasActiveChild ? 7 : r.akses }; // sama persis dengan Sistem Acuan
   });
 }
 ```
@@ -1066,7 +1066,7 @@ export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   emailAndPassword: {
     enabled: true,
-    // Ganti syarat sandi OpenSID dengan policy setara:
+    // Ganti syarat sandi Sistem Acuan dengan policy setara:
     minPasswordLength: 8, maxPasswordLength: 20,
     // requireNumber/symbol/uppercase/lowercase di-pasang di z-validator form
   },
@@ -1075,7 +1075,7 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,      // perpanjang tiap 1 hari
   },
   plugins: [
-    twoFactor({ issuer: "OpenDesa" }),     // ≈ two_factor_enabled (Spatie)
+    twoFactor({ issuer: "Sistem Acuan" }),     // ≈ two_factor_enabled (Spatie)
     emailOTP({
       async sendVerificationOTP({ email, otp, type }) { /* kirim email */ },
       otpLength: 6,
@@ -1093,7 +1093,7 @@ export const auth = betterAuth({
 });
 ```
 
-### 8.6 Rekomendasi migrasi data dari OpenSID
+### 8.6 Rekomendasi migrasi data dari Sistem Acuan
 
 1. **Role**: `user_grup` → `Role` (+ `isProtected = (jenis === 1)`, `isSuperadmin = (slug === 'administrator')`).
 2. **Resource**: `setting_modul` → `Resource` (pertahankan `slug`, `parent`→`parentId`, `hidden`, `urut`→`order`).
@@ -1101,7 +1101,7 @@ export const auth = betterAuth({
 4. **RolePermission**: `grup_akses.akses` → `aksesToActions()` (0→∅, 1→[read], 3→[read,update], 7→[read,update,delete]).
 5. **UserRole**: `user.id_grup` → satu `UserRole`.
 6. **UserDataScope**: `user.akses_wilayah` (JSON array) → baris `UserDataScope` bila `batasi_wilayah = 1`.
-7. **Verifikasi warisan**: hitung ulang `effectivePermissions` (parent paksa 7 bila ada anak ber-akses>0) dan bandingkan dengan OpenSID agar perilaku identik.
+7. **Verifikasi warisan**: hitung ulang `effectivePermissions` (parent paksa 7 bila ada anak ber-akses>0) dan bandingkan dengan Sistem Acuan agar perilaku identik.
 
 ### 8.7 Matriks pemetaan aksi (ringkas)
 
@@ -1126,7 +1126,7 @@ export const auth = betterAuth({
 | Model user | `app/Models/User.php` |
 | Model mandiri | `app/Models/PendudukMandiri.php` |
 | Scope wilayah | `app/Scopes/AccessWilayahScope.php` |
-| Helper akses | `donjo-app/helpers/general_helper.php`, `donjo-app/helpers/opensid_helper.php` |
+| Helper akses | `donjo-app/helpers/general_helper.php`, `donjo-app/helpers/sid_helper.php` |
 | Base controller | `donjo-app/core/Admin_Controller.php`, `donjo-app/core/AdminModulController.php` |
 | Trait modul | `app/Traits/ModulTrait.php` |
 | Login admin/OTP/2FA | `donjo-app/controllers/auth/AuthenticatedSessionController.php`, `TwoFactorAuthController.php` |
