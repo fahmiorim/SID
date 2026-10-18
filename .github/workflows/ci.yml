@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+# Batalkan run lama pada ref yang sama agar tidak menumpuk.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+
+    env:
+      # HUSKY=0: lewati pemasangan git hook saat `npm ci` di CI.
+      HUSKY: "0"
+      # Nilai dummy: aplikasi tidak menyentuh database saat build karena semua
+      # rute bersifat dinamis. Variabel ini hanya agar validasi env lolos.
+      DATABASE_URL: mysql://root:@127.0.0.1:3306/desa_ci
+      BETTER_AUTH_SECRET: rahasia-ci-minimal-32-karakter-aman
+      APP_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_NAME: Sistem Informasi Desa
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Pasang dependensi
+        run: npm ci
+
+      - name: Typecheck, lint, format, test
+        run: npm run check
+
+      - name: Build produksi
+        run: npm run build
