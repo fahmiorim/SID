@@ -67,8 +67,8 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 ## 3. Konvensi Lapisan Data
 
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
-  domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`) dan digabung di
-  `index.ts`.
+  domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
+  `resident.ts`) dan digabung di `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -99,11 +99,19 @@ dipertahankan apa adanya.
 | Desa      | `villages`                                       | numerik |
 | RBAC      | `roles`, `modules`, `role_permissions`           | numerik |
 | Wilayah   | `regions`                                        | numerik |
+| Penduduk  | `residents`                                      | numerik |
+| Referensi | `religions`, `educations`, `occupations`, `marital_statuses`, `family_relations`, `blood_types`, `citizenships` | numerik |
 
 Tabel identitas memakai **plural khas better-auth** dengan id string yang
 dikelola better-auth. Tabel lain dirancang mandiri: `roles` (dulu `user_grup`),
 `modules` (dulu `setting_modul`), `role_permissions` (dulu `grup_akses`), dan
 `villages` (dulu `config`). Kunci antar-tabel memakai `village_id` (tenant).
+
+Tabel **referensi** bersifat global (tanpa `village_id`) karena isinya baku
+secara nasional; `id`-nya diisi eksplisit dan stabil agar cocok dengan kode
+resmi (mis. `religions.id = 1` → ISLAM). Semuanya diisi seeder (`npm run db:seed`)
+secara idempoten. `residents.national_id` unik **per desa** — beberapa baris
+boleh ber-NIK kosong karena indeks unik MySQL mengizinkan banyak `NULL`.
 
 ---
 
@@ -209,6 +217,11 @@ Contoh: modul "Bantuan Sosial" dengan slug `bantuan`.
    (`resource={RESOURCES.bantuan}`).
 8. **Seeder:** tambahkan modul ke `modules.ts`; jalankan `npm run db:seed`.
 9. **Verifikasi:** `npm run check` lalu `npm run build`.
+
+Catatan: bila modul membutuhkan **data acuan** (enum/katalog), buat tabelnya di
+`src/db/schema/reference.ts` (global, tanpa `village_id`, `id` eksplisit), isi
+datanya di `src/db/seed/data/`, lalu daftarkan penyisipan idempotennya di
+`src/db/seed/index.ts` — pola yang dipakai modul Penduduk.
 
 ---
 

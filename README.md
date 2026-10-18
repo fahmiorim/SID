@@ -2,8 +2,8 @@
 
 Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
-autentikasi, RBAC, kerangka admin, lapisan data, dan satu irisan vertikal lengkap
-(Wilayah Administratif).
+autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
+untuk **Wilayah Administratif** dan **Kependudukan**.
 
 > Status: **fondasi** — modul fitur dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -41,7 +41,7 @@ Copy-Item .env.example .env      # bash: cp .env.example .env
 # 3. Siapkan database
 npm run db:create                # CREATE DATABASE IF NOT EXISTS
 npm run db:migrate               # jalankan migrasi Drizzle
-npm run db:seed                  # identitas desa, role, modul, admin
+npm run db:seed                  # identitas desa, role, modul, referensi, admin
 
 # 4. Jalankan
 npm run dev                      # http://localhost:3000
@@ -95,9 +95,9 @@ src/
 ├─ db/
 │  ├─ schema/                # definisi tabel (Drizzle)
 │  ├─ migrations/            # migrasi SQL
-│  └─ seed/                  # data awal + katalog modul & role
+│  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
-│  ├─ auth/  desa/  navigation/  rbac/  wilayah/
+│  ├─ auth/  desa/  navigation/  penduduk/  rbac/  wilayah/
 └─ lib/                      # env, logger, errors, action-state, dal, auth
 ```
 
@@ -152,5 +152,7 @@ npm run test:watch  # mode pantau
 
 1. **Fondasi** ✅ — auth, RBAC, kerangka admin, lapisan data, irisan Wilayah.
 2. **Fondasi mutu** ✅ — pengujian unit (Vitest) + CI + Dependabot.
-3. Modul berikutnya: Kependudukan → Keluarga → Persuratan → Keuangan.
-4. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
+3. **Kependudukan** ✅ — data penduduk (identitas, sosial, domisili) + katalog
+   referensi (agama, pendidikan, pekerjaan, dst.).
+4. Modul berikutnya: Keluarga → Persuratan → Keuangan.
+5. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.

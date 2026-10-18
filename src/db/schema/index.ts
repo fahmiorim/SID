@@ -9,5 +9,7 @@
 
 export * from "./auth";
 export * from "./rbac";
+export * from "./reference";
 export * from "./region";
+export * from "./resident";
 export * from "./village";

@@ -1,11 +1,33 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 import { db, pool } from "@/db";
-import { modules, rolePermissions, roles, users, villages } from "@/db/schema";
+import {
+  bloodTypes,
+  citizenships,
+  educations,
+  familyRelations,
+  maritalStatuses,
+  modules,
+  occupations,
+  religions,
+  rolePermissions,
+  roles,
+  users,
+  villages,
+} from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 
 import { MODULE_SEEDS } from "./data/modules";
+import {
+  BLOOD_TYPE_SEEDS,
+  CITIZENSHIP_SEEDS,
+  EDUCATION_SEEDS,
+  FAMILY_RELATION_SEEDS,
+  MARITAL_STATUS_SEEDS,
+  OCCUPATION_SEEDS,
+  RELIGION_SEEDS,
+} from "./data/references";
 import { ROLE_SEEDS, type RoleSeed } from "./data/roles";
 
 /**
@@ -51,6 +73,44 @@ async function ensureVillage(): Promise<number> {
   );
 
   return inserted.id;
+}
+
+/**
+ * Isi katalog referensi kependudukan.
+ *
+ * Katalog bersifat statis dan bertumpu pada `id` baku, jadi cukup di-upsert:
+ * baris baru disisipkan, baris lama namanya disegarkan dari nilai yang dikirim
+ * (`values(name)`). Idempoten.
+ */
+async function seedReferenceCatalogs(): Promise<void> {
+  await db
+    .insert(religions)
+    .values([...RELIGION_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(educations)
+    .values([...EDUCATION_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(occupations)
+    .values([...OCCUPATION_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(maritalStatuses)
+    .values([...MARITAL_STATUS_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(familyRelations)
+    .values([...FAMILY_RELATION_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(bloodTypes)
+    .values([...BLOOD_TYPE_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
+  await db
+    .insert(citizenships)
+    .values([...CITIZENSHIP_SEEDS])
+    .onDuplicateKeyUpdate({ set: { name: sql`values(name)` } });
 }
 
 async function upsertRole(villageId: number, seed: RoleSeed): Promise<number> {
@@ -177,6 +237,9 @@ async function ensureAdminUser(villageId: number, roleId: number): Promise<strin
 }
 
 async function main(): Promise<void> {
+  await seedReferenceCatalogs();
+  console.log("• katalog referensi kependudukan disiapkan");
+
   const villageId = await ensureVillage();
   console.log(`• village id = ${villageId}`);
 
