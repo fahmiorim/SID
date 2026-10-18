@@ -1,9 +1,38 @@
 import "server-only";
 
-import { asc } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { villages } from "@/db/schema";
+import type { DesaFormInput } from "@/features/desa/domain/desa";
+
+/** Perbarui identitas desa berdasarkan id. */
+export async function updateIdentitasDesa(id: number, input: DesaFormInput): Promise<void> {
+  await db
+    .update(villages)
+    .set({
+      name: blankToNull(input.namaDesa),
+      code: blankToNull(input.kodeDesa),
+      postalCode: blankToNull(input.kodePos),
+      district: blankToNull(input.namaKecamatan),
+      districtCode: blankToNull(input.kodeKecamatan),
+      regency: blankToNull(input.namaKabupaten),
+      regencyCode: blankToNull(input.kodeKabupaten),
+      province: blankToNull(input.namaPropinsi),
+      provinceCode: blankToNull(input.kodePropinsi),
+      officeAddress: blankToNull(input.alamatKantor),
+      email: blankToNull(input.emailDesa),
+      phone: blankToNull(input.telepon),
+      website: blankToNull(input.website),
+      logo: blankToNull(input.logo),
+    })
+    .where(eq(villages.id, id));
+}
+
+/** Ubah teks kosong menjadi `NULL`. */
+function blankToNull(value: string): string | null {
+  return value === "" ? null : value;
+}
 
 /**
  * Identitas desa. Nama field mengikuti kosakata domain aplikasi (Indonesia);
