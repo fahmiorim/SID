@@ -28,7 +28,6 @@ import {
   GENDERS,
   LIFE_STATUS_LABELS,
   LIFE_STATUSES,
-  NO_SELECTION,
   RESIDENCE_STATUS_LABELS,
   RESIDENCE_STATUSES,
   type PendudukDTO,
@@ -37,6 +36,7 @@ import {
   type RegionOption,
 } from "@/features/penduduk/domain/penduduk";
 import { idleActionState } from "@/lib/action-state";
+import { NO_SELECTION } from "@/lib/forms";
 
 import { savePendudukAction } from "../actions";
 
@@ -63,7 +63,7 @@ function catalogOptions(options: readonly ReferenceOption[]): SelectOption[] {
   return options.map((option) => ({ value: String(option.id), label: option.name }));
 }
 
-function regionOptions(options: readonly RegionOption[]): SelectOption[] {
+function labelOptions(options: readonly RegionOption[]): SelectOption[] {
   return options.map((option) => ({ value: String(option.id), label: option.label }));
 }
 
@@ -179,19 +179,13 @@ export function PendudukFormDialog({
                   <FieldError messages={fieldErrors?.nationalId} />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="familyCardNumber">No. Kartu Keluarga</Label>
-                  <Input
-                    id="familyCardNumber"
-                    name="familyCardNumber"
-                    defaultValue={penduduk?.familyCardNumber ?? ""}
-                    placeholder="16 angka"
-                    inputMode="numeric"
-                    maxLength={16}
-                    aria-invalid={Boolean(fieldErrors?.familyCardNumber)}
-                  />
-                  <FieldError messages={fieldErrors?.familyCardNumber} />
-                </div>
+                <ReferenceSelect
+                  label="Kartu Keluarga"
+                  name="familyId"
+                  options={labelOptions(reference.families)}
+                  value={idValue(penduduk?.familyId)}
+                  noneLabel="— Belum ditautkan —"
+                />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
@@ -320,7 +314,7 @@ export function PendudukFormDialog({
                 <ReferenceSelect
                   label="Wilayah"
                   name="regionId"
-                  options={regionOptions(reference.regions)}
+                  options={labelOptions(reference.regions)}
                   value={idValue(penduduk?.regionId)}
                   noneLabel="—"
                 />

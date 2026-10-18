@@ -11,6 +11,7 @@ import {
 
 import { GENDERS, LIFE_STATUSES, RESIDENCE_STATUSES } from "@/features/penduduk/domain/penduduk";
 
+import { families } from "./family";
 import {
   bloodTypes,
   citizenships,
@@ -29,6 +30,9 @@ import { villages } from "./village";
  * Kolom bertipe teks bebas dibuat *nullable* karena data sering belum lengkap
  * (mis. NIK belum tercatat). NIK unik **per desa** (nama bisa sama); beberapa
  * baris boleh ber-NIK kosong karena indeks unik MySQL mengizinkan banyak NULL.
+ *
+ * Keanggotaan Kartu Keluarga dinyatakan lewat `family_id`. Domisili di sini
+ * adalah domisili terkini penduduk dan boleh berbeda dari domisili pada KK.
  */
 export const residents = mysqlTable(
   "residents",
@@ -40,14 +44,14 @@ export const residents = mysqlTable(
 
     /** Nomor Induk Kependudukan (16 angka). */
     nationalId: varchar("national_id", { length: 16 }),
-    /** Nomor Kartu Keluarga (16 angka); banyak penduduk dapat berbagi nomor. */
-    familyCardNumber: varchar("family_card_number", { length: 16 }),
 
     name: varchar("name", { length: 100 }).notNull(),
     gender: mysqlEnum("gender", GENDERS).notNull(),
 
     birthPlace: varchar("birth_place", { length: 100 }),
     birthDate: date("birth_date", { mode: "string" }),
+
+    familyId: int("family_id").references(() => families.id, { onDelete: "set null" }),
 
     religionId: int("religion_id").references(() => religions.id, { onDelete: "set null" }),
     educationId: int("education_id").references(() => educations.id, { onDelete: "set null" }),
@@ -84,7 +88,7 @@ export const residents = mysqlTable(
   (t) => [
     uniqueIndex("residents_village_national_id_uq").on(t.villageId, t.nationalId),
     index("residents_village_name_idx").on(t.villageId, t.name),
-    index("residents_village_family_card_idx").on(t.villageId, t.familyCardNumber),
+    index("residents_village_family_idx").on(t.villageId, t.familyId),
     index("residents_village_life_status_idx").on(t.villageId, t.lifeStatus),
     index("residents_region_idx").on(t.regionId),
   ],

@@ -51,6 +51,7 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 | `auth-client.ts`     | Klien better-auth (browser).                                      |
 | `dal.ts`             | **Satu-satunya** pintu sesi/pengguna/izin di server.              |
 | `action-state.ts`    | Bentuk state Server Action + helper sukses/galat.                 |
+| `forms.ts`           | Primitif formulir murni: sentinel `NO_SELECTION`, skema zod potongan (teks/tanggal/id/angka), tipe pilihan select. |
 | `errors.ts`          | `AppError` dengan kode + status HTTP.                             |
 | `logger.ts`          | Logger JSON; menelusuri `Error.cause` (mis. galat MySQL).         |
 
@@ -58,7 +59,12 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 
 - **`infrastructure` tidak pernah diimpor `presentation`.** Halaman & aksi
   memanggil *use case*, bukan *repository*.
-- **`domain` tidak mengimpor apa pun dari aplikasi** selain zod.
+- **`domain` tidak mengimpor apa pun dari aplikasi** selain zod dan primitif
+  murni dari `src/lib/forms.ts`.
+- **Ketergantungan antar-fitur searah.** Fitur yang secara domain memakai data
+  fitur lain boleh mengimpornya (mis. `keluarga` → `penduduk`), dan pengetahuan
+  tentang sebuah tabel tetap dipegang pemiliknya (mis. opsi wilayah dibaca lewat
+  `listWilayahOptions` milik fitur `wilayah`, bukan query ulang per fitur).
 - `import "server-only"` ditambahkan pada modul yang menyentuh DB / sesi
   (`dal.ts`, use case, repository) agar tidak pernah ikut ke bundel client.
 
@@ -68,7 +74,7 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
   domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
-  `resident.ts`) dan digabung di `index.ts`.
+  `resident.ts`, `family.ts`) dan digabung di `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -100,6 +106,7 @@ dipertahankan apa adanya.
 | RBAC      | `roles`, `modules`, `role_permissions`           | numerik |
 | Wilayah   | `regions`                                        | numerik |
 | Penduduk  | `residents`                                      | numerik |
+| Keluarga  | `families`                                       | numerik |
 | Referensi | `religions`, `educations`, `occupations`, `marital_statuses`, `family_relations`, `blood_types`, `citizenships` | numerik |
 
 Tabel identitas memakai **plural khas better-auth** dengan id string yang
@@ -112,6 +119,12 @@ secara nasional; `id`-nya diisi eksplisit dan stabil agar cocok dengan kode
 resmi (mis. `religions.id = 1` → ISLAM). Semuanya diisi seeder (`npm run db:seed`)
 secara idempoten. `residents.national_id` unik **per desa** — beberapa baris
 boleh ber-NIK kosong karena indeks unik MySQL mengizinkan banyak `NULL`.
+
+Keanggotaan keluarga **tidak** diduplikasi: `residents.family_id` menunjuk
+`families.id`, dan **kepala keluarga diturunkan** dari anggota yang punya
+`family_relations.id = 1` (KEPALA KELUARGA) — tidak ada kolom kepala tersendiri
+yang bisa berbeda dari data anggotanya. Menghapus KK melepas tautan
+(`ON DELETE SET NULL`) tanpa menghapus penduduk.
 
 ---
 
@@ -152,6 +165,12 @@ boleh ber-NIK kosong karena indeks unik MySQL mengizinkan banyak `NULL`.
 - Setelah mutasi: `revalidatePath` pada halaman terkait.
 - Arahkan pengguna lewat `redirect()` hanya setelah validasi tujuan
   (lihat `safeRedirectTarget`).
+- **Select Radix menolak `value=""`,** jadi "belum dipilih" dikirim sebagai
+  sentinel `NO_SELECTION` (`src/lib/forms.ts`) dan skema zod mengubahnya kembali
+  menjadi `null` (`optionalSelectId`/`optionalIsoDate`).
+- Aksi yang hanya **membaca data untuk dialog** (mis. rincian anggota KK) tidak
+  memakai `ActionState`; ia mengembalikan hasil bertipe (`{ ok, … }`) dan tetap
+  ditegakkan izinnya di use case.
 
 ---
 
@@ -222,6 +241,11 @@ Catatan: bila modul membutuhkan **data acuan** (enum/katalog), buat tabelnya di
 `src/db/schema/reference.ts` (global, tanpa `village_id`, `id` eksplisit), isi
 datanya di `src/db/seed/data/`, lalu daftarkan penyisipan idempotennya di
 `src/db/seed/index.ts` — pola yang dipakai modul Penduduk.
+
+Bila modul butuh **opsi dari fitur lain** (mis. daftar wilayah atau daftar KK
+untuk sebuah select), panggil pembaca milik pemilik datanya — jangan menulis
+query ulang. Yang sudah ada: `listWilayahOptions(villageId)` (fitur `wilayah`)
+dan `getPendudukReferenceData(villageId)` (fitur `penduduk`).
 
 ---
 

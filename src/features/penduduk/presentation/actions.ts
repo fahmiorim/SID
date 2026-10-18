@@ -43,7 +43,7 @@ export async function savePendudukAction(
 
   const parsed = pendudukFormSchema.safeParse({
     nationalId: text(formData, "nationalId"),
-    familyCardNumber: text(formData, "familyCardNumber"),
+    familyId: text(formData, "familyId"),
     name: text(formData, "name"),
     gender: text(formData, "gender"),
     birthPlace: text(formData, "birthPlace"),

@@ -1,6 +1,15 @@
 import { z } from "zod";
 
 import { RESOURCES } from "@/features/rbac/domain/resources";
+import {
+  isBlankSelection,
+  optionalDigits,
+  optionalIsoDate,
+  optionalSelectId,
+  optionalText,
+  type IdOption,
+  type LabelOption,
+} from "@/lib/forms";
 
 /** Slug resource RBAC untuk modul penduduk (harus sama dengan `modules.slug`). */
 export const PENDUDUK_RESOURCE = RESOURCES.penduduk;
@@ -51,60 +60,27 @@ export function isActiveResident(status: LifeStatus): boolean {
 
 // --- Validasi formulir -----------------------------------------------------
 
-/**
- * Nilai sentinel untuk pilihan kosong pada select.
- *
- * Radix Select menolak item ber-`value` string kosong, sehingga "belum
- * dipilih" dikirim sebagai `"none"` lalu diterjemahkan kembali menjadi `null`.
- */
-export const NO_SELECTION = "none";
-
-const isBlank = (value: unknown): boolean =>
-  value === "" || value === null || value === undefined || value === NO_SELECTION;
-
-/** NIK / No. KK: 16 angka, boleh dikosongkan. */
-const optionalIdentityNumber = z
-  .string()
-  .trim()
-  .refine((value) => value === "" || /^\d{16}$/.test(value), "Harus 16 angka.")
-  .transform((value) => (value === "" ? null : value));
-
-/** Id referensi opsional. */
-const optionalId = z.preprocess(
-  (value) => (isBlank(value) ? null : value),
-  z.coerce.number().int().positive().nullable(),
-);
-
-/** Tanggal ISO (`YYYY-MM-DD`) opsional. */
-const optionalDate = z.preprocess(
-  (value) => (isBlank(value) ? null : value),
-  z.iso.date("Tanggal tidak valid.").nullable(),
-);
-
-const optionalText = (max: number) =>
-  z.string().trim().max(max, `Maksimal ${max} karakter.`).default("");
-
 /** Skema validasi input penduduk (dipakai di server action). */
 export const pendudukFormSchema = z.object({
-  nationalId: optionalIdentityNumber,
-  familyCardNumber: optionalIdentityNumber,
+  nationalId: optionalDigits(16),
+  familyId: optionalSelectId,
   name: z.string().trim().min(1, "Nama wajib diisi.").max(100, "Maksimal 100 karakter."),
   gender: z.preprocess(
-    (value) => (isBlank(value) ? "" : value),
+    (value) => (isBlankSelection(value) ? "" : value),
     z.enum(GENDERS, { error: "Jenis kelamin wajib dipilih." }),
   ),
   birthPlace: optionalText(100),
-  birthDate: optionalDate,
-  religionId: optionalId,
-  educationId: optionalId,
-  occupationId: optionalId,
-  maritalStatusId: optionalId,
-  familyRelationId: optionalId,
-  bloodTypeId: optionalId,
-  citizenshipId: optionalId,
+  birthDate: optionalIsoDate,
+  religionId: optionalSelectId,
+  educationId: optionalSelectId,
+  occupationId: optionalSelectId,
+  maritalStatusId: optionalSelectId,
+  familyRelationId: optionalSelectId,
+  bloodTypeId: optionalSelectId,
+  citizenshipId: optionalSelectId,
   residenceStatus: z.enum(RESIDENCE_STATUSES, { error: "Status tempat tinggal tidak valid." }),
   lifeStatus: z.enum(LIFE_STATUSES, { error: "Status kependudukan tidak valid." }),
-  regionId: optionalId,
+  regionId: optionalSelectId,
   address: optionalText(255),
   phone: optionalText(30),
   fatherName: optionalText(100),
@@ -119,7 +95,8 @@ export type PendudukFormInput = z.infer<typeof pendudukFormSchema>;
 export interface PendudukDTO {
   id: number;
   nationalId: string | null;
-  familyCardNumber: string | null;
+  /** Kartu Keluarga (KK) tempat penduduk terdaftar; `null` bila belum ditautkan. */
+  familyId: number | null;
   name: string;
   gender: Gender;
   birthPlace: string | null;
@@ -140,23 +117,19 @@ export interface PendudukDTO {
   motherName: string | null;
 }
 
-/** Baris tabel penduduk: DTO lengkap ditambah nama referensi hasil join. */
+/** Baris tabel penduduk: DTO lengkap ditambah data turunan hasil join. */
 export interface PendudukListRow extends PendudukDTO {
   religionName: string | null;
+  /** Nomor Kartu Keluarga yang ditautkan (hasil join), untuk ditampilkan. */
+  familyNumber: string | null;
   regionLabel: string | null;
 }
 
-/** Satu pilihan pada select formulir. */
-export interface ReferenceOption {
-  id: number;
-  name: string;
-}
+/** Satu pilihan katalog pada select formulir. */
+export type ReferenceOption = IdOption;
 
 /** Pilihan wilayah dengan label siap tampil. */
-export interface RegionOption {
-  id: number;
-  label: string;
-}
+export type RegionOption = LabelOption;
 
 /** Seluruh data referensi yang dibutuhkan formulir penduduk. */
 export interface PendudukReferenceData {
@@ -167,6 +140,8 @@ export interface PendudukReferenceData {
   familyRelations: ReferenceOption[];
   bloodTypes: ReferenceOption[];
   citizenships: ReferenceOption[];
+  /** Kartu Keluarga pada desa ini, untuk menautkan penduduk ke sebuah KK. */
+  families: LabelOption[];
   regions: RegionOption[];
 }
 

@@ -73,7 +73,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
   const today = new Date();
   const from = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
   const to = Math.min(result.page * result.pageSize, result.total);
-  const columns = canManage ? 7 : 6;
+  const columns = canManage ? 8 : 7;
 
   const pageHref = (targetPage: number): string => {
     const query = new URLSearchParams();
@@ -138,6 +138,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                 <TableRow>
                   <TableHead>Nama</TableHead>
                   <TableHead className="w-40">NIK</TableHead>
+                  <TableHead className="w-40">Kartu Keluarga</TableHead>
                   <TableHead className="w-28">Jenis Kelamin</TableHead>
                   <TableHead className="w-16">Usia</TableHead>
                   <TableHead className="w-48">Wilayah</TableHead>
@@ -169,6 +170,9 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                         <TableCell className="font-medium">{row.name}</TableCell>
                         <TableCell className="tabular-nums">
                           {row.nationalId ?? <span className="text-muted-foreground">—</span>}
+                        </TableCell>
+                        <TableCell className="tabular-nums">
+                          {row.familyNumber ?? <span className="text-muted-foreground">—</span>}
                         </TableCell>
                         <TableCell>{GENDER_LABELS[row.gender]}</TableCell>
                         <TableCell className="tabular-nums">

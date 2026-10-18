@@ -15,6 +15,13 @@
       "when": 1792341158029,
       "tag": "0001_exotic_umar",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1792342943717,
+      "tag": "0002_tambah_kartu_keluarga",
+      "breakpoints": true
     }
   ]
 }

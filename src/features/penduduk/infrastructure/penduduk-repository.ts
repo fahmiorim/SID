@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, count, eq, like, ne, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { regions, religions, residents } from "@/db/schema";
+import { families, regions, religions, residents } from "@/db/schema";
 import type {
   LifeStatus,
   PendudukDTO,
@@ -38,7 +38,7 @@ function toDto(row: typeof residents.$inferSelect): PendudukDTO {
   return {
     id: row.id,
     nationalId: row.nationalId,
-    familyCardNumber: row.familyCardNumber,
+    familyId: row.familyId,
     name: row.name,
     gender: row.gender,
     birthPlace: row.birthPlace,
@@ -79,7 +79,7 @@ function buildWhere(villageId: number, search: string, lifeStatus: LifeStatus | 
     const searchFilter = or(
       like(residents.name, term),
       like(residents.nationalId, term),
-      like(residents.familyCardNumber, term),
+      like(families.number, term),
     );
     if (searchFilter) filters.push(searchFilter);
   }
@@ -100,18 +100,24 @@ export async function listPenduduk(params: ListPendudukParams): Promise<Penduduk
       .select({
         resident: residents,
         religionName: religions.name,
+        familyNumber: families.number,
         dusun: regions.dusun,
         rw: regions.rw,
         rt: regions.rt,
       })
       .from(residents)
       .leftJoin(religions, eq(residents.religionId, religions.id))
+      .leftJoin(families, eq(residents.familyId, families.id))
       .leftJoin(regions, eq(residents.regionId, regions.id))
       .where(where)
       .orderBy(asc(residents.name), asc(residents.id))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ value: count() }).from(residents).where(where),
+    db
+      .select({ value: count() })
+      .from(residents)
+      .leftJoin(families, eq(residents.familyId, families.id))
+      .where(where),
   ]);
 
   const total = totalRows[0]?.value ?? 0;
@@ -120,6 +126,7 @@ export async function listPenduduk(params: ListPendudukParams): Promise<Penduduk
     rows: rows.map((row) => ({
       ...toDto(row.resident),
       religionName: row.religionName ?? null,
+      familyNumber: row.familyNumber ?? null,
       regionLabel: formatRegionLabel(row.resident.regionId, row.dusun, row.rw, row.rt),
     })),
     total,
@@ -166,7 +173,7 @@ export async function insertPenduduk(villageId: number, input: PendudukFormInput
     .values({
       villageId,
       nationalId: input.nationalId,
-      familyCardNumber: input.familyCardNumber,
+      familyId: input.familyId,
       name: input.name,
       gender: input.gender,
       birthPlace: blankToNull(input.birthPlace),
@@ -197,7 +204,7 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
     .update(residents)
     .set({
       nationalId: input.nationalId,
-      familyCardNumber: input.familyCardNumber,
+      familyId: input.familyId,
       name: input.name,
       gender: input.gender,
       birthPlace: blankToNull(input.birthPlace),

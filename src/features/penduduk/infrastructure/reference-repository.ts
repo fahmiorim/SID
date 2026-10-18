@@ -7,20 +7,21 @@ import {
   bloodTypes,
   citizenships,
   educations,
+  families,
   familyRelations,
   maritalStatuses,
   occupations,
-  regions,
   religions,
 } from "@/db/schema";
 import type { PendudukReferenceData } from "@/features/penduduk/domain/penduduk";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
+import { listWilayahOptions } from "@/features/wilayah/infrastructure/wilayah-repository";
 
 /**
  * Data referensi untuk formulir penduduk.
  *
- * Katalog (agama, pendidikan, pekerjaan, dst.) bersifat global; hanya wilayah
- * yang dibatasi per desa. Semuanya dikembalikan dalam satu panggilan agar
+ * Katalog (agama, pendidikan, pekerjaan, dst.) bersifat global; wilayah dan
+ * daftar KK dibatasi per desa. Semuanya dikembalikan dalam satu panggilan agar
  * halaman cukup sekali query.
  */
 export async function getPendudukReferenceData(villageId: number): Promise<PendudukReferenceData> {
@@ -32,6 +33,7 @@ export async function getPendudukReferenceData(villageId: number): Promise<Pendu
     relationRows,
     bloodRows,
     citizenshipRows,
+    familyRows,
     regionRows,
   ] = await Promise.all([
     db
@@ -63,15 +65,11 @@ export async function getPendudukReferenceData(villageId: number): Promise<Pendu
       .from(citizenships)
       .orderBy(asc(citizenships.id)),
     db
-      .select({
-        id: regions.id,
-        dusun: regions.dusun,
-        rw: regions.rw,
-        rt: regions.rt,
-      })
-      .from(regions)
-      .where(eq(regions.villageId, villageId))
-      .orderBy(asc(regions.sortOrder), asc(regions.dusun), asc(regions.rw), asc(regions.rt)),
+      .select({ id: families.id, number: families.number })
+      .from(families)
+      .where(eq(families.villageId, villageId))
+      .orderBy(asc(families.number)),
+    listWilayahOptions(villageId),
   ]);
 
   return {
@@ -82,9 +80,14 @@ export async function getPendudukReferenceData(villageId: number): Promise<Pendu
     familyRelations: relationRows,
     bloodTypes: bloodRows,
     citizenships: citizenshipRows,
+    families: familyRows.map((row) => ({ id: row.id, label: `KK ${row.number}` })),
     regions: regionRows.map((row) => ({
       id: row.id,
-      label: formatWilayahLabel({ dusun: row.dusun ?? "", rw: row.rw ?? "", rt: row.rt ?? "" }),
+      label: formatWilayahLabel({
+        dusun: row.dusun,
+        rw: row.rw,
+        rt: row.rt,
+      }),
     })),
   };
 }

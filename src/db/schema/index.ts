@@ -8,6 +8,7 @@
  */
 
 export * from "./auth";
+export * from "./family";
 export * from "./rbac";
 export * from "./reference";
 export * from "./region";

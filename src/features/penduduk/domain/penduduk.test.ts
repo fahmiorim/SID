@@ -3,15 +3,15 @@ import { describe, expect, it } from "vitest";
 import {
   calculateAge,
   isActiveResident,
-  NO_SELECTION,
   pendudukFormSchema,
   pendudukLabel,
 } from "@/features/penduduk/domain/penduduk";
+import { NO_SELECTION } from "@/lib/forms";
 
 /** Input minimal yang valid; field lain diisi string kosong. */
 const minimalInput = {
   nationalId: "",
-  familyCardNumber: "",
+  familyId: "",
   name: "Budi Santoso",
   gender: "male",
   birthPlace: "",
@@ -87,13 +87,10 @@ describe("pendudukFormSchema", () => {
     expect(withLetters.success).toBe(false);
   });
 
-  it("menerima No. KK 16 angka", () => {
-    const result = pendudukFormSchema.parse({
-      ...minimalInput,
-      familyCardNumber: "3201012001120002",
-    });
+  it("menerima tautan Kartu Keluarga", () => {
+    const result = pendudukFormSchema.parse({ ...minimalInput, familyId: "7" });
 
-    expect(result.familyCardNumber).toBe("3201012001120002");
+    expect(result.familyId).toBe(7);
   });
 
   it("menolak tanggal lahir yang tidak valid", () => {

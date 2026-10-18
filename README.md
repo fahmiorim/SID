@@ -3,7 +3,7 @@
 Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
 autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
-untuk **Wilayah Administratif** dan **Kependudukan**.
+untuk **Wilayah Administratif**, **Kependudukan**, dan **Kartu Keluarga**.
 
 > Status: **fondasi** — modul fitur dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -97,8 +97,8 @@ src/
 │  ├─ migrations/            # migrasi SQL
 │  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
-│  ├─ auth/  desa/  navigation/  penduduk/  rbac/  wilayah/
-└─ lib/                      # env, logger, errors, action-state, dal, auth
+│  ├─ auth/  desa/  keluarga/  navigation/  penduduk/  rbac/  wilayah/
+└─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
 
 ## Autentikasi & Hak Akses
@@ -133,9 +133,9 @@ src/
 ## Pengujian
 
 Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
-database/`next/headers`): model izin RBAC, pembentukan menu, validasi wilayah,
-pemetaan kesalahan, dan validasi environment. CI menjalankan
-typecheck + lint + format + test + build pada setiap push/PR.
+database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
+keluarga, dan wilayah, pemetaan kesalahan, serta validasi environment. CI
+menjalankan typecheck + lint + format + test + build pada setiap push/PR.
 
 ```bash
 npm run test        # sekali jalan
@@ -154,5 +154,7 @@ npm run test:watch  # mode pantau
 2. **Fondasi mutu** ✅ — pengujian unit (Vitest) + CI + Dependabot.
 3. **Kependudukan** ✅ — data penduduk (identitas, sosial, domisili) + katalog
    referensi (agama, pendidikan, pekerjaan, dst.).
-4. Modul berikutnya: Keluarga → Persuratan → Keuangan.
-5. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
+4. **Kartu Keluarga** ✅ — daftar KK, kepala keluarga (turunan), jumlah & rincian
+   anggota, penautan penduduk ke KK.
+5. Modul berikutnya: Persuratan → Keuangan.
+6. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.

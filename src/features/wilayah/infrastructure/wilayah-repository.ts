@@ -89,6 +89,22 @@ export async function findWilayahById(villageId: number, id: number): Promise<Wi
   return row ? toDto(row) : null;
 }
 
+/**
+ * Seluruh wilayah desa tanpa paginasi.
+ *
+ * Dipakai fitur lain (penduduk, keluarga) untuk mengisi pilihan wilayah pada
+ * formulir, sehingga pengetahuan tentang tabel `regions` tetap terpusat di sini.
+ */
+export async function listWilayahOptions(villageId: number): Promise<WilayahDTO[]> {
+  const rows = await db
+    .select()
+    .from(regions)
+    .where(eq(regions.villageId, villageId))
+    .orderBy(asc(regions.sortOrder), asc(regions.dusun), asc(regions.rw), asc(regions.rt));
+
+  return rows.map(toDto);
+}
+
 /** Apakah kombinasi dusun/RW/RT sudah dipakai (kecuali `excludeId`). */
 export async function wilayahExists(
   villageId: number,
