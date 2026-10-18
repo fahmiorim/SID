@@ -9,5 +9,5 @@
 
 export * from "./auth";
 export * from "./rbac";
-export * from "./tenant";
-export * from "./wilayah";
+export * from "./region";
+export * from "./village";

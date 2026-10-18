@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "18a377c8-5f50-44ae-a7fa-103e1c9fb872",
+  "id": "43b3b66b-3b90-46a3-b9ac-07131175f73c",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "accounts": {
@@ -301,15 +301,15 @@
           "notNull": false,
           "autoincrement": false
         },
-        "config_id": {
-          "name": "config_id",
+        "village_id": {
+          "name": "village_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "grup_id": {
-          "name": "grup_id",
+        "role_id": {
+          "name": "role_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
@@ -362,21 +362,21 @@
           ],
           "isUnique": true
         },
-        "users_grup_idx": {
-          "name": "users_grup_idx",
+        "users_role_idx": {
+          "name": "users_role_idx",
           "columns": [
-            "grup_id"
+            "role_id"
           ],
           "isUnique": false
         }
       },
       "foreignKeys": {
-        "users_config_id_config_id_fk": {
-          "name": "users_config_id_config_id_fk",
+        "users_village_id_villages_id_fk": {
+          "name": "users_village_id_villages_id_fk",
           "tableFrom": "users",
-          "tableTo": "config",
+          "tableTo": "villages",
           "columnsFrom": [
-            "config_id"
+            "village_id"
           ],
           "columnsTo": [
             "id"
@@ -384,12 +384,12 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "users_grup_id_user_grup_id_fk": {
-          "name": "users_grup_id_user_grup_id_fk",
+        "users_role_id_roles_id_fk": {
+          "name": "users_role_id_roles_id_fk",
           "tableFrom": "users",
-          "tableTo": "user_grup",
+          "tableTo": "roles",
           "columnsFrom": [
-            "grup_id"
+            "role_id"
           ],
           "columnsTo": [
             "id"
@@ -478,8 +478,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "grup_akses": {
-      "name": "grup_akses",
+    "modules": {
+      "name": "modules",
       "columns": {
         "id": {
           "name": "id",
@@ -488,131 +488,22 @@
           "notNull": true,
           "autoincrement": true
         },
-        "config_id": {
-          "name": "config_id",
+        "village_id": {
+          "name": "village_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "id_grup": {
-          "name": "id_grup",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "id_modul": {
-          "name": "id_modul",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "akses": {
-          "name": "akses",
-          "type": "tinyint",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": 0
-        }
-      },
-      "indexes": {
-        "grup_akses_grup_modul_uq": {
-          "name": "grup_akses_grup_modul_uq",
-          "columns": [
-            "id_grup",
-            "id_modul"
-          ],
-          "isUnique": true
-        },
-        "grup_akses_id_modul_idx": {
-          "name": "grup_akses_id_modul_idx",
-          "columns": [
-            "id_modul"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {
-        "grup_akses_config_id_config_id_fk": {
-          "name": "grup_akses_config_id_config_id_fk",
-          "tableFrom": "grup_akses",
-          "tableTo": "config",
-          "columnsFrom": [
-            "config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "grup_akses_id_grup_user_grup_id_fk": {
-          "name": "grup_akses_id_grup_user_grup_id_fk",
-          "tableFrom": "grup_akses",
-          "tableTo": "user_grup",
-          "columnsFrom": [
-            "id_grup"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "grup_akses_id_modul_setting_modul_id_fk": {
-          "name": "grup_akses_id_modul_setting_modul_id_fk",
-          "tableFrom": "grup_akses",
-          "tableTo": "setting_modul",
-          "columnsFrom": [
-            "id_modul"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "grup_akses_id": {
-          "name": "grup_akses_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "setting_modul": {
-      "name": "setting_modul",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "config_id": {
-          "name": "config_id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "modul": {
-          "name": "modul",
+        "slug": {
+          "name": "slug",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "slug": {
-          "name": "slug",
+        "name": {
+          "name": "name",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": true,
@@ -625,136 +516,53 @@
           "notNull": false,
           "autoincrement": false
         },
-        "aktif": {
-          "name": "aktif",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": false
-        },
-        "ikon": {
-          "name": "ikon",
+        "icon": {
+          "name": "icon",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": "''"
         },
-        "ikon_kecil": {
-          "name": "ikon_kecil",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false,
-          "default": "''"
-        },
-        "urut": {
-          "name": "urut",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "level": {
-          "name": "level",
+        "is_group": {
+          "name": "is_group",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "hidden": {
-          "name": "hidden",
+        "is_hidden": {
+          "name": "is_hidden",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
           "default": false
         },
-        "parent": {
-          "name": "parent",
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "sort_order": {
+          "name": "sort_order",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
           "default": 0
-        }
-      },
-      "indexes": {
-        "setting_modul_slug_config_uq": {
-          "name": "setting_modul_slug_config_uq",
-          "columns": [
-            "config_id",
-            "slug"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {
-        "setting_modul_config_id_config_id_fk": {
-          "name": "setting_modul_config_id_config_id_fk",
-          "tableFrom": "setting_modul",
-          "tableTo": "config",
-          "columnsFrom": [
-            "config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "setting_modul_id": {
-          "name": "setting_modul_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "user_grup": {
-      "name": "user_grup",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
         },
-        "config_id": {
-          "name": "config_id",
+        "parent_id": {
+          "name": "parent_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false
-        },
-        "nama": {
-          "name": "nama",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "jenis": {
-          "name": "jenis",
-          "type": "tinyint",
-          "primaryKey": false,
-          "notNull": true,
           "autoincrement": false,
-          "default": 2
+          "default": 0
         },
         "created_at": {
           "name": "created_at",
@@ -774,30 +582,29 @@
         }
       },
       "indexes": {
-        "user_grup_slug_config_uq": {
-          "name": "user_grup_slug_config_uq",
+        "modules_village_slug_uq": {
+          "name": "modules_village_slug_uq",
           "columns": [
-            "config_id",
+            "village_id",
             "slug"
           ],
           "isUnique": true
         },
-        "user_grup_nama_config_uq": {
-          "name": "user_grup_nama_config_uq",
+        "modules_parent_idx": {
+          "name": "modules_parent_idx",
           "columns": [
-            "config_id",
-            "nama"
+            "parent_id"
           ],
-          "isUnique": true
+          "isUnique": false
         }
       },
       "foreignKeys": {
-        "user_grup_config_id_config_id_fk": {
-          "name": "user_grup_config_id_config_id_fk",
-          "tableFrom": "user_grup",
-          "tableTo": "config",
+        "modules_village_id_villages_id_fk": {
+          "name": "modules_village_id_villages_id_fk",
+          "tableFrom": "modules",
+          "tableTo": "villages",
           "columnsFrom": [
-            "config_id"
+            "village_id"
           ],
           "columnsTo": [
             "id"
@@ -807,8 +614,8 @@
         }
       },
       "compositePrimaryKeys": {
-        "user_grup_id": {
-          "name": "user_grup_id",
+        "modules_id": {
+          "name": "modules_id",
           "columns": [
             "id"
           ]
@@ -817,8 +624,8 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "config": {
-      "name": "config",
+    "role_permissions": {
+      "name": "role_permissions",
       "columns": {
         "id": {
           "name": "id",
@@ -827,85 +634,361 @@
           "notNull": true,
           "autoincrement": true
         },
-        "app_key": {
-          "name": "app_key",
-          "type": "varchar(255)",
+        "role_id": {
+          "name": "role_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "module_id": {
+          "name": "module_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "access": {
+          "name": "access",
+          "type": "enum('read','write','manage')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "role_permissions_role_module_uq": {
+          "name": "role_permissions_role_module_uq",
+          "columns": [
+            "role_id",
+            "module_id"
+          ],
+          "isUnique": true
+        },
+        "role_permissions_module_idx": {
+          "name": "role_permissions_module_idx",
+          "columns": [
+            "module_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "role_permissions_role_id_roles_id_fk": {
+          "name": "role_permissions_role_id_roles_id_fk",
+          "tableFrom": "role_permissions",
+          "tableTo": "roles",
+          "columnsFrom": [
+            "role_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "role_permissions_module_id_modules_id_fk": {
+          "name": "role_permissions_module_id_modules_id_fk",
+          "tableFrom": "role_permissions",
+          "tableTo": "modules",
+          "columnsFrom": [
+            "module_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "role_permissions_id": {
+          "name": "role_permissions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "roles": {
+      "name": "roles",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nama_desa": {
-          "name": "nama_desa",
+        "name": {
+          "name": "name",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_system": {
+          "name": "is_system",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "roles_village_slug_uq": {
+          "name": "roles_village_slug_uq",
+          "columns": [
+            "village_id",
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "roles_village_name_uq": {
+          "name": "roles_village_name_uq",
+          "columns": [
+            "village_id",
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "roles_village_id_villages_id_fk": {
+          "name": "roles_village_id_villages_id_fk",
+          "tableFrom": "roles",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "roles_id": {
+          "name": "roles_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "regions": {
+      "name": "regions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dusun": {
+          "name": "dusun",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "kode_desa": {
-          "name": "kode_desa",
+        "rw": {
+          "name": "rw",
           "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "kode_pos": {
-          "name": "kode_pos",
+        "rt": {
+          "name": "rt",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "regions_village_dusun_rw_rt_uq": {
+          "name": "regions_village_dusun_rw_rt_uq",
+          "columns": [
+            "village_id",
+            "dusun",
+            "rw",
+            "rt"
+          ],
+          "isUnique": true
+        },
+        "regions_village_sort_idx": {
+          "name": "regions_village_sort_idx",
+          "columns": [
+            "village_id",
+            "sort_order"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "regions_village_id_villages_id_fk": {
+          "name": "regions_village_id_villages_id_fk",
+          "tableFrom": "regions",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "regions_id": {
+          "name": "regions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "villages": {
+      "name": "villages",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "code": {
+          "name": "code",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "postal_code": {
+          "name": "postal_code",
           "type": "varchar(5)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nama_kecamatan": {
-          "name": "nama_kecamatan",
+        "district": {
+          "name": "district",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "kode_kecamatan": {
-          "name": "kode_kecamatan",
+        "district_code": {
+          "name": "district_code",
           "type": "varchar(8)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nama_kepala_camat": {
-          "name": "nama_kepala_camat",
+        "regency": {
+          "name": "regency",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nip_kepala_camat": {
-          "name": "nip_kepala_camat",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "nama_kabupaten": {
-          "name": "nama_kabupaten",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "kode_kabupaten": {
-          "name": "kode_kabupaten",
+        "regency_code": {
+          "name": "regency_code",
           "type": "varchar(4)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "nama_propinsi": {
-          "name": "nama_propinsi",
+        "province": {
+          "name": "province",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "kode_propinsi": {
-          "name": "kode_propinsi",
+        "province_code": {
+          "name": "province_code",
           "type": "varchar(2)",
           "primaryKey": false,
           "notNull": false,
@@ -918,36 +1001,22 @@
           "notNull": false,
           "autoincrement": false
         },
-        "lat": {
-          "name": "lat",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "lng": {
-          "name": "lng",
-          "type": "varchar(30)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "alamat_kantor": {
-          "name": "alamat_kantor",
+        "office_address": {
+          "name": "office_address",
           "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "email_desa": {
-          "name": "email_desa",
+        "email": {
+          "name": "email",
           "type": "varchar(100)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "telepon": {
-          "name": "telepon",
+        "phone": {
+          "name": "phone",
           "type": "varchar(30)",
           "primaryKey": false,
           "notNull": false,
@@ -956,13 +1025,6 @@
         "website": {
           "name": "website",
           "type": "varchar(255)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "jam_kerja": {
-          "name": "jam_kerja",
-          "type": "text",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -987,8 +1049,8 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "config_id": {
-          "name": "config_id",
+        "villages_id": {
+          "name": "villages_id",
           "columns": [
             "id"
           ]

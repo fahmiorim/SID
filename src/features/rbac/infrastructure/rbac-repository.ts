@@ -3,70 +3,69 @@ import "server-only";
 import { eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db";
-import { grupAkses, settingModul, userGrup } from "@/db/schema";
+import { modules, rolePermissions, roles } from "@/db/schema";
+import type { AccessLevel } from "@/features/rbac/domain/permission";
 
-/** Representasi ringkas sebuah role (`user_grup`). */
+/** Representasi ringkas sebuah role (`roles`). */
 export interface RoleRecord {
   id: number;
   slug: string;
-  nama: string;
-  jenis: number;
+  name: string;
+  isSystem: boolean;
 }
 
-/** Representasi sebuah modul/resource (`setting_modul`). */
+/** Representasi sebuah modul/resource (`modules`). */
 export interface ModuleRecord {
   id: number;
-  parent: number | null;
+  parentId: number | null;
   slug: string;
-  modul: string;
+  name: string;
   url: string | null;
-  ikon: string | null;
-  ikonKecil: string | null;
-  urut: number | null;
-  level: boolean;
-  hidden: boolean;
-  aktif: boolean;
+  icon: string | null;
+  sortOrder: number | null;
+  isGroup: boolean;
+  isHidden: boolean;
+  isActive: boolean;
 }
 
 const roleColumns = {
-  id: userGrup.id,
-  slug: userGrup.slug,
-  nama: userGrup.nama,
-  jenis: userGrup.jenis,
+  id: roles.id,
+  slug: roles.slug,
+  name: roles.name,
+  isSystem: roles.isSystem,
 };
 
 const moduleColumns = {
-  id: settingModul.id,
-  parent: settingModul.parent,
-  slug: settingModul.slug,
-  modul: settingModul.modul,
-  url: settingModul.url,
-  ikon: settingModul.ikon,
-  ikonKecil: settingModul.ikonKecil,
-  urut: settingModul.urut,
-  level: settingModul.level,
-  hidden: settingModul.hidden,
-  aktif: settingModul.aktif,
+  id: modules.id,
+  parentId: modules.parentId,
+  slug: modules.slug,
+  name: modules.name,
+  url: modules.url,
+  icon: modules.icon,
+  sortOrder: modules.sortOrder,
+  isGroup: modules.isGroup,
+  isHidden: modules.isHidden,
+  isActive: modules.isActive,
 };
 
 export async function findRoleById(roleId: number): Promise<RoleRecord | null> {
-  const [row] = await db.select(roleColumns).from(userGrup).where(eq(userGrup.id, roleId)).limit(1);
+  const [row] = await db.select(roleColumns).from(roles).where(eq(roles.id, roleId)).limit(1);
   return row ?? null;
 }
 
-export async function listModules(configId: number | null): Promise<ModuleRecord[]> {
+export async function listModules(villageId: number | null): Promise<ModuleRecord[]> {
   return db
     .select(moduleColumns)
-    .from(settingModul)
-    .where(configId === null ? isNull(settingModul.configId) : eq(settingModul.configId, configId));
+    .from(modules)
+    .where(villageId === null ? isNull(modules.villageId) : eq(modules.villageId, villageId));
 }
 
-/** Kode akses per modul untuk sebuah role. */
-export async function listAksesByRole(roleId: number): Promise<Map<number, number>> {
+/** Tingkat akses per modul untuk sebuah role. */
+export async function listLevelsByRole(roleId: number): Promise<Map<number, AccessLevel>> {
   const rows = await db
-    .select({ idModul: grupAkses.idModul, akses: grupAkses.akses })
-    .from(grupAkses)
-    .where(eq(grupAkses.idGrup, roleId));
+    .select({ moduleId: rolePermissions.moduleId, access: rolePermissions.access })
+    .from(rolePermissions)
+    .where(eq(rolePermissions.roleId, roleId));
 
-  return new Map(rows.map((row) => [row.idModul, row.akses ?? 0]));
+  return new Map(rows.map((row) => [row.moduleId, row.access]));
 }

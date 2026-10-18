@@ -10,15 +10,15 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-import { userGrup } from "./rbac";
-import { config } from "./tenant";
+import { roles } from "./rbac";
+import { villages } from "./village";
 
 /**
  * Skema identitas & sesi untuk **better-auth** (tabel jamak).
  *
  * Definisi kolom mengikuti keluaran `getSchema()` dari better-auth 1.7 sehingga
- * adapter Drizzle mengenali seluruh field. Kolom tambahan kita (`configId`,
- * `grupId`, `active`, `lastLoginAt`) didaftarkan lewat `additionalFields` di
+ * adapter Drizzle mengenali seluruh field. Kolom tambahan kita (`villageId`,
+ * `roleId`, `active`, `lastLoginAt`) didaftarkan lewat `additionalFields` di
  * `src/lib/auth.ts`.
  */
 
@@ -34,8 +34,8 @@ export const users = mysqlTable(
     username: varchar("username", { length: 100 }),
     displayUsername: varchar("display_username", { length: 100 }),
 
-    configId: int("config_id").references(() => config.id, { onDelete: "set null" }),
-    grupId: int("grup_id").references(() => userGrup.id, { onDelete: "set null" }),
+    villageId: int("village_id").references(() => villages.id, { onDelete: "set null" }),
+    roleId: int("role_id").references(() => roles.id, { onDelete: "set null" }),
     active: boolean("active").notNull().default(true),
     lastLoginAt: timestamp("last_login_at"),
 
@@ -48,7 +48,7 @@ export const users = mysqlTable(
   (t) => [
     uniqueIndex("users_email_uq").on(t.email),
     uniqueIndex("users_username_uq").on(t.username),
-    index("users_grup_idx").on(t.grupId),
+    index("users_role_idx").on(t.roleId),
   ],
 );
 
@@ -123,8 +123,8 @@ export const verifications = mysqlTable(
 export const usersRelations = relations(users, ({ many, one }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
-  grup: one(userGrup, { fields: [users.grupId], references: [userGrup.id] }),
-  config: one(config, { fields: [users.configId], references: [config.id] }),
+  role: one(roles, { fields: [users.roleId], references: [roles.id] }),
+  village: one(villages, { fields: [users.villageId], references: [villages.id] }),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({

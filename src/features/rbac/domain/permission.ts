@@ -1,59 +1,81 @@
+/**
+ * Model izin RBAC.
+ *
+ * Sebuah role memiliki **satu tingkat akses** per modul. Tingkat disimpan
+ * sebagai nilai bernama (bukan kode bitmask) agar terbaca langsung di basis
+ * data maupun kode.
+ *
+ * - `read`   — hanya melihat
+ * - `write`  — melihat, menambah, dan mengubah
+ * - `manage` — seluruhnya, termasuk menghapus
+ */
+export const ACCESS_LEVELS = ["read", "write", "manage"] as const;
+
+export type AccessLevel = (typeof ACCESS_LEVELS)[number];
+
+/** Peringkat tingkat untuk perbandingan (semakin besar semakin luas). */
+export const ACCESS_RANK: Readonly<Record<AccessLevel, number>> = {
+  read: 1,
+  write: 2,
+  manage: 3,
+};
+
 /** Aksi granular yang dapat dimiliki atas sebuah resource (modul). */
 export type Action = "read" | "update" | "delete";
 
-/** Kode akses legacy OpenSID. */
-export const LEGACY_AKSES = {
-  NONE: 0,
-  READ: 1,
-  READ_UPDATE: 3,
-  READ_UPDATE_DELETE: 7,
-} as const;
+/** Tingkat minimum yang dibutuhkan untuk masing-masing aksi. */
+const REQUIRED_LEVEL: Readonly<Record<Action, AccessLevel>> = {
+  read: "read",
+  update: "write",
+  delete: "manage",
+};
 
-export type LegacyAkses = (typeof LEGACY_AKSES)[keyof typeof LEGACY_AKSES];
-
-/**
- * Konversi kode akses legacy (0/1/3/7) menjadi himpunan aksi.
- *
- * Pemetaan dipertahankan sama persis dengan OpenSID:
- * 1 → baca; 3 → baca+ubah; 7 → baca+ubah+hapus.
- */
-export function aksesToActions(akses: number | null | undefined): Action[] {
-  const value = akses ?? 0;
-  const actions: Action[] = [];
-
-  if (value >= LEGACY_AKSES.READ) actions.push("read");
-  if (value >= LEGACY_AKSES.READ_UPDATE) actions.push("update");
-  if (value >= LEGACY_AKSES.READ_UPDATE_DELETE) actions.push("delete");
-
-  return actions;
+function rank(level: AccessLevel | null | undefined): number {
+  return level ? ACCESS_RANK[level] : 0;
 }
 
-/** Kode akses legacy dari himpunan aksi (kebalikan `aksesToActions`). */
-export function actionsToAkses(actions: readonly Action[]): LegacyAkses {
-  const set = new Set(actions);
-  if (set.has("delete")) return LEGACY_AKSES.READ_UPDATE_DELETE;
-  if (set.has("update")) return LEGACY_AKSES.READ_UPDATE;
-  if (set.has("read")) return LEGACY_AKSES.READ;
-  return LEGACY_AKSES.NONE;
+/** Apakah `level` cukup untuk melakukan `action`. */
+export function levelAllows(level: AccessLevel | null | undefined, action: Action): boolean {
+  if (!level) return false;
+  return ACCESS_RANK[level] >= ACCESS_RANK[REQUIRED_LEVEL[action]];
+}
+
+/** Ubah sebuah tingkat menjadi daftar aksi yang diizinkan. */
+export function levelToActions(level: AccessLevel | null | undefined): Action[] {
+  if (!level) return [];
+  return (["read", "update", "delete"] as const).filter((action) => levelAllows(level, action));
+}
+
+/** Tingkat terluas di antara dua nilai (`null` = tidak ada akses). */
+function widest(a: AccessLevel | null, b: AccessLevel | null): AccessLevel | null {
+  return rank(a) >= rank(b) ? a : b;
+}
+
+/** Simpul modul minimal yang dibutuhkan untuk perhitungan warisan. */
+export interface ModuleNode {
+  id: number;
+  parentId: number | null;
+  slug: string;
 }
 
 /**
- * Hitung akses efektif untuk sekumpulan modul dengan menerapkan **warisan
- * parent → child** persis seperti OpenSID: bila sebuah modul induk memiliki
- * minimal satu anak dengan akses > 0, maka induk dipaksa menjadi 7.
+ * Terapkan warisan **induk ← anak**: sebuah modul grup (mis. "Kependudukan")
+ * harus dapat dibaca bila minimal satu anaknya dapat dibaca, supaya grup menunya
+ * ikut tampil.
  *
- * @param modules daftar modul (id, parent, slug)
- * @param aksesById peta id modul → kode akses yang diberikan
- * @returns peta slug modul → kode akses efektif
+ * Tingkat anak tidak dinaikkan; hanya tingkat baca pada induk yang ditambahkan,
+ * dan tingkat eksplisit induk yang lebih luas tetap dipertahankan.
+ *
+ * @returns peta slug modul → tingkat efektif (hanya yang punya akses)
  */
 export function applyParentInheritance(
-  modules: readonly { id: number; parent: number | null; slug: string }[],
-  aksesById: ReadonlyMap<number, number>,
-): Map<string, LegacyAkses> {
+  modules: readonly ModuleNode[],
+  levelById: ReadonlyMap<number, AccessLevel>,
+): Map<string, AccessLevel> {
   const childrenByParent = new Map<number, number[]>();
 
   for (const modul of modules) {
-    const parentId = modul.parent ?? 0;
+    const parentId = modul.parentId ?? 0;
     if (parentId > 0) {
       const siblings = childrenByParent.get(parentId) ?? [];
       siblings.push(modul.id);
@@ -61,15 +83,16 @@ export function applyParentInheritance(
     }
   }
 
-  const result = new Map<string, LegacyAkses>();
+  const effective = new Map<string, AccessLevel>();
 
   for (const modul of modules) {
-    const own = (aksesById.get(modul.id) ?? 0) as LegacyAkses;
+    const own = levelById.get(modul.id) ?? null;
     const children = childrenByParent.get(modul.id) ?? [];
-    const hasActiveChild = children.some((childId) => (aksesById.get(childId) ?? 0) > 0);
+    const childReadable = children.some((childId) => levelById.has(childId));
 
-    result.set(modul.slug, hasActiveChild ? LEGACY_AKSES.READ_UPDATE_DELETE : own);
+    const level = childReadable ? widest(own, "read") : own;
+    if (level) effective.set(modul.slug, level);
   }
 
-  return result;
+  return effective;
 }

@@ -20,8 +20,8 @@ export interface CurrentUser {
   username: string | null;
   email: string;
   image: string | null;
-  configId: number | null;
-  grupId: number | null;
+  villageId: number | null;
+  roleId: number | null;
   permissions: EffectivePermissions;
 }
 
@@ -48,9 +48,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const user = session.user;
 
   const permissions = await computeEffectivePermissions(
-    // `grupId`/`configId` berasal dari additionalFields better-auth.
-    (user.grupId as number | null) ?? 0,
-    (user.configId as number | null) ?? null,
+    // `roleId`/`villageId` berasal dari additionalFields better-auth.
+    (user.roleId as number | null) ?? 0,
+    (user.villageId as number | null) ?? null,
   );
 
   return {
@@ -59,8 +59,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     username: (user.username as string | null) ?? null,
     email: user.email,
     image: user.image ?? null,
-    configId: (user.configId as number | null) ?? null,
-    grupId: (user.grupId as number | null) ?? null,
+    villageId: (user.villageId as number | null) ?? null,
+    roleId: (user.roleId as number | null) ?? null,
     permissions,
   };
 });

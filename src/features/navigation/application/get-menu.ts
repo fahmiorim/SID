@@ -13,7 +13,7 @@ import { buildMenu, type MenuNode } from "./build-menu";
  * dibaca (plus `beranda` yang selalu tersedia).
  */
 export async function getMenuForUser(user: CurrentUser): Promise<MenuNode[]> {
-  const modules = await listModules(user.configId);
+  const modules = await listModules(user.villageId);
 
   const allowed = user.permissions.isSuperadmin
     ? new Set(modules.map((modul) => modul.slug))

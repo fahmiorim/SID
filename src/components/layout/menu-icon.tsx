@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 /**
- * Registri nama ikon (string dari `setting_modul.ikon`) → komponen Lucide.
+ * Registri nama ikon (string dari `modules.icon`) → komponen Lucide.
  *
  * OpenSID menyimpan nama ikon sebagai teks; di sini kita memetakan hanya ikon
  * yang dikenal agar bundle tetap ramping (tree-shakeable).

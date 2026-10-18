@@ -1,10 +1,10 @@
 /**
  * Slug resource RBAC.
  *
- * Nilai-nilai ini **wajib** sama dengan `setting_modul.slug` karena matriks akses
- * (`grup_akses`) bertumpu pada `id_modul`, dan menu dibangun dari slug yang sama.
- * Menaruhnya di satu tempat mencegah salah tulis yang berujung pada lolosnya
- * otorisasi atau hilangnya menu.
+ * Nilai-nilai ini **wajib** sama dengan `modules.slug` karena matriks akses
+ * (`role_permissions`) bertumpu pada `module_id`, dan menu dibangun dari slug
+ * yang sama. Menaruhnya di satu tempat mencegah salah tulis yang berujung pada
+ * lolosnya otorisasi atau hilangnya menu.
  */
 export const RESOURCES = {
   beranda: "beranda",

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { resolveConfigId } from "@/features/desa/application/resolve-config";
+import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { WILAYAH_RESOURCE, type WilayahFormInput } from "@/features/wilayah/domain/wilayah";
 import {
   deleteWilayah as deleteWilayahRow,
@@ -29,31 +29,31 @@ export interface ListWilayahParams {
 
 export async function listWilayah(params: ListWilayahParams): Promise<WilayahListResult> {
   const user = await requirePermission(WILAYAH_RESOURCE, "read");
-  const configId = await resolveConfigId(user);
+  const villageId = await resolveVillageId(user);
 
-  return listWilayahRows({ configId, ...params });
+  return listWilayahRows({ villageId, ...params });
 }
 
 export async function createWilayah(input: WilayahFormInput): Promise<{ id: number }> {
   const user = await requirePermission(WILAYAH_RESOURCE, "update");
-  const configId = await resolveConfigId(user);
+  const villageId = await resolveVillageId(user);
 
-  if (await wilayahExists(configId, input, null)) {
+  if (await wilayahExists(villageId, input, null)) {
     throw conflict("Wilayah dengan kombinasi dusun/RW/RT tersebut sudah ada.");
   }
 
-  const id = await insertWilayah(configId, input);
+  const id = await insertWilayah(villageId, input);
   return { id };
 }
 
 export async function updateWilayah(id: number, input: WilayahFormInput): Promise<void> {
   const user = await requirePermission(WILAYAH_RESOURCE, "update");
-  const configId = await resolveConfigId(user);
+  const villageId = await resolveVillageId(user);
 
-  const existing = await findWilayahById(configId, id);
+  const existing = await findWilayahById(villageId, id);
   if (!existing) throw notFound("Data wilayah tidak ditemukan.");
 
-  if (await wilayahExists(configId, input, id)) {
+  if (await wilayahExists(villageId, input, id)) {
     throw conflict("Wilayah dengan kombinasi dusun/RW/RT tersebut sudah ada.");
   }
 
@@ -62,9 +62,9 @@ export async function updateWilayah(id: number, input: WilayahFormInput): Promis
 
 export async function deleteWilayah(id: number): Promise<void> {
   const user = await requirePermission(WILAYAH_RESOURCE, "delete");
-  const configId = await resolveConfigId(user);
+  const villageId = await resolveVillageId(user);
 
-  const existing = await findWilayahById(configId, id);
+  const existing = await findWilayahById(villageId, id);
   if (!existing) throw notFound("Data wilayah tidak ditemukan.");
 
   await deleteWilayahRow(id);

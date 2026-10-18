@@ -18,7 +18,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const [menu, desa, role] = await Promise.all([
     getMenuForUser(user),
     getIdentitas(),
-    user.grupId !== null ? findRoleById(user.grupId) : Promise.resolve(null),
+    user.roleId !== null ? findRoleById(user.roleId) : Promise.resolve(null),
   ]);
 
   return (
@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         name: user.name,
         username: user.username,
         email: user.email,
-        roleName: role?.nama ?? null,
+        roleName: role?.name ?? null,
       }}
       desa={{ nama: desa?.namaDesa ?? "Desa", logo: desa?.logo ?? null }}
     >

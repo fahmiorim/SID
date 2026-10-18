@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
 import { db, pool } from "@/db";
-import { config, grupAkses, settingModul, userGrup, users } from "@/db/schema";
+import { modules, rolePermissions, roles, users, villages } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 
@@ -29,23 +29,23 @@ function unwrap<T>(values: T[]): T {
   return value;
 }
 
-async function ensureConfig(): Promise<number> {
-  const [existing] = await db.select({ id: config.id }).from(config).limit(1);
+async function ensureVillage(): Promise<number> {
+  const [existing] = await db.select({ id: villages.id }).from(villages).limit(1);
   if (existing) return existing.id;
 
   const inserted = unwrap(
     await db
-      .insert(config)
+      .insert(villages)
       .values({
-        namaDesa: "Desa Contoh",
-        kodeDesa: "3201012001",
-        kodePos: "16710",
-        namaKecamatan: "Kecamatan Contoh",
-        kodeKecamatan: "3201012",
-        namaKabupaten: "Kabupaten Contoh",
-        namaPropinsi: "Provinsi Contoh",
-        alamatKantor: "Jl. Contoh No. 1",
-        emailDesa: "desa@contoh.id",
+        name: "Desa Contoh",
+        code: "3201012001",
+        postalCode: "16710",
+        district: "Kecamatan Contoh",
+        districtCode: "3201012",
+        regency: "Kabupaten Contoh",
+        province: "Provinsi Contoh",
+        officeAddress: "Jl. Contoh No. 1",
+        email: "desa@contoh.id",
       })
       .$returningId(),
   );
@@ -53,32 +53,32 @@ async function ensureConfig(): Promise<number> {
   return inserted.id;
 }
 
-async function upsertRole(configId: number, seed: RoleSeed): Promise<number> {
+async function upsertRole(villageId: number, seed: RoleSeed): Promise<number> {
   const [existing] = await db
-    .select({ id: userGrup.id })
-    .from(userGrup)
-    .where(and(eq(userGrup.configId, configId), eq(userGrup.slug, seed.slug)))
+    .select({ id: roles.id })
+    .from(roles)
+    .where(and(eq(roles.villageId, villageId), eq(roles.slug, seed.slug)))
     .limit(1);
 
   if (existing) {
     await db
-      .update(userGrup)
-      .set({ nama: seed.nama, jenis: seed.jenis })
-      .where(eq(userGrup.id, existing.id));
+      .update(roles)
+      .set({ name: seed.name, isSystem: seed.isSystem })
+      .where(eq(roles.id, existing.id));
     return existing.id;
   }
 
   const inserted = unwrap(
     await db
-      .insert(userGrup)
-      .values({ configId, nama: seed.nama, slug: seed.slug, jenis: seed.jenis })
+      .insert(roles)
+      .values({ villageId, name: seed.name, slug: seed.slug, isSystem: seed.isSystem })
       .$returningId(),
   );
 
   return inserted.id;
 }
 
-async function upsertModules(configId: number): Promise<Map<string, number>> {
+async function upsertModules(villageId: number): Promise<Map<string, number>> {
   const slugToId = new Map<string, number>();
 
   // Induk dulu, baru anak, agar id induk sudah tersedia.
@@ -90,29 +90,29 @@ async function upsertModules(configId: number): Promise<Map<string, number>> {
     const parentId = modul.parentSlug ? (slugToId.get(modul.parentSlug) ?? 0) : 0;
 
     const values = {
-      configId,
-      modul: modul.modul,
+      villageId,
+      name: modul.name,
       slug: modul.slug,
       url: modul.url,
-      ikon: modul.ikon,
-      urut: modul.urut,
-      level: modul.level,
-      hidden: modul.hidden ?? false,
-      aktif: modul.aktif ?? true,
-      parent: parentId,
+      icon: modul.icon,
+      sortOrder: modul.sortOrder,
+      isGroup: modul.isGroup,
+      isHidden: modul.isHidden ?? false,
+      isActive: modul.isActive ?? true,
+      parentId,
     };
 
     const [existing] = await db
-      .select({ id: settingModul.id })
-      .from(settingModul)
-      .where(and(eq(settingModul.configId, configId), eq(settingModul.slug, modul.slug)))
+      .select({ id: modules.id })
+      .from(modules)
+      .where(and(eq(modules.villageId, villageId), eq(modules.slug, modul.slug)))
       .limit(1);
 
     if (existing) {
-      await db.update(settingModul).set(values).where(eq(settingModul.id, existing.id));
+      await db.update(modules).set(values).where(eq(modules.id, existing.id));
       slugToId.set(modul.slug, existing.id);
     } else {
-      const inserted = unwrap(await db.insert(settingModul).values(values).$returningId());
+      const inserted = unwrap(await db.insert(modules).values(values).$returningId());
       slugToId.set(modul.slug, inserted.id);
     }
   }
@@ -120,31 +120,29 @@ async function upsertModules(configId: number): Promise<Map<string, number>> {
   return slugToId;
 }
 
-async function upsertGrants(
-  configId: number,
+/**
+ * Ganti seluruh matriks akses sebuah role agar sinkron dengan seeder.
+ *
+ * Baris hanya dibuat untuk modul yang diberi akses (tidak ada baris "tanpa
+ * akses"), sehingga menghapus baris lama lalu menulis ulang membuat hasilnya
+ * idempoten sekaligus membersihkan grant yang sudah dihapus dari seed.
+ */
+async function replaceGrants(
   roleId: number,
-  grants: Record<string, number>,
+  grants: RoleSeed["grants"],
   slugToId: Map<string, number>,
 ): Promise<void> {
-  for (const [slug, akses] of Object.entries(grants)) {
-    const idModul = slugToId.get(slug);
-    if (idModul === undefined) continue;
+  await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
 
-    const [existing] = await db
-      .select({ id: grupAkses.id })
-      .from(grupAkses)
-      .where(and(eq(grupAkses.idGrup, roleId), eq(grupAkses.idModul, idModul)))
-      .limit(1);
+  for (const [slug, access] of Object.entries(grants)) {
+    const moduleId = slugToId.get(slug);
+    if (moduleId === undefined) continue;
 
-    if (existing) {
-      await db.update(grupAkses).set({ akses }).where(eq(grupAkses.id, existing.id));
-    } else {
-      await db.insert(grupAkses).values({ configId, idGrup: roleId, idModul, akses });
-    }
+    await db.insert(rolePermissions).values({ roleId, moduleId, access });
   }
 }
 
-async function ensureAdminUser(configId: number, grupId: number): Promise<string> {
+async function ensureAdminUser(villageId: number, roleId: number): Promise<string> {
   const [existing] = await db
     .select({ id: users.id })
     .from(users)
@@ -154,7 +152,7 @@ async function ensureAdminUser(configId: number, grupId: number): Promise<string
   if (existing) {
     await db
       .update(users)
-      .set({ grupId, configId, active: true, emailVerified: true })
+      .set({ roleId, villageId, active: true, emailVerified: true })
       .where(eq(users.id, existing.id));
     return existing.id;
   }
@@ -168,8 +166,8 @@ async function ensureAdminUser(configId: number, grupId: number): Promise<string
     .set({
       username: ADMIN_USERNAME,
       displayUsername: ADMIN_USERNAME,
-      grupId,
-      configId,
+      roleId,
+      villageId,
       active: true,
       emailVerified: true,
     })
@@ -179,22 +177,22 @@ async function ensureAdminUser(configId: number, grupId: number): Promise<string
 }
 
 async function main(): Promise<void> {
-  const configId = await ensureConfig();
-  console.log(`• config id = ${configId}`);
+  const villageId = await ensureVillage();
+  console.log(`• village id = ${villageId}`);
 
   const roleIds = new Map<string, number>();
   for (const role of ROLE_SEEDS) {
-    roleIds.set(role.slug, await upsertRole(configId, role));
+    roleIds.set(role.slug, await upsertRole(villageId, role));
   }
   console.log(`• ${roleIds.size} role disiapkan`);
 
-  const slugToId = await upsertModules(configId);
+  const slugToId = await upsertModules(villageId);
   console.log(`• ${slugToId.size} modul disiapkan`);
 
   for (const role of ROLE_SEEDS) {
     const roleId = roleIds.get(role.slug);
     if (roleId !== undefined) {
-      await upsertGrants(configId, roleId, role.grants, slugToId);
+      await replaceGrants(roleId, role.grants, slugToId);
     }
   }
   console.log("• matriks akses disiapkan");
@@ -202,7 +200,7 @@ async function main(): Promise<void> {
   const adminRoleId = roleIds.get("administrator");
   if (adminRoleId === undefined) throw new Error("Role administrator tidak ditemukan.");
 
-  await ensureAdminUser(configId, adminRoleId);
+  await ensureAdminUser(villageId, adminRoleId);
   console.log("• pengguna administrator disiapkan");
 
   console.log("\nSelesai. Kredensial administrator:");

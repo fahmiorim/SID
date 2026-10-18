@@ -7,7 +7,7 @@ export interface MenuNode {
   label: string;
   url: string | null;
   icon: string | null;
-  urut: number;
+  sortOrder: number;
   children: MenuNode[];
 }
 
@@ -22,9 +22,9 @@ export function buildMenu(
   modules: readonly ModuleRecord[],
   allowedSlugs: ReadonlySet<string>,
 ): MenuNode[] {
-  const visible = modules.filter((modul) => modul.aktif && !modul.hidden);
+  const visible = modules.filter((modul) => modul.isActive && !modul.isHidden);
 
-  const parentById = new Map(visible.map((modul) => [modul.id, modul.parent ?? 0]));
+  const parentById = new Map(visible.map((modul) => [modul.id, modul.parentId ?? 0]));
   const nodeById = new Map<number, MenuNode>();
 
   for (const modul of visible) {
@@ -33,10 +33,10 @@ export function buildMenu(
     nodeById.set(modul.id, {
       id: modul.id,
       slug: modul.slug,
-      label: modul.modul,
+      label: modul.name,
       url: modul.url,
-      icon: modul.ikon,
-      urut: modul.urut ?? 0,
+      icon: modul.icon,
+      sortOrder: modul.sortOrder ?? 0,
       children: [],
     });
   }
@@ -55,7 +55,7 @@ export function buildMenu(
   }
 
   const sortRecursively = (items: MenuNode[]): void => {
-    items.sort((a, b) => a.urut - b.urut || a.label.localeCompare(b.label, "id"));
+    items.sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label, "id"));
     for (const item of items) sortRecursively(item.children);
   };
   sortRecursively(roots);

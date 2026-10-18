@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { RESOURCES } from "@/features/rbac/domain/resources";
 
-/** Slug resource RBAC untuk modul wilayah (harus sama dengan `setting_modul.slug`). */
+/** Slug resource RBAC untuk modul wilayah (harus sama dengan `modules.slug`). */
 export const WILAYAH_RESOURCE = RESOURCES.wilayah;
 
 /** Skema validasi input wilayah (dipakai di server action). */

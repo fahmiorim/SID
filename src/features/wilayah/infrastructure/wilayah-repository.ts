@@ -3,11 +3,11 @@ import "server-only";
 import { and, asc, count, eq, like, ne, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { wilayah } from "@/db/schema";
+import { regions } from "@/db/schema";
 import type { WilayahDTO, WilayahFormInput } from "@/features/wilayah/domain/wilayah";
 
 export interface WilayahListParams {
-  configId: number;
+  villageId: number;
   search: string;
   page: number;
   pageSize: number;
@@ -21,50 +21,51 @@ export interface WilayahListResult {
   pageCount: number;
 }
 
-function toDto(row: typeof wilayah.$inferSelect): WilayahDTO {
+/** Petakan baris `regions` → DTO domain (kosakata Indonesia). */
+function toDto(row: typeof regions.$inferSelect): WilayahDTO {
   return {
     id: row.id,
     dusun: row.dusun ?? "",
     rw: row.rw ?? "",
     rt: row.rt ?? "",
-    urut: row.urut ?? 0,
+    urut: row.sortOrder,
   };
 }
 
-function buildWhere(configId: number, search: string, excludeId?: number): SQL {
-  const configFilter = eq(wilayah.configId, configId);
-  const filters: SQL[] = [configFilter];
+function buildWhere(villageId: number, search: string, excludeId?: number): SQL {
+  const villageFilter = eq(regions.villageId, villageId);
+  const filters: SQL[] = [villageFilter];
 
   if (search) {
     const term = `%${search}%`;
     const searchFilter = or(
-      like(wilayah.dusun, term),
-      like(wilayah.rw, term),
-      like(wilayah.rt, term),
+      like(regions.dusun, term),
+      like(regions.rw, term),
+      like(regions.rt, term),
     );
     if (searchFilter) filters.push(searchFilter);
   }
 
   if (excludeId !== undefined) {
-    filters.push(ne(wilayah.id, excludeId));
+    filters.push(ne(regions.id, excludeId));
   }
 
-  return and(...filters) ?? configFilter;
+  return and(...filters) ?? villageFilter;
 }
 
 export async function listWilayah(params: WilayahListParams): Promise<WilayahListResult> {
-  const { configId, search, page, pageSize } = params;
-  const where = buildWhere(configId, search);
+  const { villageId, search, page, pageSize } = params;
+  const where = buildWhere(villageId, search);
 
   const [rows, totalRows] = await Promise.all([
     db
       .select()
-      .from(wilayah)
+      .from(regions)
       .where(where)
-      .orderBy(asc(wilayah.urut), asc(wilayah.dusun), asc(wilayah.rw), asc(wilayah.rt))
+      .orderBy(asc(regions.sortOrder), asc(regions.dusun), asc(regions.rw), asc(regions.rt))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ value: count() }).from(wilayah).where(where),
+    db.select({ value: count() }).from(regions).where(where),
   ]);
 
   const total = totalRows[0]?.value ?? 0;
@@ -78,11 +79,11 @@ export async function listWilayah(params: WilayahListParams): Promise<WilayahLis
   };
 }
 
-export async function findWilayahById(configId: number, id: number): Promise<WilayahDTO | null> {
+export async function findWilayahById(villageId: number, id: number): Promise<WilayahDTO | null> {
   const [row] = await db
     .select()
-    .from(wilayah)
-    .where(and(eq(wilayah.configId, configId), eq(wilayah.id, id)))
+    .from(regions)
+    .where(and(eq(regions.villageId, villageId), eq(regions.id, id)))
     .limit(1);
 
   return row ? toDto(row) : null;
@@ -90,39 +91,39 @@ export async function findWilayahById(configId: number, id: number): Promise<Wil
 
 /** Apakah kombinasi dusun/RW/RT sudah dipakai (kecuali `excludeId`). */
 export async function wilayahExists(
-  configId: number,
+  villageId: number,
   input: WilayahFormInput,
   excludeId: number | null,
 ): Promise<boolean> {
   const filters: SQL[] = [
-    eq(wilayah.configId, configId),
-    eq(wilayah.dusun, input.dusun),
-    eq(wilayah.rw, input.rw),
-    eq(wilayah.rt, input.rt),
+    eq(regions.villageId, villageId),
+    eq(regions.dusun, input.dusun),
+    eq(regions.rw, input.rw),
+    eq(regions.rt, input.rt),
   ];
 
   if (excludeId !== null) {
-    filters.push(ne(wilayah.id, excludeId));
+    filters.push(ne(regions.id, excludeId));
   }
 
   const duplicates = await db
-    .select({ id: wilayah.id })
-    .from(wilayah)
+    .select({ id: regions.id })
+    .from(regions)
     .where(and(...filters))
     .limit(1);
 
   return duplicates.length > 0;
 }
 
-export async function insertWilayah(configId: number, input: WilayahFormInput): Promise<number> {
+export async function insertWilayah(villageId: number, input: WilayahFormInput): Promise<number> {
   const [inserted] = await db
-    .insert(wilayah)
+    .insert(regions)
     .values({
-      configId,
+      villageId,
       dusun: input.dusun,
       rw: input.rw,
       rt: input.rt,
-      urut: input.urut,
+      sortOrder: input.urut,
     })
     .$returningId();
 
@@ -132,11 +133,11 @@ export async function insertWilayah(configId: number, input: WilayahFormInput): 
 
 export async function updateWilayah(id: number, input: WilayahFormInput): Promise<void> {
   await db
-    .update(wilayah)
-    .set({ dusun: input.dusun, rw: input.rw, rt: input.rt, urut: input.urut })
-    .where(eq(wilayah.id, id));
+    .update(regions)
+    .set({ dusun: input.dusun, rw: input.rw, rt: input.rt, sortOrder: input.urut })
+    .where(eq(regions.id, id));
 }
 
 export async function deleteWilayah(id: number): Promise<void> {
-  await db.delete(wilayah).where(eq(wilayah.id, id));
+  await db.delete(regions).where(eq(regions.id, id));
 }

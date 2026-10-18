@@ -1,21 +1,20 @@
 /**
  * Katalog modul awal untuk fondasi.
  *
- * Ini subset representatif (Beranda, Kependudukan, Pengaturan) agar sidebar &
- * RBAC dapat didemonstrasikan. Impor katalog penuh (137 modul dari
- * `setting_modul` OpenSID) akan ditambahkan pada tahap migrasi data; strukturnya
- * sudah identik sehingga cukup menambah entri di sini.
+ * Subset representatif (Beranda, Kependudukan, Pengaturan) agar sidebar & RBAC
+ * dapat didemonstrasikan. Modul lain ditambahkan bertahap seiring dibangunnya
+ * fitur; cukup menambah entri di sini dengan bentuk yang sama.
  */
 export interface ModuleSeed {
   slug: string;
-  modul: string;
+  name: string;
   url: string | null;
-  ikon: string;
-  urut: number;
-  /** Modul yang hanya menjadi judul/grup (punya anak). */
-  level: boolean;
-  hidden?: boolean;
-  aktif?: boolean;
+  icon: string;
+  sortOrder: number;
+  /** Modul yang hanya menjadi judul/grup (punya anak, tanpa halaman sendiri). */
+  isGroup: boolean;
+  isHidden?: boolean;
+  isActive?: boolean;
   /** Slug modul induk; kosong berarti modul tingkat atas. */
   parentSlug?: string;
 }
@@ -23,91 +22,91 @@ export interface ModuleSeed {
 export const MODULE_SEEDS: readonly ModuleSeed[] = [
   {
     slug: "beranda",
-    modul: "Beranda",
+    name: "Beranda",
     url: "/beranda",
-    ikon: "layout-dashboard",
-    urut: 1,
-    level: false,
+    icon: "layout-dashboard",
+    sortOrder: 1,
+    isGroup: false,
   },
 
   {
     slug: "kependudukan",
-    modul: "Kependudukan",
+    name: "Kependudukan",
     url: null,
-    ikon: "users",
-    urut: 2,
-    level: true,
+    icon: "users",
+    sortOrder: 2,
+    isGroup: true,
   },
   {
     slug: "penduduk",
-    modul: "Data Penduduk",
+    name: "Data Penduduk",
     url: "/penduduk",
-    ikon: "user-round",
-    urut: 1,
-    level: false,
+    icon: "user-round",
+    sortOrder: 1,
+    isGroup: false,
     parentSlug: "kependudukan",
   },
   {
     slug: "keluarga",
-    modul: "Kartu Keluarga",
+    name: "Kartu Keluarga",
     url: "/keluarga",
-    ikon: "house",
-    urut: 2,
-    level: false,
+    icon: "house",
+    sortOrder: 2,
+    isGroup: false,
     parentSlug: "kependudukan",
   },
   {
     slug: "wilayah",
-    modul: "Wilayah Administratif",
+    name: "Wilayah Administratif",
     url: "/wilayah",
-    ikon: "map",
-    urut: 3,
-    level: false,
+    icon: "map",
+    sortOrder: 3,
+    isGroup: false,
     parentSlug: "kependudukan",
   },
 
   {
     slug: "pengaturan",
-    modul: "Pengaturan",
+    name: "Pengaturan",
     url: null,
-    ikon: "settings",
-    urut: 99,
-    level: true,
+    icon: "settings",
+    sortOrder: 99,
+    isGroup: true,
   },
   {
     slug: "identitas-desa",
-    modul: "Identitas Desa",
+    name: "Identitas Desa",
     url: "/pengaturan/desa",
-    ikon: "building-2",
-    urut: 1,
-    level: false,
+    icon: "building-2",
+    sortOrder: 1,
+    isGroup: false,
     parentSlug: "pengaturan",
   },
   {
     slug: "pengguna",
-    modul: "Pengguna",
+    name: "Pengguna",
     url: "/pengaturan/pengguna",
-    ikon: "user-cog",
-    urut: 2,
-    level: false,
+    icon: "user-cog",
+    sortOrder: 2,
+    isGroup: false,
     parentSlug: "pengaturan",
   },
   {
     slug: "grup-akses",
-    modul: "Grup & Hak Akses",
+    name: "Grup & Hak Akses",
     url: "/pengaturan/grup",
-    ikon: "shield-check",
-    urut: 3,
-    level: false,
+    icon: "shield-check",
+    sortOrder: 3,
+    isGroup: false,
     parentSlug: "pengaturan",
   },
   {
     slug: "modul",
-    modul: "Modul",
+    name: "Modul",
     url: "/pengaturan/modul",
-    ikon: "blocks",
-    urut: 4,
-    level: false,
+    icon: "blocks",
+    sortOrder: 4,
+    isGroup: false,
     parentSlug: "pengaturan",
   },
 ] as const;

@@ -3,63 +3,58 @@ import "server-only";
 import { cache } from "react";
 
 import {
-  aksesToActions,
   applyParentInheritance,
+  levelAllows,
+  type AccessLevel,
   type Action,
 } from "@/features/rbac/domain/permission";
 import {
   findRoleById,
-  listAksesByRole,
+  listLevelsByRole,
   listModules,
 } from "@/features/rbac/infrastructure/rbac-repository";
 
-/**
- * Slug role super admin OpenSID. Role ini melewati seluruh pemeriksaan izin.
- */
+/** Slug role super admin: melewati seluruh pemeriksaan izin. */
 export const SUPERADMIN_SLUG = "administrator";
 
-/** Modul bawaan yang selalu dapat diakses setiap pengguna yang sudah masuk. */
+/** Modul bawaan yang selalu dapat dibaca setiap pengguna yang sudah masuk. */
 export const DEFAULT_RESOURCE = "beranda";
 
 export interface EffectivePermissions {
   isSuperadmin: boolean;
-  actionsByResource: Map<string, Set<Action>>;
+  levelByResource: Map<string, AccessLevel>;
 }
 
 const EMPTY_PERMISSIONS: EffectivePermissions = {
   isSuperadmin: false,
-  actionsByResource: new Map(),
+  levelByResource: new Map(),
 };
 
 /**
- * Hitung izin efektif sebuah role, termasuk warisan parent→child.
+ * Hitung izin efektif sebuah role, termasuk warisan induk ← anak.
  *
  * Di-cache per-permintaan memakai `cache()` React sehingga berapa kali pun
  * dipanggil dalam satu render/aksi, query hanya dijalankan sekali.
  */
 export const computeEffectivePermissions = cache(
-  async (roleId: number, configId: number | null): Promise<EffectivePermissions> => {
+  async (roleId: number, villageId: number | null): Promise<EffectivePermissions> => {
     const role = await findRoleById(roleId);
 
     if (!role) return EMPTY_PERMISSIONS;
 
     if (role.slug === SUPERADMIN_SLUG) {
-      return { isSuperadmin: true, actionsByResource: new Map() };
+      return { isSuperadmin: true, levelByResource: new Map() };
     }
 
-    const [modules, aksesById] = await Promise.all([
-      listModules(configId),
-      listAksesByRole(roleId),
+    const [modules, levelById] = await Promise.all([
+      listModules(villageId),
+      listLevelsByRole(roleId),
     ]);
 
-    const effective = applyParentInheritance(modules, aksesById);
-    const actionsByResource = new Map<string, Set<Action>>();
-
-    for (const [slug, akses] of effective) {
-      actionsByResource.set(slug, new Set(aksesToActions(akses)));
-    }
-
-    return { isSuperadmin: false, actionsByResource };
+    return {
+      isSuperadmin: false,
+      levelByResource: applyParentInheritance(modules, levelById),
+    };
   },
 );
 
@@ -71,15 +66,15 @@ export function hasPermission(
 ): boolean {
   if (permissions.isSuperadmin) return true;
   if (resource === DEFAULT_RESOURCE) return action === "read";
-  return permissions.actionsByResource.get(resource)?.has(action) ?? false;
+  return levelAllows(permissions.levelByResource.get(resource), action);
 }
 
 /** Daftar slug resource yang boleh dibaca (untuk menyusun menu). */
 export function readableResources(permissions: EffectivePermissions): Set<string> {
   const slugs = new Set<string>();
 
-  for (const [slug, actions] of permissions.actionsByResource) {
-    if (actions.has("read")) slugs.add(slug);
+  for (const [slug, level] of permissions.levelByResource) {
+    if (levelAllows(level, "read")) slugs.add(slug);
   }
 
   return slugs;

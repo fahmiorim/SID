@@ -13,7 +13,7 @@ import { env } from "@/lib/env";
  * Keputusan desain:
  * - Tabel identitas memakai nama plural (`users`, `sessions`, `accounts`,
  *   `verifications`) dengan id string yang dikelola better-auth.
- * - Login memakai **username** (kebiasaan OpenSID), email opsional.
+ * - Login memakai **username**; email bersifat opsional.
  * - Sesi berlaku 7 hari dan diperpanjang otomatis tiap 1 hari.
  * - `nextCookies()` harus berada di urutan terakhir plugin agar cookie sesi
  *   ikut ter-set ketika autentikasi dipanggil dari Server Action.
@@ -47,9 +47,9 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       // Nullable untuk mode satu-desa; diisi saat multi-desa aktif.
-      configId: { type: "number", required: false, input: false },
-      // FK ke `user_grup.id` (RBAC).
-      grupId: { type: "number", required: false, input: false },
+      villageId: { type: "number", required: false, input: false },
+      // FK ke `roles.id` (RBAC).
+      roleId: { type: "number", required: false, input: false },
       active: { type: "boolean", required: false, defaultValue: true, input: false },
       lastLoginAt: { type: "date", required: false, input: false },
     },
