@@ -38,7 +38,7 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 /** Validasi objek environment dan kembalikan nilai bertipe. */
-export function parseEnv(source: NodeJS.ProcessEnv = process.env): Env {
+export function parseEnv(source: Record<string, string | undefined> = process.env): Env {
   const result = envSchema.safeParse(source);
 
   if (!result.success) {
