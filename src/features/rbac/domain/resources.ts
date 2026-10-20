@@ -11,6 +11,8 @@ export const RESOURCES = {
   penduduk: "penduduk",
   keluarga: "keluarga",
   rumahTangga: "rumah-tangga",
+  kelompok: "kelompok",
+  kategoriKelompok: "kategori-kelompok",
   wilayah: "wilayah",
   persuratan: "persuratan",
   surat: "surat",

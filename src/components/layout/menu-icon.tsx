@@ -7,6 +7,8 @@ import {
   Files,
   FileSpreadsheet,
   FileText,
+  HandHeart,
+  Home,
   House,
   Inbox,
   Landmark,
@@ -20,6 +22,7 @@ import {
   UserCog,
   UserRound,
   Users,
+  UsersRound,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -35,6 +38,7 @@ const ICONS: Record<string, LucideIcon> = {
   users: Users,
   "user-round": UserRound,
   house: House,
+  home: Home,
   map: Map,
   settings: Settings,
   "building-2": Building2,
@@ -52,6 +56,8 @@ const ICONS: Record<string, LucideIcon> = {
   calculator: Calculator,
   "bar-chart-3": BarChart3,
   "file-spreadsheet": FileSpreadsheet,
+  "users-round": UsersRound,
+  "hand-heart": HandHeart,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {

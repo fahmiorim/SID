@@ -37,6 +37,8 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "laporan-penduduk": "read",
       keluarga: "manage",
       "rumah-tangga": "manage",
+      kelompok: "manage",
+      "kategori-kelompok": "manage",
       wilayah: "manage",
       surat: "manage",
       "jenis-surat": "read",

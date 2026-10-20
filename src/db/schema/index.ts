@@ -12,6 +12,7 @@ export * from "./bantuan";
 export * from "./family";
 export * from "./incoming-letters";
 export * from "./keuangan";
+export * from "./kelompok";
 export * from "./letter-classifications";
 export * from "./letter-types";
 export * from "./letters";
