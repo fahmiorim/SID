@@ -4,6 +4,9 @@ import { RESOURCES } from "@/features/rbac/domain/resources";
 
 export const KEUANGAN_RESOURCE = RESOURCES.keuangan;
 
+/** Resource RBAC modul laporan keuangan (harus sama dengan `modules.slug`). */
+export const LAPORAN_KEUANGAN_RESOURCE = RESOURCES.laporanKeuangan;
+
 // --- Akun level-1 (chart of accounts) --------------------------------------
 
 /**

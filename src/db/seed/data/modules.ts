@@ -145,6 +145,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "keuangan-grup",
   },
+  {
+    slug: "dokumen-laporan",
+    name: "Dokumen Laporan",
+    url: "/keuangan/laporan-dokumen",
+    icon: "file-spreadsheet",
+    sortOrder: 3,
+    isGroup: false,
+    parentSlug: "keuangan-grup",
+  },
 
   {
     slug: "pengaturan",

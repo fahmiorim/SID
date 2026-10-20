@@ -84,3 +84,58 @@ export type KeuanganTemplate = typeof keuanganTemplate.$inferSelect;
 export type NewKeuanganTemplate = typeof keuanganTemplate.$inferInsert;
 export type Keuangan = typeof keuangan.$inferSelect;
 export type NewKeuangan = typeof keuangan.$inferInsert;
+
+/**
+ * `keuangan_laporan` — arsip dokumen laporan APBDes per semester (Lapis D).
+ *
+ * Mengikuti `laporan_sinkronisasi` pada sistem rujukan: dokumen diunggah
+ * manual oleh operator lalu ditandai sudah dikirim ke kecamatan (OpenDK).
+ * Angka laporan **tidak** diturunkan dari tabel ini.
+ */
+export const keuanganLaporan = mysqlTable(
+  "keuangan_laporan",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id")
+      .notNull()
+      .references(() => villages.id, { onDelete: "cascade" }),
+
+    /** `laporan_apbdes` atau `laporan_penduduk`. */
+    tipe: varchar("tipe", { length: 40 }).notNull(),
+    judul: varchar("judul", { length: 255 }).notNull(),
+    tahun: int("tahun").notNull(),
+    /** `1` = Januari–Juni, `2` = Juli–Desember. */
+    semester: int("semester").notNull(),
+
+    /** Nama berkas asli yang diunggah operator (untuk ditampilkan & diunduh). */
+    namaFile: varchar("nama_file", { length: 255 }).notNull(),
+    /** Jalur berkas di disk relatif terhadap `storage/keuangan-laporan`. */
+    jalurFile: varchar("jalur_file", { length: 255 }).notNull(),
+    ukuranFile: int("ukuran_file").notNull().default(0),
+
+    /** Terisi saat laporan ditandai terkirim ke kecamatan/OpenDK. */
+    kirimPada: timestamp("kirim_pada"),
+
+    createdBy: varchar("created_by", { length: 36 }).references(() => users.id, {
+      onDelete: "set null",
+    }),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("keuangan_laporan_village_tahun_semester_unique").on(
+      table.villageId,
+      table.tipe,
+      table.tahun,
+      table.semester,
+    ),
+    index("keuangan_laporan_village_tahun_idx").on(table.villageId, table.tahun),
+  ],
+);
+
+export type KeuanganLaporan = typeof keuanganLaporan.$inferSelect;
+export type NewKeuanganLaporan = typeof keuanganLaporan.$inferInsert;

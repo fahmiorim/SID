@@ -5,6 +5,7 @@ import {
   Calculator,
   Circle,
   Files,
+  FileSpreadsheet,
   FileText,
   House,
   Inbox,
@@ -50,6 +51,7 @@ const ICONS: Record<string, LucideIcon> = {
   wallet: Wallet,
   calculator: Calculator,
   "bar-chart-3": BarChart3,
+  "file-spreadsheet": FileSpreadsheet,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {

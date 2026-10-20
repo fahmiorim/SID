@@ -1,4 +1,4 @@
-import { FileDown } from "lucide-react";
+import { FileDown, FileSpreadsheet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -77,6 +77,12 @@ export default async function LaporanKeuanganPage({
                 {item}
               </Link>
             ))}
+            <Button variant="outline" asChild>
+              <a href={`/keuangan/laporan/ekspor-excel?tahun=${laporan.tahun}`}>
+                <FileSpreadsheet className="size-4" />
+                Ekspor Excel
+              </a>
+            </Button>
             <Button variant="outline" asChild>
               <a href={`/keuangan/laporan/ekspor?tahun=${laporan.tahun}`}>
                 <FileDown className="size-4" />

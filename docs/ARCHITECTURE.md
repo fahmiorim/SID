@@ -67,7 +67,7 @@ Fitur yang sudah dibangun saat ini:
 | `modul`     | Katalog modul/menu (pohon `parent_id`).                               |
 | `pengguna`  | Manajemen pengguna (di atas tabel better-auth).                       |
 | `surat`     | Persuratan: jenis/klasifikasi, surat layanan, agenda masuk/keluar, cetak & PDF. |
-| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik + ekspor CSV. |
+| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik + ekspor CSV/Excel, arsip dokumen laporan per semester (unggah PDF + tanda kirim). |
 | `navigation`| Menu sidebar dari modul + izin efektif.                               |
 | `auth`      | Login/logout username + pelacakan login terakhir.                     |
 
@@ -128,7 +128,7 @@ dipertahankan apa adanya.
 | Penduduk  | `residents`                                      | numerik |
 | Keluarga  | `families`                                       | numerik |
 | Persuratan | `letter_types`, `letter_classifications`, `letters`, `incoming_letters`, `outgoing_letters` | numerik |
-| Keuangan  | `keuangan_template`, `keuangan`                  | numerik / uuid string |
+| Keuangan  | `keuangan_template`, `keuangan`, `keuangan_laporan` | numerik / uuid string |
 | Referensi | `religions`, `educations`, `occupations`, `marital_statuses`, `family_relations`, `blood_types`, `citizenships` | numerik |
 
 Tabel identitas memakai **plural khas better-auth** dengan id string yang

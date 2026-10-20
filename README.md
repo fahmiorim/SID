@@ -6,7 +6,7 @@ autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal leng
 untuk **Wilayah Administratif**, **Kependudukan**, **Kartu Keluarga**,
 **Persuratan** (layanan surat, master surat, agenda masuk/keluar, cetak & PDF),
 dan **Keuangan** (APBDes: pohon rekening, pagu anggaran, realisasi, laporan RP
-APBDes & per bidang).
+APBDes & per bidang, ekspor CSV/Excel, serta arsip dokumen laporan per semester).
 
 > Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -169,24 +169,30 @@ npm run test:watch  # mode pantau
    & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
    ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
 7. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
-   belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, dan ekspor CSV.
-8. Modul berikutnya: laporan triwulan, ekspor Excel/PDF, dan kirim ke OpenDK.
-9. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+   belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, serta ekspor
+   **CSV** dan **Excel** (`.xls`).
+8. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
+   unggah PDF, tanda terkirim ke kecamatan, unduh berkas.
+9. Modul berikutnya: laporan triwulan dan kirim otomatis ke OpenDK.
+10. Ekspor/impor (exceljs), peta, dan lampiran berkas.
 
 ### Cakupan Keuangan
 
-Irisan Keuangan mengikuti **Lapis A (modern/konsolidasi)** dari sistem rujukan
+Irisan Keuangan mengikuti **Lapis A (modern/konsolidasi)** dan **Lapis D (arsip
+dokumen)** dari sistem rujukan
 ([`docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md)):
 dua tabel inti `keuangan_template` (pohon rekening) + `keuangan` (nilai per
 tahun), dengan laporan RP APBDes & realisasi per bidang diturunkan dari pohon
-tersebut (tanpa tabel baru). Yang belum termasuk:
+tersebut (tanpa tabel baru), ditambah `keuangan_laporan` sebagai arsip dokumen
+laporan per semester. Yang belum termasuk:
 
 | Fitur rujukan | Status |
 | ------------- | ------ |
 | Lapis B legacy manual (`keuangan_manual_*`, impor dari Siskeudes) | belum |
 | Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
 | Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | belum |
-| Ekspor laporan (Excel/PDF) & kirim ke OpenDK | sebagian (CSV sudah; Excel/PDF & OpenDK belum) |
+| Ekspor laporan (Excel/CSV) | ✅ |
+| Kirim otomatis ke OpenDK (unggah berkas OS otomatis ke API kecamatan) | belum (baru penandaan manual) |
 | Sisa lebih (SiLPA) otomatis antartahun | belum |
 | Catatan/lampiran berkas per rekening | belum |
 
