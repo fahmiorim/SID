@@ -55,6 +55,26 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 | `errors.ts`          | `AppError` dengan kode + status HTTP.                             |
 | `logger.ts`          | Logger JSON; menelusuri `Error.cause` (mis. galat MySQL).         |
 
+Fitur yang sudah dibangun saat ini:
+
+| Fitur       | Isi ringkas                                                            |
+| ----------- | ---------------------------------------------------------------------- |
+| `wilayah`   | Wilayah administratif (dusun/RW/RT) + `listWilayahOptions`.            |
+| `penduduk`  | Data penduduk + katalog referensi + `getPendudukSuratData`.           |
+| `keluarga`  | Kartu Keluarga; kepala keluarga **diturunkan** dari anggota.           |
+| `desa`      | Identitas desa (termasuk nama & NIP kepala desa).                     |
+| `rbac`      | Role, matriks izin, `computeEffectivePermissions`.                    |
+| `modul`     | Katalog modul/menu (pohon `parent_id`).                               |
+| `pengguna`  | Manajemen pengguna (di atas tabel better-auth).                       |
+| `surat`     | Persuratan: jenis/klasifikasi, surat layanan, agenda masuk/keluar, cetak & PDF. |
+| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik. |
+| `navigation`| Menu sidebar dari modul + izin efektif.                               |
+| `auth`      | Login/logout username + pelacakan login terakhir.                     |
+
+> Cakupan & batasan tiap modul (khususnya Persuratan & Keuangan) dirinci di
+> README (bagian *Cakupan Persuratan* dan *Cakupan Keuangan*); dokumen riset di
+> `docs/riset/` adalah **referensi fitur**, bukan janji cakupan.
+
 ### Aturan penting
 
 - **`infrastructure` tidak pernah diimpor `presentation`.** Halaman & aksi
@@ -107,6 +127,8 @@ dipertahankan apa adanya.
 | Wilayah   | `regions`                                        | numerik |
 | Penduduk  | `residents`                                      | numerik |
 | Keluarga  | `families`                                       | numerik |
+| Persuratan | `letter_types`, `letter_classifications`, `letters`, `incoming_letters`, `outgoing_letters` | numerik |
+| Keuangan  | `keuangan_template`, `keuangan`                  | numerik / uuid string |
 | Referensi | `religions`, `educations`, `occupations`, `marital_statuses`, `family_relations`, `blood_types`, `citizenships` | numerik |
 
 Tabel identitas memakai **plural khas better-auth** dengan id string yang
@@ -181,8 +203,12 @@ yang bisa berbeda dari data anggotanya. Menghapus KK melepas tautan
 - `cn` berasal dari paket **`cn`** (pengganti clsx + tailwind-merge, tanpa
   dependensi). `src/lib/utils.ts` hanya me-re-export.
 - Komponen bersama di `src/components/shared/`:
-  - `ModuleGuard` — gerbang izin halaman (server component).
+  - `ModuleGuard` — gerbang izin halaman (server component) untuk halaman yang
+    tidak membutuhkan data pengguna lain.
   - `NoAccess` — tampilan "Akses ditolak".
+  - Halaman yang juga membutuhkan `user` (mis. untuk menentukan tombol aksi)
+    memanggil `verifySession()` lalu `hasPermission()` langsung; `getCurrentUser`
+    di-cache per permintaan sehingga tidak menambah query.
 - Semua teks antarmuka **berbahasa Indonesia**.
 - Navigasi internal memakai `next/link` (`<Link>`), bukan `<a href>`.
 
@@ -232,8 +258,10 @@ Contoh: modul "Bantuan Sosial" dengan slug `bantuan`.
    repository.
 6. **Presentasi:** `…/presentation/actions.ts` (Server Action) dan
    `…/presentation/components/*` (formulir/tabel).
-7. **Halaman:** `src/app/(admin)/bantuan/page.tsx` — bungkus `ModuleGuard`
-   (`resource={RESOURCES.bantuan}`).
+7. **Halaman:** `src/app/(admin)/bantuan/page.tsx` — panggil `verifySession()`,
+   lalu tampilkan `NoAccess` bila `hasPermission(user.permissions,
+   RESOURCES.bantuan, "read")` gagal. Bila halaman tidak butuh data pengguna,
+   bungkus dengan `ModuleGuard` (`resource={RESOURCES.bantuan}`).
 8. **Seeder:** tambahkan modul ke `modules.ts`; jalankan `npm run db:seed`.
 9. **Verifikasi:** `npm run check` lalu `npm run build`.
 

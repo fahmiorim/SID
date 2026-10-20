@@ -3,9 +3,12 @@
 Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
 autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
-untuk **Wilayah Administratif**, **Kependudukan**, dan **Kartu Keluarga**.
+untuk **Wilayah Administratif**, **Kependudukan**, **Kartu Keluarga**,
+**Persuratan** (layanan surat, master surat, agenda masuk/keluar, cetak & PDF),
+dan **Keuangan** (APBDes: pohon rekening, pagu anggaran, realisasi, laporan RP
+APBDes & per bidang).
 
-> Status: **fondasi** — modul fitur dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
+> Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
 ## Tumpukan Teknologi
 
@@ -85,19 +88,21 @@ src/
 │  ├─ (auth)/masuk/          # Halaman masuk
 │  ├─ (admin)/               # Area terproteksi + kerangka admin
 │  │  ├─ beranda/  penduduk/  keluarga/  wilayah/
+│  │  ├─ persuratan/{surat,jenis,klasifikasi,surat-masuk,surat-keluar}/
 │  │  └─ pengaturan/{desa,pengguna,grup,modul,profil}/
 │  ├─ api/auth/[...all]/     # Handler better-auth
 │  └─ layout.tsx  page.tsx  globals.css
 ├─ components/
 │  ├─ layout/                # app-shell, sidebar, header
-│  ├─ shared/                # ModuleGuard, NoAccess, placeholder
+│  ├─ shared/                # NoAccess, placeholder, guard
 │  └─ ui/                    # komponen shadcn/ui
 ├─ db/
 │  ├─ schema/                # definisi tabel (Drizzle)
 │  ├─ migrations/            # migrasi SQL
 │  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
-│  ├─ auth/  desa/  keluarga/  navigation/  penduduk/  rbac/  wilayah/
+│  ├─ auth/  desa/  keluarga/  modul/  navigation/  penduduk/
+│  ├─ pengguna/  rbac/  surat/  wilayah/
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
 
@@ -134,8 +139,9 @@ src/
 
 Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
 database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
-keluarga, dan wilayah, pemetaan kesalahan, serta validasi environment. CI
-menjalankan typecheck + lint + format + test + build pada setiap push/PR.
+keluarga, wilayah, pengguna, dan persuratan (nomor, template, tanggal), pemetaan
+kesalahan, serta validasi environment. CI menjalankan typecheck + lint + format +
+test + build pada setiap push/PR.
 
 ```bash
 npm run test        # sekali jalan
@@ -156,5 +162,50 @@ npm run test:watch  # mode pantau
    referensi (agama, pendidikan, pekerjaan, dst.).
 4. **Kartu Keluarga** ✅ — daftar KK, kepala keluarga (turunan), jumlah & rincian
    anggota, penautan penduduk ke KK.
-5. Modul berikutnya: Persuratan → Keuangan.
-6. Ekspor/impor (exceljs/pdf-lib), peta, dan lampiran berkas.
+5. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
+   jenis/klasifikasi surat, agenda surat masuk & keluar, penomoran otomatis,
+   cetak HTML, dan unduh PDF.
+6. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
+   & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
+   ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
+7. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
+   belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, dan cetak HTML.
+8. Modul berikutnya: laporan triwulan, ekspor Excel/PDF, dan kirim ke OpenDK.
+9. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+
+### Cakupan Keuangan
+
+Irisan Keuangan mengikuti **Lapis A (modern/konsolidasi)** dari sistem rujukan
+([`docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md)):
+dua tabel inti `keuangan_template` (pohon rekening) + `keuangan` (nilai per
+tahun), dengan laporan RP APBDes & realisasi per bidang diturunkan dari pohon
+tersebut (tanpa tabel baru). Yang belum termasuk:
+
+| Fitur rujukan | Status |
+| ------------- | ------ |
+| Lapis B legacy manual (`keuangan_manual_*`, impor dari Siskeudes) | belum |
+| Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
+| Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | belum |
+| Ekspor laporan (Excel/PDF) & kirim ke OpenDK | belum |
+| Sisa lebih (SiLPA) otomatis antartahun | belum |
+| Catatan/lampiran berkas per rekening | belum |
+
+### Cakupan Persuratan
+
+Irisan Persuratan yang sudah dibangun sengaja dibatasi pada **siklus surat
+dasar**. Fitur lanjutan dari sistem rujukan
+([`docs/riset/LAMPIRAN-01-PERSURATAN.md`](docs/riset/LAMPIRAN-01-PERSURATAN.md))
+belum termasuk dan menjadi pekerjaan berikutnya:
+
+| Fitur rujukan | Status |
+| ------------- | ------ |
+| Layanan Mandiri (warga mengajukan surat sendiri) | belum |
+| Verifikasi berjenjang (operator → sekdes → kades) | belum |
+| Tanda Tangan Elektronik (TTE/BSRE) | belum |
+| QR verifikasi publik & tabel `urls` | belum |
+| Form isian dinamis per surat (`form_isian` JSON) | belum |
+| Kode isian kustom & mesin placeholder lengkap (aritmatika, terbilang, `klgx_`) | belum |
+| Master syarat surat (`ref_syarat_surat`) | belum |
+| Impor katalog 43 surat sistem | belum (seed memuat katalog contoh) |
+| Arsip ke kecamatan (OpenDK) | belum |
+| Empat mode penomoran surat | belum (dipakai: per jenis + tahun) |

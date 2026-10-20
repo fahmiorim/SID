@@ -6,6 +6,9 @@ import {
   citizenships,
   educations,
   familyRelations,
+  keuanganTemplate,
+  letterClassifications,
+  letterTypes,
   maritalStatuses,
   modules,
   occupations,
@@ -18,6 +21,7 @@ import {
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 
+import { KEUANGAN_TEMPLATE_SEEDS } from "./data/keuangan";
 import { MODULE_SEEDS } from "./data/modules";
 import {
   BLOOD_TYPE_SEEDS,
@@ -29,6 +33,7 @@ import {
   RELIGION_SEEDS,
 } from "./data/references";
 import { ROLE_SEEDS, type RoleSeed } from "./data/roles";
+import { JENIS_SURAT_SEEDS, KLASIFIKASI_SURAT_SEEDS } from "./data/surat";
 
 /**
  * Seeder fondasi: identitas desa, role, katalog modul, matriks akses, dan satu
@@ -202,6 +207,93 @@ async function replaceGrants(
   }
 }
 
+async function seedSuratCatalog(villageId: number): Promise<void> {
+  const classificationIds = new Map<string, number>();
+
+  for (const item of KLASIFIKASI_SURAT_SEEDS) {
+    const [existing] = await db
+      .select({ id: letterClassifications.id })
+      .from(letterClassifications)
+      .where(
+        and(
+          eq(letterClassifications.villageId, villageId),
+          eq(letterClassifications.code, item.code),
+        ),
+      )
+      .limit(1);
+
+    if (existing) {
+      await db
+        .update(letterClassifications)
+        .set({ name: item.name })
+        .where(eq(letterClassifications.id, existing.id));
+      classificationIds.set(item.code, existing.id);
+    } else {
+      const inserted = unwrap(
+        await db
+          .insert(letterClassifications)
+          .values({ villageId, code: item.code, name: item.name })
+          .$returningId(),
+      );
+      classificationIds.set(item.code, inserted.id);
+    }
+  }
+
+  for (const item of JENIS_SURAT_SEEDS) {
+    const values = {
+      villageId,
+      classificationId: classificationIds.get(item.classificationCode) ?? null,
+      code: item.code,
+      name: item.name,
+      templateBody: item.templateBody,
+      requiresResident: item.requiresResident,
+      isActive: item.isActive,
+      numberFormat: item.numberFormat,
+      validityMonths: item.validityMonths,
+      sortOrder: item.sortOrder,
+    };
+
+    const [existing] = await db
+      .select({ id: letterTypes.id })
+      .from(letterTypes)
+      .where(and(eq(letterTypes.villageId, villageId), eq(letterTypes.code, item.code)))
+      .limit(1);
+
+    if (existing) {
+      await db.update(letterTypes).set(values).where(eq(letterTypes.id, existing.id));
+    } else {
+      await db.insert(letterTypes).values(values);
+    }
+  }
+}
+
+/**
+ * Isi katalog pohon rekening APBDes (`keuangan_template`).
+ *
+ * `parent_uuid` diturunkan dari kode itu sendiri (segmen terakhir dibuang),
+ * sehingga seed cukup memuat daftar kode + uraian. Idempoten via upsert
+ * `uraian`.
+ */
+async function seedKeuanganTemplate(): Promise<void> {
+  const rows = KEUANGAN_TEMPLATE_SEEDS.map((item) => {
+    const parts = item.uuid.split(".");
+    return {
+      uuid: item.uuid,
+      parentUuid: parts.length > 1 ? parts.slice(0, -1).join(".") : null,
+      uraian: item.uraian,
+    };
+  });
+
+  if (rows.length === 0) return;
+
+  await db
+    .insert(keuanganTemplate)
+    .values(rows)
+    .onDuplicateKeyUpdate({
+      set: { uraian: sql`values(uraian)`, parentUuid: sql`values(parent_uuid)` },
+    });
+}
+
 async function ensureAdminUser(villageId: number, roleId: number): Promise<string> {
   const [existing] = await db
     .select({ id: users.id })
@@ -251,6 +343,11 @@ async function main(): Promise<void> {
 
   const slugToId = await upsertModules(villageId);
   console.log(`• ${slugToId.size} modul disiapkan`);
+
+  await seedSuratCatalog(villageId);
+  await seedKeuanganTemplate();
+  console.log("• katalog persuratan disiapkan");
+  console.log("• pohon rekening APBDes disiapkan");
 
   for (const role of ROLE_SEEDS) {
     const roleId = roleIds.get(role.slug);

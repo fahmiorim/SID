@@ -22,6 +22,20 @@
       "when": 1792342943717,
       "tag": "0002_tambah_kartu_keluarga",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1792487220872,
+      "tag": "0003_clear_ma_gnuci",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1792488458109,
+      "tag": "0004_lazy_guardian",
+      "breakpoints": true
     }
   ]
 }

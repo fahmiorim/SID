@@ -28,6 +28,11 @@ export const villages = mysqlTable("villages", {
 
   logo: varchar("logo", { length: 255 }),
 
+  /** Nama kepala desa. */
+  headName: varchar("head_name", { length: 100 }),
+  /** NIP kepala desa. */
+  headNip: varchar("head_nip", { length: 25 }),
+
   officeAddress: varchar("office_address", { length: 255 }),
   email: varchar("email", { length: 100 }),
   phone: varchar("phone", { length: 30 }),
