@@ -138,6 +138,24 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
   },
 
   {
+    slug: "bantuan",
+    name: "Bantuan Sosial",
+    url: null,
+    icon: "hand-heart",
+    sortOrder: 15,
+    isGroup: true,
+  },
+  {
+    slug: "program-bantuan",
+    name: "Program Bantuan",
+    url: "/bantuan",
+    icon: "hand-heart",
+    sortOrder: 1,
+    isGroup: false,
+    parentSlug: "bantuan",
+  },
+
+  {
     slug: "keuangan-grup",
     name: "Keuangan",
     url: null,

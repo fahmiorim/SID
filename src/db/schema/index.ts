@@ -8,6 +8,7 @@
  */
 
 export * from "./auth";
+export * from "./bantuan";
 export * from "./family";
 export * from "./incoming-letters";
 export * from "./keuangan";

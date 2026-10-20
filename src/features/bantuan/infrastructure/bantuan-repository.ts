@@ -1,0 +1,630 @@
+import "server-only";
+
+import { and, asc, count, desc, eq, inArray, like, ne, or, sql, type SQL } from "drizzle-orm";
+
+import { db } from "@/db";
+import {
+  bantuanPeserta,
+  bantuanProgram,
+  families,
+  regions,
+  residents,
+  rumahTangga,
+} from "@/db/schema";
+import {
+  SASARAN_KELUARGA,
+  SASARAN_PENDUDUK,
+  SASARAN_RUMAH_TANGGA,
+  type BantuanDTO,
+  type BantuanFormInput,
+  type BantuanListRow,
+  type BantuanReferenceOption,
+  type PesertaBantuanRow,
+  type PesertaFormInput,
+  type SasaranOption,
+} from "@/features/bantuan/domain/bantuan";
+import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
+
+export interface ListBantuanParams {
+  villageId: number;
+  search: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface BantuanListResult {
+  rows: BantuanListRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
+/** Ubah teks kosong menjadi `NULL` agar basis data tidak menyimpan string kosong. */
+function blankToNull(value: string): string | null {
+  return value === "" ? null : value;
+}
+
+/** Petakan baris `bantuan_program` → DTO domain (kosakata Indonesia). */
+function toDto(row: typeof bantuanProgram.$inferSelect): BantuanDTO {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    sasaran: row.sasaran,
+    description: row.description,
+    startDate: row.startDate,
+    endDate: row.endDate,
+    asalDana: row.asalDana,
+  };
+}
+
+function buildWhere(villageId: number, search: string): SQL {
+  const villageFilter = eq(bantuanProgram.villageId, villageId);
+  const filters: SQL[] = [villageFilter];
+
+  if (search) {
+    const term = `%${search}%`;
+    const searchFilter = or(
+      like(bantuanProgram.name, term),
+      like(bantuanProgram.slug, term),
+      like(bantuanProgram.description, term),
+    );
+    if (searchFilter) filters.push(searchFilter);
+  }
+
+  return and(...filters) ?? villageFilter;
+}
+
+export async function listBantuan(params: ListBantuanParams): Promise<BantuanListResult> {
+  const { villageId, search, page, pageSize } = params;
+  const where = buildWhere(villageId, search);
+
+  const [rows, totalRows] = await Promise.all([
+    db
+      .select()
+      .from(bantuanProgram)
+      .where(where)
+      .orderBy(desc(bantuanProgram.createdAt), desc(bantuanProgram.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+    db.select({ total: count() }).from(bantuanProgram).where(where),
+  ]);
+
+  const total = totalRows[0]?.total ?? 0;
+  const ids = rows.map((row) => row.id);
+
+  // Ringkasan peserta diambil sekali untuk halaman ini lalu digabung di memori —
+  // menghindari subquery berkorelasi per baris.
+  const [pesertaCounts, wilayahCounts] = await Promise.all([
+    listPesertaCounts(villageId, ids),
+    listWilayahCounts(villageId, ids),
+  ]);
+
+  return {
+    rows: rows.map((row) => ({
+      ...toDto(row),
+      pesertaCount: pesertaCounts.get(row.id) ?? 0,
+      wilayahCount: wilayahCounts.get(row.id) ?? 0,
+    })),
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
+/** Jumlah peserta per program untuk sekumpulan id (satu query). */
+async function listPesertaCounts(
+  villageId: number,
+  programIds: readonly number[],
+): Promise<Map<number, number>> {
+  if (programIds.length === 0) return new Map();
+
+  const rows = await db
+    .select({ programId: bantuanPeserta.programId, total: count() })
+    .from(bantuanPeserta)
+    .where(
+      and(
+        eq(bantuanPeserta.villageId, villageId),
+        inArray(bantuanPeserta.programId, [...programIds]),
+      ),
+    )
+    .groupBy(bantuanPeserta.programId);
+
+  return new Map(rows.map((row) => [row.programId, row.total]));
+}
+
+/**
+ * Jumlah wilayah berbeda yang dihuni peserta, per program.
+ *
+ * Wilayah diambil dari sasaran (penduduk → wilayah domisili, keluarga/RTM →
+ * wilayah kartu). Sasaran kelompok belum didukung sehingga tidak dihitung.
+ */
+async function listWilayahCounts(
+  villageId: number,
+  programIds: readonly number[],
+): Promise<Map<number, number>> {
+  if (programIds.length === 0) return new Map();
+
+  const ids = [...programIds];
+  const filters: SQL[] = [
+    eq(bantuanPeserta.villageId, villageId),
+    inArray(bantuanPeserta.programId, ids),
+  ];
+
+  const [pendudukRows, keluargaRows, rtmRows] = await Promise.all([
+    db
+      .select({
+        programId: bantuanPeserta.programId,
+        regionId: residents.regionId,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+      .where(and(...filters)),
+    db
+      .select({
+        programId: bantuanPeserta.programId,
+        regionId: families.regionId,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(families, eq(bantuanPeserta.familyId, families.id))
+      .where(and(...filters)),
+    db
+      .select({
+        programId: bantuanPeserta.programId,
+        regionId: rumahTangga.regionId,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(rumahTangga, eq(bantuanPeserta.rtmId, rumahTangga.id))
+      .where(and(...filters)),
+  ]);
+
+  // Kumpulkan himpunan wilayah per program, lalu hitung kardinalitasnya.
+  const buckets = new Map<number, Set<number | null>>();
+  for (const row of [...pendudukRows, ...keluargaRows, ...rtmRows]) {
+    const set = buckets.get(row.programId) ?? new Set<number | null>();
+    set.add(row.regionId);
+    buckets.set(row.programId, set);
+  }
+
+  return new Map([...buckets].map(([programId, set]) => [programId, set.size]));
+}
+
+export async function findBantuanById(villageId: number, id: number): Promise<BantuanDTO | null> {
+  const [row] = await db
+    .select()
+    .from(bantuanProgram)
+    .where(and(eq(bantuanProgram.villageId, villageId), eq(bantuanProgram.id, id)))
+    .limit(1);
+
+  return row ? toDto(row) : null;
+}
+
+/** Apakah slug program sudah dipakai program lain di desa yang sama. */
+export async function bantuanSlugExists(
+  villageId: number,
+  slug: string,
+  excludeId: number | null,
+): Promise<boolean> {
+  const filters: SQL[] = [eq(bantuanProgram.villageId, villageId), eq(bantuanProgram.slug, slug)];
+
+  if (excludeId !== null) {
+    filters.push(ne(bantuanProgram.id, excludeId));
+  }
+
+  const rows = await db
+    .select({ id: bantuanProgram.id })
+    .from(bantuanProgram)
+    .where(and(...filters))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+export async function insertBantuan(
+  villageId: number,
+  slug: string,
+  input: BantuanFormInput,
+): Promise<number> {
+  const [inserted] = await db
+    .insert(bantuanProgram)
+    .values({
+      villageId,
+      name: input.nama,
+      slug,
+      sasaran: input.sasaran ?? SASARAN_PENDUDUK,
+      description: blankToNull(input.keterangan),
+      startDate: input.tanggalMulai,
+      endDate: input.tanggalAkhir,
+      asalDana: input.asalDana,
+    })
+    .$returningId();
+
+  if (!inserted) throw new Error("Gagal menyimpan data program bantuan.");
+  return inserted.id;
+}
+
+export async function updateBantuan(
+  id: number,
+  slug: string,
+  input: BantuanFormInput,
+): Promise<void> {
+  await db
+    .update(bantuanProgram)
+    .set({
+      name: input.nama,
+      slug,
+      sasaran: input.sasaran ?? SASARAN_PENDUDUK,
+      description: blankToNull(input.keterangan),
+      startDate: input.tanggalMulai,
+      endDate: input.tanggalAkhir,
+      asalDana: input.asalDana,
+    })
+    .where(eq(bantuanProgram.id, id));
+}
+
+/** Hapus program; peserta ikut terhapus lewat `ON DELETE CASCADE`. */
+export async function deleteBantuan(id: number): Promise<void> {
+  await db.delete(bantuanProgram).where(eq(bantuanProgram.id, id));
+}
+
+/** Jumlah peserta sebuah program (dipakai untuk memblokir penghapusan). */
+export async function countPesertaByProgram(villageId: number, programId: number): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(bantuanPeserta)
+    .where(and(eq(bantuanPeserta.villageId, villageId), eq(bantuanPeserta.programId, programId)));
+
+  return row?.total ?? 0;
+}
+
+/**
+ * Peserta sebuah program, diurutkan menurut nama sasaran.
+ *
+ * Kolom sasaran dipilih sesuai `sasaran` program, sehingga hanya satu join yang
+ * dijalankan (bukan tiga join dengan dua di antaranya pasti kosong).
+ */
+export async function listPesertaProgram(
+  villageId: number,
+  program: BantuanDTO,
+): Promise<PesertaBantuanRow[]> {
+  const filters: SQL[] = [
+    eq(bantuanPeserta.villageId, villageId),
+    eq(bantuanPeserta.programId, program.id),
+  ];
+
+  const cardColumns = {
+    id: bantuanPeserta.id,
+    cardNumber: bantuanPeserta.cardNumber,
+    cardName: bantuanPeserta.cardName,
+    cardNationalId: bantuanPeserta.cardNationalId,
+  };
+
+  if (program.sasaran === SASARAN_KELUARGA) {
+    const rows = await db
+      .select({ ...cardColumns, targetName: families.number, targetIdentity: families.number })
+      .from(bantuanPeserta)
+      .innerJoin(families, eq(bantuanPeserta.familyId, families.id))
+      .where(and(...filters))
+      .orderBy(asc(families.number));
+
+    return rows.map((row) => ({
+      ...row,
+      targetName: `KK ${row.targetName}`,
+      targetIdentity: row.targetIdentity,
+    }));
+  }
+
+  if (program.sasaran === SASARAN_RUMAH_TANGGA) {
+    const rows = await db
+      .select({
+        ...cardColumns,
+        targetName: rumahTangga.number,
+        targetIdentity: rumahTangga.number,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(rumahTangga, eq(bantuanPeserta.rtmId, rumahTangga.id))
+      .where(and(...filters))
+      .orderBy(asc(rumahTangga.number));
+
+    return rows.map((row) => ({
+      ...row,
+      targetName: `RTM ${row.targetName}`,
+      targetIdentity: row.targetIdentity,
+    }));
+  }
+
+  const rows = await db
+    .select({
+      ...cardColumns,
+      targetName: residents.name,
+      targetIdentity: residents.nationalId,
+    })
+    .from(bantuanPeserta)
+    .innerJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+    .where(and(...filters))
+    .orderBy(asc(residents.name));
+
+  return rows;
+}
+
+/** Sebaran wilayah sasaran peserta sebuah program (label → jumlah). */
+export async function listSebaranWilayah(
+  villageId: number,
+  program: BantuanDTO,
+): Promise<Array<{ label: string; total: number }>> {
+  const filters: SQL[] = [
+    eq(bantuanPeserta.villageId, villageId),
+    eq(bantuanPeserta.programId, program.id),
+  ];
+
+  const regionColumns = {
+    regionId: regions.id,
+    dusun: regions.dusun,
+    rw: regions.rw,
+    rt: regions.rt,
+    total: count(),
+  };
+
+  let rows: Array<{
+    regionId: number | null;
+    dusun: string | null;
+    rw: string | null;
+    rt: string | null;
+    total: number;
+  }>;
+
+  if (program.sasaran === SASARAN_KELUARGA) {
+    rows = await db
+      .select(regionColumns)
+      .from(bantuanPeserta)
+      .innerJoin(families, eq(bantuanPeserta.familyId, families.id))
+      .leftJoin(regions, eq(families.regionId, regions.id))
+      .where(and(...filters))
+      .groupBy(regions.id, regions.dusun, regions.rw, regions.rt);
+  } else if (program.sasaran === SASARAN_RUMAH_TANGGA) {
+    rows = await db
+      .select(regionColumns)
+      .from(bantuanPeserta)
+      .innerJoin(rumahTangga, eq(bantuanPeserta.rtmId, rumahTangga.id))
+      .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+      .where(and(...filters))
+      .groupBy(regions.id, regions.dusun, regions.rw, regions.rt);
+  } else {
+    rows = await db
+      .select(regionColumns)
+      .from(bantuanPeserta)
+      .innerJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+      .leftJoin(regions, eq(residents.regionId, regions.id))
+      .where(and(...filters))
+      .groupBy(regions.id, regions.dusun, regions.rw, regions.rt);
+  }
+
+  return rows
+    .map((row) => ({
+      label:
+        row.regionId === null
+          ? "Wilayah belum diisi"
+          : formatWilayahLabel({ dusun: row.dusun ?? "", rw: row.rw ?? "", rt: row.rt ?? "" }),
+      total: row.total,
+    }))
+    .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label, "id"));
+}
+
+/** Kandidat sasaran penduduk yang belum menjadi peserta program. */
+export async function listPendudukSasaran(
+  villageId: number,
+  programId: number,
+): Promise<SasaranOption[]> {
+  const taken = await listTakenIds(villageId, programId, "residentId");
+
+  const rows = await db
+    .select({ id: residents.id, name: residents.name, nationalId: residents.nationalId })
+    .from(residents)
+    .where(eq(residents.villageId, villageId))
+    .orderBy(asc(residents.name), asc(residents.id));
+
+  return rows
+    .filter((row) => !taken.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      label: row.nationalId ? `${row.name} — ${row.nationalId}` : row.name,
+    }));
+}
+
+/** Kandidat sasaran keluarga (KK) yang belum menjadi peserta program. */
+export async function listKeluargaSasaran(
+  villageId: number,
+  programId: number,
+): Promise<SasaranOption[]> {
+  const taken = await listTakenIds(villageId, programId, "familyId");
+
+  const rows = await db
+    .select({ id: families.id, number: families.number, address: families.address })
+    .from(families)
+    .where(eq(families.villageId, villageId))
+    .orderBy(asc(families.number));
+
+  return rows
+    .filter((row) => !taken.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      label: row.address ? `KK ${row.number} — ${row.address}` : `KK ${row.number}`,
+    }));
+}
+
+/** Kandidat sasaran rumah tangga (RTM) yang belum menjadi peserta program. */
+export async function listRumahTanggaSasaran(
+  villageId: number,
+  programId: number,
+): Promise<SasaranOption[]> {
+  const taken = await listTakenIds(villageId, programId, "rtmId");
+
+  const rows = await db
+    .select({
+      id: rumahTangga.id,
+      number: rumahTangga.number,
+      address: rumahTangga.address,
+      dusun: regions.dusun,
+    })
+    .from(rumahTangga)
+    .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+    .where(eq(rumahTangga.villageId, villageId))
+    .orderBy(asc(rumahTangga.number));
+
+  return rows
+    .filter((row) => !taken.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      label: row.dusun ? `RTM ${row.number} — Dusun ${row.dusun}` : `RTM ${row.number}`,
+    }));
+}
+
+/** Id sasaran yang sudah terdaftar sebagai peserta sebuah program. */
+async function listTakenIds(
+  villageId: number,
+  programId: number,
+  column: "residentId" | "familyId" | "rtmId",
+): Promise<Set<number>> {
+  const target = bantuanPeserta[column];
+  const rows = await db
+    .select({ id: target })
+    .from(bantuanPeserta)
+    .where(
+      and(
+        eq(bantuanPeserta.villageId, villageId),
+        eq(bantuanPeserta.programId, programId),
+        sql`${target} is not null`,
+      ),
+    );
+
+  return new Set(rows.map((row) => row.id).filter((id): id is number => id !== null));
+}
+
+/**
+ * Penduduk desa beserta wilayah domisilinya.
+ *
+ * Dipakai untuk mengisi snapshot kartu peserta dari data master penduduk.
+ */
+export async function findPendudukSasaran(
+  villageId: number,
+  residentId: number,
+): Promise<{
+  name: string;
+  nationalId: string | null;
+  birthPlace: string | null;
+  birthDate: string | null;
+  address: string | null;
+  dusun: string | null;
+  rw: string | null;
+  rt: string | null;
+} | null> {
+  const [row] = await db
+    .select({
+      name: residents.name,
+      nationalId: residents.nationalId,
+      birthPlace: residents.birthPlace,
+      birthDate: residents.birthDate,
+      address: residents.address,
+      dusun: regions.dusun,
+      rw: regions.rw,
+      rt: regions.rt,
+    })
+    .from(residents)
+    .leftJoin(regions, eq(residents.regionId, regions.id))
+    .where(and(eq(residents.villageId, villageId), eq(residents.id, residentId)))
+    .limit(1);
+
+  return row ?? null;
+}
+
+/** Alamat sasaran keluarga/RTM (dipakai sebagai snapshot alamat kartu). */
+export async function findAlamatSasaran(
+  villageId: number,
+  kind: "keluarga" | "rumah-tangga",
+  id: number,
+): Promise<string | null> {
+  if (kind === "keluarga") {
+    const [row] = await db
+      .select({ address: families.address })
+      .from(families)
+      .where(and(eq(families.villageId, villageId), eq(families.id, id)))
+      .limit(1);
+    return row?.address ?? null;
+  }
+
+  const [row] = await db
+    .select({ address: rumahTangga.address })
+    .from(rumahTangga)
+    .where(and(eq(rumahTangga.villageId, villageId), eq(rumahTangga.id, id)))
+    .limit(1);
+  return row?.address ?? null;
+}
+
+/**
+ * Simpan seorang peserta.
+ *
+ * Sasaran yang dipilih dipetakan ke kolom FK sesuai `sasaran` program, sehingga
+ * hanya satu kolom yang terisi. Data kartu (bila kosong) diisi dari data master
+ * sebagai nilai awal yang tetap boleh disunting.
+ */
+export async function insertPeserta(
+  villageId: number,
+  programId: number,
+  sasaran: number,
+  sasaranId: number,
+  input: PesertaFormInput,
+): Promise<void> {
+  const values: typeof bantuanPeserta.$inferInsert = {
+    villageId,
+    programId,
+    residentId: null,
+    familyId: null,
+    rtmId: null,
+    cardNumber: blankToNull(input.nomorKartu),
+    cardNationalId: input.kartuNik,
+    cardName: blankToNull(input.kartuNama),
+    cardBirthPlace: blankToNull(input.kartuTempatLahir),
+    cardBirthDate: input.kartuTanggalLahir,
+    cardAddress: blankToNull(input.kartuAlamat),
+  };
+
+  if (sasaran === SASARAN_KELUARGA) {
+    values.familyId = sasaranId;
+  } else if (sasaran === SASARAN_RUMAH_TANGGA) {
+    values.rtmId = sasaranId;
+  } else {
+    values.residentId = sasaranId;
+  }
+
+  await db.insert(bantuanPeserta).values(values);
+}
+
+/** Hapus seorang peserta (scoped desa + program agar tidak lintas desa). */
+export async function deletePeserta(
+  villageId: number,
+  programId: number,
+  pesertaId: number,
+): Promise<void> {
+  await db
+    .delete(bantuanPeserta)
+    .where(
+      and(
+        eq(bantuanPeserta.villageId, villageId),
+        eq(bantuanPeserta.programId, programId),
+        eq(bantuanPeserta.id, pesertaId),
+      ),
+    );
+}
+
+/** Penduduk desa untuk memilih peserta (identitas ringkas + NIK). */
+export async function listPendudukRingkas(villageId: number): Promise<BantuanReferenceOption[]> {
+  const rows = await db
+    .select({ id: residents.id, name: residents.name, nationalId: residents.nationalId })
+    .from(residents)
+    .where(eq(residents.villageId, villageId))
+    .orderBy(asc(residents.name));
+
+  return rows.map((row) => ({ id: row.id, label: row.name, detail: row.nationalId }));
+}

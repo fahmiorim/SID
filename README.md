@@ -4,8 +4,9 @@ Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
 autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
 untuk **Wilayah Administratif**, **Kependudukan**, **Kartu Keluarga**,
-**Rumah Tangga (RTM)**, **Persuratan** (layanan surat, master surat, agenda
-masuk/keluar, cetak & PDF), dan **Keuangan** (APBDes: pohon rekening, pagu
+**Rumah Tangga (RTM)**, **Bantuan Sosial** (program & peserta), **Persuratan**
+(layanan surat, master surat, agenda masuk/keluar, cetak & PDF), dan
+**Keuangan** (APBDes: pohon rekening, pagu
 anggaran, realisasi, laporan RP APBDes & per bidang, ekspor CSV/Excel, serta
 arsip dokumen laporan per semester).
 
@@ -88,7 +89,8 @@ src/
 ├─ app/                      # Rute (App Router)
 │  ├─ (auth)/masuk/          # Halaman masuk
 │  ├─ (admin)/               # Area terproteksi + kerangka admin
-│  │  ├─ beranda/  penduduk/  keluarga/  wilayah/
+│  │  ├─ beranda/  penduduk/  keluarga/  rumah-tangga/  wilayah/
+│  │  ├─ bantuan/
 │  │  ├─ persuratan/{surat,jenis,klasifikasi,surat-masuk,surat-keluar}/
 │  │  └─ pengaturan/{desa,pengguna,grup,modul,profil}/
 │  ├─ api/auth/[...all]/     # Handler better-auth
@@ -102,7 +104,7 @@ src/
 │  ├─ migrations/            # migrasi SQL
 │  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
-│  ├─ auth/  desa/  keluarga/  modul/  navigation/  penduduk/
+│  ├─ auth/  bantuan/  desa/  keluarga/  modul/  navigation/  penduduk/
 │  ├─ pengguna/  rbac/  surat/  wilayah/
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
@@ -140,7 +142,8 @@ src/
 
 Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
 database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
-keluarga, wilayah, pengguna, dan persuratan (nomor, template, tanggal), pemetaan
+keluarga, wilayah, pengguna, bantuan (status masa aktif, slug, validasi peserta),
+dan persuratan (nomor, template, tanggal), pemetaan
 kesalahan, serta validasi environment. CI menjalankan typecheck + lint + format +
 test + build pada setiap push/PR.
 
@@ -165,23 +168,49 @@ npm run test:watch  # mode pantau
    anggota, penautan penduduk ke KK, dan cetak **Kartu Keluarga (PDF)**.
 5. **Rumah Tangga (RTM)** ✅ — daftar RTM dengan nomor otomatis, kelas sosial &
    BDT, rincian anggota (kepala/anggota), serta penautan penduduk ke RTM.
-6. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
+6. **Bantuan Sosial** ✅ — program bantuan (sasaran, masa aktif, asal dana),
+   penautan peserta penduduk/keluarga/RTM beserta snapshot kartu, dedupe peserta,
+   dan sebaran per wilayah.
+7. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
    jenis/klasifikasi surat, agenda surat masuk & keluar, penomoran otomatis,
    cetak HTML, dan unduh PDF.
-7. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
+8. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
    & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
    ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
-8. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
+9. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
    belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, serta ekspor
    **CSV** dan **Excel** (`.xls`).
-9. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
-   unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
-10. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
+10. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
+    unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
+11. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
     jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, dan
     kelompok umur (Data Pilah); cetak HTML + ekspor CSV.
-11. Modul berikutnya: laporan triwulan; modul Kelompok, Data Suplemen, dan
-    Bantuan.
-12. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+12. Modul berikutnya: Kelompok & Kategori, Data Suplemen, laporan bulanan desa,
+    laporan triwulan, dan DTKS.
+13. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+
+### Cakupan Bantuan Sosial
+
+Modul Bantuan Sosial dibangun sebagai dua entitas bersih: `bantuan_program`
+(definisi program + sasaran + masa aktif) dan `bantuan_peserta` (keanggotaan
+sasaran). Status masa aktif **dihitung** dari rentang tanggal, bukan disimpan.
+Penautan peserta memakai **FK eksplisit** (`resident_id`/`family_id`/`rtm_id`)
+alih-alih kunci teks seperti sistem rujukan
+([`docs/riset/LAMPIRAN-12-BANTUAN-DTKS.md`](docs/riset/LAMPIRAN-12-BANTUAN-DTKS.md)).
+Yang belum termasuk:
+
+| Fitur rujukan | Status |
+| ------------- | ------ |
+| Program bantuan (nama, sasaran, masa aktif, asal dana) | ✅ |
+| Sasaran penduduk / keluarga / rumah tangga | ✅ |
+| Peserta + snapshot kartu (no. kartu, NIK, nama, tempat/tanggal lahir, alamat) | ✅ |
+| Dedupe peserta per program + blokir hapus program berpeserta | ✅ |
+| Sebaran peserta per wilayah | ✅ |
+| Sasaran **kelompok** (menunggu modul Kelompok) | belum |
+| Unggah berkas kartu peserta (jpg/png) | belum |
+| Ekspor/impor peserta (Excel), cetak daftar & kartu peserta | belum |
+| Statistik bantuan per wilayah lintas program | belum |
+| Sinkronisasi DTKS (Satu Data) & impor Regsosek | belum |
 
 ### Cakupan Keuangan
 

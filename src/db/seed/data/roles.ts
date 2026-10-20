@@ -43,6 +43,8 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "klasifikasi-surat": "read",
       "surat-masuk": "manage",
       "surat-keluar": "manage",
+      "program-bantuan": "manage",
+      "peserta-bantuan": "manage",
       keuangan: "write",
       "laporan-keuangan": "read",
       "dokumen-laporan": "write",
