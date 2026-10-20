@@ -4,9 +4,10 @@ Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
 autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
 untuk **Wilayah Administratif**, **Kependudukan**, **Kartu Keluarga**,
-**Persuratan** (layanan surat, master surat, agenda masuk/keluar, cetak & PDF),
-dan **Keuangan** (APBDes: pohon rekening, pagu anggaran, realisasi, laporan RP
-APBDes & per bidang, ekspor CSV/Excel, serta arsip dokumen laporan per semester).
+**Rumah Tangga (RTM)**, **Persuratan** (layanan surat, master surat, agenda
+masuk/keluar, cetak & PDF), dan **Keuangan** (APBDes: pohon rekening, pagu
+anggaran, realisasi, laporan RP APBDes & per bidang, ekspor CSV/Excel, serta
+arsip dokumen laporan per semester).
 
 > Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -162,23 +163,25 @@ npm run test:watch  # mode pantau
    referensi (agama, pendidikan, pekerjaan, dst.).
 4. **Kartu Keluarga** ✅ — daftar KK, kepala keluarga (turunan), jumlah & rincian
    anggota, penautan penduduk ke KK, dan cetak **Kartu Keluarga (PDF)**.
-5. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
+5. **Rumah Tangga (RTM)** ✅ — daftar RTM dengan nomor otomatis, kelas sosial &
+   BDT, rincian anggota (kepala/anggota), serta penautan penduduk ke RTM.
+6. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
    jenis/klasifikasi surat, agenda surat masuk & keluar, penomoran otomatis,
    cetak HTML, dan unduh PDF.
-6. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
+7. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
    & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
    ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
-7. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
+8. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
    belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, serta ekspor
    **CSV** dan **Excel** (`.xls`).
-8. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
+9. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
    unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
-9. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
-   jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, dan
-   kelompok umur (Data Pilah); cetak HTML + ekspor CSV.
-10. Modul berikutnya: laporan triwulan; modul Rumah Tangga, Kelompok, Data
-    Suplemen, dan Bantuan.
-11. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+10. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
+    jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, dan
+    kelompok umur (Data Pilah); cetak HTML + ekspor CSV.
+11. Modul berikutnya: laporan triwulan; modul Kelompok, Data Suplemen, dan
+    Bantuan.
+12. Ekspor/impor (exceljs), peta, dan lampiran berkas.
 
 ### Cakupan Keuangan
 
@@ -213,6 +216,24 @@ hanya penduduk berstatus hidup yang dihitung. Yang belum termasuk:
 | Laporan kelompok rentan & statistik lintas-desa | belum |
 | Impor data penduduk dari berkas Excel/CSV | belum |
 | Cetak biodata penduduk per orang (PDF) | belum |
+
+### Cakupan Rumah Tangga
+
+Modul Rumah Tangga (RTM) dibangun sebagai entitas **mandiri** (kolom penanda
+DTKS/BDT disiapkan, tetapi sinkronisasi ke DTKS menyusul saat modul Bantuan
+dibangun). Keanggotaan RTM **eksklusif**: satu penduduk hanya berada di satu RTM,
+ditautkan lewat `residents.rtm_id` + `residents.rtm_level`.
+
+| Fitur rujukan | Status |
+| ------------- | ------ |
+| Daftar RTM dengan paginasi & pencarian | ✅ |
+| Nomor RTM otomatis (kode desa + nomor urut) | ✅ |
+| Kelas sosial & nomor BDT | ✅ |
+| Rincian anggota dengan tingkat (kepala/anggota) | ✅ |
+| Penautan & pengeluaran penduduk dari RTM | ✅ |
+| RTM sebagai data rumah tangga (Rumah Tangga, bukan KK) | ✅ |
+| Sinkronisasi otomatis RTM ↔ DTKS | belum (menunggu modul Bantuan/DTKS) |
+| Ekspor & cetak data RTM | belum |
 
 ### Cakupan Persuratan
 

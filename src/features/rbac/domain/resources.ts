@@ -10,6 +10,7 @@ export const RESOURCES = {
   beranda: "beranda",
   penduduk: "penduduk",
   keluarga: "keluarga",
+  rumahTangga: "rumah-tangga",
   wilayah: "wilayah",
   persuratan: "persuratan",
   surat: "surat",

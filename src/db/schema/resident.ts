@@ -22,6 +22,7 @@ import {
   religions,
 } from "./reference";
 import { regions } from "./region";
+import { rumahTangga } from "./rumah-tangga";
 import { villages } from "./village";
 
 /**
@@ -52,6 +53,16 @@ export const residents = mysqlTable(
     birthDate: date("birth_date", { mode: "string" }),
 
     familyId: int("family_id").references(() => families.id, { onDelete: "set null" }),
+
+    /**
+     * Rumah tangga tempat penduduk bernaung.
+     *
+     * Berbeda dari KK, RTM bersifat **eksklusif**: satu penduduk hanya boleh
+     * berada di satu rumah tangga. `rtmLevel` menyimpan perannya
+     * (1 = kepala rumah tangga, 2 = anggota; lihat domain rumah-tangga).
+     */
+    rtmId: int("rtm_id").references(() => rumahTangga.id, { onDelete: "set null" }),
+    rtmLevel: int("rtm_level"),
 
     religionId: int("religion_id").references(() => religions.id, { onDelete: "set null" }),
     educationId: int("education_id").references(() => educations.id, { onDelete: "set null" }),
