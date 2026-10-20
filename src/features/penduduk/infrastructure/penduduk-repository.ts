@@ -3,12 +3,13 @@ import "server-only";
 import { and, asc, count, eq, like, ne, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { families, regions, religions, residents } from "@/db/schema";
-import type {
-  LifeStatus,
-  PendudukDTO,
-  PendudukFormInput,
-  PendudukListRow,
+import { families, occupations, regions, religions, residents } from "@/db/schema";
+import {
+  HEAD_OF_FAMILY_RELATION_ID,
+  type LifeStatus,
+  type PendudukDTO,
+  type PendudukFormInput,
+  type PendudukListRow,
 } from "@/features/penduduk/domain/penduduk";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
 
@@ -165,6 +166,81 @@ export async function nationalIdExists(
     .limit(1);
 
   return duplicates.length > 0;
+}
+
+/** Apakah KK sudah punya kepala keluarga lain (selain `excludeId`). */
+export async function headOfFamilyExists(
+  villageId: number,
+  familyId: number,
+  excludeId: number | null,
+): Promise<boolean> {
+  const filters: SQL[] = [
+    eq(residents.villageId, villageId),
+    eq(residents.familyId, familyId),
+    eq(residents.familyRelationId, HEAD_OF_FAMILY_RELATION_ID),
+  ];
+
+  if (excludeId !== null) {
+    filters.push(ne(residents.id, excludeId));
+  }
+
+  const rows = await db
+    .select({ id: residents.id })
+    .from(residents)
+    .where(and(...filters))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+/** Pilihan penduduk untuk formulir fitur lain (mis. surat). */
+export interface PendudukOption {
+  id: number;
+  name: string;
+  nationalId: string | null;
+}
+
+export async function listPendudukOptions(villageId: number): Promise<PendudukOption[]> {
+  return db
+    .select({ id: residents.id, name: residents.name, nationalId: residents.nationalId })
+    .from(residents)
+    .where(eq(residents.villageId, villageId))
+    .orderBy(asc(residents.name), asc(residents.id));
+}
+
+/** Data penduduk yang dibutuhkan untuk mengisi placeholder surat. */
+export interface PendudukSuratData extends PendudukDTO {
+  religionName: string | null;
+  occupationName: string | null;
+  familyNumber: string | null;
+}
+
+export async function getPendudukSuratData(
+  villageId: number,
+  id: number,
+): Promise<PendudukSuratData | null> {
+  const [row] = await db
+    .select({
+      resident: residents,
+      religionName: religions.name,
+      occupationName: occupations.name,
+      familyNumber: families.number,
+    })
+    .from(residents)
+    .leftJoin(religions, eq(residents.religionId, religions.id))
+    .leftJoin(occupations, eq(residents.occupationId, occupations.id))
+    .leftJoin(families, eq(residents.familyId, families.id))
+    .where(and(eq(residents.villageId, villageId), eq(residents.id, id)))
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    ...toDto(row.resident),
+    religionName: row.religionName ?? null,
+    occupationName: row.occupationName ?? null,
+    familyNumber: row.familyNumber ?? null,
+  };
 }
 
 export async function insertPenduduk(villageId: number, input: PendudukFormInput): Promise<number> {

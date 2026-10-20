@@ -21,6 +21,8 @@ export async function updateIdentitasDesa(id: number, input: DesaFormInput): Pro
       province: blankToNull(input.namaPropinsi),
       provinceCode: blankToNull(input.kodePropinsi),
       officeAddress: blankToNull(input.alamatKantor),
+      headName: blankToNull(input.namaKepalaDesa),
+      headNip: blankToNull(input.nipKepalaDesa),
       email: blankToNull(input.emailDesa),
       phone: blankToNull(input.telepon),
       website: blankToNull(input.website),
@@ -51,6 +53,8 @@ export interface IdentitasDesa {
   namaPropinsi: string | null;
   kodePropinsi: string | null;
   alamatKantor: string | null;
+  namaKepalaDesa: string | null;
+  nipKepalaDesa: string | null;
   emailDesa: string | null;
   telepon: string | null;
   website: string | null;
@@ -69,6 +73,8 @@ const identitasColumns = {
   namaPropinsi: villages.province,
   kodePropinsi: villages.provinceCode,
   alamatKantor: villages.officeAddress,
+  namaKepalaDesa: villages.headName,
+  nipKepalaDesa: villages.headNip,
   emailDesa: villages.email,
   telepon: villages.phone,
   website: villages.website,

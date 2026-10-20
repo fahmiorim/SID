@@ -11,11 +11,19 @@ export const RESOURCES = {
   penduduk: "penduduk",
   keluarga: "keluarga",
   wilayah: "wilayah",
+  persuratan: "persuratan",
+  surat: "surat",
+  jenisSurat: "jenis-surat",
+  klasifikasiSurat: "klasifikasi-surat",
+  suratMasuk: "surat-masuk",
+  suratKeluar: "surat-keluar",
   pengaturan: "pengaturan",
   identitasDesa: "identitas-desa",
   pengguna: "pengguna",
   grupAkses: "grup-akses",
   modul: "modul",
+  keuangan: "keuangan",
+  laporanKeuangan: "laporan-keuangan",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

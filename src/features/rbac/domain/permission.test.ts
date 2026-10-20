@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyParentInheritance,
+  fromCrudPermissions,
   levelAllows,
   levelToActions,
+  toCrudPermissions,
   type AccessLevel,
   type ModuleNode,
 } from "@/features/rbac/domain/permission";
@@ -41,6 +43,18 @@ describe("levelToActions", () => {
 function node(id: number, slug: string, parentId: number | null = null): ModuleNode {
   return { id, slug, parentId };
 }
+
+describe("konversi izin CRUD", () => {
+  it("mengembalikan null ketika tidak ada akses", () => {
+    expect(fromCrudPermissions({ canRead: false, canWrite: false, canManage: false })).toBeNull();
+  });
+
+  it("memetakan tingkat ke izin CRUD dan sebaliknya", () => {
+    for (const level of ["read", "write", "manage"] as const) {
+      expect(fromCrudPermissions(toCrudPermissions(level))).toBe(level);
+    }
+  });
+});
 
 describe("applyParentInheritance", () => {
   const modules: readonly ModuleNode[] = [

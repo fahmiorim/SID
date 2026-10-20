@@ -16,21 +16,28 @@ import {
 import { requirePermission } from "@/lib/dal";
 import { conflict, notFound } from "@/lib/errors";
 
+/** Pastikan role yang diakses berada pada desa yang sama. */
+async function getScopedRole(id: number, villageId: number) {
+  const role = await getRoleById(id);
+  if (!role || (role.villageId !== null && role.villageId !== villageId)) {
+    throw notFound("Grup akses tidak ditemukan.");
+  }
+  return role;
+}
+
 export async function listRolesWithMeta() {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "read");
-  await resolveVillageId(user);
-  return listRoles();
+  const villageId = await resolveVillageId(user);
+  return listRoles(villageId);
 }
 
 export async function getRoleDetail(id: number) {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "read");
-  await resolveVillageId(user);
+  const villageId = await resolveVillageId(user);
 
-  const role = await getRoleById(id);
-  if (!role) throw notFound("Grup akses tidak ditemukan.");
+  const role = await getScopedRole(id, villageId);
 
-  const modules = await listModules(null);
-  const levels = await listLevelsByRole(id);
+  const [modules, levels] = await Promise.all([listModules(villageId), listLevelsByRole(id)]);
 
   const permissions = modules.map((m) => {
     const level = levels.get(m.id) ?? null;
@@ -55,26 +62,25 @@ export async function getRoleDetail(id: number) {
 
 export async function createRoleData(input: RoleFormInput): Promise<{ id: number }> {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "update");
-  await resolveVillageId(user);
+  const villageId = await resolveVillageId(user);
 
-  const existing = await listRoles();
+  const existing = await listRoles(villageId);
   if (existing.some((r) => r.name.toLowerCase() === input.name.toLowerCase())) {
     throw conflict("Nama grup sudah digunakan.");
   }
 
-  const role = await createRole({ name: input.name });
+  const role = await createRole({ villageId, name: input.name });
   return { id: role.id };
 }
 
 export async function updateRoleData(id: number, input: RoleFormInput): Promise<void> {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "update");
-  await resolveVillageId(user);
+  const villageId = await resolveVillageId(user);
 
-  const role = await getRoleById(id);
-  if (!role) throw notFound("Grup akses tidak ditemukan.");
+  const role = await getScopedRole(id, villageId);
   if (role.isSystem) throw conflict("Grup sistem tidak dapat diubah.");
 
-  const existing = await listRoles();
+  const existing = await listRoles(villageId);
   if (existing.some((r) => r.id !== id && r.name.toLowerCase() === input.name.toLowerCase())) {
     throw conflict("Nama grup sudah digunakan.");
   }
@@ -84,10 +90,9 @@ export async function updateRoleData(id: number, input: RoleFormInput): Promise<
 
 export async function deleteRoleData(id: number): Promise<void> {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "delete");
-  await resolveVillageId(user);
+  const villageId = await resolveVillageId(user);
 
-  const role = await getRoleById(id);
-  if (!role) throw notFound("Grup akses tidak ditemukan.");
+  const role = await getScopedRole(id, villageId);
   if (role.isSystem) throw conflict("Grup sistem tidak dapat dihapus.");
 
   await deleteRole(id);
@@ -98,15 +103,24 @@ export async function saveRolePermissions(
   perms: Array<{ moduleId: number; read: boolean; write: boolean; manage: boolean }>,
 ): Promise<void> {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "update");
-  await resolveVillageId(user);
+  const villageId = await resolveVillageId(user);
 
-  const role = await getRoleById(roleId);
-  if (!role) throw notFound("Grup akses tidak ditemukan.");
+  await getScopedRole(roleId, villageId);
 
-  const mapped = perms.map((p) => ({
-    moduleId: p.moduleId,
-    access: fromCrudPermissions({ canRead: p.read, canWrite: p.write, canManage: p.manage }),
-  }));
+  const modules = await listModules(villageId);
+  const validModuleIds = new Set(modules.map((modul) => modul.id));
+
+  const mapped = perms.flatMap((p) => {
+    if (!validModuleIds.has(p.moduleId)) return [];
+
+    const access = fromCrudPermissions({
+      canRead: p.read,
+      canWrite: p.write,
+      canManage: p.manage,
+    });
+
+    return access === null ? [] : [{ moduleId: p.moduleId, access }];
+  });
 
   await setRolePermissions(roleId, mapped);
 }

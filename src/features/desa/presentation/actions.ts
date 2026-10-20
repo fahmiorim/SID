@@ -34,6 +34,8 @@ export async function saveIdentitasDesaAction(
     namaPropinsi: text(formData, "namaPropinsi"),
     kodePropinsi: text(formData, "kodePropinsi"),
     alamatKantor: text(formData, "alamatKantor"),
+    namaKepalaDesa: text(formData, "namaKepalaDesa"),
+    nipKepalaDesa: text(formData, "nipKepalaDesa"),
     emailDesa: text(formData, "emailDesa"),
     telepon: text(formData, "telepon"),
     website: text(formData, "website"),

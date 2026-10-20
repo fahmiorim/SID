@@ -1,6 +1,6 @@
-﻿import "server-only";
+import "server-only";
 
-import { eq, isNull } from "drizzle-orm";
+import { eq, isNull, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { modules, rolePermissions, roles } from "@/db/schema";
@@ -9,6 +9,7 @@ import type { AccessLevel } from "@/features/rbac/domain/permission";
 /** Representasi ringkas sebuah role (`roles`). */
 export interface RoleRecord {
   id: number;
+  villageId: number | null;
   slug: string;
   name: string;
   isSystem: boolean;
@@ -30,6 +31,7 @@ export interface ModuleRecord {
 
 const roleColumns = {
   id: roles.id,
+  villageId: roles.villageId,
   slug: roles.slug,
   name: roles.name,
   isSystem: roles.isSystem,
@@ -54,10 +56,17 @@ export async function findRoleById(roleId: number): Promise<RoleRecord | null> {
 }
 
 export async function listModules(villageId: number | null): Promise<ModuleRecord[]> {
-  return db
+  const rows = await db
     .select(moduleColumns)
     .from(modules)
     .where(villageId === null ? isNull(modules.villageId) : eq(modules.villageId, villageId));
+
+  // Di basis data, modul tingkat atas disimpan sebagai `parent_id = 0`.
+  // Domain memakai `null`; samakan di sini agar hierarki menu/matriks konsisten.
+  return rows.map((row) => ({
+    ...row,
+    parentId: row.parentId === 0 ? null : row.parentId,
+  }));
 }
 
 /** Tingkat akses per modul untuk sebuah role. */
@@ -70,8 +79,16 @@ export async function listLevelsByRole(roleId: number): Promise<Map<number, Acce
   return new Map(rows.map((row) => [row.moduleId, row.access]));
 }
 
-export async function listRoles(): Promise<RoleRecord[]> {
-  return db.select(roleColumns).from(roles).orderBy(roles.createdAt, roles.name);
+export async function listRoles(villageId?: number): Promise<RoleRecord[]> {
+  const query = db.select(roleColumns).from(roles);
+
+  if (villageId === undefined) {
+    return query.orderBy(roles.createdAt, roles.name);
+  }
+
+  return query
+    .where(or(eq(roles.villageId, villageId), isNull(roles.villageId)))
+    .orderBy(roles.createdAt, roles.name);
 }
 
 export async function getRoleBySlug(slug: string): Promise<RoleRecord | null> {
@@ -88,9 +105,16 @@ export async function clearRolePermissions(roleId: number): Promise<void> {
   await db.delete(rolePermissions).where(eq(rolePermissions.roleId, roleId));
 }
 
-export async function createRole(input: { name: string; slug?: string }): Promise<RoleRecord> {
+export async function createRole(input: {
+  villageId: number;
+  name: string;
+  slug?: string;
+}): Promise<RoleRecord> {
   const slug = input.slug ?? input.name.toLowerCase().replace(/\s+/g, "-");
-  const [inserted] = await db.insert(roles).values({ name: input.name, slug }).$returningId();
+  const [inserted] = await db
+    .insert(roles)
+    .values({ villageId: input.villageId, name: input.name, slug })
+    .$returningId();
   if (!inserted) throw new Error("Gagal membuat role.");
   const role = await getRoleById(inserted.id);
   if (!role) throw new Error("Gagal mengambil role baru.");

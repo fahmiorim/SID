@@ -14,6 +14,14 @@ import {
 /** Slug resource RBAC untuk modul penduduk (harus sama dengan `modules.slug`). */
 export const PENDUDUK_RESOURCE = RESOURCES.penduduk;
 
+/**
+ * `family_relations.id` untuk "KEPALA KELUARGA".
+ *
+ * Ditempatkan di domain penduduk karena aturan "satu kepala per KK" ditegakkan
+ * saat menyimpan penduduk; fitur keluarga memakainya untuk menurunkan kepala KK.
+ */
+export const HEAD_OF_FAMILY_RELATION_ID = 1;
+
 // --- Kosakata domain (nilai disimpan dalam bahasa Inggris, label Indonesia) ---
 
 export const GENDERS = ["male", "female"] as const;

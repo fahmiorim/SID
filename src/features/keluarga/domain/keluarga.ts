@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Gender } from "@/features/penduduk/domain/penduduk";
+import { HEAD_OF_FAMILY_RELATION_ID, type Gender } from "@/features/penduduk/domain/penduduk";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { optionalSelectId, optionalText, type LabelOption } from "@/lib/forms";
 
@@ -12,8 +12,10 @@ export const KELUARGA_RESOURCE = RESOURCES.keluarga;
  *
  * Kepala keluarga tidak disimpan sebagai kolom, melainkan diturunkan dari
  * anggota yang punya hubungan keluarga ini (lihat `docs/ARCHITECTURE.md`).
+ * Konstanta aslinya ada di domain penduduk agar aturan satu-kepala-per-KK dapat
+ * ditegakkan saat menyimpan penduduk.
  */
-export const HEAD_OF_FAMILY_RELATION_ID = 1;
+export { HEAD_OF_FAMILY_RELATION_ID };
 
 // --- Validasi formulir -----------------------------------------------------
 

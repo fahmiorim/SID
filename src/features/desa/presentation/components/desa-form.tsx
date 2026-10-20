@@ -88,6 +88,25 @@ export function DesaForm({ desa, canManage }: DesaFormProps) {
                 maxLength={255}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="namaKepalaDesa">Nama Kepala Desa</Label>
+              <Input
+                id="namaKepalaDesa"
+                name="namaKepalaDesa"
+                defaultValue={desa?.namaKepalaDesa ?? ""}
+                maxLength={100}
+                placeholder="Dipakai pada tanda tangan surat"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="nipKepalaDesa">NIP/NIAP Kepala Desa</Label>
+              <Input
+                id="nipKepalaDesa"
+                name="nipKepalaDesa"
+                defaultValue={desa?.nipKepalaDesa ?? ""}
+                maxLength={30}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

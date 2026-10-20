@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { Fragment, useActionState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -75,8 +75,8 @@ export function PermissionMatrix({ role, permissions, canManage }: PermissionMat
                 {parents.map((parent) => {
                   const childs = getChildren(parent.moduleId);
                   return (
-                    <>
-                      <TableRow key={`p-${parent.moduleId}`}>
+                    <Fragment key={parent.moduleId}>
+                      <TableRow>
                         <TableCell className="font-medium">{parent.name}</TableCell>
                         <TableCell colSpan={3} />
                       </TableRow>
@@ -108,11 +108,17 @@ export function PermissionMatrix({ role, permissions, canManage }: PermissionMat
                           </TableCell>
                         </TableRow>
                       ))}
-                    </>
+                    </Fragment>
                   );
                 })}
-                {children
-                  .filter((c) => parents.every((p) => p.moduleId !== c.parentId))
+                {/* Modul anak yatim (induknya tidak tampil) dan modul tingkat atas
+                    non-grup (mis. Beranda / modul baru) tetap harus bisa diatur. */}
+                {permissions
+                  .filter(
+                    (c) =>
+                      (c.parentId !== null && parents.every((p) => p.moduleId !== c.parentId)) ||
+                      (c.parentId === null && !c.isGroup),
+                  )
                   .map((c) => (
                     <TableRow key={c.moduleId}>
                       <TableCell>{c.name}</TableCell>

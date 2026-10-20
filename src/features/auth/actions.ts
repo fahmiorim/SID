@@ -1,11 +1,9 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { db } from "@/db";
-import { users } from "@/db/schema";
+import { touchLastLogin } from "@/features/auth/infrastructure/auth-repository";
 import { errorState, toErrorState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -46,7 +44,14 @@ export async function signInAction(
       body: { username: parsed.data.username, password: parsed.data.password },
     });
 
-    await db.update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, result.user.id));
+    // `signInUsername` tidak mengetik additionalFields; nilainya tetap dikirim.
+    const signedInUser = result.user as unknown as { active?: boolean };
+    if (signedInUser.active === false) {
+      await auth.api.signOut({ headers: await headers() });
+      return errorState("Akun Anda dinonaktifkan. Hubungi administrator.");
+    }
+
+    await touchLastLogin(result.user.id);
   } catch (error) {
     logger.warn("Login gagal", { username: parsed.data.username });
     // better-auth melempar APIError untuk kredensial salah; jangan bocorkan detail.

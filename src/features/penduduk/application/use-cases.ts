@@ -2,6 +2,7 @@ import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
+  HEAD_OF_FAMILY_RELATION_ID,
   PENDUDUK_RESOURCE,
   type LifeStatus,
   type PendudukFormInput,
@@ -10,6 +11,7 @@ import {
 import {
   deletePenduduk as deletePendudukRow,
   findPendudukById,
+  headOfFamilyExists,
   insertPenduduk,
   listPenduduk as listPendudukRows,
   nationalIdExists,
@@ -49,6 +51,19 @@ export async function getPendudukReference(): Promise<PendudukReferenceData> {
   return getPendudukReferenceData(villageId);
 }
 
+/** Pastikan sebuah KK tidak punya lebih dari satu kepala keluarga. */
+async function ensureSingleHeadOfFamily(
+  villageId: number,
+  input: PendudukFormInput,
+  excludeId: number | null,
+): Promise<void> {
+  if (input.familyId === null || input.familyRelationId !== HEAD_OF_FAMILY_RELATION_ID) return;
+
+  if (await headOfFamilyExists(villageId, input.familyId, excludeId)) {
+    throw conflict("Kartu Keluarga tersebut sudah memiliki kepala keluarga.");
+  }
+}
+
 export async function createPenduduk(input: PendudukFormInput): Promise<{ id: number }> {
   const user = await requirePermission(PENDUDUK_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
@@ -56,6 +71,8 @@ export async function createPenduduk(input: PendudukFormInput): Promise<{ id: nu
   if (input.nationalId !== null && (await nationalIdExists(villageId, input.nationalId, null))) {
     throw conflict("NIK tersebut sudah terdaftar pada penduduk lain.");
   }
+
+  await ensureSingleHeadOfFamily(villageId, input, null);
 
   const id = await insertPenduduk(villageId, input);
   return { id };
@@ -71,6 +88,8 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
   if (input.nationalId !== null && (await nationalIdExists(villageId, input.nationalId, id))) {
     throw conflict("NIK tersebut sudah terdaftar pada penduduk lain.");
   }
+
+  await ensureSingleHeadOfFamily(villageId, input, id);
 
   await updatePendudukRow(id, input);
 }

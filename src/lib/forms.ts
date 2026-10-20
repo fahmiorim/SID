@@ -20,6 +20,20 @@ export function isBlankSelection(value: unknown): boolean {
   return value === "" || value === null || value === undefined || value === NO_SELECTION;
 }
 
+/**
+ * Tanggal hari ini (`YYYY-MM-DD`) menurut zona waktu **lokal** browser/server.
+ *
+ * Jangan memakai `toISOString().slice(0, 10)` untuk nilai default formulir:
+ * fungsi itu mengikuti UTC sehingga di WIB (UTC+7) pukul 00.00–06.59 masih
+ * menghasilkan tanggal kemarin.
+ */
+export function todayIsoDate(now = new Date()): string {
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 /** Id referensi opsional (dari select) → angka atau `null`. */
 export const optionalSelectId = z.preprocess(
   (value) => (isBlankSelection(value) ? null : value),

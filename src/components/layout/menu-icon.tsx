@@ -1,16 +1,25 @@
 import {
+  BarChart3,
   Blocks,
   Building2,
+  Calculator,
   Circle,
+  Files,
+  FileText,
   House,
+  Inbox,
   Landmark,
   LayoutDashboard,
+  Mail,
   Map,
+  Send,
   Settings,
   ShieldCheck,
+  Tags,
   UserCog,
   UserRound,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,6 +41,15 @@ const ICONS: Record<string, LucideIcon> = {
   "shield-check": ShieldCheck,
   blocks: Blocks,
   landmark: Landmark,
+  mail: Mail,
+  "file-text": FileText,
+  files: Files,
+  tags: Tags,
+  inbox: Inbox,
+  send: Send,
+  wallet: Wallet,
+  calculator: Calculator,
+  "bar-chart-3": BarChart3,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {

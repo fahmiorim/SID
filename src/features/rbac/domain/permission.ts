@@ -74,9 +74,9 @@ export function toCrudPermissions(level: AccessLevel | null | undefined): CrudPe
     canManage: ACCESS_RANK[level as AccessLevel] >= ACCESS_RANK.manage,
   };
 }
-export function fromCrudPermissions(perms: CrudPermissions): AccessLevel {
+export function fromCrudPermissions(perms: CrudPermissions): AccessLevel | null {
   if (perms.canManage) return "manage";
   if (perms.canWrite) return "write";
   if (perms.canRead) return "read";
-  return "none" as AccessLevel;
+  return null;
 }

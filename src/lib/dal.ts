@@ -1,9 +1,12 @@
 import "server-only";
 
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import {
   computeEffectivePermissions,
   hasPermission,
@@ -46,6 +49,16 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   if (!session) return null;
 
   const user = session.user;
+
+  // Status aktif dibaca dari DB (bukan cookie cache sesi) agar akun yang
+  // dinonaktifkan lewat modul Pengguna langsung kehilangan akses.
+  const [account] = await db
+    .select({ active: users.active })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+
+  if (!account?.active) return null;
 
   const permissions = await computeEffectivePermissions(
     // `roleId`/`villageId` berasal dari additionalFields better-auth.

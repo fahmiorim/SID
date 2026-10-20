@@ -17,6 +17,8 @@ export const desaFormSchema = z.object({
   namaPropinsi: optionalText(100),
   kodePropinsi: optionalText(10),
   alamatKantor: optionalText(255),
+  namaKepalaDesa: optionalText(100),
+  nipKepalaDesa: optionalText(30),
   emailDesa: optionalText(100).refine(
     (value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
     "Format email tidak valid.",
@@ -45,6 +47,8 @@ export interface IdentitasDesaDTO {
   namaPropinsi: string | null;
   kodePropinsi: string | null;
   alamatKantor: string | null;
+  namaKepalaDesa: string | null;
+  nipKepalaDesa: string | null;
   emailDesa: string | null;
   telepon: string | null;
   website: string | null;
