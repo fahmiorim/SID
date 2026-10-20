@@ -61,6 +61,26 @@ export interface KeluargaMember {
   relationName: string | null;
 }
 
+/**
+ * Anggota keluarga dengan data lengkap untuk cetak Kartu Keluarga.
+ *
+ * Dipisahkan dari `KeluargaMember` karena formulir rincian hanya butuh kolom
+ * ringkas, sedangkan KK memerlukan kolom baku (agama, pendidikan, pekerjaan,
+ * nama ayah/ibu, dst.). Nama-nama atribut mengikuti urutan kolom KK agar
+ * pemetaannya ke berkas cetak mudah ditelusuri.
+ */
+export interface KeluargaMemberDetail extends KeluargaMember {
+  birthPlace: string | null;
+  religionName: string | null;
+  educationName: string | null;
+  occupationName: string | null;
+  maritalStatusName: string | null;
+  bloodTypeName: string | null;
+  citizenshipName: string | null;
+  fatherName: string | null;
+  motherName: string | null;
+}
+
 /** Data referensi yang dibutuhkan formulir keluarga. */
 export interface KeluargaReferenceData {
   regions: LabelOption[];
@@ -69,4 +89,31 @@ export interface KeluargaReferenceData {
 /** Label ringkas keluarga, mis. "KK 3201012001120001". */
 export function keluargaLabel(keluarga: Pick<KeluargaDTO, "number">): string {
   return `KK ${keluarga.number}`;
+}
+
+// --- Cetak Kartu Keluarga --------------------------------------------------
+
+/** Isi kolom "Jenis Kelamin" pada KK. */
+export function genderLabelKk(gender: Gender): string {
+  return gender === "male" ? "LAKI-LAKI" : "PEREMPUAN";
+}
+
+/**
+ * Tampilkan tanggal ISO (`YYYY-MM-DD`) dalam format Indonesia (`DD-MM-YYYY`).
+ *
+ * KK memakai format bertanda hubung; mengembalikan `null` bila tanggal tidak
+ * tersedia agar pemanggil dapat menuliskan tanda kosong.
+ */
+export function tanggalKk(iso: string | null): string | null {
+  if (!iso) return null;
+  const [year, month, day] = iso.split("-");
+  if (!year || !month || !day) return null;
+  return `${day}-${month}-${year}`;
+}
+
+/** Nama kepala keluarga (anggota dengan hubungan "kepala keluarga"). */
+export function kepalaKeluarga(
+  anggota: readonly KeluargaMemberDetail[],
+): KeluargaMemberDetail | null {
+  return anggota.find((row) => row.relationName?.toUpperCase().includes("KEPALA")) ?? null;
 }

@@ -161,7 +161,7 @@ npm run test:watch  # mode pantau
 3. **Kependudukan** ✅ — data penduduk (identitas, sosial, domisili) + katalog
    referensi (agama, pendidikan, pekerjaan, dst.).
 4. **Kartu Keluarga** ✅ — daftar KK, kepala keluarga (turunan), jumlah & rincian
-   anggota, penautan penduduk ke KK.
+   anggota, penautan penduduk ke KK, dan cetak **Kartu Keluarga (PDF)**.
 5. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
    jenis/klasifikasi surat, agenda surat masuk & keluar, penomoran otomatis,
    cetak HTML, dan unduh PDF.
@@ -208,10 +208,11 @@ hanya penduduk berstatus hidup yang dihitung. Yang belum termasuk:
 | ------------- | ------ |
 | Rekap menurut umur, jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, kelompok umur | ✅ |
 | Ekspor CSV (pemisah `;`, BOM UTF-8) | ✅ |
+| Cetak Kartu Keluarga (PDF, lanskap, dua tabel) | ✅ |
 | Laporan bulanan desa (LAMPIRAN A-9, kelahiran/kematian/pindah) | belum |
 | Laporan kelompok rentan & statistik lintas-desa | belum |
 | Impor data penduduk dari berkas Excel/CSV | belum |
-| Cetak Kartu Keluarga (PDF) | belum |
+| Cetak biodata penduduk per orang (PDF) | belum |
 
 ### Cakupan Persuratan
 

@@ -3,8 +3,10 @@ import "server-only";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   KELUARGA_RESOURCE,
+  type KeluargaDTO,
   type KeluargaFormInput,
   type KeluargaMember,
+  type KeluargaMemberDetail,
   type KeluargaReferenceData,
 } from "@/features/keluarga/domain/keluarga";
 import {
@@ -12,13 +14,17 @@ import {
   findKeluargaById,
   insertKeluarga,
   keluargaNumberExists,
+  listKeluargaMemberDetails,
   listKeluargaMembers as listKeluargaMembersRows,
   listKeluarga as listKeluargaRows,
   updateKeluarga as updateKeluargaRow,
   type KeluargaListResult,
 } from "@/features/keluarga/infrastructure/keluarga-repository";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
-import { listWilayahOptions } from "@/features/wilayah/infrastructure/wilayah-repository";
+import {
+  findWilayahById,
+  listWilayahOptions,
+} from "@/features/wilayah/infrastructure/wilayah-repository";
 import { requirePermission } from "@/lib/dal";
 import { conflict, notFound } from "@/lib/errors";
 
@@ -63,6 +69,48 @@ export async function listKeluargaMembers(familyId: number): Promise<KeluargaMem
   if (!family) throw notFound("Kartu Keluarga tidak ditemukan.");
 
   return listKeluargaMembersRows(villageId, familyId);
+}
+
+/**
+ * Data lengkap sebuah KK untuk dicetak.
+ *
+ * Menggabungkan identitas desa (untuk kop & wilayah), keluarga (nomor, alamat),
+ * dan seluruh anggota berstatus hidup dengan kolom baku KK. Route PDF memakai
+ * ini agar tidak perlu menyusun data sendiri.
+ */
+export interface KeluargaPrintData {
+  keluarga: KeluargaDTO;
+  anggota: KeluargaMemberDetail[];
+  wilayah: {
+    dusun: string | null;
+    rw: string | null;
+    rt: string | null;
+  };
+}
+
+export async function getKeluargaPrintData(familyId: number): Promise<KeluargaPrintData> {
+  const user = await requirePermission(KELUARGA_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const keluarga = await findKeluargaById(villageId, familyId);
+  if (!keluarga) throw notFound("Kartu Keluarga tidak ditemukan.");
+
+  const [anggota, wilayah] = await Promise.all([
+    listKeluargaMemberDetails(villageId, familyId),
+    keluarga.regionId === null
+      ? Promise.resolve(null)
+      : findWilayahById(villageId, keluarga.regionId),
+  ]);
+
+  return {
+    keluarga,
+    anggota,
+    wilayah: {
+      dusun: wilayah?.dusun || null,
+      rw: wilayah?.rw || null,
+      rt: wilayah?.rt || null,
+    },
+  };
 }
 
 export async function createKeluarga(input: KeluargaFormInput): Promise<{ id: number }> {

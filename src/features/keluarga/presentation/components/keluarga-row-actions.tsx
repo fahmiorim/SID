@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertCircle, Loader2, MoreHorizontal, Pencil, Trash2, Users } from "lucide-react";
+import {
+  AlertCircle,
+  FileText,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Users,
+} from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -87,6 +95,12 @@ export function KeluargaRowActions({ keluarga, reference }: KeluargaRowActionsPr
           <DropdownMenuItem onSelect={() => setMembersOpen(true)}>
             <Users className="size-4" />
             Anggota
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a href={`/keluarga/${keluarga.id}/pdf`} target="_blank" rel="noopener noreferrer">
+              <FileText className="size-4" />
+              Cetak KK
+            </a>
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"

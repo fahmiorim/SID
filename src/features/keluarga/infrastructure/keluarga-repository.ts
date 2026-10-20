@@ -3,13 +3,25 @@ import "server-only";
 import { aliasedTable, and, asc, count, eq, like, ne, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { families, familyRelations, regions, residents } from "@/db/schema";
+import {
+  bloodTypes,
+  citizenships,
+  educations,
+  families,
+  familyRelations,
+  maritalStatuses,
+  occupations,
+  regions,
+  religions,
+  residents,
+} from "@/db/schema";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
   type KeluargaDTO,
   type KeluargaFormInput,
   type KeluargaListRow,
   type KeluargaMember,
+  type KeluargaMemberDetail,
 } from "@/features/keluarga/domain/keluarga";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
 
@@ -181,6 +193,76 @@ export async function listKeluargaMembers(
       gender: row.gender,
       birthDate: row.birthDate,
       relationName: row.relationName ?? null,
+    }));
+}
+
+/**
+ * Anggota sebuah KK dengan data lengkap untuk cetak Kartu Keluarga.
+ *
+ * Hanya penduduk berstatus hidup yang dicetak. Seluruh kolom referensi diambil
+ * sebagai nama (bukan id) agar lapisan PDF tinggal menulis teksnya.
+ */
+export async function listKeluargaMemberDetails(
+  villageId: number,
+  familyId: number,
+): Promise<KeluargaMemberDetail[]> {
+  const rows = await db
+    .select({
+      id: residents.id,
+      name: residents.name,
+      nationalId: residents.nationalId,
+      gender: residents.gender,
+      birthPlace: residents.birthPlace,
+      birthDate: residents.birthDate,
+      relationName: familyRelations.name,
+      familyRelationId: residents.familyRelationId,
+      religionName: religions.name,
+      educationName: educations.name,
+      occupationName: occupations.name,
+      maritalStatusName: maritalStatuses.name,
+      bloodTypeName: bloodTypes.name,
+      citizenshipName: citizenships.name,
+      fatherName: residents.fatherName,
+      motherName: residents.motherName,
+    })
+    .from(residents)
+    .leftJoin(familyRelations, eq(residents.familyRelationId, familyRelations.id))
+    .leftJoin(religions, eq(residents.religionId, religions.id))
+    .leftJoin(educations, eq(residents.educationId, educations.id))
+    .leftJoin(occupations, eq(residents.occupationId, occupations.id))
+    .leftJoin(maritalStatuses, eq(residents.maritalStatusId, maritalStatuses.id))
+    .leftJoin(bloodTypes, eq(residents.bloodTypeId, bloodTypes.id))
+    .leftJoin(citizenships, eq(residents.citizenshipId, citizenships.id))
+    .where(
+      and(
+        eq(residents.villageId, villageId),
+        eq(residents.familyId, familyId),
+        eq(residents.lifeStatus, "alive"),
+      ),
+    );
+
+  return rows
+    .sort((a, b) => {
+      const aHead = a.familyRelationId === HEAD_OF_FAMILY_RELATION_ID ? 0 : 1;
+      const bHead = b.familyRelationId === HEAD_OF_FAMILY_RELATION_ID ? 0 : 1;
+      return aHead - bHead || a.name.localeCompare(b.name, "id") || a.id - b.id;
+    })
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      nationalId: row.nationalId,
+      gender: row.gender,
+      birthDate: row.birthDate,
+      relationName: row.relationName ?? null,
+      birthPlace: row.birthPlace,
+      religionName: row.religionName,
+      educationName: row.educationName,
+      occupationName: row.occupationName,
+      maritalStatusName: row.maritalStatusName,
+      bloodTypeName: row.bloodTypeName,
+      citizenshipName: row.citizenshipName,
+      fatherName: row.fatherName,
+      motherName: row.motherName,
     }));
 }
 
