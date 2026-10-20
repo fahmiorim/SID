@@ -1,8 +1,10 @@
+import { FileDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -75,6 +77,12 @@ export default async function LaporanKeuanganPage({
                 {item}
               </Link>
             ))}
+            <Button variant="outline" asChild>
+              <a href={`/keuangan/laporan/ekspor?tahun=${laporan.tahun}`}>
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
             <LaporanPrintButton />
           </div>
         }

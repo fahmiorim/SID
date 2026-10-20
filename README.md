@@ -169,7 +169,7 @@ npm run test:watch  # mode pantau
    & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
    ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
 7. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
-   belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, dan cetak HTML.
+   belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, dan ekspor CSV.
 8. Modul berikutnya: laporan triwulan, ekspor Excel/PDF, dan kirim ke OpenDK.
 9. Ekspor/impor (exceljs), peta, dan lampiran berkas.
 
@@ -186,7 +186,7 @@ tersebut (tanpa tabel baru). Yang belum termasuk:
 | Lapis B legacy manual (`keuangan_manual_*`, impor dari Siskeudes) | belum |
 | Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
 | Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | belum |
-| Ekspor laporan (Excel/PDF) & kirim ke OpenDK | belum |
+| Ekspor laporan (Excel/PDF) & kirim ke OpenDK | sebagian (CSV sudah; Excel/PDF & OpenDK belum) |
 | Sisa lebih (SiLPA) otomatis antartahun | belum |
 | Catatan/lampiran berkas per rekening | belum |
 

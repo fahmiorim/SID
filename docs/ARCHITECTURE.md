@@ -67,7 +67,7 @@ Fitur yang sudah dibangun saat ini:
 | `modul`     | Katalog modul/menu (pohon `parent_id`).                               |
 | `pengguna`  | Manajemen pengguna (di atas tabel better-auth).                       |
 | `surat`     | Persuratan: jenis/klasifikasi, surat layanan, agenda masuk/keluar, cetak & PDF. |
-| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik. |
+| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik + ekspor CSV. |
 | `navigation`| Menu sidebar dari modul + izin efektif.                               |
 | `auth`      | Login/logout username + pelacakan login terakhir.                     |
 
