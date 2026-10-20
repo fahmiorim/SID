@@ -64,6 +64,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "kependudukan",
   },
+  {
+    slug: "laporan-penduduk",
+    name: "Laporan Kependudukan",
+    url: "/penduduk/laporan",
+    icon: "bar-chart-3",
+    sortOrder: 4,
+    isGroup: false,
+    parentSlug: "kependudukan",
+  },
 
   {
     slug: "persuratan",

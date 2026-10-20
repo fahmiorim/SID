@@ -25,6 +25,7 @@ export const RESOURCES = {
   keuangan: "keuangan",
   laporanKeuangan: "laporan-keuangan",
   dokumenLaporan: "dokumen-laporan",
+  laporanPenduduk: "laporan-penduduk",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

@@ -173,9 +173,12 @@ npm run test:watch  # mode pantau
    **CSV** dan **Excel** (`.xls`).
 8. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
    unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
-9. Modul berikutnya: laporan triwulan; modul Rumah Tangga, Kelompok, Data
-   Suplemen, dan Bantuan.
-10. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+9. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
+   jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, dan
+   kelompok umur (Data Pilah); cetak HTML + ekspor CSV.
+10. Modul berikutnya: laporan triwulan; modul Rumah Tangga, Kelompok, Data
+    Suplemen, dan Bantuan.
+11. Ekspor/impor (exceljs), peta, dan lampiran berkas.
 
 ### Cakupan Keuangan
 
@@ -195,6 +198,20 @@ laporan per semester. Yang belum termasuk:
 | Ekspor laporan (Excel/CSV) | ✅ |
 | Sisa lebih (SiLPA) otomatis antartahun | belum |
 | Catatan/lampiran berkas per rekening | belum |
+
+### Cakupan Kependudukan
+
+Laporan kependudukan **diturunkan** dari tabel `residents` (tanpa tabel baru);
+hanya penduduk berstatus hidup yang dihitung. Yang belum termasuk:
+
+| Fitur rujukan | Status |
+| ------------- | ------ |
+| Rekap menurut umur, jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, kelompok umur | ✅ |
+| Ekspor CSV (pemisah `;`, BOM UTF-8) | ✅ |
+| Laporan bulanan desa (LAMPIRAN A-9, kelahiran/kematian/pindah) | belum |
+| Laporan kelompok rentan & statistik lintas-desa | belum |
+| Impor data penduduk dari berkas Excel/CSV | belum |
+| Cetak Kartu Keluarga (PDF) | belum |
 
 ### Cakupan Persuratan
 

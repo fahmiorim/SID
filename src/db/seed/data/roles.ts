@@ -34,6 +34,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
     grants: {
       beranda: "read",
       penduduk: "manage",
+      "laporan-penduduk": "read",
       keluarga: "manage",
       wilayah: "manage",
       surat: "manage",
