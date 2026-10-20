@@ -89,7 +89,7 @@ export type NewKeuangan = typeof keuangan.$inferInsert;
  * `keuangan_laporan` — arsip dokumen laporan APBDes per semester (Lapis D).
  *
  * Mengikuti `laporan_sinkronisasi` pada sistem rujukan: dokumen diunggah
- * manual oleh operator lalu ditandai sudah dikirim ke kecamatan (OpenDK).
+ * manual oleh operator lalu dicatat tanggal penyerahannya.
  * Angka laporan **tidak** diturunkan dari tabel ini.
  */
 export const keuanganLaporan = mysqlTable(
@@ -113,8 +113,8 @@ export const keuanganLaporan = mysqlTable(
     jalurFile: varchar("jalur_file", { length: 255 }).notNull(),
     ukuranFile: int("ukuran_file").notNull().default(0),
 
-    /** Terisi saat laporan ditandai terkirim ke kecamatan/OpenDK. */
-    kirimPada: timestamp("kirim_pada"),
+    /** Tanggal dokumen diserahkan; kosong berarti belum diserahkan. */
+    diserahkanPada: timestamp("diserahkan_pada"),
 
     createdBy: varchar("created_by", { length: 36 }).references(() => users.id, {
       onDelete: "set null",

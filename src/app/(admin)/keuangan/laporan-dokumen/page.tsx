@@ -57,7 +57,7 @@ export default async function LaporanDokumenPage({
     <div className="space-y-6">
       <PageHeader
         title="Dokumen Laporan APBDes"
-        description="Arsip dokumen laporan per semester yang disiapkan untuk kecamatan/OpenDK."
+        description="Arsip dokumen laporan per semester beserta tanggal penyerahannya."
         actions={
           <div className="flex flex-wrap items-center gap-2">
             {tahunList.map((item) => (
@@ -162,7 +162,7 @@ export default async function LaporanDokumenPage({
                 <TableHead className="w-36">Semester</TableHead>
                 <TableHead className="w-32">Berkas</TableHead>
                 <TableHead className="w-32">Status</TableHead>
-                <TableHead className="w-36">Dikirim</TableHead>
+                <TableHead className="w-36">Diserahkan</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -188,14 +188,14 @@ export default async function LaporanDokumenPage({
                       </a>
                     </TableCell>
                     <TableCell>
-                      {row.terkirim ? (
-                        <Badge variant="secondary">Terkirim</Badge>
+                      {row.diserahkanPada ? (
+                        <Badge variant="secondary">Diserahkan</Badge>
                       ) : (
-                        <Badge variant="outline">Belum dikirim</Badge>
+                        <Badge variant="outline">Belum diserahkan</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground tabular-nums">
-                      {tanggalRingkas(row.kirimPada)}
+                      {tanggalRingkas(row.diserahkanPada)}
                     </TableCell>
                     <TableCell className="text-right">
                       {bisaUbah ? (

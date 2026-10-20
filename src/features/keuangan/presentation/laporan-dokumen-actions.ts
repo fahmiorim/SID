@@ -5,9 +5,9 @@ import { revalidatePath } from "next/cache";
 import {
   deleteLaporanKeuanganDokumen,
   saveLaporanKeuanganDokumen,
-  setLaporanKeuanganTerkirim,
+  setLaporanKeuanganDiserahkan,
 } from "@/features/keuangan/application/laporan-dokumen-use-cases";
-import { MAKS_UKURAN_BERKAS } from "@/features/keuangan/domain/laporan-dokumen";
+import { MAKS_UKURAN_BERKAS, tanggalPenyerahan } from "@/features/keuangan/domain/laporan-dokumen";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
 
 const LAPORAN_PATH = "/keuangan/laporan-dokumen";
@@ -60,19 +60,28 @@ export async function saveLaporanDokumenAction(
   }
 }
 
-export async function setLaporanTerkirimAction(
+/** Catat tanggal penyerahan dokumen laporan (kirim `""` untuk mengosongkan). */
+export async function setLaporanDiserahkanAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
   const id = bacaId(formData);
   if (id === null) return errorState("Dokumen laporan tidak valid.");
 
-  const terkirim = formData.get("terkirim") === "true";
+  const raw = formData.get("diserahkanPada");
+  const isi = typeof raw === "string" ? raw : "";
+  if (isi.trim() !== "" && tanggalPenyerahan(isi) === null) {
+    return errorState("Tanggal penyerahan tidak valid.");
+  }
+
+  const tanggal = tanggalPenyerahan(isi);
 
   try {
-    await setLaporanKeuanganTerkirim(id, terkirim);
+    await setLaporanKeuanganDiserahkan(id, tanggal);
     revalidatePath(LAPORAN_PATH);
-    return successState(terkirim ? "Laporan ditandai terkirim." : "Penandaan kirim dibatalkan.");
+    return successState(
+      tanggal ? "Tanggal penyerahan dicatat." : "Tanggal penyerahan dikosongkan.",
+    );
   } catch (error) {
     return toErrorState(error);
   }

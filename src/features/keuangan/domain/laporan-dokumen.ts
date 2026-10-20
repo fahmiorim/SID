@@ -7,8 +7,8 @@ import { formatMoney, toMinor, totalLaporan, type RpApbdBaris, type RpApbdTotal 
  *
  * Berbeda dari RP APBDes yang dihitung dari pohon rekening, lapis ini tidak
  * menurunkan angka apa pun: operator menyusun/mengunggah sendiri dokumen
- * laporan per semester, lalu menandainya sudah dikirim ke kecamatan (OpenDK).
- * Karena itu modulnya adalah **arsip dokumen**, bukan pembangkit laporan.
+ * laporan per semester, lalu mencatat tanggal penyerahannya. Karena itu
+ * modulnya adalah **arsip dokumen**, bukan pembangkit laporan.
  */
 
 /** Jenis dokumen laporan yang dikenal. */
@@ -115,9 +115,8 @@ export interface LaporanDokumenRow {
   semester: number;
   semesterLabel: string;
   namaFile: string;
-  /** `true` bila sudah ditandai terkirim ke kecamatan/OpenDK. */
-  terkirim: boolean;
-  kirimPada: string | null;
+  /** Tanggal dokumen diserahkan (ISO), `null` bila belum diserahkan. */
+  diserahkanPada: string | null;
   dibuatPada: string;
 }
 
@@ -128,13 +127,35 @@ export interface LaporanPeriode {
   jumlahDokumen: number;
   /** Pasangan semester yang sudah tercatat (mis. `["2026-S1"]`). */
   tercatat: string[];
-  /** Pesan kesiapan kirim; `null` bila periode sudah lengkap. */
+  /** Pesan kelengkapan; `null` bila periode sudah lengkap. */
   belumLengkap: string | null;
 }
 
-/** Apakah dokumen ini sudah ditandai terkirim? */
-export function sudahTerkirim(kirimPada: string | null): boolean {
-  return kirimPada !== null && kirimPada.trim() !== "";
+/** Apakah dokumen ini sudah diserahkan? */
+export function sudahDiserahkan(diserahkanPada: string | null): boolean {
+  return diserahkanPada !== null && diserahkanPada.trim() !== "";
+}
+
+/**
+ * Ubah input `<input type="date">` menjadi cap waktu ISO.
+ *
+ * Tanggal dipatok ke pukul 12.00 UTC agar tanggal lokal di Indonesia
+ * (UTC+7/8/9) tidak bergeser menjadi hari sebelumnya.
+ */
+export function tanggalPenyerahan(value: string): string | null {
+  const bersih = value.trim();
+  if (bersih === "") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(bersih)) return null;
+
+  const tanggal = new Date(`${bersih}T12:00:00.000Z`);
+  return Number.isNaN(tanggal.getTime()) ? null : tanggal.toISOString();
+}
+
+/** Format tanggal penyerahan untuk `<input type="date">` (`YYYY-MM-DD`). */
+export function tanggalUntukInput(diserahkanPada: string | null): string {
+  if (!diserahkanPada) return "";
+  const tanggal = new Date(diserahkanPada);
+  return Number.isNaN(tanggal.getTime()) ? "" : tanggal.toISOString().slice(0, 10);
 }
 
 /**

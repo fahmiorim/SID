@@ -16,7 +16,7 @@ import {
   findLaporanDokumen,
   insertLaporanDokumen,
   listLaporanDokumen,
-  setLaporanTerkirim,
+  setLaporanDiserahkan,
   updateLaporanDokumen,
 } from "@/features/keuangan/infrastructure/laporan-dokumen-repository";
 import {
@@ -165,15 +165,20 @@ export async function getLaporanKeuanganDokumenBerkas(id: number) {
   return { row, isi };
 }
 
-/** Tandai/batalkan penandaan laporan sebagai terkirim ke kecamatan. */
-export async function setLaporanKeuanganTerkirim(id: number, terkirim: boolean) {
+/** Catat tanggal penyerahan laporan; `null` mengosongkan catatan tersebut. */
+export async function setLaporanKeuanganDiserahkan(id: number, diserahkanPada: string | null) {
   const user = await requirePermission(LAPORAN_KEUANGAN_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
 
   const row = await findLaporanDokumen(villageId, id);
   if (!row) throw notFound("Dokumen laporan tidak ditemukan.");
 
-  await setLaporanTerkirim(villageId, id, terkirim);
+  const tanggal = diserahkanPada?.trim() ? diserahkanPada : null;
+  if (tanggal && Number.isNaN(new Date(tanggal).getTime())) {
+    throw validationError("Tanggal penyerahan tidak valid.");
+  }
+
+  await setLaporanDiserahkan(villageId, id, tanggal ? new Date(tanggal) : null);
   return { id };
 }
 

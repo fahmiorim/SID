@@ -11,7 +11,9 @@ import {
   selAngka,
   selTeks,
   semesterLabel,
-  sudahTerkirim,
+  sudahDiserahkan,
+  tanggalPenyerahan,
+  tanggalUntukInput,
   validasiBerkasLaporan,
   type LaporanDokumenRow,
 } from "./laporan-dokumen";
@@ -26,8 +28,7 @@ function row(partial: Partial<LaporanDokumenRow>): LaporanDokumenRow {
     semester: 1,
     semesterLabel: "Semester I",
     namaFile: "laporan.pdf",
-    terkirim: false,
-    kirimPada: null,
+    diserahkanPada: null,
     dibuatPada: "2026-01-01T00:00:00.000Z",
     ...partial,
   };
@@ -49,14 +50,40 @@ describe("laporanTipeLabel & semesterLabel", () => {
   });
 });
 
-describe("sudahTerkirim", () => {
-  it("false bila belum ada cap kirim", () => {
-    expect(sudahTerkirim(null)).toBe(false);
-    expect(sudahTerkirim("   ")).toBe(false);
+describe("sudahDiserahkan", () => {
+  it("false bila belum ada tanggal penyerahan", () => {
+    expect(sudahDiserahkan(null)).toBe(false);
+    expect(sudahDiserahkan("   ")).toBe(false);
   });
 
-  it("true bila sudah ada cap kirim", () => {
-    expect(sudahTerkirim("2026-02-01T00:00:00.000Z")).toBe(true);
+  it("true bila sudah ada tanggal penyerahan", () => {
+    expect(sudahDiserahkan("2026-02-01T00:00:00.000Z")).toBe(true);
+  });
+});
+
+describe("tanggalPenyerahan", () => {
+  it("mengubah tanggal input menjadi cap waktu ISO pukul 12.00 UTC", () => {
+    expect(tanggalPenyerahan("2026-02-01")).toBe("2026-02-01T12:00:00.000Z");
+  });
+
+  it("mengembalikan null untuk input kosong", () => {
+    expect(tanggalPenyerahan("")).toBeNull();
+    expect(tanggalPenyerahan("   ")).toBeNull();
+  });
+
+  it("menolak format tanggal yang tidak dikenal", () => {
+    expect(tanggalPenyerahan("01-02-2026")).toBeNull();
+    expect(tanggalPenyerahan("2026/02/01")).toBeNull();
+  });
+});
+
+describe("tanggalUntukInput", () => {
+  it("memotong cap waktu ISO menjadi YYYY-MM-DD", () => {
+    expect(tanggalUntukInput("2026-02-01T12:00:00.000Z")).toBe("2026-02-01");
+  });
+
+  it("mengembalikan string kosong bila belum diserahkan", () => {
+    expect(tanggalUntukInput(null)).toBe("");
   });
 });
 

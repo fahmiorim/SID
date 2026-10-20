@@ -172,8 +172,9 @@ npm run test:watch  # mode pantau
    belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, serta ekspor
    **CSV** dan **Excel** (`.xls`).
 8. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
-   unggah PDF, tanda terkirim ke kecamatan, unduh berkas.
-9. Modul berikutnya: laporan triwulan dan kirim otomatis ke OpenDK.
+   unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
+9. Modul berikutnya: laporan triwulan; modul Rumah Tangga, Kelompok, Data
+   Suplemen, dan Bantuan.
 10. Ekspor/impor (exceljs), peta, dan lampiran berkas.
 
 ### Cakupan Keuangan
@@ -192,7 +193,6 @@ laporan per semester. Yang belum termasuk:
 | Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
 | Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | belum |
 | Ekspor laporan (Excel/CSV) | ✅ |
-| Kirim otomatis ke OpenDK (unggah berkas OS otomatis ke API kecamatan) | belum (baru penandaan manual) |
 | Sisa lebih (SiLPA) otomatis antartahun | belum |
 | Catatan/lampiran berkas per rekening | belum |
 
@@ -213,5 +213,4 @@ belum termasuk dan menjadi pekerjaan berikutnya:
 | Kode isian kustom & mesin placeholder lengkap (aritmatika, terbilang, `klgx_`) | belum |
 | Master syarat surat (`ref_syarat_surat`) | belum |
 | Impor katalog 43 surat sistem | belum (seed memuat katalog contoh) |
-| Arsip ke kecamatan (OpenDK) | belum |
 | Empat mode penomoran surat | belum (dipakai: per jenis + tahun) |

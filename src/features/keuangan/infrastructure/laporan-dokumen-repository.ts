@@ -7,7 +7,6 @@ import { keuanganLaporan } from "@/db/schema";
 import {
   laporanTipeLabel,
   semesterLabel,
-  sudahTerkirim,
   type LaporanDokumenRow,
 } from "@/features/keuangan/domain/laporan-dokumen";
 
@@ -17,7 +16,7 @@ function tanggal(value: Date | null): string | null {
 }
 
 function keRow(row: typeof keuanganLaporan.$inferSelect): LaporanDokumenRow {
-  const kirimPada = tanggal(row.kirimPada);
+  const diserahkanPada = tanggal(row.diserahkanPada);
   return {
     id: row.id,
     tipe: row.tipe,
@@ -27,8 +26,7 @@ function keRow(row: typeof keuanganLaporan.$inferSelect): LaporanDokumenRow {
     semester: row.semester,
     semesterLabel: semesterLabel(row.semester),
     namaFile: row.namaFile,
-    terkirim: sudahTerkirim(kirimPada),
-    kirimPada,
+    diserahkanPada,
     dibuatPada: row.createdAt.toISOString(),
   };
 }
@@ -107,15 +105,15 @@ export async function deleteLaporanDokumen(villageId: number, id: number): Promi
     .where(and(eq(keuanganLaporan.villageId, villageId), eq(keuanganLaporan.id, id)));
 }
 
-/** Tandai laporan sudah dikirim ke kecamatan (atau batalkan penandaan). */
-export async function setLaporanTerkirim(
+/** Catat tanggal penyerahan dokumen; `null` mengosongkan catatan tersebut. */
+export async function setLaporanDiserahkan(
   villageId: number,
   id: number,
-  terkirim: boolean,
+  diserahkanPada: Date | null,
 ): Promise<void> {
   await db
     .update(keuanganLaporan)
-    .set({ kirimPada: terkirim ? new Date() : null })
+    .set({ diserahkanPada })
     .where(and(eq(keuanganLaporan.villageId, villageId), eq(keuanganLaporan.id, id)));
 }
 

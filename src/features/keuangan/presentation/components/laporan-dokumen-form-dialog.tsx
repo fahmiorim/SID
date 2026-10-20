@@ -84,7 +84,7 @@ export function LaporanDokumenFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? "Ganti Dokumen Laporan" : "Unggah Dokumen Laporan"}</DialogTitle>
           <DialogDescription>
-            Dokumen laporan resmi (PDF) per semester, disiapkan untuk dikirim ke kecamatan.
+            Dokumen laporan resmi (PDF) per semester yang disiapkan untuk diserahkan.
           </DialogDescription>
         </DialogHeader>
 
