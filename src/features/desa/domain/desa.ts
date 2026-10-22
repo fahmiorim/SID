@@ -26,6 +26,8 @@ export const desaFormSchema = z.object({
   telepon: optionalText(30),
   website: optionalText(150),
   logo: optionalText(150),
+  /** 1–4; lihat `PENOMORAN_SURAT_MODES` di domain surat. */
+  penomoranSurat: z.coerce.number().int().min(1).max(4).default(2),
 });
 
 export type DesaFormInput = z.infer<typeof desaFormSchema>;
@@ -53,6 +55,7 @@ export interface IdentitasDesaDTO {
   telepon: string | null;
   website: string | null;
   logo: string | null;
+  penomoranSurat: number;
 }
 
 /** Label ringkas untuk kepentingan tampilan. */

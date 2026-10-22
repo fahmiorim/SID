@@ -9,7 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { IdentitasDesaDTO } from "@/features/desa/domain/desa";
+import {
+  normalizePenomoranMode,
+  PENOMORAN_SURAT_LABELS,
+  PENOMORAN_SURAT_MODES,
+} from "@/features/surat/domain/penomoran";
 import { idleActionState } from "@/lib/action-state";
 
 import { saveIdentitasDesaAction } from "../actions";
@@ -212,6 +224,35 @@ export function DesaForm({ desa, canManage }: DesaFormProps) {
               <Label htmlFor="logo">Logo (URL)</Label>
               <Input id="logo" name="logo" defaultValue={desa?.logo ?? ""} maxLength={150} />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-4">
+          <h2 className="text-lg font-semibold">Persuratan</h2>
+          <div className="max-w-xl space-y-2">
+            <Label htmlFor="penomoranSurat">Mode Penomoran Surat</Label>
+            <Select
+              name="penomoranSurat"
+              defaultValue={String(normalizePenomoranMode(desa?.penomoranSurat))}
+              disabled={!canManage}
+            >
+              <SelectTrigger id="penomoranSurat" className="w-full">
+                <SelectValue placeholder="Pilih mode penomoran" />
+              </SelectTrigger>
+              <SelectContent>
+                {PENOMORAN_SURAT_MODES.map((mode) => (
+                  <SelectItem key={mode} value={String(mode)}>
+                    {PENOMORAN_SURAT_LABELS[mode]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Menentukan cara nomor urut surat layanan dihitung. Mode 3 memakai nomor agenda surat
+              masuk/keluar; mode 4 memerlukan klasifikasi pada jenis surat.
+            </p>
           </div>
         </CardContent>
       </Card>

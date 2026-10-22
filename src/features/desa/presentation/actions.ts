@@ -40,6 +40,7 @@ export async function saveIdentitasDesaAction(
     telepon: text(formData, "telepon"),
     website: text(formData, "website"),
     logo: text(formData, "logo"),
+    penomoranSurat: text(formData, "penomoranSurat") || "2",
   });
 
   if (!parsed.success) {

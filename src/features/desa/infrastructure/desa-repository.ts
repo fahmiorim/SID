@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { villages } from "@/db/schema";
@@ -27,6 +27,7 @@ export async function updateIdentitasDesa(id: number, input: DesaFormInput): Pro
       phone: blankToNull(input.telepon),
       website: blankToNull(input.website),
       logo: blankToNull(input.logo),
+      penomoranSurat: input.penomoranSurat,
     })
     .where(eq(villages.id, id));
 }
@@ -59,6 +60,10 @@ export interface IdentitasDesa {
   telepon: string | null;
   website: string | null;
   logo: string | null;
+  /** Domain publik desa (host tanpa protokol), bila sudah dipetakan. */
+  domain: string | null;
+  /** Mode penomoran surat layanan (1–4). */
+  penomoranSurat: number;
 }
 
 const identitasColumns = {
@@ -79,10 +84,44 @@ const identitasColumns = {
   telepon: villages.phone,
   website: villages.website,
   logo: villages.logo,
+  domain: villages.domain,
+  penomoranSurat: villages.penomoranSurat,
 };
 
-/** Identitas desa (mode satu-desa: baris pertama). */
-export async function getIdentitasDesa(): Promise<IdentitasDesa | null> {
-  const [row] = await db.select(identitasColumns).from(villages).orderBy(asc(villages.id)).limit(1);
+/** Identitas desa berdasarkan tenant. */
+export async function getIdentitasDesa(villageId: number): Promise<IdentitasDesa | null> {
+  const [row] = await db
+    .select(identitasColumns)
+    .from(villages)
+    .where(eq(villages.id, villageId))
+    .limit(1);
   return row ?? null;
+}
+
+/** Id desa pertama. Hanya untuk fallback mode satu-desa/administrasi. */
+export async function getFirstVillageId(): Promise<number | null> {
+  const [row] = await db
+    .select({ id: villages.id })
+    .from(villages)
+    .orderBy(asc(villages.id))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** Id desa yang dipetakan ke domain tertentu (sudah dinormalisasi). */
+export async function getVillageIdByDomain(domain: string): Promise<number | null> {
+  if (!domain) return null;
+
+  const [row] = await db
+    .select({ id: villages.id })
+    .from(villages)
+    .where(eq(villages.domain, domain))
+    .limit(1);
+  return row?.id ?? null;
+}
+
+/** Jumlah desa; dipakai untuk menentukan apakah fallback satu-desa aman. */
+export async function countVillages(): Promise<number> {
+  const [row] = await db.select({ value: count() }).from(villages);
+  return row?.value ?? 0;
 }

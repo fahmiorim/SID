@@ -18,6 +18,7 @@ export const RESOURCES = {
   surat: "surat",
   jenisSurat: "jenis-surat",
   klasifikasiSurat: "klasifikasi-surat",
+  syaratSurat: "syarat-surat",
   suratMasuk: "surat-masuk",
   suratKeluar: "surat-keluar",
   pengaturan: "pengaturan",
@@ -32,6 +33,19 @@ export const RESOURCES = {
   bantuan: "bantuan",
   programBantuan: "program-bantuan",
   pesertaBantuan: "peserta-bantuan",
+  // Modul yang sudah memiliki halaman/API tetapi belum selesai dibangun tetap
+  // punya slug resource agar otorisasi tidak memakai string bebas (`as any`).
+  inventaris: "inventaris",
+  mutasiInventaris: "mutasi-inventaris",
+  bumindes: "bumindes",
+  /**
+   * Pengajuan surat oleh warga (dulu bernama "layanan-mandiri").
+   *
+   * Slug resource diganti menjadi `permohonan-surat` pada Fase 1A agar rute
+   * publik `/layanan-mandiri` (milik warga) tidak bentrok dengan admin.
+   */
+  permohonanSurat: "permohonan-surat",
+  analisisSurvei: "analisis-survei",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

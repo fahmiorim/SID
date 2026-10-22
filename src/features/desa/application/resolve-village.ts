@@ -1,21 +1,65 @@
 import "server-only";
 
+import { headers } from "next/headers";
+import { cache } from "react";
+
+import { hostCandidates } from "@/features/desa/domain/host";
+import {
+  countVillages,
+  getFirstVillageId,
+  getIdentitasDesa,
+  getVillageIdByDomain,
+  type IdentitasDesa,
+} from "@/features/desa/infrastructure/desa-repository";
 import type { CurrentUser } from "@/lib/dal";
 import { notFound } from "@/lib/errors";
 
-import { getIdentitas } from "./get-identitas";
-
 /**
- * Tentukan `village_id` efektif untuk operasi tulis.
+ * Tentukan `village_id` efektif untuk operasi tulis/admin.
  *
- * Pada mode satu-desa, pengguna biasanya sudah membawa `villageId`; bila belum
- * (mis. super admin tanpa penugasan desa), gunakan desa pertama yang ada.
+ * Prioritas: penugasan desa pada sesi → desa pertama (mode satu-desa). Super
+ * admin tanpa penugasan desa tetap bisa bekerja pada instalasi satu-desa.
  */
 export async function resolveVillageId(user: CurrentUser): Promise<number> {
   if (user.villageId !== null) return user.villageId;
 
-  const desa = await getIdentitas();
-  if (!desa) throw notFound("Identitas desa belum dikonfigurasi.");
+  const villageId = await getFirstVillageId();
+  if (villageId === null) throw notFound("Identitas desa belum dikonfigurasi.");
 
-  return desa.id;
+  return villageId;
 }
+
+/**
+ * Tentukan desa dari host permintaan (halaman publik).
+ *
+ * Urutan: domain persis → alias `www` → fallback **hanya** bila instalasi
+ * benar-benar memiliki satu desa. Bila ada banyak desa dan host tidak dikenal,
+ * hasilnya 404 agar tenant tidak bocor.
+ */
+export const resolveVillageByHost = cache(
+  async (host: string | null | undefined): Promise<IdentitasDesa> => {
+    for (const candidate of hostCandidates(host)) {
+      const villageId = await getVillageIdByDomain(candidate);
+      if (villageId === null) continue;
+
+      const desa = await getIdentitasDesa(villageId);
+      if (desa) return desa;
+    }
+
+    if ((await countVillages()) === 1) {
+      const villageId = await getFirstVillageId();
+      if (villageId !== null) {
+        const desa = await getIdentitasDesa(villageId);
+        if (desa) return desa;
+      }
+    }
+
+    throw notFound("Desa untuk domain ini tidak ditemukan.");
+  },
+);
+
+/** Desa aktif untuk request saat ini, berdasarkan `Host`/`X-Forwarded-Host`. */
+export const getIdentitasFromRequest = cache(async (): Promise<IdentitasDesa> => {
+  const requestHeaders = await headers();
+  return resolveVillageByHost(requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host"));
+});

@@ -5,12 +5,52 @@ on:
     branches: [master, main]
   pull_request:
 
-# Batalkan run lama pada ref yang sama agar tidak menumpuk.
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  migrate:
+    name: Migrasi & seed dari DB kosong
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sid_desa
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      HUSKY: "0"
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/sid_desa
+      BETTER_AUTH_SECRET: rahasia-ci-minimal-32-karakter-aman
+      APP_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Migrasi harus berhasil dari database kosong, lalu idempoten bila diulang.
+      - name: Terapkan migrasi
+        run: npm run db:migrate
+
+      - name: Ulangi migrasi (uji idempoten)
+        run: npm run db:migrate
+
+      - name: Isi data awal
+        run: npm run db:seed
+
   verify:
     name: Typecheck, lint, test, build
     runs-on: ubuntu-latest
