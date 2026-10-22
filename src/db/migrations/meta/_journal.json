@@ -127,6 +127,13 @@
       "when": 1792687649567,
       "tag": "0017_narrow_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1792689920499,
+      "tag": "0018_early_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

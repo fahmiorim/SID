@@ -10,6 +10,7 @@
 export * from "./auth";
 export * from "./bantuan";
 export * from "./bumindes";
+export * from "./content";
 export * from "./family";
 export * from "./incoming-letters";
 export * from "./inventaris";

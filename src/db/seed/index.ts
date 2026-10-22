@@ -2,17 +2,24 @@ import { and, eq, sql } from "drizzle-orm";
 
 import { db, pool } from "@/db";
 import {
+  berita,
+  beritaKategori,
   bloodTypes,
   citizenships,
+  dokumenPublik,
   educations,
   familyRelations,
+  jabatanPerangkat,
   keuanganTemplate,
   letterClassifications,
   letterRequirements,
   letterTypes,
   maritalStatuses,
+  menuPublik,
   modules,
   occupations,
+  perangkatDesa,
+  profilDesa,
   religions,
   rolePermissions,
   roles,
@@ -23,6 +30,14 @@ import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 
 import { KEUANGAN_TEMPLATE_SEEDS } from "./data/keuangan";
+import {
+  BERITA_CONTOH,
+  DOKUMEN_SEEDS,
+  JABATAN_SEEDS,
+  KATEGORI_BERITA_SEEDS,
+  MENU_SEEDS,
+  PROFIL_SEED,
+} from "./data/konten";
 import { MODULE_SEEDS } from "./data/modules";
 import {
   BLOOD_TYPE_SEEDS,
@@ -387,6 +402,138 @@ async function ensureAdminUser(villageId: number, roleId: number): Promise<strin
   return user.id;
 }
 
+/**
+ * Seed konten situs publik (Fase 1C.5).
+ *
+ * Idempoten: setiap bagian dicek keberadaannya lebih dulu sehingga menjalankan
+ * `db:seed` ulang tidak menggandakan baris sekaligus tidak menimpa konten yang
+ * sudah disunting operator (hanya menyisipkan contoh saat tabel masih kosong).
+ */
+async function seedKonten(villageId: number): Promise<void> {
+  // Profil desa — satu baris per desa.
+  const [profilAda] = await db
+    .select({ id: profilDesa.id })
+    .from(profilDesa)
+    .where(eq(profilDesa.villageId, villageId))
+    .limit(1);
+  if (!profilAda) {
+    await db.insert(profilDesa).values({ villageId, ...PROFIL_SEED });
+  }
+
+  // Jabatan perangkat.
+  const jabatanIds = new Map<string, number>();
+  for (const item of JABATAN_SEEDS) {
+    const [ada] = await db
+      .select({ id: jabatanPerangkat.id })
+      .from(jabatanPerangkat)
+      .where(and(eq(jabatanPerangkat.villageId, villageId), eq(jabatanPerangkat.slug, item.slug)))
+      .limit(1);
+    if (ada) {
+      jabatanIds.set(item.slug, ada.id);
+    } else {
+      const inserted = unwrap(
+        await db
+          .insert(jabatanPerangkat)
+          .values({ villageId, nama: item.nama, slug: item.slug, urut: item.urut })
+          .$returningId(),
+      );
+      jabatanIds.set(item.slug, inserted.id);
+    }
+  }
+
+  // Perangkat contoh: hanya kepala desa, agar operator mengisi sisanya.
+  const [kepalaAda] = await db
+    .select({ id: perangkatDesa.id })
+    .from(perangkatDesa)
+    .where(eq(perangkatDesa.villageId, villageId))
+    .limit(1);
+  if (!kepalaAda) {
+    const [village] = await db
+      .select({ name: villages.name, headName: villages.headName })
+      .from(villages)
+      .where(eq(villages.id, villageId))
+      .limit(1);
+    await db.insert(perangkatDesa).values({
+      villageId,
+      jabatanId: jabatanIds.get("kepala-desa") ?? null,
+      nama: village?.headName?.trim() || "Kepala Desa",
+      penandaTangan: true,
+      status: "aktif",
+      urut: 1,
+    });
+  }
+
+  // Kategori berita.
+  const kategoriIds = new Map<string, number>();
+  for (const item of KATEGORI_BERITA_SEEDS) {
+    const [ada] = await db
+      .select({ id: beritaKategori.id })
+      .from(beritaKategori)
+      .where(and(eq(beritaKategori.villageId, villageId), eq(beritaKategori.slug, item.slug)))
+      .limit(1);
+    if (ada) {
+      kategoriIds.set(item.slug, ada.id);
+    } else {
+      const inserted = unwrap(
+        await db
+          .insert(beritaKategori)
+          .values({ villageId, nama: item.nama, slug: item.slug, urut: item.urut })
+          .$returningId(),
+      );
+      kategoriIds.set(item.slug, inserted.id);
+    }
+  }
+
+  // Satu berita contoh (hanya bila desa belum punya berita sama sekali).
+  const [beritaAda] = await db
+    .select({ id: berita.id })
+    .from(berita)
+    .where(eq(berita.villageId, villageId))
+    .limit(1);
+  if (!beritaAda) {
+    await db.insert(berita).values({
+      villageId,
+      kategoriId: kategoriIds.get(BERITA_CONTOH.kategoriSlug) ?? null,
+      judul: BERITA_CONTOH.judul,
+      slug: BERITA_CONTOH.slug,
+      ringkasan: BERITA_CONTOH.ringkasan,
+      isi: BERITA_CONTOH.isi,
+      status: "published",
+      terbitPada: new Date(),
+    });
+  }
+
+  // Dokumen publik contoh.
+  for (const item of DOKUMEN_SEEDS) {
+    const [ada] = await db
+      .select({ id: dokumenPublik.id })
+      .from(dokumenPublik)
+      .where(and(eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.slug, item.slug)))
+      .limit(1);
+    if (!ada) {
+      await db.insert(dokumenPublik).values({
+        villageId,
+        nama: item.nama,
+        slug: item.slug,
+        kategori: item.kategori,
+        keterangan: item.keterangan,
+      });
+    }
+  }
+
+  // Menu publik bawaan (hanya bila desa belum punya menu).
+  const [menuAda] = await db
+    .select({ id: menuPublik.id })
+    .from(menuPublik)
+    .where(eq(menuPublik.villageId, villageId))
+    .limit(1);
+  if (!menuAda) {
+    await db
+      .insert(menuPublik)
+      .values(MENU_SEEDS.map((item) => ({ villageId, ...item, parentId: null })));
+  }
+}
+
 async function main(): Promise<void> {
   await seedReferenceCatalogs();
   console.log("• katalog referensi kependudukan disiapkan");
@@ -421,6 +568,9 @@ async function main(): Promise<void> {
 
   await ensureAdminUser(villageId, adminRoleId);
   console.log("• pengguna administrator disiapkan");
+
+  await seedKonten(villageId);
+  console.log("• konten publik contoh disiapkan (profil, berita, galeri, dokumen, menu)");
 
   console.log("\nSelesai. Kredensial administrator:");
   console.log(`   username : ${ADMIN_USERNAME}`);
