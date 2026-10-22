@@ -50,6 +50,7 @@ export async function savePendudukAction(
     birthDate: text(formData, "birthDate"),
     religionId: text(formData, "religionId"),
     educationId: text(formData, "educationId"),
+    educationSedangId: text(formData, "educationSedangId"),
     occupationId: text(formData, "occupationId"),
     maritalStatusId: text(formData, "maritalStatusId"),
     familyRelationId: text(formData, "familyRelationId"),
@@ -62,6 +63,8 @@ export async function savePendudukAction(
     phone: text(formData, "phone"),
     fatherName: text(formData, "fatherName"),
     motherName: text(formData, "motherName"),
+    fatherNationalId: text(formData, "fatherNationalId"),
+    motherNationalId: text(formData, "motherNationalId"),
   });
 
   if (!parsed.success) {

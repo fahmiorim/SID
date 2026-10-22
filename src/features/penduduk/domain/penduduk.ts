@@ -81,6 +81,7 @@ export const pendudukFormSchema = z.object({
   birthDate: optionalIsoDate,
   religionId: optionalSelectId,
   educationId: optionalSelectId,
+  educationSedangId: optionalSelectId,
   occupationId: optionalSelectId,
   maritalStatusId: optionalSelectId,
   familyRelationId: optionalSelectId,
@@ -93,6 +94,8 @@ export const pendudukFormSchema = z.object({
   phone: optionalText(30),
   fatherName: optionalText(100),
   motherName: optionalText(100),
+  fatherNationalId: optionalDigits(16),
+  motherNationalId: optionalDigits(16),
 });
 
 export type PendudukFormInput = z.infer<typeof pendudukFormSchema>;
@@ -111,6 +114,8 @@ export interface PendudukDTO {
   birthDate: string | null;
   religionId: number | null;
   educationId: number | null;
+  /** Pendidikan yang sedang ditempuh (bisa berbeda dari pendidikan terakhir). */
+  educationSedangId: number | null;
   occupationId: number | null;
   maritalStatusId: number | null;
   familyRelationId: number | null;
@@ -123,6 +128,8 @@ export interface PendudukDTO {
   phone: string | null;
   fatherName: string | null;
   motherName: string | null;
+  fatherNationalId: string | null;
+  motherNationalId: string | null;
 }
 
 /** Baris tabel penduduk: DTO lengkap ditambah data turunan hasil join. */

@@ -10,6 +10,7 @@ import {
   SASARAN_KELUARGA,
   SASARAN_PENDUDUK,
   SASARAN_RUMAH_TANGGA,
+  SASARAN_TERSEDIA,
   sasaranLabel,
   statusMasaAktif,
 } from "@/features/bantuan/domain/bantuan";
@@ -202,7 +203,21 @@ describe("isSasaranTersedia", () => {
     expect(isSasaranTersedia(SASARAN_RUMAH_TANGGA)).toBe(true);
   });
 
-  it("menyatakan sasaran kelompok belum tersedia", () => {
-    expect(isSasaranTersedia(SASARAN_KELOMPOK)).toBe(false);
+  it("menyatakan sasaran kelompok kini tersedia", () => {
+    expect(isSasaranTersedia(SASARAN_KELOMPOK)).toBe(true);
+  });
+
+  it("menolak sasaran di luar katalog", () => {
+    expect(isSasaranTersedia(5)).toBe(false);
+    expect(isSasaranTersedia(0)).toBe(false);
+  });
+
+  it("menyediakan keempat jenis sasaran", () => {
+    expect(SASARAN_TERSEDIA).toEqual([
+      SASARAN_PENDUDUK,
+      SASARAN_KELUARGA,
+      SASARAN_RUMAH_TANGGA,
+      SASARAN_KELOMPOK,
+    ]);
   });
 });

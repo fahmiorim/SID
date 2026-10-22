@@ -53,16 +53,16 @@ export function sasaranLabel(sasaran: number | null): string {
 }
 
 /**
- * Sasaran mana yang sudah dapat ditautkan pesertanya.
+ * Sasaran yang sudah dapat ditautkan pesertanya.
  *
- * Sasaran **kelompok** belum tersedia karena modul Kelompok belum dibangun;
- * program ber-sasaran kelompok tetap boleh dibuat, tetapi belum bisa diisi
- * peserta sampai modul tersebut ada.
+ * Keempat jenis sasaran kini tersedia: penduduk, keluarga, rumah tangga, dan
+ * kelompok (kelompok diisi lewat modul Kelompok & Lembaga).
  */
 export const SASARAN_TERSEDIA: readonly SasaranBantuan[] = [
   SASARAN_PENDUDUK,
   SASARAN_KELUARGA,
   SASARAN_RUMAH_TANGGA,
+  SASARAN_KELOMPOK,
 ];
 
 /** Apakah sasaran sudah punya daftar kandidat peserta. */
@@ -238,6 +238,7 @@ export interface PesertaReferenceData {
   penduduk: SasaranOption[];
   keluarga: SasaranOption[];
   rumahTangga: SasaranOption[];
+  kelompok: SasaranOption[];
 }
 
 /** Wilayah yang menjadi domisili peserta, untuk ringkasan sebaran. */

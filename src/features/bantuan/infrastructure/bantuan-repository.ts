@@ -7,11 +7,14 @@ import {
   bantuanPeserta,
   bantuanProgram,
   families,
+  kelompok,
+  kelompokAnggota,
   regions,
   residents,
   rumahTangga,
 } from "@/db/schema";
 import {
+  SASARAN_KELOMPOK,
   SASARAN_KELUARGA,
   SASARAN_PENDUDUK,
   SASARAN_RUMAH_TANGGA,
@@ -139,7 +142,8 @@ async function listPesertaCounts(
  * Jumlah wilayah berbeda yang dihuni peserta, per program.
  *
  * Wilayah diambil dari sasaran (penduduk → wilayah domisili, keluarga/RTM →
- * wilayah kartu). Sasaran kelompok belum didukung sehingga tidak dihitung.
+ * wilayah kartu). Untuk sasaran **kelompok**, wilayah diambil dari domisili
+ * anggotanya (gabungan), karena kelompok sendiri tidak punya wilayah.
  */
 async function listWilayahCounts(
   villageId: number,
@@ -153,7 +157,7 @@ async function listWilayahCounts(
     inArray(bantuanPeserta.programId, ids),
   ];
 
-  const [pendudukRows, keluargaRows, rtmRows] = await Promise.all([
+  const [pendudukRows, keluargaRows, rtmRows, kelompokRows] = await Promise.all([
     db
       .select({
         programId: bantuanPeserta.programId,
@@ -178,11 +182,21 @@ async function listWilayahCounts(
       .from(bantuanPeserta)
       .innerJoin(rumahTangga, eq(bantuanPeserta.rtmId, rumahTangga.id))
       .where(and(...filters)),
+    // Wilayah kelompok = domisili anggotanya.
+    db
+      .select({
+        programId: bantuanPeserta.programId,
+        regionId: residents.regionId,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(kelompokAnggota, eq(bantuanPeserta.kelompokId, kelompokAnggota.kelompokId))
+      .innerJoin(residents, eq(kelompokAnggota.residentId, residents.id))
+      .where(and(...filters)),
   ]);
 
   // Kumpulkan himpunan wilayah per program, lalu hitung kardinalitasnya.
   const buckets = new Map<number, Set<number | null>>();
-  for (const row of [...pendudukRows, ...keluargaRows, ...rtmRows]) {
+  for (const row of [...pendudukRows, ...keluargaRows, ...rtmRows, ...kelompokRows]) {
     const set = buckets.get(row.programId) ?? new Set<number | null>();
     set.add(row.regionId);
     buckets.set(row.programId, set);
@@ -279,6 +293,31 @@ export async function countPesertaByProgram(villageId: number, programId: number
   return row?.total ?? 0;
 }
 
+/** Ringkasan program bantuan untuk situs publik (tanpa izin admin, sadar-tenant). */
+export interface BantuanProgramPublik {
+  id: number;
+  nama: string;
+  slug: string;
+  sasaran: number;
+  asalDana: number | null;
+}
+
+export async function listBantuanProgramPublik(villageId: number): Promise<BantuanProgramPublik[]> {
+  const rows = await db
+    .select({
+      id: bantuanProgram.id,
+      nama: bantuanProgram.name,
+      slug: bantuanProgram.slug,
+      sasaran: bantuanProgram.sasaran,
+      asalDana: bantuanProgram.asalDana,
+    })
+    .from(bantuanProgram)
+    .where(eq(bantuanProgram.villageId, villageId))
+    .orderBy(asc(bantuanProgram.name));
+
+  return rows;
+}
+
 /**
  * Peserta sebuah program, diurutkan menurut nama sasaran.
  *
@@ -335,6 +374,21 @@ export async function listPesertaProgram(
     }));
   }
 
+  if (program.sasaran === SASARAN_KELOMPOK) {
+    // Nama kelompok sudah merupakan nama diri (mis. "Kelompok Tani Mekar"),
+    // jadi tidak perlu diberi awalan seperti pada sasaran rumah tangga.
+    return db
+      .select({
+        ...cardColumns,
+        targetName: kelompok.name,
+        targetIdentity: kelompok.code,
+      })
+      .from(bantuanPeserta)
+      .innerJoin(kelompok, eq(bantuanPeserta.kelompokId, kelompok.id))
+      .where(and(...filters))
+      .orderBy(asc(kelompok.name));
+  }
+
   const rows = await db
     .select({
       ...cardColumns,
@@ -389,6 +443,16 @@ export async function listSebaranWilayah(
       .from(bantuanPeserta)
       .innerJoin(rumahTangga, eq(bantuanPeserta.rtmId, rumahTangga.id))
       .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+      .where(and(...filters))
+      .groupBy(regions.id, regions.dusun, regions.rw, regions.rt);
+  } else if (program.sasaran === SASARAN_KELOMPOK) {
+    // Sebaran sasaran kelompok mengikuti domisili anggotanya.
+    rows = await db
+      .select(regionColumns)
+      .from(bantuanPeserta)
+      .innerJoin(kelompokAnggota, eq(bantuanPeserta.kelompokId, kelompokAnggota.kelompokId))
+      .innerJoin(residents, eq(kelompokAnggota.residentId, residents.id))
+      .leftJoin(regions, eq(residents.regionId, regions.id))
       .where(and(...filters))
       .groupBy(regions.id, regions.dusun, regions.rw, regions.rt);
   } else {
@@ -481,11 +545,32 @@ export async function listRumahTanggaSasaran(
     }));
 }
 
+/** Kandidat sasaran kelompok yang belum menjadi peserta program. */
+export async function listKelompokSasaran(
+  villageId: number,
+  programId: number,
+): Promise<SasaranOption[]> {
+  const taken = await listTakenIds(villageId, programId, "kelompokId");
+
+  const rows = await db
+    .select({ id: kelompok.id, name: kelompok.name, code: kelompok.code })
+    .from(kelompok)
+    .where(eq(kelompok.villageId, villageId))
+    .orderBy(asc(kelompok.name));
+
+  return rows
+    .filter((row) => !taken.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      label: row.code ? `${row.name} — ${row.code}` : row.name,
+    }));
+}
+
 /** Id sasaran yang sudah terdaftar sebagai peserta sebuah program. */
 async function listTakenIds(
   villageId: number,
   programId: number,
-  column: "residentId" | "familyId" | "rtmId",
+  column: "residentId" | "familyId" | "rtmId" | "kelompokId",
 ): Promise<Set<number>> {
   const target = bantuanPeserta[column];
   const rows = await db
@@ -539,6 +624,20 @@ export async function findPendudukSasaran(
   return row ?? null;
 }
 
+/** Nama & kode kelompok (dipakai sebagai snapshot kartu peserta kelompok). */
+export async function findKelompokSasaran(
+  villageId: number,
+  kelompokId: number,
+): Promise<{ name: string; code: string | null; decreeNumber: string | null } | null> {
+  const [row] = await db
+    .select({ name: kelompok.name, code: kelompok.code, decreeNumber: kelompok.decreeNumber })
+    .from(kelompok)
+    .where(and(eq(kelompok.villageId, villageId), eq(kelompok.id, kelompokId)))
+    .limit(1);
+
+  return row ?? null;
+}
+
 /** Alamat sasaran keluarga/RTM (dipakai sebagai snapshot alamat kartu). */
 export async function findAlamatSasaran(
   villageId: number,
@@ -582,6 +681,7 @@ export async function insertPeserta(
     residentId: null,
     familyId: null,
     rtmId: null,
+    kelompokId: null,
     cardNumber: blankToNull(input.nomorKartu),
     cardNationalId: input.kartuNik,
     cardName: blankToNull(input.kartuNama),
@@ -594,6 +694,8 @@ export async function insertPeserta(
     values.familyId = sasaranId;
   } else if (sasaran === SASARAN_RUMAH_TANGGA) {
     values.rtmId = sasaranId;
+  } else if (sasaran === SASARAN_KELOMPOK) {
+    values.kelompokId = sasaranId;
   } else {
     values.residentId = sasaranId;
   }

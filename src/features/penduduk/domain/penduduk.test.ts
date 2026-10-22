@@ -18,6 +18,7 @@ const minimalInput = {
   birthDate: "",
   religionId: "",
   educationId: "",
+  educationSedangId: "",
   occupationId: "",
   maritalStatusId: "",
   familyRelationId: "",
@@ -30,6 +31,8 @@ const minimalInput = {
   phone: "",
   fatherName: "",
   motherName: "",
+  fatherNationalId: "",
+  motherNationalId: "",
 };
 
 describe("pendudukFormSchema", () => {

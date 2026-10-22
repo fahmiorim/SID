@@ -4,6 +4,7 @@ import {
   BANTUAN_PESERTA_RESOURCE,
   BANTUAN_RESOURCE,
   buildProgramSlug,
+  SASARAN_KELOMPOK,
   SASARAN_KELUARGA,
   SASARAN_PENDUDUK,
   SASARAN_RUMAH_TANGGA,
@@ -22,10 +23,12 @@ import {
   deletePeserta as deletePesertaRow,
   findAlamatSasaran,
   findBantuanById,
+  findKelompokSasaran,
   findPendudukSasaran,
   insertBantuan,
   insertPeserta,
   listBantuan as listBantuanRows,
+  listKelompokSasaran,
   listKeluargaSasaran,
   listPendudukSasaran,
   listPesertaProgram,
@@ -166,7 +169,7 @@ async function punyaIzinUbah(): Promise<boolean> {
 }
 
 function emptyReference(): PesertaReferenceData {
-  return { penduduk: [], keluarga: [], rumahTangga: [] };
+  return { penduduk: [], keluarga: [], rumahTangga: [], kelompok: [] };
 }
 
 /** Kandidat sasaran yang belum menjadi peserta program. */
@@ -180,6 +183,8 @@ async function getReferenceKandidat(
     reference.keluarga = await listKeluargaSasaran(villageId, program.id);
   } else if (program.sasaran === SASARAN_RUMAH_TANGGA) {
     reference.rumahTangga = await listRumahTanggaSasaran(villageId, program.id);
+  } else if (program.sasaran === SASARAN_KELOMPOK) {
+    reference.kelompok = await listKelompokSasaran(villageId, program.id);
   } else if (program.sasaran === SASARAN_PENDUDUK) {
     reference.penduduk = await listPendudukSasaran(villageId, program.id);
   }
@@ -250,6 +255,7 @@ export async function addPeserta(
 function pilihKandidat(reference: PesertaReferenceData, sasaran: number): SasaranOption[] {
   if (sasaran === SASARAN_KELUARGA) return reference.keluarga;
   if (sasaran === SASARAN_RUMAH_TANGGA) return reference.rumahTangga;
+  if (sasaran === SASARAN_KELOMPOK) return reference.kelompok;
   return reference.penduduk;
 }
 
@@ -278,6 +284,12 @@ async function lengkapiKartu(
       if (!lengkap.kartuAlamat) {
         lengkap.kartuAlamat = penduduk.address || wilayahLabel(penduduk);
       }
+    }
+  } else if (sasaran === SASARAN_KELOMPOK) {
+    const target = await findKelompokSasaran(villageId, sasaranId);
+    if (target) {
+      lengkap.kartuNama ||= target.name;
+      lengkap.nomorKartu ||= target.decreeNumber ?? target.code ?? "";
     }
   } else if (sasaran === SASARAN_KELUARGA || sasaran === SASARAN_RUMAH_TANGGA) {
     if (!lengkap.kartuAlamat) {

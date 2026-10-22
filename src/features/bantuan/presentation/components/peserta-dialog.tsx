@@ -5,7 +5,6 @@ import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  SASARAN_KELOMPOK,
   SASARAN_LABELS,
   type BantuanListRow,
   type PesertaBantuanRow,
@@ -111,6 +109,7 @@ function sasaranOptions(
 ): { options: PesertaReferenceData["penduduk"]; judul: string } {
   if (sasaran === 2) return { options: reference.keluarga, judul: "Keluarga (KK)" };
   if (sasaran === 3) return { options: reference.rumahTangga, judul: "Rumah Tangga (RTM)" };
+  if (sasaran === 4) return { options: reference.kelompok, judul: "Kelompok" };
   return { options: reference.penduduk, judul: "Penduduk" };
 }
 
@@ -304,17 +303,8 @@ export function PesertaDialog({ open, onOpenChange, program }: PesertaDialogProp
         <DialogHeader>
           <DialogTitle>Peserta — {program.name}</DialogTitle>
           <DialogDescription>
-            <span className="inline-flex flex-wrap items-center gap-2">
-              <span>
-                Sasaran {SASARAN_LABELS[program.sasaran as 1 | 2 | 3 | 4] ?? "-"} ·{" "}
-                {program.pesertaCount} peserta
-              </span>
-              {program.sasaran === SASARAN_KELOMPOK ? (
-                <Badge variant="outline" className="text-xs">
-                  Belum tersedia
-                </Badge>
-              ) : null}
-            </span>
+            Sasaran {SASARAN_LABELS[program.sasaran as 1 | 2 | 3 | 4] ?? "-"} ·{" "}
+            {program.pesertaCount} peserta
           </DialogDescription>
         </DialogHeader>
 

@@ -1,9 +1,21 @@
 import "server-only";
 
 import { and, asc, count, eq, like, ne, or, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/mysql-core";
 
 import { db } from "@/db";
-import { families, occupations, regions, religions, residents } from "@/db/schema";
+import {
+  bloodTypes,
+  citizenships,
+  educations,
+  families,
+  familyRelations,
+  maritalStatuses,
+  occupations,
+  regions,
+  religions,
+  residents,
+} from "@/db/schema";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
   type LifeStatus,
@@ -46,6 +58,7 @@ function toDto(row: typeof residents.$inferSelect): PendudukDTO {
     birthDate: row.birthDate,
     religionId: row.religionId,
     educationId: row.educationId,
+    educationSedangId: row.educationSedangId,
     occupationId: row.occupationId,
     maritalStatusId: row.maritalStatusId,
     familyRelationId: row.familyRelationId,
@@ -58,6 +71,8 @@ function toDto(row: typeof residents.$inferSelect): PendudukDTO {
     phone: row.phone,
     fatherName: row.fatherName,
     motherName: row.motherName,
+    fatherNationalId: row.fatherNationalId,
+    motherNationalId: row.motherNationalId,
   };
 }
 
@@ -243,6 +258,83 @@ export async function getPendudukSuratData(
   };
 }
 
+/** Satu anggota keluarga untuk pengisian placeholder surat `klg1_*` … `klg10_*`. */
+export interface AnggotaKeluargaSuratRow {
+  id: number;
+  nationalId: string | null;
+  name: string;
+  gender: PendudukDTO["gender"];
+  birthPlace: string | null;
+  birthDate: string | null;
+  religionName: string | null;
+  educationName: string | null;
+  educationSedangName: string | null;
+  occupationName: string | null;
+  maritalStatusName: string | null;
+  familyRelationName: string | null;
+  citizenshipName: string | null;
+  bloodTypeName: string | null;
+  address: string | null;
+  fatherName: string | null;
+  motherName: string | null;
+  fatherNationalId: string | null;
+  motherNationalId: string | null;
+}
+
+/**
+ * Anggota keluarga yang masih hidup, urut dari kepala keluarga.
+ *
+ * Dipakai untuk mengisi placeholder `[klg1_nama]`, `[klg2_nik]`, dst. pada
+ * template surat. Batas 10 mengikuti parity OpenSID.
+ */
+export async function listAnggotaKeluargaSurat(
+  villageId: number,
+  familyId: number,
+): Promise<AnggotaKeluargaSuratRow[]> {
+  const educationsSedang = alias(educations, "educations_sedang");
+
+  return db
+    .select({
+      id: residents.id,
+      nationalId: residents.nationalId,
+      name: residents.name,
+      gender: residents.gender,
+      birthPlace: residents.birthPlace,
+      birthDate: residents.birthDate,
+      religionName: religions.name,
+      educationName: educations.name,
+      educationSedangName: educationsSedang.name,
+      occupationName: occupations.name,
+      maritalStatusName: maritalStatuses.name,
+      familyRelationName: familyRelations.name,
+      citizenshipName: citizenships.name,
+      bloodTypeName: bloodTypes.name,
+      address: residents.address,
+      fatherName: residents.fatherName,
+      motherName: residents.motherName,
+      fatherNationalId: residents.fatherNationalId,
+      motherNationalId: residents.motherNationalId,
+    })
+    .from(residents)
+    .leftJoin(religions, eq(residents.religionId, religions.id))
+    .leftJoin(educations, eq(residents.educationId, educations.id))
+    .leftJoin(educationsSedang, eq(residents.educationSedangId, educationsSedang.id))
+    .leftJoin(occupations, eq(residents.occupationId, occupations.id))
+    .leftJoin(maritalStatuses, eq(residents.maritalStatusId, maritalStatuses.id))
+    .leftJoin(familyRelations, eq(residents.familyRelationId, familyRelations.id))
+    .leftJoin(citizenships, eq(residents.citizenshipId, citizenships.id))
+    .leftJoin(bloodTypes, eq(residents.bloodTypeId, bloodTypes.id))
+    .where(
+      and(
+        eq(residents.villageId, villageId),
+        eq(residents.familyId, familyId),
+        eq(residents.lifeStatus, "alive"),
+      ),
+    )
+    .orderBy(asc(residents.familyRelationId), asc(residents.id))
+    .limit(10);
+}
+
 export async function insertPenduduk(villageId: number, input: PendudukFormInput): Promise<number> {
   const [inserted] = await db
     .insert(residents)
@@ -256,6 +348,7 @@ export async function insertPenduduk(villageId: number, input: PendudukFormInput
       birthDate: input.birthDate,
       religionId: input.religionId,
       educationId: input.educationId,
+      educationSedangId: input.educationSedangId,
       occupationId: input.occupationId,
       maritalStatusId: input.maritalStatusId,
       familyRelationId: input.familyRelationId,
@@ -268,6 +361,8 @@ export async function insertPenduduk(villageId: number, input: PendudukFormInput
       phone: blankToNull(input.phone),
       fatherName: blankToNull(input.fatherName),
       motherName: blankToNull(input.motherName),
+      fatherNationalId: input.fatherNationalId,
+      motherNationalId: input.motherNationalId,
     })
     .$returningId();
 
@@ -287,6 +382,7 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
       birthDate: input.birthDate,
       religionId: input.religionId,
       educationId: input.educationId,
+      educationSedangId: input.educationSedangId,
       occupationId: input.occupationId,
       maritalStatusId: input.maritalStatusId,
       familyRelationId: input.familyRelationId,
@@ -299,6 +395,8 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
       phone: blankToNull(input.phone),
       fatherName: blankToNull(input.fatherName),
       motherName: blankToNull(input.motherName),
+      fatherNationalId: input.fatherNationalId,
+      motherNationalId: input.motherNationalId,
     })
     .where(eq(residents.id, id));
 }

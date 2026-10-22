@@ -260,6 +260,13 @@ export function PendudukFormDialog({
                   noneLabel="—"
                 />
                 <ReferenceSelect
+                  label="Pendidikan Sedang Ditempuh"
+                  name="educationSedangId"
+                  options={catalogOptions(reference.educations)}
+                  value={idValue(penduduk?.educationSedangId)}
+                  noneLabel="—"
+                />
+                <ReferenceSelect
                   label="Pekerjaan"
                   name="occupationId"
                   options={catalogOptions(reference.occupations)}
@@ -384,6 +391,36 @@ export function PendudukFormDialog({
                     aria-invalid={Boolean(fieldErrors?.motherName)}
                   />
                   <FieldError messages={fieldErrors?.motherName} />
+                </div>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="fatherNationalId">NIK Ayah</Label>
+                  <Input
+                    id="fatherNationalId"
+                    name="fatherNationalId"
+                    defaultValue={penduduk?.fatherNationalId ?? ""}
+                    placeholder="16 angka"
+                    inputMode="numeric"
+                    maxLength={16}
+                    aria-invalid={Boolean(fieldErrors?.fatherNationalId)}
+                  />
+                  <FieldError messages={fieldErrors?.fatherNationalId} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="motherNationalId">NIK Ibu</Label>
+                  <Input
+                    id="motherNationalId"
+                    name="motherNationalId"
+                    defaultValue={penduduk?.motherNationalId ?? ""}
+                    placeholder="16 angka"
+                    inputMode="numeric"
+                    maxLength={16}
+                    aria-invalid={Boolean(fieldErrors?.motherNationalId)}
+                  />
+                  <FieldError messages={fieldErrors?.motherNationalId} />
                 </div>
               </div>
             </section>
