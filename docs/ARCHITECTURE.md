@@ -3,6 +3,11 @@
 Dokumen ini menjelaskan **cara kode ini disusun** dan **mengapa**. Tujuannya agar
 kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
 
+> Peta seluruh dokumentasi ada di [`README.md`](./README.md). Status fitur dan
+> prioritas **tidak** diambil dari dokumen ini — gunakan
+> [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md) dan
+> [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
+
 ---
 
 ## 1. Prinsip
@@ -57,23 +62,30 @@ Lapisan bersama (lintas-fitur) tinggal di `src/lib/`:
 
 Fitur yang sudah dibangun saat ini:
 
-| Fitur       | Isi ringkas                                                            |
-| ----------- | ---------------------------------------------------------------------- |
-| `wilayah`   | Wilayah administratif (dusun/RW/RT) + `listWilayahOptions`.            |
-| `penduduk`  | Data penduduk + katalog referensi + `getPendudukSuratData`.           |
-| `keluarga`  | Kartu Keluarga; kepala keluarga **diturunkan** dari anggota.           |
-| `desa`      | Identitas desa (termasuk nama & NIP kepala desa).                     |
-| `rbac`      | Role, matriks izin, `computeEffectivePermissions`.                    |
-| `modul`     | Katalog modul/menu (pohon `parent_id`).                               |
-| `pengguna`  | Manajemen pengguna (di atas tabel better-auth).                       |
-| `surat`     | Persuratan: jenis/klasifikasi, surat layanan, agenda masuk/keluar, cetak & PDF. |
-| `keuangan`  | APBDes: pohon rekening, pagu anggaran & realisasi per tahun, agregasi induk, ringkasan RP APBDes, laporan RP APBDes + realisasi per bidang + grafik + ekspor CSV/Excel, arsip dokumen laporan per semester (unggah PDF + tanda kirim). |
-| `navigation`| Menu sidebar dari modul + izin efektif.                               |
-| `auth`      | Login/logout username + pelacakan login terakhir.                     |
+| Fitur            | Isi ringkas                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| `wilayah`        | Wilayah administratif (dusun/RW/RT) + `listWilayahOptions`.            |
+| `penduduk`       | Data penduduk + katalog referensi + `getPendudukSuratData`.           |
+| `keluarga`       | Kartu Keluarga; kepala keluarga **diturunkan** dari anggota.           |
+| `rumah-tangga`   | Rumah Tangga (RTM), nomor otomatis, kelas sosial & BDT, anggota.       |
+| `kelompok`       | Kelompok masyarakat & lembaga desa (single-table inheritance), kategori, keanggotaan berjabatan. |
+| `bantuan`        | Program bantuan, peserta penduduk/KK/RTM, snapshot kartu, sebaran wilayah. |
+| `inventaris`     | Aset desa, kategori, mutasi/penghapusan, persetujuan berjenjang.       |
+| `bumindes`       | BUMDes: unit usaha (buku) dan item/katalog.                            |
+| `layanan-mandiri`| Permohonan surat warga (backend + action). Halaman admin kini di `/permohonan-surat`; rute publik `/layanan-mandiri` milik warga (UI login NIK+PIN belum dibangun). |
+| `desa`           | Identitas desa (termasuk nama & NIP kepala desa).                     |
+| `rbac`           | Role, matriks izin, `computeEffectivePermissions`.                    |
+| `modul`          | Katalog modul/menu (pohon `parent_id`).                               |
+| `pengguna`       | Manajemen pengguna (di atas tabel better-auth).                       |
+| `surat`          | Persuratan: jenis/klasifikasi/syarat, surat layanan, agenda masuk/keluar, verifikasi berjenjang, cetak & PDF. |
+| `keuangan`       | APBDes: pohon rekening, pagu & realisasi, agregasi induk, laporan RP APBDes, realisasi per bidang, grafik, ekspor CSV/Excel, arsip dokumen, triwulan. |
+| `navigation`     | Menu sidebar dari modul + izin efektif.                               |
+| `auth`           | Login/logout staf (username) + pelacakan login terakhir.               |
 
-> Cakupan & batasan tiap modul (khususnya Persuratan & Keuangan) dirinci di
-> README (bagian *Cakupan Persuratan* dan *Cakupan Keuangan*); dokumen riset di
-> `docs/riset/` adalah **referensi fitur**, bukan janji cakupan.
+> Cakupan & batasan tiap modul dirinci di README. Status paritas dan prioritas
+> ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) dan
+> [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md); dokumen di `docs/riset/`
+> hanya **referensi historis**.
 
 ### Aturan penting
 
@@ -94,7 +106,9 @@ Fitur yang sudah dibangun saat ini:
 
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
   domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
-  `resident.ts`, `family.ts`) dan digabung di `index.ts`.
+  `resident.ts`, `family.ts`, `rumah-tangga.ts`, `kelompok.ts`, `bantuan.ts`,
+  `inventaris.ts`, `bumindes.ts`, `survey.ts`, `letters*.ts`,
+  `permohonan-surat.ts`, `keuangan.ts`) dan digabung di `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -127,8 +141,14 @@ dipertahankan apa adanya.
 | Wilayah   | `regions`                                        | numerik |
 | Penduduk  | `residents`                                      | numerik |
 | Keluarga  | `families`                                       | numerik |
-| Persuratan | `letter_types`, `letter_classifications`, `letters`, `incoming_letters`, `outgoing_letters` | numerik |
-| Keuangan  | `keuangan_template`, `keuangan`, `keuangan_laporan` | numerik / uuid string |
+| Rumah Tangga | `rtm`                                         | numerik |
+| Kelompok  | `kelompok_master`, `kelompok`, `kelompok_anggota` | numerik |
+| Bantuan   | `bantuan_program`, `bantuan_peserta`             | numerik |
+| Inventaris | `inventaris_kategori`, `inventaris`, `inventaris_mutasi` | numerik |
+| BUMDes    | `bumindes_buku`, `bumindes_item`                 | numerik |
+| Survei    | `survey`, `survey_soal`, `survey_responden`, `survey_jawaban` | numerik |
+| Persuratan | `letter_types`, `letter_classifications`, `letter_requirements`, `letters`, `incoming_letters`, `outgoing_letters`, `permohonan_surat` | numerik |
+| Keuangan  | `keuangan_template`, `keuangan`, `keuangan_triwulan`, `keuangan_laporan` | numerik / uuid string |
 | Referensi | `religions`, `educations`, `occupations`, `marital_statuses`, `family_relations`, `blood_types`, `citizenships` | numerik |
 
 Tabel identitas memakai **plural khas better-auth** dengan id string yang
@@ -277,7 +297,62 @@ dan `getPendudukReferenceData(villageId)` (fitur `penduduk`).
 
 ---
 
-## 10. QA & Verifikasi
+## 10. Multi-Tenant, Web Publik & Tema (target)
+
+Bagian ini adalah **arah arsitektur** untuk Fase 1 dan Fase 4; belum semua
+diimplementasikan. Statusnya ada di
+[`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md).
+
+### Route group
+
+- `(public)` — situs desa: `/` (beranda), `/desa/*`, dan `/layanan-mandiri`
+  (halaman informasi/CTA warga). **Sudah berjalan.**
+- `(warga)` — *belum ada*: login NIK + PIN dan dasbor warga di
+  `/layanan-mandiri/*` (rencana Fase 2).
+- `(admin)` — panel staf di `/beranda` dan modulnya. Permohonan surat warga ada
+  di `/permohonan-surat`.
+- `(auth)` — `/masuk` untuk staf.
+
+Root `/` adalah beranda publik, bukan redirect ke login. `/beranda` tetap admin.
+Rute admin lama `/layanan-mandiri` sudah dipindah ke `/permohonan-surat`, dan
+slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
+
+### Resolusi desa (tenant)
+
+- `resolveVillageByHost(host)` membaca `villages.domain` (unik). Di produksi
+  jangan mengandalkan `orderBy(id).limit(1)`; fallback hanya dipakai bila
+  instalasi benar-benar satu desa (`countVillages() === 1`) atau untuk fallback
+  admin. Bila ada >1 desa dan host tak dikenal → 404.
+- Halaman publik: `villageId` berasal dari **host**.
+- Halaman admin/warga: `villageId` berasal dari **sesi** pengguna.
+- Setiap repository yang menyentuh data desa **wajib** menerima `villageId` dan
+  memasukkannya ke `WHERE`.
+- `getIdentitas()` menjadi `getIdentitas(villageId)`.
+
+### Warga
+
+- Login NIK + PIN (6 digit) mengikuti perilaku OpenSID, bukan email/username.
+- Akun warga dibuat operator (tanpa pendaftaran mandiri), dengan `resident_id` +
+  `must_change_pin`; PIN direset operator.
+- `users` tetap dipakai better-auth; identitas warga ditautkan ke `residents`.
+
+### Tema publik
+
+- Tema **dikompilasi saat build** di `src/themes/<slug>` dengan manifest.
+- Tema aktif + opsi (warna, logo, menu) disimpan di DB per desa.
+- Unggah ZIP tema saat runtime **ditolak**: mengeksekusi kode/aset tak tepercaya
+  dan tidak kompatibel dengan build Next.js.
+- Konten berita memakai HTML tervalidasi + sanitizer di server sebelum disimpan
+  dan sebelum dirender.
+
+### Batas keamanan
+
+- Jangan menerima `villageId` dari body/query klien.
+- Semua action tetap memeriksa izin di use case, termasuk action warga.
+
+---
+
+## 11. QA & Verifikasi
 
 `npm run check` menjalankan typecheck, lint, cek format, **dan pengujian unit**.
 Sebelum sebuah perubahan dianggap selesai, pastikan juga:

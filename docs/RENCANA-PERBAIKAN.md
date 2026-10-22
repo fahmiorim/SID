@@ -1,0 +1,495 @@
+# Rencana Pembangunan Menyeluruh — SID Desa
+
+Dokumen ini menggantikan urutan rencana sebelumnya. Prioritas mengikuti arahan
+produk terbaru:
+
+1. **Web publik dibangun sempurna lebih dulu** — itu wajah aplikasi.
+2. **Semua fitur admin yang sudah ada wajib berfungsi penuh.**
+3. **Kejar paritas fitur OpenSID** (lihat `docs/PARITAS-OPENSID.md`).
+4. **Multi-desa dibangun terakhir**, setelah semua di atas stabil.
+
+Rujukan paritas: `docs/PARITAS-OPENSID.md` (dipetakan dari source OpenSID di
+`D:\laragon\www\opensid`).
+
+---
+
+## Asumsi & Keputusan
+
+| # | Keputusan | Catatan |
+|---|---|---|
+| 1 | Web publik di `/`, admin di `/beranda` | Sesuai keputusan sebelumnya |
+| 2 | Konten berita memakai **HTML + sanitizer** | `sanitize-html`, allowlist ketat |
+| 3 | Akun warga **dibuat operator** | Sesuai keputusan; tanpa self-register |
+| 4 | Login warga **NIK + PIN** | Meniru OpenSID (`controllers/Mandiri.php`); PIN 6 digit, bisa diganti |
+| 5 | Tema publik **dipasang di build**, opsi diubah dari admin | Next.js tidak aman memuat kode tema saat runtime |
+| 6 | Multi-desa: subdomain `*.desa.id` + dukungan domain kustom | Wildcard DNS + TLS; detail di Fase 5 |
+| 7 | Target paritas: **T1 + T2** OpenSID, bukan seluruh modul premium | T3 (lapak, SMS, plugin, OpenDK) opsional |
+
+**Dampak estimasi:** total **±7–8 bulan** untuk satu developer, atau
+**±4–5 bulan** dengan dua developer yang bekerja paralel. Ini konsekuensi dari
+target "tidak kalah OpenSID" — bukan pekerjaan 2–3 minggu.
+
+---
+
+## Kondisi Awal yang Harus Dibereskan
+
+| Masalah | Bukti | Dampak |
+|---|---|---|
+| Build gagal | `src/features/surat/domain/isian.test.ts:50` (`TS2532`) | Tidak bisa deploy |
+| 95 file belum di-commit | `git status` | Pekerjaan tanpa titik aman |
+| Migrasi `0010`–`0016` untracked | `src/db/migrations` | Clone bersih kehilangan tabel |
+| Halaman publik diblokir | `src/proxy.ts` hanya mengizinkan `/masuk` | Web publik tidak bisa diakses |
+| Root bukan beranda desa | `src/app/page.tsx` redirect | Wajah aplikasi belum ada |
+| Asumsi satu desa | `getIdentitasDesa()` = `orderBy(id).limit(1)` | Multi-desa butuh refactor |
+| Fitur mati | Inventaris read-only, Layanan Mandiri read-only, Bumindes tanpa form | Menu ada, fungsi tidak |
+| Dokumentasi stale | `README.md`, `docs/arsip/MAPPING-RISET-vs-KODE.md` | Menyesatkan |
+
+---
+
+## Fase 0 — Stabilisasi (1 hari)
+
+- [x] **0.1** Perbaiki `isian.test.ts:50` (guard `parsed[0]`).
+- [x] **0.2** Audit pola `arr[0]` serupa di seluruh test: tidak ada lagi pola
+      `[angka].` yang tidak dijaga.
+- [ ] **0.3** Commit migrasi `0010`–`0017` + snapshot + `_journal.json`; uji
+      `npm run db:migrate` dari DB kosong. (Migrasi & seed terverifikasi lokal:
+      `db:migrate` dua kali idempoten, `db:seed` idempoten; job CI
+      `migrate` di `.github/workflows/ci.yml` menjaga regresi. Menunggu commit.)
+- [ ] **0.4** Commit pekerjaan berjalan, pesan per domain. (Menunggu commit.)
+- [x] **0.5** Perbaiki seed `peserta-bantuan` yang silent-skip: grant dihapus
+      karena peserta dikelola di dalam modul `program-bantuan`.
+- [x] **0.6** Seeder gagal keras bila grant merujuk modul yang tidak ada
+      (`replaceGrants` melempar galat berisi slug role + modul).
+- [x] **0.7** Konsolidasi dokumentasi: `docs/README.md` sebagai peta, 6 dokumen
+      usang diarsipkan ke `docs/arsip/` dengan penanda, `README.md` + `AGENTS.md`
+      + `ARCHITECTURE.md` disinkronkan.
+
+**Selesai bila:** `npm run check` + `npm run build` hijau, `git status` bersih.
+Status: check + build hijau; tinggal commit (0.3, 0.4).
+
+---
+
+## Fase 1 — Web Publik + Sistem Tema (3–4 minggu)
+
+Tujuan: wajah aplikasi selesai lebih dulu. Semua halaman publik dibangun
+strukturnya (dengan empty state), lalu diisi data pada Fase 4.
+
+### 1A. Fondasi publik
+
+- [x] **1A.1** Perbaiki `src/proxy.ts`: publik = `/`, `/desa/*`,
+      `/layanan-mandiri/*`, `/masuk`, `/verifikasi-surat/*`, plus berkas
+      metadata (`/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`,
+      `/icon.svg`); sisanya terproteksi. Tidak ada redirect pengguna login dari
+      halaman publik (kecuali `/masuk` → `/beranda`).
+- [x] **1A.2** Beranda desa di `src/app/(public)/page.tsx` (redirect dihapus);
+      `src/app/page.tsx` lama dihapus, `/desa` dialihkan ke `/`.
+- [x] **1A.3** `src/app/(public)/layout.tsx`: header (logo, menu, drawer mobile,
+      CTA Layanan Mandiri) + footer (tautan + kontak). *Mode gelap belum*
+      (menyusul bersama mesin tema 1D).
+- [x] **1A.4** `generateMetadata` per halaman + `sitemap.ts` + `robots.ts` sadar
+      host (multi-domain). *JSON-LD belum.*
+- [ ] **1A.5** Halaman 404/error publik yang rapi.
+
+### 1B. Seam multi-domain (disiapkan, belum diaktifkan)
+
+- [x] **1B.1** Migrasi `villages.domain` (nullable, unique) — `0017`.
+- [x] **1B.2** `resolveVillageByHost()` + `getIdentitasFromRequest()` di
+      `src/features/desa/application/resolve-village.ts`: normalisasi host →
+      exact → alias `www` → fallback **hanya bila instalasi berjumlah satu desa**
+      → 404. Normalisasi murni di `domain/host.ts` + test.
+- [x] **1B.3** `getIdentitasDesa(villageId)` (wajib argumen); `orderBy(id)`
+      tersisa **hanya** di `getFirstVillageId()` untuk fallback admin, bukan di
+      jalur publik.
+- [x] **1B.4** Semua query publik (beranda, statistik, APBDes, bantuan, profil)
+      memfilter `villageId` dari host.
+- [ ] **1B.5** Media & URL relatif; cache sadar-tenant; cookie per-host.
+- [ ] **1B.6** Test isolasi dua desa/dua host.
+
+### 1C. Skema konten & media
+
+- [ ] **1C.1** Migrasi: `profil_desa`, `perangkat_desa`, `jabatan_perangkat`,
+      `berita_kategori`, `berita`, `galeri_album`, `galeri_foto`,
+      `menu_publik`, `widget`, `slider`, `dokumen_publik`, `halaman_statis`.
+- [ ] **1C.2** Slug unik per desa + helper.
+- [ ] **1C.3** `media-storage.ts` (pola `laporan-storage.ts`) +
+      `/api/publik/media/[...path]`.
+- [ ] **1C.4** Validasi unggahan: MIME allowlist, batas ukuran, nama acak.
+- [ ] **1C.5** Seed konten awal agar instalasi baru tidak kosong.
+
+### 1D. Mesin tema (template bisa diubah)
+
+Meniru konsep OpenSID (`storage/app/themes/{esensi,natra}` + `config.json`),
+tetapi aman untuk Next.js.
+
+- [ ] **1D.1** Migrasi tabel `theme`: `village_id`, `slug`, `nama`, `versi`,
+      `sumber`, `aktif`, `opsi` (JSON).
+- [ ] **1D.2** Kontrak tema di `src/features/publik/domain/theme.ts`:
+      `ThemeManifest`, `ThemeOptionsSchema` (Zod), daftar slot halaman.
+- [ ] **1D.3** Struktur folder:
+      ```
+      src/themes/<slug>/
+        manifest.ts        # nama, versi, preview, opsi, slot
+        layout.tsx         # header/footer
+        pages/
+          home.tsx
+          profil.tsx
+          perangkat.tsx
+          berita.tsx
+          berita-detail.tsx
+          galeri.tsx
+          galeri-detail.tsx
+          kontak.tsx
+          dokumen.tsx
+          statistik.tsx
+        components/
+        theme.css
+      ```
+- [ ] **1D.4** `src/themes/registry.ts` — peta statis slug → komponen.
+      **Tanpa** dynamic import dari input user.
+- [ ] **1D.5** Dua tema bawaan: `esensi` (bersih, default) dan `natra`
+      (modern). Desain orisinal — **jangan salin aset OpenSID (GPL)**.
+- [ ] **1D.6** Opsi tema: warna primer/sekunder, font, hero, susunan section,
+      tampil/sembunyi widget. Disimpan di `theme.opsi`.
+- [ ] **1D.7** Admin `/konten/tema`: pilih tema, atur opsi, pratinjau,
+      aktifkan per desa.
+- [ ] **1D.8** Batasan yang didokumentasikan: menambah tema baru = tambah
+      folder + build/deploy. Unggah ZIP tema saat runtime **tidak didukung**
+      (keamanan + model build Next.js). Bila kelak perlu kustomisasi tanpa
+      deploy, tambahkan "page builder" berbasis blok, bukan eksekusi kode.
+
+### 1E. Halaman publik (gelombang 1 — struktur lengkap)
+
+Mengacu `donjo-app/controllers/fweb/*`:
+
+- [ ] `/` beranda: hero, sambutan, berita terbaru, statistik ringkas, agenda.
+- [ ] `/desa/profil`: visi, misi, sejarah, sambutan, peta.
+- [ ] `/desa/perangkat`: perangkat + jabatan + foto (SOTK).
+- [ ] `/desa/berita` + `/desa/berita/[slug]` + `/desa/berita/arsip`.
+- [ ] `/desa/galeri` + `/desa/galeri/[slug]`.
+- [ ] `/desa/dokumen` (informasi publik, produk hukum).
+- [ ] `/desa/statistik` (penduduk, bantuan, APBDes).
+- [ ] `/desa/kelompok` (kelompok & lembaga).
+- [ ] `/desa/inventaris` (ringkasan aset).
+- [ ] `/desa/apbdes` (transparansi keuangan).
+- [ ] `/desa/kontak`.
+- [ ] `/verifikasi-surat/[token]`.
+- [ ] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
+      `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **struktur
+      dulu**, data menyusul di Fase 4.
+
+### 1F. CMS konten
+
+- [ ] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
+      `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
+      `dokumen-publik`, `tema`.
+- [ ] **1F.2** `/konten/berita` + kategori: CRUD, draft/publish, jadwal,
+      cover, penulis.
+- [ ] **1F.3** `/konten/galeri`: album + multi-upload + urutan.
+- [ ] **1F.4** `/konten/profil` dan `/konten/perangkat`.
+- [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`.
+- [ ] **1F.6** `/konten/dokumen` (unggah PDF + metadata).
+- [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
+      `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
+      (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
+
+### 1G. Test & kriteria selesai
+
+- [ ] Semua halaman publik bisa dibuka tanpa sesi.
+- [ ] Ganti tema & opsi langsung terlihat, tanpa deploy.
+- [ ] Draft tidak tampil; slug unik; unggahan tervalidasi; konten tersanitasi.
+- [ ] Tidak ada tautan 404.
+- [ ] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
+
+**Selesai bila:** situs publik terasa seperti produk jadi, bukan placeholder.
+
+---
+
+## Fase 2 — Semua Fitur Admin Berfungsi (4–5 minggu)
+
+Fokus: tidak ada menu yang membuka halaman mati. Setiap action punya UI,
+otorisasi, validasi, dan test.
+
+### 2A. Inventaris + approval berjenjang (6 hari)
+
+- [ ] Migrasi `inventaris_mutasi`: `diajukan_oleh`, `diajukan_oleh_id`,
+      `verifikasi_operator`, `verifikasi_sekdes`, `verifikasi_kades`,
+      `log_verifikasi`, `catatan_verifikasi`.
+- [ ] State machine `nextMutasiStage()` (mirror persuratan).
+- [ ] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
+      transaksi (`pindah` → lokasi, `rusak` → kondisi, `perbaikan` → baik,
+      `hapus` → soft-delete).
+- [ ] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
+- [ ] Grant `inventaris` + `mutasi-inventaris` untuk sekdes & kades.
+- [ ] UI: CRUD inventaris, kategori, form mutasi, timeline verifikasi.
+- [ ] Test transisi sah & ilegal.
+
+### 2B. Perangkat desa & lembaga (3 hari)
+
+- [ ] Modul `perangkat-desa`: CRUD, jabatan, urutan, foto, periode, aktif.
+- [ ] Modul `jabatan` (master) bila diperlukan.
+- [ ] Lembaga desa memakai `kelompok` tipe `lembaga` yang sudah ada; lengkapi
+      anggota lembaga + UI.
+- [ ] Data ini dipakai halaman publik `/desa/perangkat` (Fase 1E).
+
+### 2C. Akun warga (NIK + PIN) + Layanan Mandiri (10 hari)
+
+**Route:** warga di `/layanan-mandiri` (login & dasbor). Halaman admin
+permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
+
+- [ ] Migrasi `users.resident_id`, `users.must_change_pin`.
+- [ ] Login warga: `username = NIK`, password = PIN 6 digit.
+  - Set `minPasswordLength: 6` di better-auth; **kebijakan staf tetap ≥ 8**
+    ditegakkan di form/use-case.
+  - Aktifkan rate limit login.
+- [ ] Operator membuat akun dari detail penduduk:
+  - generate PIN 6 digit, tampilkan **sekali**, tombol salin;
+  - `mustChangePin = true`; reset PIN oleh operator;
+  - kirim PIN otomatis menyusul di Fase 3H (SMS/WA); sekarang manual.
+- [ ] Area `(warga)`: `/layanan-mandiri`, `/layanan-mandiri/beranda`,
+      `/layanan-mandiri/surat`, `/layanan-mandiri/dokumen`,
+      `/layanan-mandiri/pesan`, `/layanan-mandiri/profil`,
+      `/layanan-mandiri/ubah-pin`.
+- [ ] Scoping: `residentId` **selalu dari sesi**, tidak dari `formData`.
+- [ ] State machine status permohonan 0–5; tolak transisi ilegal.
+- [ ] Syarat nyata dari master surat (bukan `"[]"`).
+- [ ] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
+- [ ] UI admin: proses, kembalikan, batalkan, riwayat.
+- [ ] Terbitkan surat dari permohonan (pakai use-case persuratan, bukan
+      duplikasi penomoran) + simpan `surat_id`.
+- [ ] Test: akses lintas warga, akun tanpa `residentId`, paksa ganti PIN.
+
+### 2D. Bumindes (4 hari)
+
+- [ ] Layer `domain` + `application`; presentation tidak impor `infrastructure`.
+- [ ] CRUD item buku; validasi nomor urut unik.
+- [ ] Lengkapi buku inti: administrasi umum, penduduk induk, KTP/KK, mutasi,
+      rekapitulasi, tanah desa, inventaris kekayaan.
+- [ ] Test.
+
+### 2E. Persuratan: sisa gap (8 hari)
+
+- [ ] Penegakan syarat saat pengajuan (juga dipakai 2C).
+- [ ] Verifikasi publik QR/token + `/verifikasi-surat/[token]` (tenant-aware).
+- [ ] Template surat, placeholder gambar (logo, TTD, stempel).
+- [ ] Terbilang & aritmetika isian.
+- [ ] Pengikut & penduduk luar.
+- [ ] Surat dinas + arsip.
+- [ ] TTE/BSRE: adapter mode nonaktif (jangan blokir fase lain).
+
+### 2F. Keuangan (3 hari)
+
+- [ ] Pastikan seluruh halaman anggaran, triwulan, laporan, dokumen bebas
+      error dan konsisten.
+- [ ] Ekspor CSV/Excel & cetak.
+- [ ] Data untuk `/desa/apbdes` publik.
+- [ ] Rekonsiliasi/manual (bila diperlukan) — P2.
+
+### 2G. Analisis/survei (5 hari)
+
+- [ ] Modul `survey` penuh: builder soal, responden, jawaban, rekap.
+- [ ] Grant & modul seed konsisten.
+
+**Selesai bila:** setiap menu admin membuka fitur yang benar-benar bisa dipakai
+end-to-end; tidak ada action tanpa UI; `npm run check` hijau.
+
+---
+
+## Fase 3 — Paritas Admin OpenSID T1+T2 (10–14 minggu)
+
+Rujuk `docs/PARITAS-OPENSID.md`. Urutan berdasarkan nilai bagi desa dan
+ketergantungan halaman publik.
+
+### 3A. Kependudukan lanjutan (2 minggu)
+
+- [ ] Log/riwayat penduduk (lahir, mati, pindah, datang).
+- [ ] DPT.
+- [ ] DTKS.
+- [ ] Data suplemen.
+- [ ] Statistik penduduk & bantuan (tabel + grafik).
+- [ ] (P2) Stunting, vaksin/Covid, pendapat warga.
+
+### 3B. Pertanahan & peta/GIS (3 minggu)
+
+- [ ] Data persil, Cdesa, mutasi, rincian.
+- [ ] Peta: area, garis, titik, polygon; editor sederhana.
+- [ ] Layer batas desa/dusun.
+
+### 3C. Pembangunan (2 minggu)
+
+- [ ] Proyek pembangunan: rencana, realisasi, dokumentasi foto, hasil.
+- [ ] Integrasi ke buku pembangunan & halaman publik.
+
+### 3D. Pengaduan warga (1 minggu)
+
+- [ ] Warga kirim pengaduan (dari layanan mandiri), admin tanggapi,
+      status, kategori, lampiran.
+- [ ] Halaman publik pengaduan.
+
+### 3E. Dokumen, produk hukum, surat dinas (2 minggu)
+
+- [ ] Produk hukum/peraturan desa + unggah PDF.
+- [ ] Informasi publik/dokumen.
+- [ ] Surat dinas + arsip.
+
+### 3F. Analisis penuh (2 minggu)
+
+- [ ] Kategori, indikator, parameter, periode, respon, laporan, statistik
+      jawaban.
+- [ ] Impor/ekspor respon.
+
+### 3G. Bumindes lengkap (1 minggu)
+
+- [ ] Buku rencana/kegiatan/hasil pembangunan, kader, arsip, tanah kas.
+
+### 3H. Operasional & keamanan (2 minggu)
+
+- [ ] Backup/restore database + optimasi gambar.
+- [ ] Audit log aktivitas.
+- [ ] OTP/token & keamanan login tambahan.
+- [ ] Notifikasi internal + mailbox.
+- [ ] (P2) SMS/WA gateway.
+
+### 3I. Opsional P3 (tidak memblokir "tidak kalah")
+
+- [ ] Lapak, anjungan, buku tamu, kehadiran, pemilihan, sinergi program,
+      plugin, sinkronisasi/OpenDK.
+
+**Selesai bila:** T1 + T2 di matriks paritas berstatus ✅ atau 🟡 yang
+terdokumentasi, dengan test.
+
+---
+
+## Fase 4 — Menyambungkan Web Publik ke Modul Baru (2–3 minggu)
+
+- [ ] `/desa/pembangunan` memakai data Fase 3C.
+- [ ] `/desa/pengaduan` memakai data Fase 3D (termasuk form kirim).
+- [ ] `/desa/peta` memakai data Fase 3B.
+- [ ] `/desa/dokumen` + produk hukum memakai Fase 3E.
+- [ ] `/desa/statistik` + `/desa/apbdes` final.
+- [ ] `/desa/suplemen`, `/desa/dpt`, `/desa/idm`, `/desa/sdgs` bila datanya ada.
+- [ ] Widget, slider, menu dinamis dari CMS.
+- [ ] Audit tautan mati + uji aksesibilitas.
+- [ ] Test regresi proxy & isolasi tenant.
+
+---
+
+## Fase 5 — Multi-Desa (4–6 minggu)
+
+Aktivasi penuh setelah single-tenant stabil.
+
+### 5A. Fondasi tenant
+
+- [ ] Role `super-admin` (tanpa `villageId`).
+- [ ] Tabel `village_domains` (banyak domain per desa: primary + alias),
+      migrasi dari `villages.domain`.
+- [ ] `resolveVillageByHost` final + wildcard `*.desa.id` + domain kustom.
+- [ ] Semua staf wajib punya `villageId`; super admin memilih desa eksplisit.
+- [ ] Isolasi data: semua query admin & publik ter-scope `villageId`.
+
+### 5B. Super admin & provisioning
+
+- [ ] Dashboard super admin: daftar desa, domain, status, admin, kuota.
+- [ ] Wizard buat desa: identitas, domain, tema default, akun admin desa.
+- [ ] Seed per desa: jenis surat, klasifikasi, syarat, buku bumindes, kategori
+      inventaris, menu publik default.
+- [ ] Nonaktifkan/arsipkan desa.
+- [ ] Reset akses admin desa oleh super admin.
+
+### 5C. Tema & domain per desa
+
+- [ ] Tema aktif per desa (sudah disiapkan Fase 1D).
+- [ ] Opsi tema per desa.
+- [ ] Domain kustom + verifikasi kepemilikan + TLS.
+- [ ] Media per desa (`storage/publik/<villageId>`), kuota.
+
+### 5D. Warga & admin desa
+
+- [ ] Warga terikat `resident.villageId`; tidak bisa lintas desa.
+- [ ] Admin desa hanya melihat desanya.
+- [ ] Login warga di domain desanya masing-masing.
+
+### 5E. Uji multi-tenant
+
+- [ ] Dua desa + dua domain: data, media, tema, metadata, sitemap tidak bocor.
+- [ ] Uji beban dasar (ratusan desa) + cache per host.
+- [ ] Audit keamanan: IDOR, path traversal, cross-tenant query.
+
+**Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
+admin desa, tema, dan situs publik yang langsung hidup.
+
+---
+
+## Fase 6 — Hardening & Dokumentasi (2 minggu)
+
+- [ ] Audit keamanan: otorisasi setiap action, scoping, sanitasi, unggahan,
+      rate limit, session.
+- [ ] Performance: query N+1, pagination, index DB, caching publik.
+- [ ] Aksesibilitas & SEO menyeluruh.
+- [ ] Backup/restore & runbook operasional.
+- [ ] Sinkronkan `README.md`, `AGENTS.md`, `ARCHITECTURE.md`,
+      `LOG-PERKEMBANGAN.md`, `RENCANA-PERBAIKAN.md`, `PARITAS-OPENSID.md`;
+      pastikan tidak ada dokumen status baru di luar `docs/README.md`.
+- [ ] Aturan: PR yang mengubah status fitur wajib memperbarui dokumen status.
+
+---
+
+## Urutan & Estimasi
+
+| Fase | Isi | Estimasi | Milestone |
+|---|---|---|---|
+| 0 | Stabilisasi | 1 hari | **M0** build hijau, tree bersih |
+| 1 | Web publik + tema + CMS | 3–4 minggu | **M1** wajah aplikasi selesai |
+| 2 | Admin existing berfungsi penuh | 4–5 minggu | **M2** tidak ada menu mati |
+| 3 | Paritas OpenSID T1+T2 | 10–14 minggu | **M3** setara OpenSID (T1+T2) |
+| 4 | Sambungkan web publik ke modul baru | 2–3 minggu | **M4** situs publik penuh data |
+| 5 | Multi-desa | 4–6 minggu | **M5** super admin + domain |
+| 6 | Hardening & docs | 2 minggu | **M6** siap produksi |
+
+**Total: ±7–8 bulan** (satu developer), **±4–5 bulan** (dua developer).
+Fase 1 dan 2 tidak bisa paralel penuh karena berbagi skema konten/auth, tetapi
+Fase 3A–3H bisa dipecah ke beberapa developer.
+
+---
+
+## Quality Gate (setiap fase)
+
+1. `npm run check` + `npm run build` lulus.
+2. Tidak ada impor `infrastructure` dari `presentation`/`app`.
+3. Setiap action dipakai minimal satu komponen UI.
+4. Setiap perubahan skema punya migrasi + snapshot ter-commit.
+5. Test jalur sukses **dan** gagal (transisi, otorisasi, scoping, XSS).
+6. Data warga dari sesi; `villageId` publik dari host.
+7. Dokumentasi status diperbarui.
+
+## Definition of Done (per fitur)
+
+- UI mencakup seluruh operasi domain (bukan hanya daftar).
+- Otorisasi di application layer.
+- Validasi Zod di domain.
+- Tidak ada tautan/aksi mati.
+- Konten HTML tersanitasi.
+- Status di dokumen sesuai kenyataan.
+
+---
+
+## Risiko Utama
+
+| Risiko | Dampak | Mitigasi |
+|---|---|---|
+| Scope "tidak kalah OpenSID" membengkak | Tidak pernah selesai | Target T1+T2, T3 opsional |
+| Web publik dibangun sebelum skema stabil | Rework besar | Skema konten di 1C sebelum halaman |
+| Tema runtime upload | Celah eksekusi kode | Tema compiled + opsi DB (1D.8) |
+| PIN 6 digit | Brute force | Rate limit + lockout + reset operator |
+| Approval berjenjang salah tahap | Aset berubah tanpa otorisasi | State machine + test |
+| Asumsi satu desa terbawa | Multi-desa mustahil | Seam 1B sekarang |
+| Cache lintas tenant | Kebocoran data | Cache key per host/desa |
+| Lisensi GPL OpenSID | Kewajiban lisensi | Tiru perilaku, jangan salin kode/aset |
+| Estimasi meleset | Kepercayaan turun | Milestone per fase, review tiap M |
+
+---
+
+## Status Dokumen
+
+Diperbarui 22 Oktober 2026 dari audit `commit ded8f5f` + pemetaan source
+OpenSID di `D:\laragon\www\opensid`. Urutan prioritas: web publik → admin
+berfungsi → paritas OpenSID → multi-desa.

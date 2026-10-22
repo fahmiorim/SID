@@ -88,28 +88,37 @@ Buka `http://localhost:3000` → dialihkan ke `/masuk`.
 ```
 src/
 ├─ app/                      # Rute (App Router)
-│  ├─ (auth)/masuk/          # Halaman masuk
+│  ├─ (auth)/masuk/          # Halaman masuk staf
 │  ├─ (admin)/               # Area terproteksi + kerangka admin
 │  │  ├─ beranda/  penduduk/  keluarga/  rumah-tangga/  wilayah/
 │  │  ├─ kelompok/  kelompok/kategori/
-│  │  ├─ bantuan/
-│  │  ├─ persuratan/{surat,jenis,klasifikasi,surat-masuk,surat-keluar}/
+│  │  ├─ bantuan/  inventaris/  bumindes/  analisis-survei/
+│  │  ├─ persuratan/{surat,jenis,klasifikasi,syarat,surat-masuk,surat-keluar}/
+│  │  ├─ keuangan/{anggaran,triwulan,laporan,laporan-dokumen}/
+│  │  ├─ layanan-mandiri/    # sementara: admin; akan dipindah ke /permohonan-surat
 │  │  └─ pengaturan/{desa,pengguna,grup,modul,profil}/
+│  ├─ (public)/              # Situs desa (target: /, /desa/*, /layanan-mandiri/*)
 │  ├─ api/auth/[...all]/     # Handler better-auth
 │  └─ layout.tsx  page.tsx  globals.css
 ├─ components/
 │  ├─ layout/                # app-shell, sidebar, header
-│  ├─ shared/                # NoAccess, placeholder, guard
+│  ├─ shared/                # NoAccess, guard
 │  └─ ui/                    # komponen shadcn/ui
 ├─ db/
 │  ├─ schema/                # definisi tabel (Drizzle)
 │  ├─ migrations/            # migrasi SQL
 │  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
-│  ├─ auth/  bantuan/  desa/  keluarga/  kelompok/  modul/  navigation/  penduduk/
-│  ├─ pengguna/  rbac/  surat/  wilayah/
+│  ├─ auth/  bantuan/  bumindes/  desa/  inventaris/  keluarga/  kelompok/
+│  ├─ keuangan/  layanan-mandiri/  modul/  navigation/  penduduk/  pengguna/
+│  ├─ rbac/  rumah-tangga/  surat/  wilayah/
+├─ themes/                   # (target) tema web publik yang dipasang saat build
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
+
+Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
+[`docs/README.md`](docs/README.md). Dokumen usang dipindahkan ke
+[`docs/arsip/`](docs/arsip/) dan **tidak boleh** dipakai sebagai acuan status.
 
 ## Autentikasi & Hak Akses
 
@@ -157,43 +166,47 @@ npm run test:watch  # mode pantau
 
 ## Dokumentasi
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arsitektur, konvensi, keputusan.
-- [`docs/riset/README.md`](docs/riset/README.md) — catatan riset internal
-  (analisis sistem rujukan + lampiran), dipakai sebagai **referensi fitur**.
+Mulai dari **[`docs/README.md`](docs/README.md)** — peta dokumentasi dan aturan
+sumber kebenaran.
 
-## Peta Jalan
+- [`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md) — **otoritatif** untuk
+  prioritas, fase, dan status milestone.
+- [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md) — **otoritatif** untuk
+  status paritas fitur terhadap OpenSID (T1/T2/T3).
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — **otoritatif** untuk
+  arsitektur, lapisan, skema, RBAC, dan konvensi kode.
+- [`docs/LOG-PERKEMBANGAN.md`](docs/LOG-PERKEMBANGAN.md) — kronologi pekerjaan
+  yang sudah selesai.
+- [`docs/riset/`](docs/riset/README.md) — analisis sistem acuan (OpenSID) sebagai
+  **referensi historis**, bukan status.
+- [`docs/arsip/`](docs/arsip/README.md) — dokumen usang; **jangan** dipakai untuk
+  status atau prioritas.
 
-1. **Fondasi** ✅ — auth, RBAC, kerangka admin, lapisan data, irisan Wilayah.
-2. **Fondasi mutu** ✅ — pengujian unit (Vitest) + CI + Dependabot.
-3. **Kependudukan** ✅ — data penduduk (identitas, sosial, domisili) + katalog
-   referensi (agama, pendidikan, pekerjaan, dst.).
-4. **Kartu Keluarga** ✅ — daftar KK, kepala keluarga (turunan), jumlah & rincian
-   anggota, penautan penduduk ke KK, dan cetak **Kartu Keluarga (PDF)**.
-5. **Rumah Tangga (RTM)** ✅ — daftar RTM dengan nomor otomatis, kelas sosial &
-   BDT, rincian anggota (kepala/anggota), serta penautan penduduk ke RTM.
-6. **Kelompok & Lembaga** ✅ — kelompok masyarakat & lembaga desa
-   (*single-table inheritance*), master kategori, keanggotaan berjabatan
-   (ketua diturunkan dari anggota), dan penautan penduduk.
-7. **Bantuan Sosial** ✅ — program bantuan (sasaran, masa aktif, asal dana),
-   penautan peserta penduduk/keluarga/RTM beserta snapshot kartu, dedupe peserta,
-   dan sebaran per wilayah.
-8. **Persuratan (dasar)** ✅ — layanan surat (konsep → terbit), master
-   jenis/klasifikasi surat, agenda surat masuk & keluar, penomoran otomatis,
-   cetak HTML, dan unduh PDF.
-9. **Keuangan (APBDes)** ✅ — pohon rekening (chart of accounts), pagu anggaran
-   & realisasi per rekening per tahun, agregasi otomatis ke rekening induk, dan
-   ringkasan RP APBDes (pendapatan, belanja, pembiayaan, surplus/defisit).
-10. **Laporan Keuangan** ✅ — RP APBDes (anggaran, realisasi, selisih, %), realisasi
-    belanja per bidang (`5.1`–`5.5`), grafik RP APBDes, cetak HTML, serta ekspor
-    **CSV** dan **Excel** (`.xls`).
-11. **Dokumen Laporan APBDes** ✅ — arsip dokumen laporan per semester (Lapis D),
-    unggah PDF, pencatatan tanggal penyerahan, unduh berkas.
-12. **Laporan Kependudukan** ✅ — rekap penduduk berstatus hidup menurut umur,
-    jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, dan
-    kelompok umur (Data Pilah); cetak HTML + ekspor CSV.
-13. Modul berikutnya: Data Suplemen, laporan bulanan desa, laporan triwulan, dan
-    DTKS.
-14. Ekspor/impor (exceljs), peta, dan lampiran berkas.
+## Status & Peta Jalan
+
+Status lengkap dan urutan fase ada di
+[`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md). Ringkasnya:
+
+1. **Fondasi** ✅ — auth staf, RBAC, kerangka admin, lapisan data, Wilayah.
+2. **Kependudukan** ✅ — penduduk, Kartu Keluarga (termasuk PDF), Rumah Tangga.
+3. **Kelompok & Lembaga** ✅ — kelompok/lembaga, kategori, keanggotaan berjabatan.
+4. **Bantuan Sosial** ✅ — program, peserta, snapshot kartu, sebaran wilayah.
+5. **Persuratan** ✅ — layanan surat, syarat dinamis, penomoran, agenda masuk/keluar,
+   verifikasi berjenjang, cetak HTML/PDF.
+6. **Keuangan** ✅ — APBDes, realisasi, laporan & dokumen, triwulan.
+7. **Inventaris** 🟡 — aset & mutasi ada; persetujuan mutasi belum menerapkan
+   perubahan aset secara transaksional.
+8. **Layanan Mandiri** 🟡 — domain/action ada; UI warga dan login NIK + PIN belum.
+9. **BUMDes** 🟡 — unit & item ada; action belum terhubung ke UI.
+10. **Analisis & Survei** 🟡 — kerangka skema ada; UI masih placeholder.
+
+Berikutnya (lihat rencana untuk detail):
+
+- **Fase 1** — web publik (beranda, profil, berita, statistik, tema), lalu pindahkan
+  `/layanan-mandiri` milik admin menjadi `/permohonan-surat`.
+- **Fase 2** — menuntaskan seluruh menu admin yang ada.
+- **Fase 3** — paritas OpenSID T1 + T2.
+- **Fase 4** — multi-desa & multi-domain.
 
 ### Cakupan Kelompok & Lembaga
 
@@ -243,14 +256,15 @@ dokumen)** dari sistem rujukan
 ([`docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md)):
 dua tabel inti `keuangan_template` (pohon rekening) + `keuangan` (nilai per
 tahun), dengan laporan RP APBDes & realisasi per bidang diturunkan dari pohon
-tersebut (tanpa tabel baru), ditambah `keuangan_laporan` sebagai arsip dokumen
-laporan per semester. Yang belum termasuk:
+tersebut, ditambah `keuangan_triwulan` (realisasi per bidang per TW I–IV) dan
+`keuangan_laporan` sebagai arsip dokumen laporan per semester. Yang belum
+termasuk:
 
 | Fitur rujukan | Status |
 | ------------- | ------ |
 | Lapis B legacy manual (`keuangan_manual_*`, impor dari Siskeudes) | belum |
 | Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
-| Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | belum |
+| Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | ✅ (per bidang `5.x`, input manual) |
 | Ekspor laporan (Excel/CSV) | ✅ |
 | Sisa lebih (SiLPA) otomatis antartahun | belum |
 | Catatan/lampiran berkas per rekening | belum |

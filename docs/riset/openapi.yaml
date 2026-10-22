@@ -1,3 +1,6 @@
+# ARSIP HISTORIS: kontrak ini tidak dipakai aplikasi (memakai Server Actions).
+# Status & rencana: ../RENCANA-PERBAIKAN.md dan ../PARITAS-OPENSID.md.
+
 openapi: 3.1.0
 info:
   title: API Aplikasi Desa (Rebuild Sistem Acuan)

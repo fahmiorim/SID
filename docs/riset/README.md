@@ -5,6 +5,13 @@ sumber) dan rencana pembangunan ulang ke **Next.js 15+ (App Router)**.
 
 Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
+> **Catatan status.** Dokumen di folder ini adalah **referensi historis**.
+> Status fitur, prioritas, dan rencana **tidak** diambil dari sini — gunakan
+> [`../RENCANA-PERBAIKAN.md`](../RENCANA-PERBAIKAN.md) dan
+> [`../PARITAS-OPENSID.md`](../PARITAS-OPENSID.md). "Sistem Acuan" yang
+> dianalisis di sini merujuk pada **OpenSID** (`D:\laragon\www\opensid`,
+> GPL v3); jangan menyalin kode/asetnya.
+
 > **Catatan netralitas.** Ini catatan riset internal. Nama aplikasi yang dianalisis
 > disamarkan menjadi **“Sistem Acuan”**, dan unsur penamaan yang menunjuk produk
 > aslinya ikut dinetralkan. Istilah domain (nama tabel, kolom, path) tetap
@@ -41,7 +48,7 @@ Tanggal: 2026-10-16 · Repo sumber **tidak diubah**.
 
 | Artefak | Ukuran | Isi |
 |---|---|---|
-| **[openapi.yaml](./openapi.yaml)** | ~33 KB | Kontrak REST API lengkap **OpenAPI 3.1.0** untuk modul P0 (auth/RBAC, penduduk, keluarga, wilayah, referensi, surat, laporan, pengaturan). |
+| **[openapi.yaml](./openapi.yaml)** | ~33 KB | **Historis:** kontrak REST API OpenAPI 3.1.0 untuk modul P0 (auth/RBAC, penduduk, keluarga, wilayah, referensi, surat, laporan, pengaturan). Aplikasi ini memakai Server Actions, **bukan** kontrak ini. |
 
 > Skema Drizzle Opsi A (`drizzle/schema.ts`), petunjuknya (`drizzle/README.md`),
 > dan skrip impor (`migration/p0-import.sql`) **dihapus** karena proyek tidak lagi
