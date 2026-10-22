@@ -268,3 +268,28 @@ uji dibersihkan.
 
 **Belum diuji:** submit form lewat browser (Server Action + unggah berkas).
 Berikutnya: 1F.5 menu/widget/slider, lalu 1F.6 dokumen publik.
+
+---
+
+## 2026-10-24 — Fase 1F.5 (CMS menu, widget, slider)
+
+- Menu (`/konten/menu`): CRUD menu navigasi dengan form nama, link, tipe link, urutan, status. Halaman admin di `/konten/menu`. Integrasi RBAC: operator `manage`, sekdes/kades `read`.
+- Widget (`/konten/widget`): CRUD widget samping beranda dengan judul, isi, jenis, status. Halaman admin di `/konten/widget`.
+- Slider (`/konten/slider`): CRUD slider beranda dengan gambar, judul, keterangan, status. Halaman admin di `/konten/slider`.
+- Semua fitur terintegrasi dengan sistem RBAC dan helper media bersama.
+- Verifikasi: `npm run check` hijau (typecheck, lint, format), `npm run build` hijau.
+
+Berikutnya: 1F.6 dokumen publik.
+
+---
+
+## 2026-10-25 — Fase 1F.6 (CMS dokumen publik)
+
+- Dokumen Publik (`/konten/dokumen`): CRUD dokumen dengan form nama, slug, kategori, tahun, berkas/tautan, status. Halaman admin di `/konten/dokumen`.
+- Setiap dokumen dapat memiliki berkas URL (link ke storage) dan/atau tautan eksternal.
+- Validasi format slug unik dan tahun optionally.
+- Integrasi RBAC: operator `manage`, sekdes/kades `read`.
+- Helper media: validasi tipe dan ukuran berkas menggunakan `simpanBerkasMedia` dari galeri/berita.
+- Verifikasi: `npm run check` hijau (typecheck, lint, format), `npm run build` hijau.
+
+Sampai Fase 1F.6 selesai, baru melanjutkan ke Fase 1A.5 halaman 404/error publik untuk menutup Fase 1.

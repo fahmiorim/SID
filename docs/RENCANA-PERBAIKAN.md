@@ -219,7 +219,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
       jabatan, foto, status, urutan, dan penanda tangan; katalog jabatan CRUD.
       Bukti: `features/konten/*profil*`, `*perangkat*`, halaman admin; CRUD dan
       FK `set null` diuji ke DB dev.
-- [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`.
+- [x] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`. Semua halaman admin terbangun dan tervalidasi.
+- [x] **1F.6** `/konten/dokumen`: CRUD dokumen publik dengan form nama, slug, kategori, tahun, berkas/tautan, status. Halaman admin di `/konten/dokumen`.
 - [ ] **1F.6** `/konten/dokumen` (unggah PDF + metadata).
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS

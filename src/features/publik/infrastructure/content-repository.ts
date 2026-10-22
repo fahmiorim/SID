@@ -397,6 +397,32 @@ export async function listMenuPublik(villageId: number): Promise<MenuPublikRingk
     .orderBy(asc(menuPublik.urut), asc(menuPublik.id));
 }
 
+/** Menambahkan baris menu publik. */
+export async function createMenuPublik(
+  villageId: number,
+  data: { nama: string; link: string; linkTipe: string; parentId?: number; urut?: number },
+): Promise<void> {
+  await db.insert(menuPublik).values({ villageId, ...data });
+}
+
+/** Mengubah satu baris menu publik. */
+export async function updateMenuPublik(
+  villageId: number,
+  id: number,
+  data: Partial<{ nama: string; link: string; linkTipe: string; parentId?: number; urut?: number }>,
+): Promise<void> {
+  await db
+    .update(menuPublik)
+    .set({ villageId, ...data })
+    .where(eq(menuPublik.id, id));
+}
+
+/** Menghapus satu baris menu publik. */
+export async function deleteMenuPublik(villageId: number, id: number): Promise<void> {
+  await db.delete(menuPublik).where(eq(menuPublik.id, id));
+}
+
+/* -------------------------------------------------------- halaman statis */
 export interface WidgetRingkas {
   id: number;
   judul: string | null;
@@ -417,10 +443,70 @@ export async function listWidget(villageId: number): Promise<WidgetRingkas[]> {
     .from(widget)
     .where(and(eq(widget.villageId, villageId), eq(widget.aktif, true)))
     .orderBy(asc(widget.urut), asc(widget.id));
+} /** Menambahkan baris widget. */
+export async function createWidget(
+  villageId: number,
+  data: { judul: string | null; isi: string | null; jenis: number; pengaturan: string | null },
+): Promise<void> {
+  await db.insert(widget).values({ villageId, ...data });
+}
+
+/** Mengubah satu baris widget. */
+export async function updateWidget(
+  villageId: number,
+  id: number,
+  data: Partial<{
+    judul: string | null;
+    isi: string | null;
+    jenis: number;
+    pengaturan: string | null;
+  }>,
+): Promise<void> {
+  await db
+    .update(widget)
+    .set({ villageId, ...data })
+    .where(eq(widget.id, id));
+}
+
+/** Menghapus satu baris widget. */
+export async function deleteWidget(villageId: number, id: number): Promise<void> {
+  await db.delete(widget).where(eq(widget.id, id));
+}
+
+/** Menambahkan baris dokumen publik. */
+export async function createDokumenPublik(
+  villageId: number,
+  data: { nama: string; slug: string; kategori: string; keterangan: string },
+): Promise<void> {
+  await db.insert(dokumenPublik).values({ villageId, ...data });
+}
+
+/** Mengubah satu baris dokumen publik. */
+export async function updateDokumenPublik(
+  villageId: number,
+  id: number,
+  data: Partial<{
+    nama: string;
+    slug: string;
+    kategori: string;
+    keterangan: string;
+    berkas: string | null;
+    tautan: string | null;
+    tahun: number | null;
+  }>,
+): Promise<void> {
+  await db
+    .update(dokumenPublik)
+    .set({ villageId, ...data })
+    .where(eq(dokumenPublik.id, id));
+}
+
+/** Menghapus satu baris dokumen publik. */
+export async function deleteDokumenPublik(villageId: number, id: number): Promise<void> {
+  await db.delete(dokumenPublik).where(eq(dokumenPublik.id, id));
 }
 
 /* -------------------------------------------------------- halaman statis */
-
 export interface HalamanRingkas {
   judul: string;
   slug: string;
