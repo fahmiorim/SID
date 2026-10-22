@@ -341,6 +341,24 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "konten",
   },
+  {
+    slug: "profil-desa",
+    name: "Profil Desa",
+    url: "/konten/profil",
+    icon: "landmark",
+    sortOrder: 5,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
+    slug: "perangkat-desa",
+    name: "Perangkat Desa",
+    url: "/konten/perangkat",
+    icon: "user-round-check",
+    sortOrder: 6,
+    isGroup: false,
+    parentSlug: "konten",
+  },
 
   {
     slug: "pengaturan",

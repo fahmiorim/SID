@@ -52,6 +52,8 @@ export const RESOURCES = {
   berita: "berita",
   beritaKategori: "berita-kategori",
   galeri: "galeri",
+  profilDesa: "profil-desa",
+  perangkatDesa: "perangkat-desa",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

@@ -50,6 +50,8 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       berita: "read",
       "berita-kategori": "read",
       galeri: "read",
+      "profil-desa": "read",
+      "perangkat-desa": "read",
     },
   },
   {
@@ -75,6 +77,8 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       berita: "read",
       "berita-kategori": "read",
       galeri: "read",
+      "profil-desa": "read",
+      "perangkat-desa": "read",
     },
   },
   {
@@ -110,6 +114,8 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       berita: "manage",
       "berita-kategori": "manage",
       galeri: "manage",
+      "profil-desa": "manage",
+      "perangkat-desa": "manage",
     },
   },
 ] as const;
