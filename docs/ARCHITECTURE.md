@@ -73,6 +73,7 @@ Fitur yang sudah dibangun saat ini:
 | `inventaris`     | Aset desa, kategori, mutasi/penghapusan, persetujuan berjenjang.       |
 | `bumindes`       | BUMDes: unit usaha (buku) dan item/katalog.                            |
 | `layanan-mandiri`| Permohonan surat warga (backend + action). Halaman admin kini di `/permohonan-surat`; rute publik `/layanan-mandiri` milik warga (UI login NIK+PIN belum dibangun). |
+| `publik`         | Situs publik: konten (berita, galeri, profil, perangkat, dokumen, menu, slider, widget, halaman), media sadar-tenant, sanitasi HTML, dan mesin tema per desa. |
 | `desa`           | Identitas desa (termasuk nama & NIP kepala desa).                     |
 | `rbac`           | Role, matriks izin, `computeEffectivePermissions`.                    |
 | `modul`          | Katalog modul/menu (pohon `parent_id`).                               |
@@ -108,7 +109,8 @@ Fitur yang sudah dibangun saat ini:
   domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
   `resident.ts`, `family.ts`, `rumah-tangga.ts`, `kelompok.ts`, `bantuan.ts`,
   `inventaris.ts`, `bumindes.ts`, `survey.ts`, `letters*.ts`,
-  `permohonan-surat.ts`, `keuangan.ts`) dan digabung di `index.ts`.
+  `permohonan-surat.ts`, `keuangan.ts`, `content.ts`, `theme.ts`) dan digabung
+  di `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -306,7 +308,8 @@ diimplementasikan. Statusnya ada di
 ### Route group
 
 - `(public)` — situs desa: `/` (beranda), `/desa/*`, dan `/layanan-mandiri`
-  (halaman informasi/CTA warga). **Sudah berjalan.**
+  (halaman informasi/CTA warga). **Sudah berjalan**; seluruh halaman dirender
+  oleh tema aktif lewat `src/app/(public)/layout.tsx`.
 - `(warga)` — *belum ada*: login NIK + PIN dan dasbor warga di
   `/layanan-mandiri/*` (rencana Fase 2).
 - `(admin)` — panel staf di `/beranda` dan modulnya. Permohonan surat warga ada
@@ -338,12 +341,43 @@ slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
 
 ### Tema publik
 
-- Tema **dikompilasi saat build** di `src/themes/<slug>` dengan manifest.
-- Tema aktif + opsi (warna, logo, menu) disimpan di DB per desa.
-- Unggah ZIP tema saat runtime **ditolak**: mengeksekusi kode/aset tak tepercaya
-  dan tidak kompatibel dengan build Next.js.
+Tema **dikompilasi saat build** di `src/themes/<slug>/`:
+
+```
+src/themes/<slug>/
+  manifest.ts   # slug, nama, versi, deskripsi, warna pratinjau, slot, tata letak
+  layout.tsx    # header & footer
+  pages/*.tsx   # home, profil, perangkat, berita(+detail), galeri(+detail),
+                # dokumen, statistik, apbdes, bantuan, kontak, halaman,
+                # layanan-mandiri
+  theme.css
+```
+
+- **Registry statis** (`src/themes/registry.ts`) memetakan slug → paket
+  komponen. Tidak ada `import()` dinamis dari input pengguna; slug asing jatuh
+  ke tema bawaan (`esensi`). Unggah ZIP tema saat runtime **ditolak** karena
+  mengeksekusi kode/aset tak tepercaya dan tidak kompatibel dengan build
+  Next.js.
+- Kontrak tema ada di `src/themes/kontrak.ts` (`ThemeComponents`) dan
+  `src/themes/types.ts` (props per slot). Tema wajib mengisi seluruh slot; tema
+  yang hanya ingin mengubah sebagian halaman boleh mengekspor ulang halaman
+  `esensi` (`src/themes/natra/index.tsx`).
+- Alur render: `(public)/layout.tsx` → `siapkanTema()`
+  (`features/publik/application`) → `getTemaAktif(villageId)` membaca tabel
+  `theme` (`village_id`, `slug`, `nama`, `versi`, `sumber`, `aktif`, `opsi`
+  JSON) → `parseThemeOptions` memvalidasi opsi (data lama/tidak valid diganti
+  bawaan, bukan melempar). Hasilnya `ThemeContext` (`desa`, `menu`, `opsi`,
+  `tema.cssVars`) diberikan ke layout tema; halaman rute cukup memilih
+  komponen tema dan tidak tahu detail tampilan.
+- **Opsi per desa** (warna primer/sekunder, font, kelengkungan, judul & tombol
+  hero, varian header, susunan bagian beranda, tampil menu/kontak footer)
+  disimpan di `theme.opsi` dan diubah operator di `/konten/tema` (resource RBAC
+  `tema`). Perubahan berlaku tanpa deploy.
+- Menambah tema = tambah folder + daftarkan di registry + build/deploy. Bila
+  kelak perlu kustomisasi tanpa deploy, jalurnya adalah page builder berbasis
+  blok, bukan memuat kode asing.
 - Konten berita memakai HTML tervalidasi + sanitizer di server sebelum disimpan
-  dan sebelum dirender.
+  dan sebelum dirender (`src/lib/sanitize.ts`; lapisan kedua di `ThemeProse`).
 
 ### Batas keamanan
 

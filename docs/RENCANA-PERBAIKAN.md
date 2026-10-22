@@ -129,11 +129,11 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 Meniru konsep OpenSID (`storage/app/themes/{esensi,natra}` + `config.json`),
 tetapi aman untuk Next.js.
 
-- [ ] **1D.1** Migrasi tabel `theme`: `village_id`, `slug`, `nama`, `versi`,
-      `sumber`, `aktif`, `opsi` (JSON).
-- [ ] **1D.2** Kontrak tema di `src/features/publik/domain/theme.ts`:
+- [x] **1D.1** Migrasi tabel `theme`: `village_id`, `slug`, `nama`, `versi`,
+      `sumber`, `aktif`, `opsi` (JSON). *(Migrasi `0019`.)*
+- [x] **1D.2** Kontrak tema di `src/features/publik/domain/theme.ts`:
       `ThemeManifest`, `ThemeOptionsSchema` (Zod), daftar slot halaman.
-- [ ] **1D.3** Struktur folder:
+- [x] **1D.3** Struktur folder:
       ```
       src/themes/<slug>/
         manifest.ts        # nama, versi, preview, opsi, slot
@@ -152,18 +152,24 @@ tetapi aman untuk Next.js.
         components/
         theme.css
       ```
-- [ ] **1D.4** `src/themes/registry.ts` — peta statis slug → komponen.
-      **Tanpa** dynamic import dari input user.
-- [ ] **1D.5** Dua tema bawaan: `esensi` (bersih, default) dan `natra`
+      *(Halaman rute hanya mengambil data lalu menyerahkan ke komponen tema;
+      kontrak props ada di `src/themes/types.ts`, paket komponen di
+      `src/themes/kontrak.ts`.)*
+- [x] **1D.4** `src/themes/registry.ts` — peta statis slug → komponen.
+      **Tanpa** dynamic import dari input user. *(Slug tak dikenal jatuh ke tema
+      bawaan, bukan mengeksekusi apa pun di luar registry.)*
+- [x] **1D.5** Dua tema bawaan: `esensi` (bersih, default) dan `natra`
       (modern). Desain orisinal — **jangan salin aset OpenSID (GPL)**.
-- [ ] **1D.6** Opsi tema: warna primer/sekunder, font, hero, susunan section,
+- [x] **1D.6** Opsi tema: warna primer/sekunder, font, hero, susunan section,
       tampil/sembunyi widget. Disimpan di `theme.opsi`.
-- [ ] **1D.7** Admin `/konten/tema`: pilih tema, atur opsi, pratinjau,
+- [x] **1D.7** Admin `/konten/tema`: pilih tema, atur opsi, pratinjau,
       aktifkan per desa.
-- [ ] **1D.8** Batasan yang didokumentasikan: menambah tema baru = tambah
+- [x] **1D.8** Batasan yang didokumentasikan: menambah tema baru = tambah
       folder + build/deploy. Unggah ZIP tema saat runtime **tidak didukung**
       (keamanan + model build Next.js). Bila kelak perlu kustomisasi tanpa
       deploy, tambahkan "page builder" berbasis blok, bukan eksekusi kode.
+      *(Belum ada pemilih tema di `/pengaturan/modul`; cukup lewat halaman
+      `/konten/tema`.)*
 
 ### 1E. Halaman publik (gelombang 1 — struktur lengkap)
 

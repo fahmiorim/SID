@@ -115,3 +115,50 @@ dari DB kosong; smoke test HTTP: seluruh halaman publik 200, media sadar-tenant
 **Catatan:** pekerjaan ini belum di-commit. Fase berikutnya: 1D (mesin tema),
 1E (halaman lanjutan), 1F (CMS konten), 1B.5/1B.6 (cache/cookie per-tenant +
 test isolasi dua desa).
+
+---
+
+## 2026-10-23 — Fase 1D (mesin tema) selesai
+
+**Skema & domain:**
+
+- `src/db/schema/theme.ts` + migrasi `0019`: tabel `theme` (`village_id`,
+  `slug`, `nama`, `versi`, `sumber`, `aktif`, `opsi` JSON; unik per
+  `(village_id, slug)`).
+- `features/publik/domain/theme.ts`: `ThemeManifest`, `THEME_SLOTS`,
+  `themeOptionsSchema` (Zod), `parseThemeOptions` (toleran data lama),
+  `themeCssVars`, `kontrasTeks`. Test: 12 kasus.
+- `features/publik/domain/tema.ts`: resource RBAC `tema`, skema form admin,
+  `opsiKeForm`.
+- `features/publik/infrastructure/theme-repository.ts`: baca/tulis tema per desa;
+  `application/tema-use-cases.ts`: `getTemaAktif` (cache per request),
+  `simpanPengaturanTema`, `gantiTemaAktif` — otorisasi diperiksa di use case.
+
+**Tema terpasang** (`src/themes/`):
+
+- Kontrak `kontrak.ts` (`ThemeComponents`) + props per slot di `types.ts` +
+  registry statis `registry.ts` (slug asing → tema bawaan, tanpa import dinamis)
+  + katalog manifest murni `manifests.ts` (aman diimpor skrip seed).
+- `esensi` (default, satu kolom) dan `natra` (aksen berwarna); `natra`
+  mengekspor ulang halaman `esensi` yang tidak dikustomisasi.
+- `features/publik/application/siapkan-tema.ts`: resolusi desa dari host, menu
+  publik, tema aktif, dan CSS variable; dipakai `(public)/layout.tsx`.
+- Seluruh halaman rute publik kini hanya mengambil data lalu memilih komponen
+  tema; komponen lama `_components/public-{header,footer,placeholder}.tsx` dan
+  `konten-html.tsx` dihapus (dipindah ke `src/themes/ui.tsx`).
+- `domain/menu.ts` memuat `susunMenu` + navigasi bawaan (dipindah dari
+  presentasi).
+
+**Admin:**
+
+- `/konten/tema`: kartu pilihan tema + form opsi (warna, font, kelengkungan,
+  hero, varian header, susunan beranda, menu/kontak footer), dengan pratinjau
+  aktif. `presentation/tema-actions.ts` memanggil use case; modul `tema`
+  ditambahkan ke seed (`Konten` → `tema`) beserta grant operator/sekdes/kades.
+
+**Verifikasi:** `npm run check` hijau (29 file / 339 test), `npm run build`
+hijau; migrasi `0019` + `db:seed` idempoten; ganti tema lewat DB terlihat
+langsung di situs publik (atribut tema + CSS variable berubah).
+
+**Catatan:** `1A.5`, `1B.5`, `1B.6`, `1E` (halaman lanjutan), dan `1F` (CMS
+konten) masih terbuka. Lihat status di `RENCANA-PERBAIKAN.md`.
