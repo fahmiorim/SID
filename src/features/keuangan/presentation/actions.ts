@@ -2,10 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveKeuanganData } from "@/features/keuangan/application/keuangan-use-cases";
+import {
+  saveKeuanganData,
+  saveKeuanganTriwulanData,
+} from "@/features/keuangan/application/keuangan-use-cases";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
 
 const KEUANGAN_PATH = "/keuangan";
+const TRIWULAN_PATH = `${KEUANGAN_PATH}/triwulan`;
 
 /**
  * Simpan nilai anggaran & realisasi untuk banyak rekening sekaligus.
@@ -42,6 +46,45 @@ export async function saveKeuanganAction(
     revalidatePath(KEUANGAN_PATH);
     revalidatePath(`${KEUANGAN_PATH}/anggaran`);
     return successState("Anggaran & realisasi disimpan.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/**
+ * Simpan realisasi per triwulan (TW I–IV) untuk banyak bidang sekaligus.
+ *
+ * Sama seperti input anggaran, baris dikirim sebagai JSON agar komponen klien
+ * cukup mengirim baris yang berubah.
+ */
+export async function saveKeuanganTriwulanAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const tahunRaw = formData.get("tahun");
+  const rowsRaw = formData.get("rows");
+
+  const tahun = typeof tahunRaw === "string" ? Number(tahunRaw) : Number.NaN;
+  if (!Number.isInteger(tahun)) return errorState("Tahun anggaran tidak valid.");
+
+  if (typeof rowsRaw !== "string" || rowsRaw.trim() === "") {
+    return errorState("Tidak ada perubahan untuk disimpan.");
+  }
+
+  let rows: unknown;
+  try {
+    rows = JSON.parse(rowsRaw);
+  } catch {
+    return errorState("Data realisasi triwulan tidak dapat dibaca.");
+  }
+
+  if (!Array.isArray(rows)) return errorState("Data realisasi triwulan tidak valid.");
+
+  try {
+    await saveKeuanganTriwulanData(tahun, rows);
+    revalidatePath(TRIWULAN_PATH);
+    revalidatePath(KEUANGAN_PATH);
+    return successState("Realisasi triwulan disimpan.");
   } catch (error) {
     return toErrorState(error);
   }

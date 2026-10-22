@@ -16,10 +16,18 @@ import {
   type KeuanganBarisInput,
 } from "@/features/keuangan/domain/keuangan";
 import {
+  buildTriwulanRows,
+  totalTriwulan,
+  triwulanBarisFormSchema,
+  type TriwulanBarisInput,
+} from "@/features/keuangan/domain/laporan-triwulan";
+import {
   listKeuanganTahun,
   listKeuanganTahunTersedia,
+  listKeuanganTriwulan,
   listTemplate,
   saveKeuanganNilai,
+  saveKeuanganTriwulan,
 } from "@/features/keuangan/infrastructure/keuangan-repository";
 import { requirePermission } from "@/lib/dal";
 import { conflict } from "@/lib/errors";
@@ -82,6 +90,68 @@ export async function getLaporanKeuangan(tahunParam?: number) {
     totalBidang: totalLaporan(bidang),
     grafik: seriGrafik(baris),
   };
+}
+
+/**
+ * Laporan realisasi per triwulan untuk satu tahun anggaran.
+ *
+ * Nilai triwulan dibaca dari tabel `keuangan_triwulan`; tidak ada estimasi
+ * yang diturunkan dari realisasi tahunan. Baris yang belum pernah diisi
+ * ditampilkan sebagai nol.
+ */
+export async function getLaporanTriwulan(tahunParam?: number) {
+  const { villageId, tahun, tersedia, rows } = await listKeuangan(tahunParam);
+  const bidang = listBidangBelanja(rows);
+  const tersimpan = await listKeuanganTriwulan(villageId, tahun);
+  const byKode = new Map(tersimpan.map((row) => [row.templateUuid, row]));
+
+  const input: TriwulanBarisInput[] = bidang.map((row) => {
+    const nilai = byKode.get(row.templateUuid);
+    return {
+      kode: row.templateUuid,
+      uraian: row.uraian,
+      anggaran: row.anggaran,
+      tw1: nilai?.tw1 ?? "0.00",
+      tw2: nilai?.tw2 ?? "0.00",
+      tw3: nilai?.tw3 ?? "0.00",
+      tw4: nilai?.tw4 ?? "0.00",
+    };
+  });
+
+  const baris = buildTriwulanRows(input);
+
+  return { tahun, tersedia, baris, total: totalTriwulan(baris) };
+}
+
+/** Simpan realisasi triwulan per bidang belanja (`5.x`). */
+export async function saveKeuanganTriwulanData(tahun: number, inputs: unknown[]) {
+  const user = await requirePermission(KEUANGAN_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  if (!isValidTahun(tahun)) throw conflict("Tahun anggaran tidak valid.");
+
+  const rows = inputs.map((input) => {
+    const parsed = triwulanBarisFormSchema.safeParse(input);
+    if (!parsed.success) {
+      throw conflict(parsed.error.issues[0]?.message ?? "Isian realisasi triwulan tidak valid.");
+    }
+    return parsed.data;
+  });
+
+  await saveKeuanganTriwulan(
+    villageId,
+    tahun,
+    user.id,
+    rows.map((row) => ({
+      templateUuid: row.kode,
+      tw1: numberToMoney(row.tw1),
+      tw2: numberToMoney(row.tw2),
+      tw3: numberToMoney(row.tw3),
+      tw4: numberToMoney(row.tw4),
+    })),
+  );
+
+  return { tahun };
 }
 
 export async function listKeuanganTemplate() {

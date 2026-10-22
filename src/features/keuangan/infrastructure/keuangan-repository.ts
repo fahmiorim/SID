@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { keuangan, keuanganTemplate } from "@/db/schema";
+import { keuangan, keuanganTemplate, keuanganTriwulan } from "@/db/schema";
 import {
   formatMoney,
   kodeLength,
@@ -180,6 +180,56 @@ export async function saveKeuanganNilai(
       set: {
         anggaran: sql`VALUES(${sql.raw("anggaran")})`,
         realisasi: sql`VALUES(${sql.raw("realisasi")})`,
+      },
+    });
+}
+
+// --- Realisasi per triwulan ------------------------------------------------
+
+export interface TriwulanRow {
+  templateUuid: string;
+  tw1: string;
+  tw2: string;
+  tw3: string;
+  tw4: string;
+}
+
+/** Realisasi triwulan yang sudah tersimpan untuk satu tahun anggaran. */
+export async function listKeuanganTriwulan(
+  villageId: number,
+  tahun: number,
+): Promise<TriwulanRow[]> {
+  return db
+    .select({
+      templateUuid: keuanganTriwulan.templateUuid,
+      tw1: keuanganTriwulan.tw1,
+      tw2: keuanganTriwulan.tw2,
+      tw3: keuanganTriwulan.tw3,
+      tw4: keuanganTriwulan.tw4,
+    })
+    .from(keuanganTriwulan)
+    .where(and(eq(keuanganTriwulan.villageId, villageId), eq(keuanganTriwulan.tahun, tahun)));
+}
+
+/** Simpan (upsert) realisasi triwulan per bidang. */
+export async function saveKeuanganTriwulan(
+  villageId: number,
+  tahun: number,
+  createdBy: string,
+  input: TriwulanRow[],
+): Promise<void> {
+  if (input.length === 0) return;
+
+  await db
+    .insert(keuanganTriwulan)
+    .values(input.map((row) => ({ ...row, villageId, tahun, createdBy })))
+    .onDuplicateKeyUpdate({
+      set: {
+        tw1: sql`VALUES(${sql.raw("tw1")})`,
+        tw2: sql`VALUES(${sql.raw("tw2")})`,
+        tw3: sql`VALUES(${sql.raw("tw3")})`,
+        tw4: sql`VALUES(${sql.raw("tw4")})`,
+        createdBy: sql`VALUES(${sql.raw("created_by")})`,
       },
     });
 }
