@@ -162,3 +162,19 @@ langsung di situs publik (atribut tema + CSS variable berubah).
 
 **Catatan:** `1A.5`, `1B.5`, `1B.6`, `1E` (halaman lanjutan), dan `1F` (CMS
 konten) masih terbuka. Lihat status di `RENCANA-PERBAIKAN.md`.
+
+---
+
+## 2026-10-23 — Fase 1B.6 (uji isolasi tenant)
+
+- Aturan host → desa diekstrak ke `features/desa/domain/tenant.ts`
+  (`susunPetaDesa`, `villageIdDariHost`) — murni, tanpa DB atau `next/headers`.
+- `resolveVillageByHost` memuat `listVillageDomains()` sekali per permintaan
+  lalu memakai aturan tersebut; query per kandidat (`getVillageIdByDomain`)
+  dan `countVillages` dihapus.
+- `domain/tenant.test.ts`: dua desa/dua host tidak saling bocor, normalisasi
+  port/huruf/`www`, host asing → `null` saat multi-desa, fallback hanya untuk
+  instalasi satu desa, dan instalasi kosong.
+
+**Verifikasi:** `npm run check` hijau (30 file / 348 test). Uji HTTP dengan dua
+host nyata menyusul bersama aktivasi multi-desa.

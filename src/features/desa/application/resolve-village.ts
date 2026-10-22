@@ -3,12 +3,11 @@ import "server-only";
 import { headers } from "next/headers";
 import { cache } from "react";
 
-import { hostCandidates } from "@/features/desa/domain/host";
+import { susunPetaDesa, villageIdDariHost } from "@/features/desa/domain/tenant";
 import {
-  countVillages,
   getFirstVillageId,
   getIdentitasDesa,
-  getVillageIdByDomain,
+  listVillageDomains,
   type IdentitasDesa,
 } from "@/features/desa/infrastructure/desa-repository";
 import type { CurrentUser } from "@/lib/dal";
@@ -32,26 +31,19 @@ export async function resolveVillageId(user: CurrentUser): Promise<number> {
 /**
  * Tentukan desa dari host permintaan (halaman publik).
  *
- * Urutan: domain persis → alias `www` → fallback **hanya** bila instalasi
- * benar-benar memiliki satu desa. Bila ada banyak desa dan host tidak dikenal,
- * hasilnya 404 agar tenant tidak bocor.
+ * Aturan pemetaan ada di `domain/tenant.ts` (murni, teruji): domain persis →
+ * alias `www` → fallback **hanya** bila instalasi benar-benar memiliki satu
+ * desa. Bila ada banyak desa dan host tidak dikenal, hasilnya 404 agar tenant
+ * tidak bocor.
  */
 export const resolveVillageByHost = cache(
   async (host: string | null | undefined): Promise<IdentitasDesa> => {
-    for (const candidate of hostCandidates(host)) {
-      const villageId = await getVillageIdByDomain(candidate);
-      if (villageId === null) continue;
+    const peta = susunPetaDesa(await listVillageDomains());
+    const villageId = villageIdDariHost(host, peta);
 
+    if (villageId !== null) {
       const desa = await getIdentitasDesa(villageId);
       if (desa) return desa;
-    }
-
-    if ((await countVillages()) === 1) {
-      const villageId = await getFirstVillageId();
-      if (villageId !== null) {
-        const desa = await getIdentitasDesa(villageId);
-        if (desa) return desa;
-      }
     }
 
     throw notFound("Desa untuk domain ini tidak ditemukan.");

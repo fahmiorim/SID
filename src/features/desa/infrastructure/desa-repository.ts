@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, count, eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { villages } from "@/db/schema";
@@ -108,20 +108,16 @@ export async function getFirstVillageId(): Promise<number | null> {
   return row?.id ?? null;
 }
 
-/** Id desa yang dipetakan ke domain tertentu (sudah dinormalisasi). */
-export async function getVillageIdByDomain(domain: string): Promise<number | null> {
-  if (!domain) return null;
-
-  const [row] = await db
-    .select({ id: villages.id })
+/**
+ * Daftar id + domain seluruh desa, terurut menaik berdasarkan id.
+ *
+ * Dipakai resolver host (`resolveVillageByHost`) untuk menyusun peta domain
+ * sekali per permintaan, alih-alih satu query per kandidat host. Ukurannya
+ * satu baris per desa sehingga murah bahkan untuk ratusan desa.
+ */
+export async function listVillageDomains(): Promise<{ id: number; domain: string | null }[]> {
+  return db
+    .select({ id: villages.id, domain: villages.domain })
     .from(villages)
-    .where(eq(villages.domain, domain))
-    .limit(1);
-  return row?.id ?? null;
-}
-
-/** Jumlah desa; dipakai untuk menentukan apakah fallback satu-desa aman. */
-export async function countVillages(): Promise<number> {
-  const [row] = await db.select({ value: count() }).from(villages);
-  return row?.value ?? 0;
+    .orderBy(asc(villages.id));
 }

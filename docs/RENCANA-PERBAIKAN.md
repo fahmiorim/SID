@@ -105,7 +105,10 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 - [x] **1B.4** Semua query publik (beranda, statistik, APBDes, bantuan, profil)
       memfilter `villageId` dari host.
 - [ ] **1B.5** Media & URL relatif; cache sadar-tenant; cookie per-host.
-- [ ] **1B.6** Test isolasi dua desa/dua host.
+- [x] **1B.6** Test isolasi dua desa/dua host: `domain/tenant.test.ts` menguji
+      dua domain → dua desa berbeda, host tak dikenal → `null` (404) saat
+      multi-desa, fallback hanya untuk instalasi satu desa, serta desa tanpa
+      domain tidak membocorkan tenant lain. *(Uji HTTP dua host menyusul.)*
 
 ### 1C. Skema konten & media
 

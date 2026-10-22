@@ -322,10 +322,12 @@ slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
 
 ### Resolusi desa (tenant)
 
-- `resolveVillageByHost(host)` membaca `villages.domain` (unik). Di produksi
+- `resolveVillageByHost(host)` memuat `listVillageDomains()` sekali per
+  permintaan lalu memakai aturan murni `susunPetaDesa()` +
+  `villageIdDariHost()` (`features/desa/domain/tenant.ts`, teruji). Di produksi
   jangan mengandalkan `orderBy(id).limit(1)`; fallback hanya dipakai bila
-  instalasi benar-benar satu desa (`countVillages() === 1`) atau untuk fallback
-  admin. Bila ada >1 desa dan host tak dikenal → 404.
+  instalasi benar-benar satu desa atau untuk fallback admin. Bila ada >1 desa
+  dan host tak dikenal → 404.
 - Halaman publik: `villageId` berasal dari **host**.
 - Halaman admin/warga: `villageId` berasal dari **sesi** pengguna.
 - Setiap repository yang menyentuh data desa **wajib** menerima `villageId` dan
