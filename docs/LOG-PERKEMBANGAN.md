@@ -70,3 +70,48 @@ acuan.
 
 **Catatan:** semua perubahan **belum di-commit** (Fase 0.3/0.4). Fase 1C (skema
 konten), 1D (mesin tema), 1E (halaman lanjutan), 1F (CMS) belum dimulai.
+
+---
+
+## 2026-10-23 — Commit Fase 0 + Fase 1C (skema konten & media)
+
+**Commit Fase 0:** seluruh pekerjaan berjalan di-commit per domain (9 commit
+`07268d1`..`98f40c2`: db, inventaris, bumindes, layanan-mandiri, persuratan,
+keuangan, kependudukan, publik, docs).
+
+**Fase 1C (skema konten & media):**
+
+- `src/db/schema/content.ts` + migrasi `0018`: `profil_desa`, `jabatan_perangkat`,
+  `perangkat_desa`, `berita_kategori`, `berita`, `galeri_album`, `galeri_foto`,
+  `menu_publik`, `widget`, `slider`, `dokumen_publik`, `halaman_statis`. Semua
+  membawa `village_id`; slug unik **per desa**.
+- `features/publik/domain/slug.ts` (`buatSlug`, `slugUnik`) + test.
+- `features/publik/infrastructure/media-storage.ts` (pola `laporan-storage.ts`):
+  simpan/baca/hapus media per tenant + `simpanUnggahanMedia`.
+- `features/publik/domain/media.ts`: allowlist MIME, batas ukuran, nama aman,
+  ekstensi dari MIME + test.
+- `/api/publik/media/[...path]`: penyaji media sadar-tenant (segmen pertama
+  wajib = `villageId` host; tolak traversal; cache immutable).
+- `features/publik/infrastructure/content-repository.ts`: query publik
+  (berita, kategori, galeri, slider, profil, perangkat, dokumen, menu, widget,
+  halaman, slug untuk sitemap) — semua difilter `villageId`.
+- `src/lib/sanitize.ts` (`sanitasiHtml`, `teksPolos`) + test XSS; komponen
+  render `_components/konten-html.tsx` (sanitasi lapisan kedua).
+- Halaman publik kini berisi data nyata: beranda (sambutan, slider, berita
+  terbaru), `/desa/berita` (+ filter kategori) & `/desa/berita/[slug]`,
+  `/desa/galeri` & `/desa/galeri/[slug]`, `/desa/profil` (visi/misi/sejarah/
+  lokasi), `/desa/pemerintahan` (SOTK), `/desa/dokumen`, dan
+  `/desa/halaman/[slug]`. Header memakai menu DB (`menu_publik`) dengan fallback
+  statis. `sitemap.ts` memuat berita/album/halaman per tenant.
+- Seed konten awal (`db/seed/data/konten.ts` + `seedKonten`): profil, jabatan +
+  perangkat contoh, kategori berita, satu berita, tiga dokumen, menu bawaan.
+  Idempoten.
+
+**Verifikasi:** `npm run check` hijau (typecheck + lint + format + vitest
+26 file / 321 test); `npm run build` hijau; `db:migrate` + `db:seed` idempoten
+dari DB kosong; smoke test HTTP: seluruh halaman publik 200, media sadar-tenant
+(404 desa lain, 400 traversal).
+
+**Catatan:** pekerjaan ini belum di-commit. Fase berikutnya: 1D (mesin tema),
+1E (halaman lanjutan), 1F (CMS konten), 1B.5/1B.6 (cache/cookie per-tenant +
+test isolasi dua desa).

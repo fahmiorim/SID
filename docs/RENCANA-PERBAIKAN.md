@@ -51,11 +51,13 @@ target "tidak kalah OpenSID" — bukan pekerjaan 2–3 minggu.
 - [x] **0.1** Perbaiki `isian.test.ts:50` (guard `parsed[0]`).
 - [x] **0.2** Audit pola `arr[0]` serupa di seluruh test: tidak ada lagi pola
       `[angka].` yang tidak dijaga.
-- [ ] **0.3** Commit migrasi `0010`–`0017` + snapshot + `_journal.json`; uji
+- [x] **0.3** Commit migrasi `0010`–`0017` + snapshot + `_journal.json`; uji
       `npm run db:migrate` dari DB kosong. (Migrasi & seed terverifikasi lokal:
       `db:migrate` dua kali idempoten, `db:seed` idempoten; job CI
-      `migrate` di `.github/workflows/ci.yml` menjaga regresi. Menunggu commit.)
-- [ ] **0.4** Commit pekerjaan berjalan, pesan per domain. (Menunggu commit.)
+      `migrate` di `.github/workflows/ci.yml` menjaga regresi.)
+- [x] **0.4** Commit pekerjaan berjalan, pesan per domain (9 commit:
+      db, inventaris, bumindes, layanan-mandiri, persuratan, keuangan,
+      kependudukan, publik, docs).
 - [x] **0.5** Perbaiki seed `peserta-bantuan` yang silent-skip: grant dihapus
       karena peserta dikelola di dalam modul `program-bantuan`.
 - [x] **0.6** Seeder gagal keras bila grant merujuk modul yang tidak ada
@@ -65,7 +67,7 @@ target "tidak kalah OpenSID" — bukan pekerjaan 2–3 minggu.
       + `ARCHITECTURE.md` disinkronkan.
 
 **Selesai bila:** `npm run check` + `npm run build` hijau, `git status` bersih.
-Status: check + build hijau; tinggal commit (0.3, 0.4).
+Status: **SELESAI** — check + build hijau, tree bersih (commit `07268d1`..`98f40c2`).
 
 ---
 
@@ -107,14 +109,20 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
 ### 1C. Skema konten & media
 
-- [ ] **1C.1** Migrasi: `profil_desa`, `perangkat_desa`, `jabatan_perangkat`,
+- [x] **1C.1** Migrasi: `profil_desa`, `perangkat_desa`, `jabatan_perangkat`,
       `berita_kategori`, `berita`, `galeri_album`, `galeri_foto`,
-      `menu_publik`, `widget`, `slider`, `dokumen_publik`, `halaman_statis`.
-- [ ] **1C.2** Slug unik per desa + helper.
-- [ ] **1C.3** `media-storage.ts` (pola `laporan-storage.ts`) +
-      `/api/publik/media/[...path]`.
-- [ ] **1C.4** Validasi unggahan: MIME allowlist, batas ukuran, nama acak.
-- [ ] **1C.5** Seed konten awal agar instalasi baru tidak kosong.
+      `menu_publik`, `widget`, `slider`, `dokumen_publik`, `halaman_statis`
+      (`src/db/schema/content.ts`, migrasi `0018`).
+- [x] **1C.2** Slug unik per desa + helper (`domain/slug.ts`: `buatSlug`,
+      `slugUnik`; unique index `(village_id, slug)` di DB).
+- [x] **1C.3** `media-storage.ts` (pola `laporan-storage.ts`) +
+      `/api/publik/media/[...path]` (sadar-tenant: segmen pertama wajib
+      sama dengan `villageId` host; tolak traversal).
+- [x] **1C.4** Validasi unggahan: MIME allowlist, batas ukuran, nama acak,
+      ekstensi diturunkan dari MIME (`domain/media.ts` + test).
+- [x] **1C.5** Seed konten awal (`db/seed/data/konten.ts` + `seedKonten`):
+      profil, jabatan + perangkat contoh, kategori berita, satu berita,
+      tiga dokumen, menu publik bawaan. Idempoten.
 
 ### 1D. Mesin tema (template bisa diubah)
 
@@ -161,18 +169,22 @@ tetapi aman untuk Next.js.
 
 Mengacu `donjo-app/controllers/fweb/*`:
 
-- [ ] `/` beranda: hero, sambutan, berita terbaru, statistik ringkas, agenda.
-- [ ] `/desa/profil`: visi, misi, sejarah, sambutan, peta.
-- [ ] `/desa/perangkat`: perangkat + jabatan + foto (SOTK).
-- [ ] `/desa/berita` + `/desa/berita/[slug]` + `/desa/berita/arsip`.
-- [ ] `/desa/galeri` + `/desa/galeri/[slug]`.
-- [ ] `/desa/dokumen` (informasi publik, produk hukum).
-- [ ] `/desa/statistik` (penduduk, bantuan, APBDes).
+- [x] `/` beranda: hero, sambutan, berita terbaru, statistik ringkas, slider.
+      *(Agenda menyusul.)*
+- [ ] `/desa/profil`: visi, misi, sejarah, sambutan, peta. *(Visi/misi/sejarah/
+      sambutan + koordinat sudah tampil; peta interaktif menyusul.)*
+- [x] `/desa/perangkat`: perangkat + jabatan + foto (SOTK).
+- [x] `/desa/berita` + `/desa/berita/[slug]`. *(`/desa/berita/arsip`
+      menyusul — daftar berita memakai filter kategori.)*
+- [x] `/desa/galeri` + `/desa/galeri/[slug]`.
+- [x] `/desa/dokumen` (informasi publik, produk hukum).
+- [x] `/desa/statistik` (penduduk, bantuan, APBDes).
 - [ ] `/desa/kelompok` (kelompok & lembaga).
 - [ ] `/desa/inventaris` (ringkasan aset).
-- [ ] `/desa/apbdes` (transparansi keuangan).
-- [ ] `/desa/kontak`.
+- [x] `/desa/apbdes` (transparansi keuangan).
+- [x] `/desa/kontak`.
 - [ ] `/verifikasi-surat/[token]`.
+- [x] `/desa/halaman/[slug]` (halaman statis dari `halaman_statis`).
 - [ ] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
       `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **struktur
       dulu**, data menyusul di Fase 4.
@@ -191,12 +203,21 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
       (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
+      *(Sudah dikerjakan lebih awal di 1C/1G karena render berita
+      membutuhkannya; tinggal sanitasi di sisi form CMS saat 1F dibangun.)*
 
 ### 1G. Test & kriteria selesai
 
-- [ ] Semua halaman publik bisa dibuka tanpa sesi.
+- [x] Sanitasi HTML: `sanitize-html` + `@types/sanitize-html` terpasang;
+      `src/lib/sanitize.ts` (`sanitasiHtml`, `teksPolos`); sanitasi saat
+      render (lapisan kedua) via `_components/konten-html.tsx`; test XSS
+      (`<script>`, `onerror=`, `javascript:`, `style=`, `<iframe>`, `data:`).
+- [ ] Semua halaman publik bisa dibuka tanpa sesi. *(Terverifikasi manual via
+      smoke test; test otomatis menyusul.)*
 - [ ] Ganti tema & opsi langsung terlihat, tanpa deploy.
 - [ ] Draft tidak tampil; slug unik; unggahan tervalidasi; konten tersanitasi.
+      *(Query publik hanya menampilkan `published`+jadwal; slug unik via DB;
+      unggahan tervalidasi; sanitasi dua lapis — tinggal test integrasi.)*
 - [ ] Tidak ada tautan 404.
 - [ ] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
 

@@ -1,19 +1,19 @@
-import { FileText } from "lucide-react";
+import { Download, ExternalLink, FileText } from "lucide-react";
 import Link from "next/link";
+
+import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { urlMedia } from "@/features/publik/domain/format";
+import { listDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Dokumen Publik" };
+export const metadata = { title: "Informasi Publik" };
 
-const RENCANA = [
-  "Laporan Realisasi APBDes",
-  "Rencana Kerja Pemerintah Desa (RKPDes)",
-  "Peraturan Desa",
-  "Profil & Statistik Desa",
-] as const;
+/** Informasi publik & produk hukum (dari tabel `dokumen_publik`). */
+export default async function DokumenPublikPage() {
+  const desa = await getIdentitasFromRequest();
+  const dokumen = await listDokumenPublik(desa.id);
 
-/** Informasi publik & produk hukum. CMS dokumen dibangun pada Fase 1C/1F. */
-export default function DokumenPublikPage() {
   return (
     <div className="space-y-8">
       <header className="space-y-2">
@@ -21,25 +21,56 @@ export default function DokumenPublikPage() {
         <p className="text-muted-foreground">Dokumen resmi desa yang dapat diakses warga.</p>
       </header>
 
-      <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-        Arsip dokumen belum tersedia. Sementara ini, laporan keuangan dapat dilihat pada halaman{" "}
-        <Link href="/desa/apbdes" className="text-primary underline-offset-4 hover:underline">
-          Transparansi APBDes
-        </Link>
-        .
-      </p>
-
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold tracking-tight">Dokumen yang akan tersedia</h2>
+      {dokumen.length === 0 ? (
+        <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
+          Arsip dokumen belum tersedia. Sementara ini, laporan keuangan dapat dilihat pada halaman{" "}
+          <Link href="/desa/apbdes" className="text-primary underline-offset-4 hover:underline">
+            Transparansi APBDes
+          </Link>
+          .
+        </p>
+      ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
-          {RENCANA.map((item) => (
-            <li key={item} className="flex items-center gap-3 rounded-lg border p-4">
-              <FileText className="size-4 shrink-0 text-muted-foreground" />
-              <span className="text-sm">{item}</span>
-            </li>
-          ))}
+          {dokumen.map((item) => {
+            const berkas = urlMedia(item.berkas);
+            const tautan = berkas ?? item.tautan;
+            const eksternal = !berkas && Boolean(item.tautan);
+
+            return (
+              <li key={item.id} className="rounded-lg border p-4">
+                <div className="flex items-start gap-3">
+                  <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{item.nama}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {[item.jenis, item.nomor, item.tahun].filter(Boolean).join(" · ") ||
+                        item.kategori}
+                    </p>
+                    {item.keterangan ? (
+                      <p className="mt-2 text-sm text-muted-foreground">{item.keterangan}</p>
+                    ) : null}
+                    {tautan ? (
+                      <a
+                        href={tautan}
+                        target={eksternal ? "_blank" : undefined}
+                        rel={eksternal ? "noopener noreferrer" : undefined}
+                        className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      >
+                        {eksternal ? (
+                          <ExternalLink className="size-3.5" />
+                        ) : (
+                          <Download className="size-3.5" />
+                        )}
+                        {eksternal ? "Buka tautan" : "Unduh"}
+                      </a>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ul>
-      </section>
+      )}
     </div>
   );
 }

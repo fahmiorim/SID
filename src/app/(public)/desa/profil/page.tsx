@@ -1,5 +1,8 @@
+import { KontenHtml } from "@/app/(public)/_components/konten-html";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { parseMisi } from "@/features/publik/domain/format";
+import { getProfilDesa } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +10,8 @@ export const metadata = { title: "Profil Desa" };
 
 export default async function ProfilDesaPage() {
   const desa = await getIdentitasFromRequest();
+  const profil = await getProfilDesa(desa.id);
+  const misi = parseMisi(profil?.misi);
 
   return (
     <div className="space-y-10">
@@ -55,10 +60,14 @@ export default async function ProfilDesaPage() {
             <CardTitle className="text-base">Visi</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Visi desa belum diatur. Pengelola desa dapat menambahkannya melalui panel admin (menu
-              Konten → Profil).
-            </p>
+            {profil?.visi ? (
+              <p className="text-sm leading-relaxed whitespace-pre-line">{profil.visi}</p>
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Visi desa belum diatur. Pengelola desa dapat menambahkannya melalui panel admin
+                (menu Konten → Profil).
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -66,13 +75,45 @@ export default async function ProfilDesaPage() {
             <CardTitle className="text-base">Misi</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Misi desa belum diatur. Pengelola desa dapat menambahkannya melalui panel admin (menu
-              Konten → Profil).
-            </p>
+            {misi.length > 0 ? (
+              <ol className="list-decimal space-y-2 pl-5 text-sm leading-relaxed">
+                {misi.map((butir) => (
+                  <li key={butir}>{butir}</li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Misi desa belum diatur. Pengelola desa dapat menambahkannya melalui panel admin
+                (menu Konten → Profil).
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>
+
+      {profil?.sejarah ? (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight">Sejarah Desa</h2>
+          <KontenHtml html={profil.sejarah} />
+        </section>
+      ) : null}
+
+      {profil?.koordinat ? (
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold tracking-tight">Lokasi</h2>
+          <p className="text-sm text-muted-foreground">Koordinat: {profil.koordinat}</p>
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${encodeURIComponent(
+              profil.koordinat.split(",")[0]?.trim() ?? "",
+            )}&mlon=${encodeURIComponent(profil.koordinat.split(",")[1]?.trim() ?? "")}#map=15`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary underline-offset-4 hover:underline"
+          >
+            Lihat di peta
+          </a>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -23,7 +23,43 @@ export const PUBLIC_NAV = [
   { href: "/desa/kontak", label: "Kontak" },
 ] as const;
 
-export function PublicHeader({ namaDesa, logo }: { namaDesa: string; logo: string | null }) {
+export interface PublicNavItem {
+  href: string;
+  label: string;
+}
+
+/**
+ * Susun menu navigasi dari baris `menu_publik` (bila ada), dengan fallback ke
+ * menu statis bawaan. Menu bertingkat diratakan menjadi satu tingkat dengan
+ * label induk sebagai awalan agar tetap terbaca di header ramping.
+ */
+export function susunMenu(
+  menu: { nama: string; link: string; parentId: number | null; id: number }[],
+): PublicNavItem[] {
+  if (menu.length === 0) return [...PUBLIC_NAV];
+
+  const induk = menu.filter((item) => item.parentId === null);
+  const anakDari = (id: number) => menu.filter((item) => item.parentId === id);
+
+  const hasil: PublicNavItem[] = [];
+  for (const item of induk) {
+    hasil.push({ href: item.link, label: item.nama });
+    for (const anak of anakDari(item.id)) {
+      hasil.push({ href: anak.link, label: `${item.nama}: ${anak.nama}` });
+    }
+  }
+  return hasil.length > 0 ? hasil : [...PUBLIC_NAV];
+}
+
+export function PublicHeader({
+  namaDesa,
+  logo,
+  menu,
+}: {
+  namaDesa: string;
+  logo: string | null;
+  menu: PublicNavItem[];
+}) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6">
@@ -42,7 +78,7 @@ export function PublicHeader({ namaDesa, logo }: { namaDesa: string; logo: strin
         </Link>
 
         <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Menu utama">
-          {PUBLIC_NAV.map((item) => (
+          {menu.map((item) => (
             <Link
               key={item.href}
               href={item.href}
@@ -73,7 +109,7 @@ export function PublicHeader({ namaDesa, logo }: { namaDesa: string; logo: strin
                 <SheetDescription>Menu situs desa</SheetDescription>
               </SheetHeader>
               <nav className="mt-4 flex flex-col gap-1 px-4" aria-label="Menu utama">
-                {PUBLIC_NAV.map((item) => (
+                {menu.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
