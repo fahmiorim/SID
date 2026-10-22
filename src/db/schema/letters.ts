@@ -1,4 +1,5 @@
 import {
+  boolean,
   index,
   int,
   mysqlEnum,
@@ -51,6 +52,26 @@ export const letters = mysqlTable(
 
     /** Badan surat hasil render template pada saat diterbitkan. */
     content: text("content"),
+    /** Salinan isi surat untuk arsip (parity dengan log_surat.isi_surat). */
+    isiSurat: text("isi_surat"),
+    /** Nilai isian dinamis per jenis surat (JSON map kode isian → nilai). */
+    nilaiIsian: text("nilai_isian"),
+
+    /** Verifikasi berjenjang (operator -> sekdes -> kades). */
+    verifikasiOperator: boolean("verifikasi_operator"),
+    verifikasiSekdes: boolean("verifikasi_sekdes"),
+    verifikasiKades: boolean("verifikasi_kades"),
+    /** Tahap verifikasi terakhir (operator/sekdes/kades/ditolak). */
+    logVerifikasi: varchar("log_verifikasi", { length: 100 }),
+    /** Catatan/alasan penolakan dari verifikator. */
+    catatanVerifikasi: text("catatan_verifikasi"),
+    /** Tanda TTE (BSRE) */
+    tte: boolean("tte"),
+    /** Relasi ke tabel urls untuk QR verifikasi */
+    urlsId: int("urls_id"),
+
+    /** Nama pemohon / informasi pelengkap */
+    pemohon: varchar("pemohon", { length: 200 }),
 
     createdBy: varchar("created_by", { length: 36 }).references(() => users.id, {
       onDelete: "set null",
@@ -58,6 +79,8 @@ export const letters = mysqlTable(
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     issuedAt: timestamp("issued_at"),
+    /** Soft delete untuk arsip verifikasi */
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [
     index("letters_village_type_year_idx").on(table.villageId, table.typeId, table.year),

@@ -66,6 +66,15 @@ export const residents = mysqlTable(
 
     religionId: int("religion_id").references(() => religions.id, { onDelete: "set null" }),
     educationId: int("education_id").references(() => educations.id, { onDelete: "set null" }),
+    /**
+     * Pendidikan yang sedang ditempuh (parity `pendidikan_sedang_id`).
+     *
+     * memakai katalog `educations` yang sama dengan pendidikan terakhir; dipisah
+     * agar isian surat/KK dapat membedakan keduanya.
+     */
+    educationSedangId: int("education_sedang_id").references(() => educations.id, {
+      onDelete: "set null",
+    }),
     occupationId: int("occupation_id").references(() => occupations.id, { onDelete: "set null" }),
     maritalStatusId: int("marital_status_id").references(() => maritalStatuses.id, {
       onDelete: "set null",
@@ -89,6 +98,10 @@ export const residents = mysqlTable(
     phone: varchar("phone", { length: 30 }),
     fatherName: varchar("father_name", { length: 100 }),
     motherName: varchar("mother_name", { length: 100 }),
+    /** NIK ayah (parity `ayah_nik`), dipakai pada placeholder surat/KK. */
+    fatherNationalId: varchar("father_national_id", { length: 16 }),
+    /** NIK ibu (parity `ibu_nik`), dipakai pada placeholder surat/KK. */
+    motherNationalId: varchar("mother_national_id", { length: 16 }),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

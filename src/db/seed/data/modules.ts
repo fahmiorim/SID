@@ -154,6 +154,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "persuratan",
   },
+  {
+    slug: "syarat-surat",
+    name: "Syarat Surat",
+    url: "/persuratan/syarat",
+    icon: "clipboard-check",
+    sortOrder: 6,
+    isGroup: false,
+    parentSlug: "persuratan",
+  },
 
   {
     slug: "bantuan",
@@ -207,6 +216,85 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     sortOrder: 3,
     isGroup: false,
     parentSlug: "keuangan-grup",
+  },
+  {
+    slug: "laporan-triwulan",
+    name: "Laporan Triwulan",
+    url: "/keuangan/triwulan",
+    icon: "calendar-range",
+    sortOrder: 4,
+    isGroup: false,
+    parentSlug: "keuangan-grup",
+  },
+
+  {
+    slug: "administrasi",
+    name: "Administrasi",
+    url: null,
+    icon: "book-open",
+    sortOrder: 30,
+    isGroup: true,
+  },
+  {
+    slug: "bumindes",
+    name: "Buku Administrasi Desa",
+    url: "/bumindes/buku-administrasi",
+    icon: "book-open",
+    sortOrder: 1,
+    isGroup: false,
+    parentSlug: "administrasi",
+  },
+
+  {
+    slug: "inventaris-grup",
+    name: "Inventaris & Aset",
+    url: null,
+    icon: "boxes",
+    sortOrder: 35,
+    isGroup: true,
+  },
+  {
+    // Belum selesai: form input & mutasi belum tersedia. Disembunyikan sampai
+    // modul benar-benar bisa dipakai agar tidak menampilkan halaman setengah jadi.
+    slug: "inventaris",
+    name: "Inventaris",
+    url: "/inventaris",
+    icon: "boxes",
+    sortOrder: 1,
+    isGroup: false,
+    isActive: false,
+    parentSlug: "inventaris-grup",
+  },
+  {
+    slug: "mutasi-inventaris",
+    name: "Mutasi Inventaris",
+    url: "/inventaris/mutasi",
+    icon: "arrow-left-right",
+    sortOrder: 2,
+    isGroup: false,
+    isActive: false,
+    parentSlug: "inventaris-grup",
+  },
+
+  {
+    slug: "permohonan-surat",
+    name: "Permohonan Surat",
+    url: "/permohonan-surat",
+    icon: "mail-check",
+    sortOrder: 40,
+    isGroup: false,
+    // Alur pengajuan warga (form, syarat, cetak) belum dibangun.
+    isActive: false,
+  },
+  {
+    slug: "analisis-survei",
+    name: "Analisis & Survei",
+    url: "/analisis-survei",
+    icon: "chart-column",
+    sortOrder: 45,
+    isGroup: false,
+    // Halaman masih berupa kerangka tanpa data.
+    isActive: false,
   },
 
   {

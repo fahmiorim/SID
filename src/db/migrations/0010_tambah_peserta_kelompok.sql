@@ -1,0 +1,3 @@
+ALTER TABLE `bantuan_peserta` ADD `kelompok_id` int;--> statement-breakpoint
+ALTER TABLE `bantuan_peserta` ADD CONSTRAINT `bantuan_peserta_program_kelompok_uq` UNIQUE(`program_id`,`kelompok_id`);--> statement-breakpoint
+ALTER TABLE `bantuan_peserta` ADD CONSTRAINT `bantuan_peserta_kelompok_id_kelompok_id_fk` FOREIGN KEY (`kelompok_id`) REFERENCES `kelompok`(`id`) ON DELETE cascade ON UPDATE no action;

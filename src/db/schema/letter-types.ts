@@ -4,6 +4,7 @@ import {
   mysqlTable,
   text,
   timestamp,
+  tinyint,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -34,6 +35,12 @@ export const letterTypes = mysqlTable(
 
     /** Badan surat bertemplat, memakai placeholder `[nama_desa]`, dst. */
     templateBody: text("template_body").notNull(),
+    /** Form isian dinamis per kategori (JSON) */
+    formIsian: text("form_isian"),
+    /** Kode isian kustom (JSON) */
+    kodeIsian: text("kode_isian"),
+    /** Daftar id syarat surat (JSON array), parity `syarat_surat`. */
+    syaratSurat: text("syarat_surat"),
     requiresResident: boolean("requires_resident").notNull().default(true),
     isActive: boolean("is_active").notNull().default(true),
 
@@ -41,9 +48,25 @@ export const letterTypes = mysqlTable(
     numberFormat: varchar("number_format", { length: 100 })
       .notNull()
       .default("[kode_surat]/[nomor]/[kode_desa]/[tahun]"),
+    /** Pakai format penomoran global (1) atau per jenis (0) */
+    formatNomorGlobal: tinyint("format_nomor_global").default(1),
     /** Masa berlaku surat (bulan); 0 = tidak kedaluwarsa. */
     validityMonths: int("validity_months").notNull().default(1),
+    /** Satuan masa berlaku (d/w/M/y) */
+    satuanMasaBerlaku: varchar("satuan_masa_berlaku", { length: 15 }).default("M"),
     sortOrder: int("sort_order").notNull().default(0),
+
+    /** Pengaturan rendering/TTE/QR */
+    qrCode: boolean("qr_code"),
+    qrCodeTte: boolean("qr_code_tte"),
+    logoGaruda: boolean("logo_garuda"),
+    kecamatan: boolean("kecamatan"),
+    orientasi: varchar("orientasi", { length: 10 }),
+    ukuran: varchar("ukuran", { length: 10 }),
+    margin: text("margin"),
+    header: int("header").default(1),
+    footer: int("footer").default(1),
+    sumberPendudukBerulang: boolean("sumber_penduduk_berulang"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

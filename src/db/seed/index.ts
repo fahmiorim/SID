@@ -8,6 +8,7 @@ import {
   familyRelations,
   keuanganTemplate,
   letterClassifications,
+  letterRequirements,
   letterTypes,
   maritalStatuses,
   modules,
@@ -33,7 +34,7 @@ import {
   RELIGION_SEEDS,
 } from "./data/references";
 import { ROLE_SEEDS, type RoleSeed } from "./data/roles";
-import { JENIS_SURAT_SEEDS, KLASIFIKASI_SURAT_SEEDS } from "./data/surat";
+import { JENIS_SURAT_SEEDS, KLASIFIKASI_SURAT_SEEDS, SYARAT_SURAT_SEEDS } from "./data/surat";
 
 /**
  * Seeder fondasi: identitas desa, role, katalog modul, matriks akses, dan satu
@@ -193,6 +194,7 @@ async function upsertModules(villageId: number): Promise<Map<string, number>> {
  * idempoten sekaligus membersihkan grant yang sudah dihapus dari seed.
  */
 async function replaceGrants(
+  roleSlug: string,
   roleId: number,
   grants: RoleSeed["grants"],
   slugToId: Map<string, number>,
@@ -201,14 +203,65 @@ async function replaceGrants(
 
   for (const [slug, access] of Object.entries(grants)) {
     const moduleId = slugToId.get(slug);
-    if (moduleId === undefined) continue;
+    if (moduleId === undefined) {
+      throw new Error(
+        `Grant role "${roleSlug}" merujuk modul yang tidak ada: "${slug}". ` +
+          "Tambahkan modulnya di modules.ts atau hapus grant-nya.",
+      );
+    }
 
     await db.insert(rolePermissions).values({ roleId, moduleId, access });
   }
 }
 
+/**
+ * Siapkan master syarat surat dan kembalikan peta nama → id.
+ *
+ * Idempoten: baris yang sudah ada disegarkan, sisanya baru disisipkan.
+ */
+async function seedSyaratSurat(villageId: number): Promise<Map<string, number>> {
+  const ids = new Map<string, number>();
+
+  for (const item of SYARAT_SURAT_SEEDS) {
+    const [existing] = await db
+      .select({ id: letterRequirements.id })
+      .from(letterRequirements)
+      .where(
+        and(eq(letterRequirements.villageId, villageId), eq(letterRequirements.name, item.name)),
+      )
+      .limit(1);
+
+    if (existing) {
+      await db
+        .update(letterRequirements)
+        .set({ description: item.description, sortOrder: item.sortOrder, isActive: true })
+        .where(eq(letterRequirements.id, existing.id));
+      ids.set(item.name, existing.id);
+      continue;
+    }
+
+    const inserted = unwrap(
+      await db
+        .insert(letterRequirements)
+        .values({
+          villageId,
+          name: item.name,
+          description: item.description,
+          sortOrder: item.sortOrder,
+          isActive: true,
+        })
+        .$returningId(),
+    );
+
+    ids.set(item.name, inserted.id);
+  }
+
+  return ids;
+}
+
 async function seedSuratCatalog(villageId: number): Promise<void> {
   const classificationIds = new Map<string, number>();
+  const syaratIds = await seedSyaratSurat(villageId);
 
   for (const item of KLASIFIKASI_SURAT_SEEDS) {
     const [existing] = await db
@@ -246,6 +299,12 @@ async function seedSuratCatalog(villageId: number): Promise<void> {
       code: item.code,
       name: item.name,
       templateBody: item.templateBody,
+      formIsian: item.formIsian ? JSON.stringify(item.formIsian) : null,
+      syaratSurat: JSON.stringify(
+        (item.syaratNames ?? [])
+          .map((name) => syaratIds.get(name))
+          .filter((id): id is number => id !== undefined),
+      ),
       requiresResident: item.requiresResident,
       isActive: item.isActive,
       numberFormat: item.numberFormat,
@@ -352,7 +411,7 @@ async function main(): Promise<void> {
   for (const role of ROLE_SEEDS) {
     const roleId = roleIds.get(role.slug);
     if (roleId !== undefined) {
-      await replaceGrants(roleId, role.grants, slugToId);
+      await replaceGrants(role.slug, roleId, role.grants, slugToId);
     }
   }
   console.log("• matriks akses disiapkan");

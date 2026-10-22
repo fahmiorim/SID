@@ -1,4 +1,4 @@
-import { int, mysqlTable, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlTable, timestamp, tinyint, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * `villages` — identitas desa sekaligus kunci tenant (multi-desa).
@@ -28,10 +28,19 @@ export const villages = mysqlTable("villages", {
 
   logo: varchar("logo", { length: 255 }),
 
+  /**
+   * Domain publik desa (mis. `desa-sukamaju.id`). Unik agar satu host hanya
+   * menunjuk satu desa. `NULL` = belum dipetakan (mode pengembangan).
+   */
+  domain: varchar("domain", { length: 255 }).unique(),
+
   /** Nama kepala desa. */
   headName: varchar("head_name", { length: 100 }),
   /** NIP kepala desa. */
   headNip: varchar("head_nip", { length: 25 }),
+
+  /** Mode penomoran surat layanan (1–4); lihat domain `penomoran.ts`. */
+  penomoranSurat: tinyint("penomoran_surat").notNull().default(2),
 
   officeAddress: varchar("office_address", { length: 255 }),
   email: varchar("email", { length: 100 }),

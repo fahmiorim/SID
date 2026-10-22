@@ -1,0 +1,2 @@
+ALTER TABLE `letters` MODIFY COLUMN `status` enum('draft','verifikasi','issued','cancelled') NOT NULL DEFAULT 'draft';--> statement-breakpoint
+ALTER TABLE `villages` ADD `penomoran_surat` tinyint DEFAULT 2 NOT NULL;

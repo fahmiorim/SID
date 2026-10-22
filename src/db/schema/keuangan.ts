@@ -86,6 +86,53 @@ export type Keuangan = typeof keuangan.$inferSelect;
 export type NewKeuangan = typeof keuangan.$inferInsert;
 
 /**
+ * `keuangan_triwulan` — realisasi belanja per bidang per triwulan.
+ *
+ * Satu baris = satu bidang (kode `5.x`) pada satu tahun. Nilai disimpan
+ * terpisah dari `keuangan.realisasi` (realisasi tahunan) agar angka triwulan
+ * tidak pernah dibagi otomatis dari total tahunan.
+ */
+export const keuanganTriwulan = mysqlTable(
+  "keuangan_triwulan",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id")
+      .notNull()
+      .references(() => villages.id, { onDelete: "cascade" }),
+    templateUuid: varchar("template_uuid", { length: 20 })
+      .notNull()
+      .references(() => keuanganTemplate.uuid, { onDelete: "cascade" }),
+    tahun: int("tahun").notNull(),
+
+    tw1: decimal("tw1", { precision: 65, scale: 2 }).notNull().default("0.00"),
+    tw2: decimal("tw2", { precision: 65, scale: 2 }).notNull().default("0.00"),
+    tw3: decimal("tw3", { precision: 65, scale: 2 }).notNull().default("0.00"),
+    tw4: decimal("tw4", { precision: 65, scale: 2 }).notNull().default("0.00"),
+
+    createdBy: varchar("created_by", { length: 36 }).references(() => users.id, {
+      onDelete: "set null",
+    }),
+
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("keuangan_triwulan_village_tahun_uuid_unique").on(
+      table.villageId,
+      table.tahun,
+      table.templateUuid,
+    ),
+    index("keuangan_triwulan_village_tahun_idx").on(table.villageId, table.tahun),
+  ],
+);
+
+export type KeuanganTriwulan = typeof keuanganTriwulan.$inferSelect;
+export type NewKeuanganTriwulan = typeof keuanganTriwulan.$inferInsert;
+
+/**
  * `keuangan_laporan` — arsip dokumen laporan APBDes per semester (Lapis D).
  *
  * Mengikuti `laporan_sinkronisasi` pada sistem rujukan: dokumen diunggah

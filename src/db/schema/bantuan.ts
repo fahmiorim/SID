@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/mysql-core";
 
 import { families } from "./family";
+import { kelompok } from "./kelompok";
 import { residents } from "./resident";
 import { rumahTangga } from "./rumah-tangga";
 import { villages } from "./village";
@@ -46,7 +47,7 @@ export const bantuanProgram = mysqlTable(
     startDate: date("start_date", { mode: "string" }),
     endDate: date("end_date", { mode: "string" }),
 
-    /** Asal dana; lihat `ASAL_DANA_BANTUAN` (1 pusat … 5 lainnya). */
+    /** Asal dana (lihat `ASAL_DANA` pada domain bantuan), boleh kosong. */
     asalDana: int("asal_dana"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -65,10 +66,9 @@ export const bantuanProgram = mysqlTable(
  * `bantuan_peserta` — keanggotaan peserta pada sebuah program.
  *
  * Penautan memakai **FK eksplisit per jenis sasaran** (`resident_id`,
- * `family_id`, `rtm_id`) alih-alih kunci join berupa teks (NIK/no. KK) seperti
- * sistem rujukan, sehingga integritas referensial terjaga dan peserta otomatis
- * terlepas bila sasaran dihapus. `kelompok_id` menyusul saat modul Kelompok
- * dibangun; sampai saat itu sasaran kelompok belum dapat dipilih.
+ * `family_id`, `rtm_id`, `kelompok_id`) alih-alih kunci join berupa teks
+ * (NIK/no. KK) seperti sistem rujukan, sehingga integritas referensial terjaga
+ * dan peserta otomatis terlepas bila sasaran dihapus.
  *
  * Kolom `card_*` adalah **salinan cetak** yang boleh berbeda dari data master
  * (mis. nama pada kartu bantuan), jadi tidak digabung paksa dengan `residents`.
@@ -90,6 +90,8 @@ export const bantuanPeserta = mysqlTable(
     familyId: int("family_id").references(() => families.id, { onDelete: "cascade" }),
     /** Sasaran: rumah tangga (RTM). */
     rtmId: int("rtm_id").references(() => rumahTangga.id, { onDelete: "cascade" }),
+    /** Sasaran: kelompok. */
+    kelompokId: int("kelompok_id").references(() => kelompok.id, { onDelete: "cascade" }),
 
     /** Nomor Kartu Peserta (KKS/PKH/dll.) sebagai identitas cetak. */
     cardNumber: varchar("card_number", { length: 60 }),
@@ -110,6 +112,7 @@ export const bantuanPeserta = mysqlTable(
     uniqueIndex("bantuan_peserta_program_resident_uq").on(t.programId, t.residentId),
     uniqueIndex("bantuan_peserta_program_family_uq").on(t.programId, t.familyId),
     uniqueIndex("bantuan_peserta_program_rtm_uq").on(t.programId, t.rtmId),
+    uniqueIndex("bantuan_peserta_program_kelompok_uq").on(t.programId, t.kelompokId),
     index("bantuan_peserta_program_idx").on(t.programId),
   ],
 );

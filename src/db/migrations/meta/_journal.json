@@ -71,6 +71,62 @@
       "when": 1792682520000,
       "tag": "0009_tambah_kelompok",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1792682580000,
+      "tag": "0010_tambah_peserta_kelompok",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1792682640000,
+      "tag": "0011_sinkronisasi_modul_baru",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1792682700000,
+      "tag": "0012_verifikasi_dan_penomoran",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1792682760000,
+      "tag": "0013_catatan_verifikasi",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1792682820000,
+      "tag": "0014_tambah_realisasi_triwulan",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1792682880000,
+      "tag": "0015_tambah_syarat_surat",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1792682940000,
+      "tag": "0016_tambah_data_ortu_penduduk",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1792687649567,
+      "tag": "0017_narrow_dark_beast",
+      "breakpoints": true
     }
   ]
 }

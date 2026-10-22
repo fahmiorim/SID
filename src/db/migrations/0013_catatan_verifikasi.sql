@@ -1,0 +1,1 @@
+ALTER TABLE `letters` ADD `catatan_verifikasi` text;
