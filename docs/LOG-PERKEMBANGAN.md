@@ -235,3 +235,36 @@ album uji tampil di `/konten/galeri`, `/konten/galeri/[id]`, `/desa/galeri`, dan
 
 **Belum diuji:** unggah lewat form browser (Server Action). Berikutnya: 1F.4
 profil & perangkat desa, lalu 1F.5 menu/widget/slider dan 1F.6 dokumen.
+
+---
+
+## 2026-10-23 — Fase 1F.4 (CMS profil desa & perangkat desa)
+
+- Modul & resource `profil-desa` (`/konten/profil`) dan `perangkat-desa`
+  (`/konten/perangkat`): operator `manage`, sekdes/kades `read`; seed kini
+  menyiapkan 42 modul.
+- `features/konten` profil: form visi (teks), misi (satu butir per baris),
+  sejarah & sambutan (HTML disanitasi), koordinat divalidasi `lat, lng`;
+  repository `upsertProfil` (satu baris per desa); seed desa baru tetap mengisi
+  `PROFIL_SEED` sehingga instalasi tidak kosong.
+- `features/konten` perangkat: CRUD perangkat (gelar, NIP/NIK, jenis kelamin,
+  tanggal lahir, foto, status, urutan, penanda tangan) dan katalog jabatan
+  (slug unik, urutan). Jabatan yang dihapus tidak menghapus perangkat — FK
+  `set null`, perangkat hanya kehilangan jabatan.
+- Berkas: foto lama dibersihkan saat diganti/dihapus; perangkat yang masih
+  dirujuk tidak dihapus filenya sebelum baris dihapus.
+- Admin: `/konten/profil` (form tunggal + pratinjau tautan situs) dan
+  `/konten/perangkat` (tabel aparatur + pengelolaan jabatan dalam satu halaman).
+- Test domain: 11 kasus (profil: koordinat, isian kosong; perangkat: slug
+  jabatan, NIK 16 angka, tanggal, status/jenis kelamin, label, normalisasi
+  pilihan kosong). Sanitasi HTML terjadi di use case.
+
+**Verifikasi:** `npm run check` hijau (34 file / 376 test), `npm run build`
+hijau (`/konten/profil`, `/konten/perangkat`), `db:seed` idempoten. Runtime:
+simpan profil + CRUD perangkat/jabatan + unggah foto nyata diuji ke DB dev,
+halaman publik `/desa/profil` dan `/desa/pemerintahan` merender data baru tanpa
+sesi, penghapusan jabatan menyisakan perangkat dengan jabatan kosong, lalu data
+uji dibersihkan.
+
+**Belum diuji:** submit form lewat browser (Server Action + unggah berkas).
+Berikutnya: 1F.5 menu/widget/slider, lalu 1F.6 dokumen publik.

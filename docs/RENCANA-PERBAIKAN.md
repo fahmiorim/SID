@@ -203,8 +203,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [ ] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
       `dokumen-publik`, `tema`. *(Selesai: `tema`, `berita`,
-      `berita-kategori`, `galeri`. Menyusul: profil, perangkat, menu, widget,
-      slider, dokumen.)*
+      `berita-kategori`, `galeri`, `profil-desa`, `perangkat-desa`. Menyusul:
+      menu, widget, slider, dokumen.)*
 - [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
       jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
       disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
@@ -214,7 +214,11 @@ Mengacu `donjo-app/controllers/fweb/*`:
       slider beranda, sampul album. Bukti: `features/konten/*galeri*`,
       `domain/galeri.test.ts`, halaman admin; album & foto uji terverifikasi
       tampil di admin dan `/desa/galeri` lalu dibersihkan.
-- [ ] **1F.4** `/konten/profil` dan `/konten/perangkat`.
+- [x] **1F.4** `/konten/profil` dan `/konten/perangkat`: visi/misi/sejarah/
+      sambutan/koordinat (HTML disanitasi), CRUD perangkat lengkap dengan
+      jabatan, foto, status, urutan, dan penanda tangan; katalog jabatan CRUD.
+      Bukti: `features/konten/*profil*`, `*perangkat*`, halaman admin; CRUD dan
+      FK `set null` diuji ke DB dev.
 - [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`.
 - [ ] **1F.6** `/konten/dokumen` (unggah PDF + metadata).
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
