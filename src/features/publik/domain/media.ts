@@ -29,6 +29,14 @@ export const JENIS_MEDIA: Record<string, JenisMedia> = {
 
 export type HasilValidasiMedia = { ok: true; jenis: JenisMedia } | { ok: false; pesan: string };
 
+/** Berkas unggahan yang sudah dibaca dari `FormData` (isi, bukan jalur). */
+export interface BerkasUnggahan {
+  nama: string;
+  mime: string | null;
+  ukuran: number;
+  isi: Uint8Array;
+}
+
 /** Validasi MIME + ukuran unggahan. Mengembalikan jenis kanonik bila sah. */
 export function validasiMedia(
   mime: string | null | undefined,

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import {
   errorState,
   successState,
@@ -17,7 +18,6 @@ import {
   deleteKategori,
   updateBerita,
   updateKategori,
-  type BerkasUnggahan,
   type MediaBerita,
 } from "../application/berita-use-cases";
 import { beritaFormSchema, kategoriBeritaFormSchema } from "../domain/berita";

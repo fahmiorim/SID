@@ -1,8 +1,9 @@
 import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { validasiMedia } from "@/features/publik/domain/media";
-import { hapusMedia, simpanUnggahanMedia } from "@/features/publik/infrastructure/media-storage";
+import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-media";
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
+import { hapusMedia } from "@/features/publik/infrastructure/media-storage";
 import { requirePermission } from "@/lib/dal";
 import { conflict, notFound, validationError } from "@/lib/errors";
 import { sanitasiHtml } from "@/lib/sanitize";
@@ -138,40 +139,10 @@ function siapkanSimpan(
   };
 }
 
-/** Berkas unggahan yang sudah dibaca dari `FormData` oleh Server Action. */
-export interface BerkasUnggahan {
-  nama: string;
-  mime: string | null;
-  ukuran: number;
-  isi: Uint8Array;
-}
-
 /** Berkas baru yang menyertai penyimpanan berita; kosong = pertahankan yang lama. */
 export interface MediaBerita {
   gambar?: BerkasUnggahan | null;
   dokumen?: BerkasUnggahan | null;
-}
-
-/** Validasi, simpan, dan kembalikan jalur relatif berkas media. */
-async function simpanBerkas(
-  villageId: number,
-  berkas: BerkasUnggahan,
-  kategori: "berita" | "dokumen",
-  namaField: "gambar" | "dokumen",
-): Promise<string> {
-  const validasi = validasiMedia(berkas.mime, berkas.ukuran);
-  if (!validasi.ok) {
-    throw validationError(validasi.pesan, { [namaField]: [validasi.pesan] });
-  }
-
-  const hasil = await simpanUnggahanMedia(villageId, kategori, {
-    nama: berkas.nama,
-    mime: berkas.mime,
-    ukuran: berkas.ukuran,
-    isi: berkas.isi,
-  });
-
-  return hasil.jalur;
 }
 
 export async function createBerita(
@@ -186,10 +157,10 @@ export async function createBerita(
   const slug = await slugBeritaBebas(villageId, input.judul, null);
 
   const gambar = media.gambar
-    ? await simpanBerkas(villageId, media.gambar, "berita", "gambar")
+    ? await simpanBerkasMedia(villageId, media.gambar, "berita", "gambar")
     : null;
   const dokumen = media.dokumen
-    ? await simpanBerkas(villageId, media.dokumen, "dokumen", "dokumen")
+    ? await simpanBerkasMedia(villageId, media.dokumen, "dokumen", "dokumen")
     : null;
 
   try {
@@ -224,10 +195,10 @@ export async function updateBerita(
   const slug = await slugBeritaBebas(villageId, input.judul, id);
 
   const gambarBaru = media.gambar
-    ? await simpanBerkas(villageId, media.gambar, "berita", "gambar")
+    ? await simpanBerkasMedia(villageId, media.gambar, "berita", "gambar")
     : null;
   const dokumenBaru = media.dokumen
-    ? await simpanBerkas(villageId, media.dokumen, "dokumen", "dokumen")
+    ? await simpanBerkasMedia(villageId, media.dokumen, "dokumen", "dokumen")
     : null;
 
   const gambar = gambarBaru ?? lama.gambar;
