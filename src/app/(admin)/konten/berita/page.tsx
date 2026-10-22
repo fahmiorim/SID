@@ -9,13 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -104,19 +97,19 @@ export default async function BeritaPage({ searchParams }: PageProps<"/konten/be
             </div>
 
             <div className="w-40">
-              <Select name="status" defaultValue={status || "semua"}>
-                <SelectTrigger aria-label="Filter status">
-                  <SelectValue placeholder="Semua status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="semua">Semua status</SelectItem>
-                  {STATUS_BERITA.map((nilai) => (
-                    <SelectItem key={nilai} value={nilai}>
-                      {labelStatusBerita(nilai)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <select
+                name="status"
+                defaultValue={status}
+                aria-label="Filter status"
+                className="h-9 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              >
+                <option value="">Semua status</option>
+                {STATUS_BERITA.map((nilai) => (
+                  <option key={nilai} value={nilai}>
+                    {labelStatusBerita(nilai)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <Button type="submit" variant="outline">
