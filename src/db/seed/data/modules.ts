@@ -332,6 +332,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "konten",
   },
+  {
+    slug: "galeri",
+    name: "Galeri Foto",
+    url: "/konten/galeri",
+    icon: "images",
+    sortOrder: 4,
+    isGroup: false,
+    parentSlug: "konten",
+  },
 
   {
     slug: "pengaturan",
