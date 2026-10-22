@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound as nextNotFound } from "next/navigation";
 
-import { KontenHtml } from "@/app/(public)/_components/konten-html";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 import { getHalamanBySlug } from "@/features/publik/infrastructure/content-repository";
 import { teksPolos } from "@/lib/sanitize";
 
@@ -23,17 +23,12 @@ export async function generateMetadata({
 
 export default async function HalamanStatisPage({ params }: PageProps<"/desa/halaman/[slug]">) {
   const { slug } = await params;
-  const desa = await getIdentitasFromRequest();
+  const { ctx, tema, desa } = await siapkanTema();
   const halaman = await getHalamanBySlug(desa.id, slug);
 
   if (!halaman) nextNotFound();
 
-  return (
-    <article className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-semibold tracking-tight">{halaman.judul}</h1>
-      </header>
-      <KontenHtml html={halaman.isi} className="space-y-4 text-base leading-relaxed" />
-    </article>
-  );
+  const Halaman = tema.halaman;
+
+  return <Halaman ctx={ctx} judul={halaman.judul} isi={halaman.isi} />;
 }

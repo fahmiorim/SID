@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { PUBLIC_NAV } from "@/app/(public)/_components/public-header";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { PUBLIC_NAV } from "@/features/publik/domain/menu";
 import {
   listAlbumGaleri,
   listSlugBerita,
