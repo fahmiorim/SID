@@ -314,6 +314,24 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "konten",
   },
+  {
+    slug: "berita",
+    name: "Berita & Artikel",
+    url: "/konten/berita",
+    icon: "newspaper",
+    sortOrder: 2,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
+    slug: "berita-kategori",
+    name: "Kategori Berita",
+    url: "/konten/berita/kategori",
+    icon: "tags",
+    sortOrder: 3,
+    isGroup: false,
+    parentSlug: "konten",
+  },
 
   {
     slug: "pengaturan",
