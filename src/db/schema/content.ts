@@ -102,6 +102,8 @@ export const perangkatDesa = mysqlTable(
     penandaTangan: boolean("penanda_tangan").notNull().default(false),
     /** Status: `aktif` | `nonaktif`. */
     status: varchar("status", { length: 20 }).notNull().default("aktif"),
+    /** Periode menjabat (masa jabatan). Format: "YYYY" atau "YYYY-YYYY". */
+    periode: varchar("periode", { length: 20 }),
     urut: int("urut").notNull().default(0),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),

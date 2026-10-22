@@ -46,6 +46,14 @@ export function labelStatusPerangkat(nilai: string): string {
   return nilai === "nonaktif" ? STATUS_PERANGKAT_LABELS.nonaktif : STATUS_PERANGKAT_LABELS.aktif;
 }
 
+/** Periode menjabat perangkat (Fase 2B). Format: "YYYY" atau "YYYY-YYYY". */
+export const PERIODE_JABATAN = ["aktif"] as const;
+export type PeriodeJabatan = (typeof PERIODE_JABATAN)[number];
+
+export const PERIODE_JABATAN_LABELS: Readonly<Record<PeriodeJabatan, string>> = {
+  aktif: "Aktif",
+};
+
 /** Skema form jabatan. */
 export const jabatanFormSchema = z.object({
   nama: z.string().trim().min(1, "Nama jabatan wajib diisi.").max(100, "Maksimal 100 karakter."),
@@ -78,6 +86,7 @@ export const perangkatFormSchema = z.object({
   tanggalLahir: optionalIsoDate,
   penandaTangan: z.boolean().default(false),
   status: z.enum(STATUS_PERANGKAT, { error: "Status perangkat tidak valid." }).default("aktif"),
+  periode: optionalText(20),
   urut: z.coerce
     .number({ error: "Urutan harus angka." })
     .int("Urutan harus bilangan bulat.")
@@ -125,5 +134,6 @@ export interface PerangkatAdmin {
   foto: string | null;
   penandaTangan: boolean;
   status: string;
+  periode: string | null;
   urut: number;
 }

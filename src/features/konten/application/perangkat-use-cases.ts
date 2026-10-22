@@ -148,6 +148,7 @@ function dataPerangkat(input: PerangkatFormInput, foto: string | null): Perangka
     foto,
     penandaTangan: input.penandaTangan,
     status: input.status,
+    periode: input.periode,
     urut: input.urut,
   };
 }

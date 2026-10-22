@@ -254,21 +254,21 @@ otorisasi, validasi, dan test.
 
 ### 2A. Inventaris + approval berjenjang (6 hari)
 
-- [ ] Migrasi `inventaris_mutasi`: `diajukan_oleh`, `diajukan_oleh_id`,
+- [x] Migrasi `inventaris_mutasi`: `diajukan_oleh`, `diajukan_oleh_id`,
       `verifikasi_operator`, `verifikasi_sekdes`, `verifikasi_kades`,
       `log_verifikasi`, `catatan_verifikasi`.
-- [ ] State machine `nextMutasiStage()` (mirror persuratan).
-- [ ] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
+- [x] State machine `nextMutasiStage()` (mirror persuratan).
+- [x] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
       transaksi (`pindah` → lokasi, `rusak` → kondisi, `perbaikan` → baik,
       `hapus` → soft-delete).
-- [ ] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
-- [ ] Grant `inventaris` + `mutasi-inventaris` untuk sekdes & kades.
-- [ ] UI: CRUD inventaris, kategori, form mutasi, timeline verifikasi.
-- [ ] Test transisi sah & ilegal.
+- [x] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
+- [x] Grant `inventaris` + `mutasi-inventaris` untuk sekdes & kades.
+- [x] UI: CRUD inventaris, kategori, form mutasi, timeline verifikasi.
+- [x] Test transisi sah & ilegal.
 
 ### 2B. Perangkat desa & lembaga (3 hari)
 
-- [ ] Modul `perangkat-desa`: CRUD, jabatan, urutan, foto, periode, aktif.
+- [x] Modul `perangkat-desa`: CRUD, jabatan, urutan, foto, periode, aktif.
 - [ ] Modul `jabatan` (master) bila diperlukan.
 - [ ] Lembaga desa memakai `kelompok` tipe `lembaga` yang sudah ada; lengkapi
       anggota lembaga + UI.
@@ -279,7 +279,7 @@ otorisasi, validasi, dan test.
 **Route:** warga di `/layanan-mandiri` (login & dasbor). Halaman admin
 permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
 
-- [ ] Migrasi `users.resident_id`, `users.must_change_pin`.
+- [x] Migrasi `users.resident_id`, `users.must_change_pin`.
 - [ ] Login warga: `username = NIK`, password = PIN 6 digit.
   - Set `minPasswordLength: 6` di better-auth; **kebijakan staf tetap ≥ 8**
     ditegakkan di form/use-case.
@@ -293,10 +293,10 @@ permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
       `/layanan-mandiri/pesan`, `/layanan-mandiri/profil`,
       `/layanan-mandiri/ubah-pin`.
 - [ ] Scoping: `residentId` **selalu dari sesi**, tidak dari `formData`.
-- [ ] State machine status permohonan 0–5; tolak transisi ilegal.
+- [x] State machine status permohonan 0–5; tolak transisi ilegal.
 - [ ] Syarat nyata dari master surat (bukan `"[]"`).
-- [ ] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
-- [ ] UI admin: proses, kembalikan, batalkan, riwayat.
+- [x] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
+- [x] UI admin: proses, kembalikan, batalkan, riwayat.
 - [ ] Terbitkan surat dari permohonan (pakai use-case persuratan, bukan
       duplikasi penomoran) + simpan `surat_id`.
 - [ ] Test: akses lintas warga, akun tanpa `residentId`, paksa ganti PIN.
@@ -330,7 +330,7 @@ permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
 ### 2G. Analisis/survei (5 hari)
 
 - [ ] Modul `survey` penuh: builder soal, responden, jawaban, rekap.
-- [ ] Grant & modul seed konsisten.
+- [x] Grant & modul seed konsisten.
 
 **Selesai bila:** setiap menu admin membuka fitur yang benar-benar bisa dipakai
 end-to-end; tidak ada action tanpa UI; `npm run check` hijau.

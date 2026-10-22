@@ -65,6 +65,7 @@ export interface PerangkatProps {
     jabatan: string | null;
     nip: string | null;
     foto: string | null;
+    periode: string | null;
   }[];
 }
 

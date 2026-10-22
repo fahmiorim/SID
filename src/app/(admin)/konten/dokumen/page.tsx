@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { daftarDokumenAction } from "@/features/konten/presentation/dokumen-actions";
+import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-media";
 
 interface DokumenItem {
   id: number;
@@ -38,6 +39,30 @@ export default function DokumenPage() {
 
   const onSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const villageId = 1; // akan diambil dari sesi di aplikasi lengkap
+    if (formData.get("berkas")) {
+      const jalur = await simpanBerkasMedia(
+        villageId,
+        {
+          nama: formData.get("berkas") as string,
+          mime: (formData.get("berkaMime") as string) || "application/pdf",
+          ukuran: Number(formData.get("berkaSize")),
+          isi: new Uint8Array(),
+        },
+        "dokumen",
+        "berkas",
+      );
+      formData.set("berkas", jalur);
+    }
+
+    // Submit via action
+    const result = await daftarDokumenAction(null, formData);
+    if (Array.isArray(result)) {
+      setDokumen(result);
+    }
   };
 
   return (
@@ -91,8 +116,8 @@ export default function DokumenPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium">Berkas (URL)</label>
-            <Input name="berkas" placeholder="URL berkas" defaultValue="" />
+            <label className="mb-2 block text-sm font-medium">Berkas (PDF)</label>
+            <Input type="file" accept="application/pdf" name="berkas" />
           </div>
 
           <div>

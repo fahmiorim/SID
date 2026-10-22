@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/mysql-core";
 
 import { roles } from "./rbac";
+import { residents } from "./resident";
 import { villages } from "./village";
 
 /**
@@ -38,6 +39,8 @@ export const users = mysqlTable(
     roleId: int("role_id").references(() => roles.id, { onDelete: "set null" }),
     active: boolean("active").notNull().default(true),
     lastLoginAt: timestamp("last_login_at"),
+    mustChangePin: boolean("must_change_pin").notNull().default(true),
+    residentId: int("resident_id").references(() => residents.id, { onDelete: "set null" }),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

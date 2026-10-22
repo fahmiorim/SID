@@ -49,6 +49,9 @@ export function EsensiPerangkat({ ctx, perangkat }: PerangkatProps) {
                     {orang.nip ? (
                       <p className="mt-1 text-xs text-muted-foreground">NIP {orang.nip}</p>
                     ) : null}
+                    {orang.periode ? (
+                      <p className="mt-1 text-xs text-muted-foreground">Periode {orang.periode}</p>
+                    ) : null}
                   </div>
                 </ThemeCard>
               );

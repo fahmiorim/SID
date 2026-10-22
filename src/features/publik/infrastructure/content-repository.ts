@@ -312,6 +312,7 @@ export interface PerangkatRingkas {
   jenisKelamin: string | null;
   foto: string | null;
   urut: number;
+  periode: string | null;
 }
 
 export async function listPerangkatDesa(villageId: number): Promise<PerangkatRingkas[]> {
@@ -326,6 +327,7 @@ export async function listPerangkatDesa(villageId: number): Promise<PerangkatRin
       jenisKelamin: perangkatDesa.jenisKelamin,
       foto: perangkatDesa.foto,
       urut: perangkatDesa.urut,
+      periode: perangkatDesa.periode,
     })
     .from(perangkatDesa)
     .leftJoin(jabatanPerangkat, eq(perangkatDesa.jabatanId, jabatanPerangkat.id))
@@ -381,6 +383,8 @@ export interface MenuPublikRingkas {
   link: string;
   linkTipe: string;
   parentId: number | null;
+  urut: number;
+  aktif: boolean;
 }
 
 export async function listMenuPublik(villageId: number): Promise<MenuPublikRingkas[]> {
@@ -391,6 +395,8 @@ export async function listMenuPublik(villageId: number): Promise<MenuPublikRingk
       link: menuPublik.link,
       linkTipe: menuPublik.linkTipe,
       parentId: menuPublik.parentId,
+      urut: menuPublik.urut,
+      aktif: menuPublik.aktif,
     })
     .from(menuPublik)
     .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.aktif, true)))

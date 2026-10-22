@@ -280,6 +280,18 @@ function PerangkatFormDialog({
               <FieldError messages={fieldErrors?.urut} />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="periode">Periode</Label>
+              <Input
+                id="periode"
+                name="periode"
+                defaultValue={perangkat?.periode ?? ""}
+                maxLength={20}
+                aria-invalid={Boolean(fieldErrors?.periode)}
+              />
+              <FieldError messages={fieldErrors?.periode} />
+            </div>
+
             <div className="space-y-2 self-end pb-1">
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox name="penandaTangan" defaultChecked={perangkat?.penandaTangan ?? false} />

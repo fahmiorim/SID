@@ -17,5 +17,6 @@ export const permohonanSuratFormSchema = z.object({
   isianForm: z.string().optional().or(z.literal("")),
   noHpAktif: z.string().trim().max(50).optional().or(z.literal("")),
   keterangan: z.string().trim().max(500).optional().or(z.literal("")),
+  residentId: z.coerce.number().int().positive().optional(),
 });
 export type PermohonanSuratInput = z.infer<typeof permohonanSuratFormSchema>;

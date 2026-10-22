@@ -1,7 +1,10 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
+import { db } from "@/db";
+import { users } from "@/db/schema";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   buatPermohonan,
@@ -32,8 +35,13 @@ export async function ajukanSuratMandiriAction(
 ): Promise<ActionState> {
   const user = await requirePermission(RESOURCES.permohonanSurat, "update");
   const villageId = await resolveVillageId(user);
+  // residentId diambil dari DB, bukan dari formData warga
+  const [userRow] = await db
+    .select({ residentId: users.residentId })
+    .from(users)
+    .where(eq(users.id, user.id));
+  const residentId = userRow?.residentId ?? 0;
   const letterTypeId = Number(formData.get("idSurat"));
-  const residentId = Number(formData.get("idPemohon"));
 
   if (
     !Number.isInteger(letterTypeId) ||

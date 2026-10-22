@@ -33,6 +33,7 @@ export interface PerangkatSimpan {
   foto: string | null;
   penandaTangan: boolean;
   status: string;
+  periode: string | null;
   urut: number;
 }
 
@@ -138,6 +139,7 @@ export async function listPerangkatAdmin(villageId: number): Promise<PerangkatAd
       foto: perangkatDesa.foto,
       penandaTangan: perangkatDesa.penandaTangan,
       status: perangkatDesa.status,
+      periode: perangkatDesa.periode,
       urut: perangkatDesa.urut,
     })
     .from(perangkatDesa)
@@ -167,6 +169,7 @@ export async function getPerangkatAdmin(
       foto: perangkatDesa.foto,
       penandaTangan: perangkatDesa.penandaTangan,
       status: perangkatDesa.status,
+      periode: perangkatDesa.periode,
       urut: perangkatDesa.urut,
     })
     .from(perangkatDesa)
