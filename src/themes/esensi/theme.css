@@ -1,0 +1,41 @@
+/*
+ * Tema `esensi` — bersih, terang, banyak ruang putih.
+ *
+ * Semua warna radius & font berasal dari CSS variable `--pub-*` yang dipasang
+ * wrapper situs publik dari opsi tema desa, sehingga tema tetap "satu kode"
+ * walau tiap desa punya warna berbeda.
+ */
+
+[data-theme="esensi"] {
+  font-family: var(--pub-font);
+}
+
+[data-theme="esensi"] .tema-esensi-judul {
+  letter-spacing: -0.02em;
+}
+
+[data-theme="esensi"] .tema-esensi-hero {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--pub-primary) 12%, transparent),
+    transparent 60%
+  );
+}
+
+[data-theme="esensi"] .tema-esensi-header[data-varian="berwarna"] {
+  background-color: var(--pub-primary);
+  color: var(--pub-primary-foreground);
+}
+
+[data-theme="esensi"] .tema-esensi-header[data-varian="berwarna"] a {
+  color: inherit;
+}
+
+[data-theme="esensi"] .tema-esensi-footer {
+  background-color: color-mix(in srgb, var(--pub-primary) 6%, var(--background));
+}
+
+/** Kelas kecil yang dipakai bersama beberapa bagian tema. */
+[data-theme="esensi"] .tema-link-primary {
+  color: var(--pub-primary);
+}

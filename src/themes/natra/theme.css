@@ -1,0 +1,50 @@
+/*
+ * Tema `natra` — modern, kontras tinggi, header berwarna penuh.
+ *
+ * Berbeda dari `esensi` yang banyak ruang putih, `natra` memakai blok warna
+ * tebal, kartu dengan bayangan, dan tipografi padat. Semua warna diambil dari
+ * CSS variable `--pub-*` sehingga tetap mengikuti opsi per desa.
+ */
+
+[data-theme="natra"] {
+  font-family: var(--pub-font);
+}
+
+[data-theme="natra"] .tema-natra-header {
+  background-color: var(--pub-primary);
+  color: var(--pub-primary-foreground);
+}
+
+[data-theme="natra"] .tema-natra-header a {
+  color: inherit;
+}
+
+[data-theme="natra"] .tema-natra-hero {
+  background:
+    radial-gradient(
+      circle at 15% 15%,
+      color-mix(in srgb, var(--pub-secondary) 85%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      135deg,
+      var(--pub-primary),
+      color-mix(in srgb, var(--pub-primary) 55%, var(--pub-secondary))
+    );
+  color: var(--pub-primary-foreground);
+}
+
+[data-theme="natra"] .tema-natra-card {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 6%),
+    0 8px 24px -12px rgb(0 0 0 / 18%);
+}
+
+[data-theme="natra"] .tema-natra-chip {
+  background-color: color-mix(in srgb, var(--pub-primary) 12%, transparent);
+  color: var(--pub-primary);
+}
+
+[data-theme="natra"] .tema-link-primary {
+  color: var(--pub-primary);
+}
