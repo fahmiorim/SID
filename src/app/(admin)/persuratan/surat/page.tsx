@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/features/rbac/application/authorization";
+import { findRoleById } from "@/features/rbac/infrastructure/rbac-repository";
 import { listSuratWithMeta } from "@/features/surat/application/surat-use-cases";
 import {
   formatTanggalIndonesia,
@@ -50,6 +51,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
 
   const { rows, total, jenis, penduduk, recap } = await listSuratWithMeta({ search, status });
   const canManage = hasPermission(user.permissions, SURAT_RESOURCE, "update");
+  const role = user.roleId === null ? null : await findRoleById(user.roleId);
 
   const recapMap = new Map(recap.map((item) => [item.status, item.total]));
   const totalSurat = recap.reduce((sum, item) => sum + item.total, 0);
@@ -168,6 +170,11 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
                         >
                           {LETTER_STATUS_LABELS[row.status]}
                         </Badge>
+                        {row.logVerifikasi === "ditolak" && row.catatanVerifikasi ? (
+                          <p className="mt-1 max-w-40 text-xs text-destructive">
+                            {row.catatanVerifikasi}
+                          </p>
+                        ) : null}
                       </TableCell>
                       <TableCell className="text-right">
                         <SuratRowActions
@@ -175,6 +182,8 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
                           jenis={jenis}
                           penduduk={penduduk}
                           canManage={canManage}
+                          roleSlug={role?.slug ?? null}
+                          isSuperadmin={user.permissions.isSuperadmin}
                         />
                       </TableCell>
                     </TableRow>

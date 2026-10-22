@@ -26,6 +26,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  parseIsianFields,
+  parseSyaratIds,
+  type SyaratSuratDTO,
+} from "@/features/surat/domain/isian";
+import {
   DEFAULT_NUMBER_FORMAT,
   placeholderHelp,
   type JenisSuratDTO,
@@ -35,12 +40,16 @@ import { idleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveJenisSuratAction } from "../master-actions";
+import { IsianBuilder } from "./isian-builder";
+import { SyaratPicker } from "./syarat-picker";
 
 interface JenisSuratFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   jenis?: JenisSuratDTO | null;
   classifications: KlasifikasiSuratDTO[];
+  /** Master syarat surat untuk dipilih pada jenis surat. */
+  syarat: SyaratSuratDTO[];
 }
 
 function FieldError({ messages }: { messages?: string[] }) {
@@ -62,6 +71,7 @@ export function JenisSuratFormDialog({
   onOpenChange,
   jenis,
   classifications,
+  syarat,
 }: JenisSuratFormDialogProps) {
   const isEdit = Boolean(jenis);
   const [state, formAction, isPending] = useActionState(saveJenisSuratAction, idleActionState);
@@ -176,6 +186,10 @@ export function JenisSuratFormDialog({
             <p className="text-xs text-muted-foreground">Placeholder: {placeholderHelp()}</p>
             <FieldError messages={fieldErrors?.templateBody} />
           </div>
+
+          <IsianBuilder initialFields={parseIsianFields(jenis?.formIsian)} />
+
+          <SyaratPicker syarat={syarat} initialIds={parseSyaratIds(jenis?.syaratSurat)} />
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">

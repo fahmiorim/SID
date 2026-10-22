@@ -21,6 +21,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { SyaratSuratDTO } from "@/features/surat/domain/isian";
 import type { JenisSuratDTO, KlasifikasiSuratDTO } from "@/features/surat/domain/surat";
 import { idleActionState } from "@/lib/action-state";
 
@@ -30,9 +31,14 @@ import { JenisSuratFormDialog } from "./jenis-surat-form-dialog";
 interface JenisSuratRowActionsProps {
   jenis: JenisSuratDTO;
   classifications: KlasifikasiSuratDTO[];
+  syarat: SyaratSuratDTO[];
 }
 
-export function JenisSuratRowActions({ jenis, classifications }: JenisSuratRowActionsProps) {
+export function JenisSuratRowActions({
+  jenis,
+  classifications,
+  syarat,
+}: JenisSuratRowActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +86,7 @@ export function JenisSuratRowActions({ jenis, classifications }: JenisSuratRowAc
         onOpenChange={setEditOpen}
         jenis={jenis}
         classifications={classifications}
+        syarat={syarat}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

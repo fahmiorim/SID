@@ -3,7 +3,7 @@ import "server-only";
 import { and, count, desc, eq, like, max, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { letters, letterTypes, residents } from "@/db/schema";
+import { incomingLetters, letters, letterTypes, outgoingLetters, residents } from "@/db/schema";
 import type { LetterStatus, SuratDetail, SuratListRow } from "@/features/surat/domain/surat";
 
 export interface ListSuratParams {
@@ -28,8 +28,14 @@ const listColumns = {
   typeCode: letterTypes.code,
   residentName: residents.name,
   purpose: letters.purpose,
+  nilaiIsian: letters.nilaiIsian,
   createdAt: letters.createdAt,
   issuedAt: letters.issuedAt,
+  verifikasiOperator: letters.verifikasiOperator,
+  verifikasiSekdes: letters.verifikasiSekdes,
+  verifikasiKades: letters.verifikasiKades,
+  logVerifikasi: letters.logVerifikasi,
+  catatanVerifikasi: letters.catatanVerifikasi,
 };
 
 function buildWhere(villageId: number, search: string, status: LetterStatus | null): SQL {
@@ -125,6 +131,8 @@ export async function createSuratDraft(input: {
   year: number;
   purpose: string;
   typeName: string;
+  /** JSON nilai isian dinamis. */
+  nilaiIsian: string | null;
   createdBy: string;
 }): Promise<number> {
   const [inserted] = await db
@@ -137,6 +145,7 @@ export async function createSuratDraft(input: {
       year: input.year,
       purpose: input.purpose,
       typeName: input.typeName,
+      nilaiIsian: input.nilaiIsian,
       createdBy: input.createdBy,
       status: "draft",
     })
@@ -156,6 +165,8 @@ export async function updateSuratDraft(
     year: number;
     purpose: string;
     typeName: string;
+    /** JSON nilai isian dinamis. */
+    nilaiIsian: string | null;
   },
 ): Promise<void> {
   await db
@@ -167,6 +178,7 @@ export async function updateSuratDraft(
       year: input.year,
       purpose: input.purpose,
       typeName: input.typeName,
+      nilaiIsian: input.nilaiIsian,
     })
     .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
 }
@@ -176,12 +188,14 @@ export async function deleteSurat(villageId: number, id: number): Promise<void> 
 }
 
 export async function issueSuratRecord(
+  villageId: number,
   id: number,
   input: {
     number: string;
     sequence: number;
     content: string;
     issuedAt: Date;
+    logVerifikasi?: string | null;
   },
 ): Promise<void> {
   await db
@@ -190,12 +204,16 @@ export async function issueSuratRecord(
       number: input.number,
       sequence: input.sequence,
       content: input.content,
+      isiSurat: input.content,
       status: "issued",
       issuedAt: input.issuedAt,
+      verifikasiKades: true,
+      logVerifikasi: input.logVerifikasi ?? "kades",
     })
-    .where(eq(letters.id, id));
+    .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
 }
 
+// Mode 2: per jenis surat
 export async function nextSuratSequence(
   villageId: number,
   typeId: number,
@@ -211,6 +229,63 @@ export async function nextSuratSequence(
   return Number(row?.value ?? 0) + 1;
 }
 
+// Mode 1: seluruh surat layanan per tahun
+export async function nextSuratSequenceGlobal(villageId: number, year: number): Promise<number> {
+  const [row] = await db
+    .select({ value: max(letters.sequence) })
+    .from(letters)
+    .where(and(eq(letters.villageId, villageId), eq(letters.year, year)));
+
+  return Number(row?.value ?? 0) + 1;
+}
+
+// Mode 4: per klasifikasi surat
+export async function nextSuratSequenceByKlasifikasi(
+  villageId: number,
+  classificationId: number,
+  year: number,
+): Promise<number> {
+  const [row] = await db
+    .select({ value: max(letters.sequence) })
+    .from(letters)
+    .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
+    .where(
+      and(
+        eq(letters.villageId, villageId),
+        eq(letterTypes.classificationId, classificationId),
+        eq(letters.year, year),
+      ),
+    );
+
+  return Number(row?.value ?? 0) + 1;
+}
+
+// Mode 3: gabungan log_surat, surat_masuk, surat_keluar (maksimum nomor urut)
+export async function nextSuratSequenceCombined(villageId: number, year: number): Promise<number> {
+  const [rowLetters] = await db
+    .select({ value: max(letters.sequence) })
+    .from(letters)
+    .where(and(eq(letters.villageId, villageId), eq(letters.year, year)));
+
+  const [rowIncoming] = await db
+    .select({ value: max(incomingLetters.agendaNumber) })
+    .from(incomingLetters)
+    .where(eq(incomingLetters.villageId, villageId));
+
+  const [rowOutgoing] = await db
+    .select({ value: max(outgoingLetters.agendaNumber) })
+    .from(outgoingLetters)
+    .where(eq(outgoingLetters.villageId, villageId));
+
+  const maxSeq = Math.max(
+    Number(rowLetters?.value ?? 0),
+    Number(rowIncoming?.value ?? 0),
+    Number(rowOutgoing?.value ?? 0),
+  );
+
+  return maxSeq + 1;
+}
+
 export async function suratNumberExists(villageId: number, number: string): Promise<boolean> {
   const rows = await db
     .select({ id: letters.id })
@@ -219,4 +294,70 @@ export async function suratNumberExists(villageId: number, number: string): Prom
     .limit(1);
 
   return rows.length > 0;
+}
+
+// Deteksi duplikat lintas agenda (mode 3)
+export async function suratNumberExistsWithAgenda(
+  villageId: number,
+  number: string,
+): Promise<boolean> {
+  const [rowLetters] = await db
+    .select({ id: letters.id })
+    .from(letters)
+    .where(and(eq(letters.villageId, villageId), eq(letters.number, number)))
+    .limit(1);
+
+  if (rowLetters) return true;
+
+  const [rowIncoming] = await db
+    .select({ id: incomingLetters.id })
+    .from(incomingLetters)
+    .where(and(eq(incomingLetters.villageId, villageId), eq(incomingLetters.letterNumber, number)))
+    .limit(1);
+
+  if (rowIncoming) return true;
+
+  const [rowOutgoing] = await db
+    .select({ id: outgoingLetters.id })
+    .from(outgoingLetters)
+    .where(and(eq(outgoingLetters.villageId, villageId), eq(outgoingLetters.letterNumber, number)))
+    .limit(1);
+
+  if (rowOutgoing) return true;
+
+  return false;
+}
+
+// Verifikasi berjenjang
+export async function updateSuratVerification(
+  villageId: number,
+  id: number,
+  input: {
+    verifikasiOperator?: boolean | null;
+    verifikasiSekdes?: boolean | null;
+    verifikasiKades?: boolean | null;
+    logVerifikasi?: string | null;
+    catatanVerifikasi?: string | null;
+    tte?: boolean | null;
+    status?: LetterStatus;
+  },
+): Promise<void> {
+  await db
+    .update(letters)
+    .set(input)
+    .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
+}
+
+export async function rejectSurat(villageId: number, id: number, reason: string): Promise<void> {
+  await db
+    .update(letters)
+    .set({
+      verifikasiOperator: null,
+      verifikasiSekdes: null,
+      verifikasiKades: null,
+      logVerifikasi: "ditolak",
+      catatanVerifikasi: reason,
+      status: "draft",
+    })
+    .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
 }

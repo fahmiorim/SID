@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  CheckCircle2,
   Eye,
   FileDown,
   Loader2,
@@ -9,7 +10,9 @@ import {
   Pencil,
   Printer,
   Send,
+  ThumbsDown,
   Trash2,
+  UserCheck,
 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -32,10 +35,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { JenisSuratDTO, SuratListRow } from "@/features/surat/domain/surat";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  nextVerificationStep,
+  roleCanVerifyStep,
+  VERIFICATION_STEP_LABELS,
+  type JenisSuratDTO,
+  type SuratListRow,
+  type VerificationStep,
+} from "@/features/surat/domain/surat";
 import { idleActionState } from "@/lib/action-state";
 
-import { deleteSuratAction, issueSuratAction } from "../actions";
+import {
+  ajukanVerifikasiSuratAction,
+  deleteSuratAction,
+  rejectSuratAction,
+  verifySuratAction,
+} from "../actions";
 import { SuratFormDialog } from "./surat-form-dialog";
 
 interface PendudukOption {
@@ -49,32 +66,54 @@ interface SuratRowActionsProps {
   jenis: JenisSuratDTO[];
   penduduk: PendudukOption[];
   canManage: boolean;
+  roleSlug: string | null;
+  isSuperadmin: boolean;
 }
 
-export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowActionsProps) {
+export function SuratRowActions({
+  surat,
+  jenis,
+  penduduk,
+  canManage,
+  roleSlug,
+  isSuperadmin,
+}: SuratRowActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
-  const [issueOpen, setIssueOpen] = useState(false);
+  const [submitOpen, setSubmitOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [verifyStep, setVerifyStep] = useState<VerificationStep>("operator");
+  const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const isDraft = surat.status === "draft";
+  const isWaiting = surat.status === "verifikasi";
   const isIssued = surat.status === "issued";
+  const nextStep = nextVerificationStep(surat);
+  const canRunNextStep = nextStep !== null && roleCanVerifyStep(nextStep, roleSlug, isSuperadmin);
 
-  function handleIssue() {
+  function openVerify(step: VerificationStep) {
+    setVerifyStep(step);
+    setError(null);
+    setVerifyOpen(true);
+  }
+
+  function handleSubmit() {
     setError(null);
     startTransition(async () => {
       const formData = new FormData();
       formData.set("id", String(surat.id));
-      const result = await issueSuratAction(idleActionState, formData);
+      const result = await ajukanVerifikasiSuratAction(idleActionState, formData);
 
       if (result.status === "success") {
         toast.success(result.message);
-        setIssueOpen(false);
+        setSubmitOpen(false);
         return;
       }
 
-      setError(result.status === "error" ? result.message : "Gagal menerbitkan surat.");
+      setError(result.status === "error" ? result.message : "Gagal mengajukan surat.");
     });
   }
 
@@ -92,6 +131,43 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
       }
 
       setError(result.status === "error" ? result.message : "Gagal menghapus surat.");
+    });
+  }
+
+  function handleVerify() {
+    setError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("id", String(surat.id));
+      formData.set("action", verifyStep);
+      const result = await verifySuratAction(idleActionState, formData);
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        setVerifyOpen(false);
+        return;
+      }
+
+      setError(result.status === "error" ? result.message : "Gagal verifikasi surat.");
+    });
+  }
+
+  function handleReject() {
+    setError(null);
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("id", String(surat.id));
+      formData.set("reason", reason);
+      const result = await rejectSuratAction(idleActionState, formData);
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        setRejectOpen(false);
+        setReason("");
+        return;
+      }
+
+      setError(result.status === "error" ? result.message : "Gagal menolak surat.");
     });
   }
 
@@ -113,8 +189,8 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
 
           <DropdownMenuItem asChild>
             <a href={`/persuratan/surat/${surat.id}/cetak`} target="_blank" rel="noreferrer">
-              {isDraft ? <Eye className="size-4" /> : <Printer className="size-4" />}
-              {isDraft ? "Pratinjau" : "Cetak"}
+              {isDraft || isWaiting ? <Eye className="size-4" /> : <Printer className="size-4" />}
+              {isDraft || isWaiting ? "Pratinjau" : "Cetak"}
             </a>
           </DropdownMenuItem>
 
@@ -129,14 +205,45 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
 
           {canManage && isDraft ? (
             <>
-              <DropdownMenuItem onSelect={() => setIssueOpen(true)}>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={() => {
+                  setError(null);
+                  setSubmitOpen(true);
+                }}
+              >
                 <Send className="size-4" />
-                Terbitkan
+                Ajukan Verifikasi
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onSelect={() => setDeleteOpen(true)}>
                 <Trash2 className="size-4" />
                 Hapus
+              </DropdownMenuItem>
+            </>
+          ) : null}
+
+          {canManage && isWaiting && nextStep && canRunNextStep ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => openVerify(nextStep)}>
+                {nextStep === "kades" ? (
+                  <CheckCircle2 className="size-4" />
+                ) : (
+                  <UserCheck className="size-4" />
+                )}
+                Verifikasi {VERIFICATION_STEP_LABELS[nextStep]}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => {
+                  setError(null);
+                  setReason("");
+                  setRejectOpen(true);
+                }}
+              >
+                <ThumbsDown className="size-4" />
+                Tolak & Kembalikan ke Konsep
               </DropdownMenuItem>
             </>
           ) : null}
@@ -151,13 +258,13 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
         surat={surat}
       />
 
-      <AlertDialog open={issueOpen} onOpenChange={setIssueOpen}>
+      <AlertDialog open={submitOpen} onOpenChange={setSubmitOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Terbitkan surat?</AlertDialogTitle>
+            <AlertDialogTitle>Ajukan verifikasi?</AlertDialogTitle>
             <AlertDialogDescription>
-              Nomor surat akan dibuat otomatis dan isi surat dikunci. Setelah terbit, surat tidak
-              dapat diubah atau dihapus.
+              Surat masuk antrean verifikasi Operator → Sekretaris Desa → Kepala Desa. Nomor surat
+              baru diberikan setelah Kepala Desa menyetujui.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -172,9 +279,9 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
             <AlertDialogCancel type="button" disabled={isPending}>
               Batal
             </AlertDialogCancel>
-            <Button type="button" disabled={isPending} onClick={handleIssue}>
+            <Button type="button" disabled={isPending} onClick={handleSubmit}>
               {isPending ? <Loader2 className="animate-spin" /> : null}
-              Terbitkan
+              Ajukan
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -203,6 +310,82 @@ export function SuratRowActions({ surat, jenis, penduduk, canManage }: SuratRowA
             <Button type="button" variant="destructive" disabled={isPending} onClick={handleDelete}>
               {isPending ? <Loader2 className="animate-spin" /> : null}
               Hapus
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={verifyOpen} onOpenChange={setVerifyOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Verifikasi surat</AlertDialogTitle>
+            <AlertDialogDescription>
+              Setujui tahap {VERIFICATION_STEP_LABELS[verifyStep]} untuk surat ini?
+              {verifyStep === "kades"
+                ? " Nomor surat akan dibuat dan surat langsung terbit."
+                : " Tahap berikutnya adalah " +
+                  VERIFICATION_STEP_LABELS[verifyStep === "operator" ? "sekdes" : "kades"] +
+                  "."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {error ? (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button" disabled={isPending}>
+              Batal
+            </AlertDialogCancel>
+            <Button type="button" disabled={isPending} onClick={handleVerify}>
+              {isPending ? <Loader2 className="animate-spin" /> : null}
+              Verifikasi
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tolak & kembalikan ke konsep</AlertDialogTitle>
+            <AlertDialogDescription>
+              Surat dikembalikan menjadi konsep agar bisa diperbaiki. Alasan penolakan wajib diisi.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="reason">Alasan penolakan</Label>
+            <Input
+              id="reason"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Alasan..."
+            />
+          </div>
+
+          {error ? (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button" disabled={isPending}>
+              Batal
+            </AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isPending || !reason.trim()}
+              onClick={handleReject}
+            >
+              {isPending ? <Loader2 className="animate-spin" /> : null}
+              Tolak
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

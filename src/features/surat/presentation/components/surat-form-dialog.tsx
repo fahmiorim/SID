@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,11 +23,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { parseIsianFields, parseNilaiIsian } from "@/features/surat/domain/isian";
 import type { JenisSuratDTO, SuratListRow } from "@/features/surat/domain/surat";
 import { idleActionState } from "@/lib/action-state";
 import { NO_SELECTION, todayIsoDate } from "@/lib/forms";
 
 import { saveSuratAction } from "../actions";
+import { IsianFields } from "./isian-fields";
 
 interface PendudukOption {
   id: number;
@@ -67,6 +69,11 @@ export function SuratFormDialog({
   const isEdit = Boolean(surat);
   const [state, formAction, isPending] = useActionState(saveSuratAction, idleActionState);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
+  const [typeId, setTypeId] = useState(surat ? String(surat.typeId) : "");
+
+  const activeJenis = jenis.find((item) => String(item.id) === typeId);
+  const isianFields = parseIsianFields(activeJenis?.formIsian);
+  const isianValues = parseNilaiIsian(surat?.nilaiIsian);
 
   useEffect(() => {
     if (state.status === "success") {
@@ -97,7 +104,7 @@ export function SuratFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="typeId">Jenis Surat</Label>
-            <Select name="typeId" defaultValue={surat ? String(surat.typeId) : undefined}>
+            <Select name="typeId" value={typeId} onValueChange={setTypeId}>
               <SelectTrigger id="typeId" className="w-full">
                 <SelectValue placeholder="Pilih jenis surat" />
               </SelectTrigger>
@@ -164,6 +171,8 @@ export function SuratFormDialog({
               <FieldError messages={fieldErrors?.purpose} />
             </div>
           </div>
+
+          <IsianFields fields={isianFields} values={isianValues} errors={fieldErrors} />
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

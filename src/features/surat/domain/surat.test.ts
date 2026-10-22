@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   addMonthsIso,
+  buildKlgPlaceholders,
   buildSuratNumber,
   bulanRomawi,
+  canVerifyStep,
   formatTanggalIndonesia,
   jenisSuratFormSchema,
+  nextVerificationStep,
   renderSuratTemplate,
+  roleCanVerifyStep,
   suratFormSchema,
 } from "./surat";
 
@@ -32,6 +36,10 @@ describe("buildSuratNumber", () => {
   it("membiarkan placeholder yang tidak dikenal", () => {
     expect(buildSuratNumber("[tidak_ada]/[nomor]", context)).toBe("[tidak_ada]/007");
   });
+
+  it("menerima alias [nomor_surat] seperti format OpenSID", () => {
+    expect(buildSuratNumber("[kode_surat]/[nomor_surat]/[tahun]", context)).toBe("S-41/007/2026");
+  });
 });
 
 describe("renderSuratTemplate", () => {
@@ -46,6 +54,73 @@ describe("renderSuratTemplate", () => {
 
   it("membiarkan placeholder yang belum punya nilai", () => {
     expect(renderSuratTemplate("[nama] - [agama]", { nama: "Budi" })).toBe("Budi - [agama]");
+  });
+
+  it("mengisi placeholder anggota keluarga klg1..klg10", () => {
+    const values = buildKlgPlaceholders([
+      {
+        nik: "3201012001120001",
+        nama: "Siti",
+        jenisKelamin: "Perempuan",
+        tempatLahir: "Bandung",
+        tanggalLahir: "1 Desember 2001",
+        usia: "24",
+        agama: "Islam",
+        pendidikan: "SLTA/Sederajat",
+        pendidikanSedang: "S1",
+        pekerjaan: "Karyawan",
+        statusKawin: "Kawin",
+        hubunganKk: "Anak",
+        kewarganegaraan: "WNI",
+        golonganDarah: "O",
+        alamat: "Jl. Contoh",
+        namaAyah: "Budi",
+        namaIbu: "Ani",
+        nikAyah: "3201012001120002",
+        nikIbu: "3201012001120003",
+      },
+    ]);
+
+    expect(values.klg1_nama).toBe("Siti");
+    expect(values.klg1_nik).toBe("3201012001120001");
+    expect(values.klg1_ttl).toBe("Bandung, 1 Desember 2001");
+    expect(values.klg1_pendidikan_kk).toBe("SLTA/Sederajat");
+    expect(values.klg2_nama).toBeUndefined();
+
+    expect(renderSuratTemplate("[klg1_nama] / [klg1_hubungan_kk]", values)).toBe("Siti / Anak");
+  });
+});
+
+describe("verifikasi berjenjang", () => {
+  const base = {
+    status: "verifikasi" as const,
+    verifikasiOperator: false,
+    verifikasiSekdes: false,
+    verifikasiKades: false,
+  };
+
+  it("menentukan tahap berikutnya secara berurutan", () => {
+    expect(nextVerificationStep(base)).toBe("operator");
+    expect(nextVerificationStep({ ...base, verifikasiOperator: true })).toBe("sekdes");
+    expect(
+      nextVerificationStep({ ...base, verifikasiOperator: true, verifikasiSekdes: true }),
+    ).toBe("kades");
+    expect(nextVerificationStep({ ...base, status: "draft" })).toBeNull();
+    expect(nextVerificationStep({ ...base, status: "issued" })).toBeNull();
+  });
+
+  it("menolak lompat tahap", () => {
+    expect(canVerifyStep(base, "operator")).toBe(true);
+    expect(canVerifyStep(base, "sekdes")).toBe(false);
+    expect(canVerifyStep(base, "kades")).toBe(false);
+  });
+
+  it("membatasi tahap berdasarkan role", () => {
+    expect(roleCanVerifyStep("operator", "operator", false)).toBe(true);
+    expect(roleCanVerifyStep("sekdes", "operator", false)).toBe(false);
+    expect(roleCanVerifyStep("sekdes", "sekretaris-desa", false)).toBe(true);
+    expect(roleCanVerifyStep("kades", "kepala-desa", false)).toBe(true);
+    expect(roleCanVerifyStep("kades", null, true)).toBe(true);
   });
 });
 

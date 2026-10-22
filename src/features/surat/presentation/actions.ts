@@ -3,11 +3,14 @@
 import { revalidatePath } from "next/cache";
 
 import {
+  ajukanVerifikasiSuratData,
   createSuratDraftData,
   deleteSuratData,
-  issueSuratData,
+  rejectSuratData,
   updateSuratDraftData,
+  verifySuratData,
 } from "@/features/surat/application/surat-use-cases";
+import { ISIAN_FIELD_PREFIX } from "@/features/surat/domain/isian";
 import { suratFormSchema } from "@/features/surat/domain/surat";
 import {
   errorState,
@@ -30,6 +33,25 @@ function parseId(raw: FormDataEntryValue | null): number | null {
   return Number.isInteger(value) && value > 0 ? value : null;
 }
 
+/**
+ * Kumpulkan nilai isian dinamis dari formulir.
+ *
+ * Field isian dikirim dengan nama `isian.<kode>`; hanya kode yang dikirim
+ *-server yang diteruskan ke use case (use case tetap memfilter terhadap
+ * definisi isian jenis surat).
+ */
+function collectIsian(formData: FormData): Record<string, string> {
+  const values: Record<string, string> = {};
+
+  for (const [key, value] of formData.entries()) {
+    if (!key.startsWith(ISIAN_FIELD_PREFIX)) continue;
+    if (typeof value !== "string") continue;
+    values[key.slice(ISIAN_FIELD_PREFIX.length)] = value;
+  }
+
+  return values;
+}
+
 export async function saveSuratAction(
   _previousState: ActionState,
   formData: FormData,
@@ -41,6 +63,7 @@ export async function saveSuratAction(
     residentId: text(formData, "residentId"),
     letterDate: text(formData, "letterDate"),
     purpose: text(formData, "purpose"),
+    isiSurat: collectIsian(formData),
   });
 
   if (!parsed.success) {
@@ -60,7 +83,7 @@ export async function saveSuratAction(
   }
 }
 
-export async function issueSuratAction(
+export async function ajukanVerifikasiSuratAction(
   _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
@@ -68,10 +91,9 @@ export async function issueSuratAction(
   if (id === null) return errorState("Data surat tidak valid.");
 
   try {
-    const { number } = await issueSuratData(id);
+    await ajukanVerifikasiSuratData(id);
     revalidatePath(SURAT_PATH);
-    revalidatePath(`/persuratan/surat/${id}/cetak`);
-    return successState(`Surat diterbitkan dengan nomor ${number}.`);
+    return successState("Surat diajukan untuk verifikasi.");
   } catch (error) {
     return toErrorState(error);
   }
@@ -88,6 +110,47 @@ export async function deleteSuratAction(
     await deleteSuratData(id);
     revalidatePath(SURAT_PATH);
     return successState("Konsep surat dihapus.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function verifySuratAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const id = parseId(formData.get("id"));
+  const action = text(formData, "action") as "operator" | "sekdes" | "kades";
+  if (id === null) return errorState("Data surat tidak valid.");
+  if (!["operator", "sekdes", "kades"].includes(action)) {
+    return errorState("Aksi verifikasi tidak valid.");
+  }
+
+  try {
+    const { number } = await verifySuratData(id, action);
+    revalidatePath(SURAT_PATH);
+    revalidatePath(`/persuratan/surat/${id}`);
+    return successState(
+      number ? `Surat terverifikasi dan terbit dengan nomor ${number}.` : "Surat diverifikasi.",
+    );
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function rejectSuratAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const id = parseId(formData.get("id"));
+  const reason = text(formData, "reason");
+  if (id === null) return errorState("Data surat tidak valid.");
+
+  try {
+    await rejectSuratData(id, reason);
+    revalidatePath(SURAT_PATH);
+    revalidatePath(`/persuratan/surat/${id}`);
+    return successState("Surat ditolak.");
   } catch (error) {
     return toErrorState(error);
   }

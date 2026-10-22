@@ -3,7 +3,8 @@ import "server-only";
 import { and, asc, count, eq, ne } from "drizzle-orm";
 
 import { db } from "@/db";
-import { letterClassifications, letters, letterTypes } from "@/db/schema";
+import { letterClassifications, letterRequirements, letters, letterTypes } from "@/db/schema";
+import { parseSyaratIds, type SyaratSuratDTO } from "@/features/surat/domain/isian";
 import type {
   JenisSuratDTO,
   JenisSuratInput,
@@ -111,6 +112,8 @@ const jenisColumns = {
   classificationId: letterTypes.classificationId,
   classificationName: letterClassifications.name,
   templateBody: letterTypes.templateBody,
+  formIsian: letterTypes.formIsian,
+  syaratSurat: letterTypes.syaratSurat,
   requiresResident: letterTypes.requiresResident,
   isActive: letterTypes.isActive,
   numberFormat: letterTypes.numberFormat,
@@ -164,6 +167,8 @@ export async function createJenisSurat(villageId: number, input: JenisSuratInput
       code: input.code,
       name: input.name,
       templateBody: input.templateBody,
+      formIsian: input.formIsian,
+      syaratSurat: input.syaratSurat,
       requiresResident: input.requiresResident,
       isActive: input.isActive,
       numberFormat: input.numberFormat,
@@ -188,6 +193,8 @@ export async function updateJenisSurat(
       code: input.code,
       name: input.name,
       templateBody: input.templateBody,
+      formIsian: input.formIsian,
+      syaratSurat: input.syaratSurat,
       requiresResident: input.requiresResident,
       isActive: input.isActive,
       numberFormat: input.numberFormat,
@@ -211,4 +218,97 @@ export async function countSuratByJenis(villageId: number, typeId: number): Prom
     .where(and(eq(letters.villageId, villageId), eq(letters.typeId, typeId)));
 
   return row?.value ?? 0;
+}
+
+// --- Syarat surat ---------------------------------------------------------
+
+const syaratColumns = {
+  id: letterRequirements.id,
+  name: letterRequirements.name,
+  description: letterRequirements.description,
+  sortOrder: letterRequirements.sortOrder,
+  isActive: letterRequirements.isActive,
+};
+
+export async function listSyaratSurat(villageId: number): Promise<SyaratSuratDTO[]> {
+  return db
+    .select(syaratColumns)
+    .from(letterRequirements)
+    .where(eq(letterRequirements.villageId, villageId))
+    .orderBy(asc(letterRequirements.sortOrder), asc(letterRequirements.name));
+}
+
+export async function getSyaratSurat(
+  villageId: number,
+  id: number,
+): Promise<SyaratSuratDTO | null> {
+  const [row] = await db
+    .select(syaratColumns)
+    .from(letterRequirements)
+    .where(and(eq(letterRequirements.villageId, villageId), eq(letterRequirements.id, id)))
+    .limit(1);
+
+  return row ?? null;
+}
+
+export async function syaratSuratNameExists(
+  villageId: number,
+  name: string,
+  excludeId: number | null,
+): Promise<boolean> {
+  const filters = [eq(letterRequirements.villageId, villageId), eq(letterRequirements.name, name)];
+  if (excludeId !== null) filters.push(ne(letterRequirements.id, excludeId));
+
+  const rows = await db
+    .select({ id: letterRequirements.id })
+    .from(letterRequirements)
+    .where(and(...filters))
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+export async function createSyaratSurat(
+  villageId: number,
+  input: { name: string; description: string | null; sortOrder: number; isActive: boolean },
+): Promise<number> {
+  const [inserted] = await db
+    .insert(letterRequirements)
+    .values({ villageId, ...input })
+    .$returningId();
+
+  if (!inserted) throw new Error("Gagal menyimpan syarat surat.");
+  return inserted.id;
+}
+
+export async function updateSyaratSurat(
+  villageId: number,
+  id: number,
+  input: { name: string; description: string | null; sortOrder: number; isActive: boolean },
+): Promise<void> {
+  await db
+    .update(letterRequirements)
+    .set(input)
+    .where(and(eq(letterRequirements.villageId, villageId), eq(letterRequirements.id, id)));
+}
+
+export async function deleteSyaratSurat(villageId: number, id: number): Promise<void> {
+  await db
+    .delete(letterRequirements)
+    .where(and(eq(letterRequirements.villageId, villageId), eq(letterRequirements.id, id)));
+}
+
+/**
+ * Berapa jenis surat yang memakai syarat ini.
+ *
+ * Daftar syarat disimpan sebagai JSON pada `letter_types.syarat_surat`, jadi
+ * pencocokan dilakukan di aplikasi (bukan query).
+ */
+export async function countJenisBySyarat(villageId: number, syaratId: number): Promise<number> {
+  const rows = await db
+    .select({ syaratSurat: letterTypes.syaratSurat })
+    .from(letterTypes)
+    .where(eq(letterTypes.villageId, villageId));
+
+  return rows.filter((row) => parseSyaratIds(row.syaratSurat).includes(syaratId)).length;
 }

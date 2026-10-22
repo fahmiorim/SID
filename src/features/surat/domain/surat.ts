@@ -6,19 +6,77 @@ import { optionalIsoDate, optionalSelectId, optionalText } from "@/lib/forms";
 export const SURAT_RESOURCE = RESOURCES.surat;
 export const JENIS_SURAT_RESOURCE = RESOURCES.jenisSurat;
 export const KLASIFIKASI_SURAT_RESOURCE = RESOURCES.klasifikasiSurat;
+export const SYARAT_SURAT_RESOURCE = RESOURCES.syaratSurat;
 export const SURAT_MASUK_RESOURCE = RESOURCES.suratMasuk;
 export const SURAT_KELUAR_RESOURCE = RESOURCES.suratKeluar;
 
 // --- Status surat ----------------------------------------------------------
 
-export const LETTER_STATUSES = ["draft", "issued", "cancelled"] as const;
+export const LETTER_STATUSES = ["draft", "verifikasi", "issued", "cancelled"] as const;
 export type LetterStatus = (typeof LETTER_STATUSES)[number];
 
 export const LETTER_STATUS_LABELS: Readonly<Record<LetterStatus, string>> = {
   draft: "Konsep",
+  verifikasi: "Menunggu Verifikasi",
   issued: "Terbit",
   cancelled: "Dibatalkan",
 };
+
+// --- Verification status (berjenjang) ----------------------------------------
+
+export const VERIFICATION_STEPS = ["operator", "sekdes", "kades"] as const;
+export type VerificationStep = (typeof VERIFICATION_STEPS)[number];
+
+export const VERIFICATION_STATUS = ["pending", "approved", "rejected"] as const;
+export type VerificationStatus = (typeof VERIFICATION_STATUS)[number];
+
+export const VERIFICATION_STEP_LABELS: Readonly<Record<VerificationStep, string>> = {
+  operator: "Operator",
+  sekdes: "Sekretaris Desa",
+  kades: "Kepala Desa",
+};
+
+/** Slug role yang boleh menjalankan tiap tahap verifikasi. */
+export const VERIFICATION_STEP_ROLE_SLUGS: Readonly<Record<VerificationStep, readonly string[]>> = {
+  operator: ["operator"],
+  sekdes: ["sekretaris-desa"],
+  kades: ["kepala-desa"],
+};
+
+/**
+ * Tahap verifikasi berikutnya, atau `null` bila surat tidak sedang menunggu
+ * verifikasi. Tahap hanya boleh dilompati lewat persetujuan berurutan.
+ */
+export function nextVerificationStep(surat: {
+  status: LetterStatus;
+  verifikasiOperator: boolean | null;
+  verifikasiSekdes: boolean | null;
+  verifikasiKades: boolean | null;
+}): VerificationStep | null {
+  if (surat.status !== "verifikasi") return null;
+  if (!surat.verifikasiOperator) return "operator";
+  if (!surat.verifikasiSekdes) return "sekdes";
+  if (!surat.verifikasiKades) return "kades";
+  return null;
+}
+
+/** Validasi urutan tahap: hanya tahap berikutnya yang boleh dijalankan. */
+export function canVerifyStep(
+  surat: Parameters<typeof nextVerificationStep>[0],
+  step: VerificationStep,
+): boolean {
+  return nextVerificationStep(surat) === step;
+}
+
+/** Validasi peran: super admin boleh semua tahap, role lain hanya tahapnya. */
+export function roleCanVerifyStep(
+  step: VerificationStep,
+  roleSlug: string | null,
+  isSuperadmin: boolean,
+): boolean {
+  if (isSuperadmin) return true;
+  return roleSlug !== null && VERIFICATION_STEP_ROLE_SLUGS[step].includes(roleSlug);
+}
 
 // --- Placeholder -----------------------------------------------------------
 
@@ -109,14 +167,17 @@ export interface NumberContext {
 /**
  * Isi format penomoran surat.
  *
- * Mendukung `[nomor]` (otomatis 3 digit), `[nomor, N]` (N digit),
- * `[kode_surat]`, `[kode_desa]`, `[tahun]`, dan `[bulan_romawi]`.
+ * Mendukung `[nomor]`/`[nomor_surat]` (otomatis 3 digit), `[nomor, N]`
+ * (N digit), `[kode_surat]`, `[kode_desa]`, `[tahun]`, dan `[bulan_romawi]`.
+ * Token `[format_nomor_surat]` adalah placeholder badan surat, bukan format
+ * penomoran; nilainya diisi lewat `buildValues` saat render.
  */
 export function buildSuratNumber(format: string, context: NumberContext): string {
   const padded = (digits: number) => String(context.sequence).padStart(digits, "0");
 
-  const withNumber = format.replace(/\[nomor(?:\s*,\s*(\d+))?\]/gi, (_match, digits?: string) =>
-    padded(digits ? Number(digits) : 3),
+  const withNumber = format.replace(
+    /\[(?:nomor|nomor_surat)(?:\s*,\s*(\d+))?\]/gi,
+    (_match, digits?: string) => padded(digits ? Number(digits) : 3),
   );
 
   const values: Record<string, string> = {
@@ -145,6 +206,108 @@ export function renderSuratTemplate(
     return normalized.get(key.toLowerCase()) ?? match;
   });
 }
+
+/** Data anggota keluarga yang dipakai placeholder `klg1_*` … `klg10_*`. */
+export interface AnggotaKeluargaSurat {
+  nik: string | null;
+  nama: string;
+  jenisKelamin: string;
+  tempatLahir: string | null;
+  /** Sudah diformat untuk tampilan surat. */
+  tanggalLahir: string;
+  usia: string;
+  agama: string | null;
+  pendidikan: string | null;
+  pendidikanSedang: string | null;
+  pekerjaan: string | null;
+  statusKawin: string | null;
+  hubunganKk: string | null;
+  alamat: string | null;
+  kewarganegaraan: string | null;
+  golonganDarah: string | null;
+  namaAyah: string | null;
+  namaIbu: string | null;
+  nikAyah: string | null;
+  nikIbu: string | null;
+}
+
+/**
+ * Bentuk placeholder anggota keluarga (`klg1_nama`, `klg2_nik`, dst.).
+ *
+ * Hanya anggota yang ada yang diisi; template yang merujuk anggota di luar
+ * jumlah anggota keluarga akan mempertahankan placeholder aslinya. Kode yang
+ * tersedia mengikuti parity OpenSID (`klgx_*` di acuan), termasuk alias
+ * penulisan tanpa garis bawah seperti `tempatlahir` dan `tanggallahir`.
+ */
+export function buildKlgPlaceholders(
+  anggota: readonly AnggotaKeluargaSurat[],
+): Record<string, string> {
+  const values: Record<string, string> = {};
+
+  anggota.slice(0, 10).forEach((item, index) => {
+    const prefix = `klg${index + 1}_`;
+    const tempatTanggal = [item.tempatLahir, item.tanggalLahir]
+      .filter((part) => part && part !== "-")
+      .join(", ");
+
+    values[`${prefix}no`] = String(index + 1);
+    values[`${prefix}nik`] = item.nik ?? "-";
+    values[`${prefix}nama`] = item.nama;
+    values[`${prefix}jenis_kelamin`] = item.jenisKelamin;
+    values[`${prefix}tempat_lahir`] = item.tempatLahir ?? "-";
+    values[`${prefix}tempatlahir`] = item.tempatLahir ?? "-";
+    values[`${prefix}tanggal_lahir`] = item.tanggalLahir;
+    values[`${prefix}tanggallahir`] = item.tanggalLahir;
+    values[`${prefix}ttl`] = tempatTanggal || "-";
+    values[`${prefix}tempat_tgl_lahir`] = tempatTanggal || "-";
+    values[`${prefix}usia`] = item.usia;
+    values[`${prefix}agama`] = item.agama ?? "-";
+    values[`${prefix}pendidikan`] = item.pendidikan ?? "-";
+    values[`${prefix}pendidikan_kk`] = item.pendidikan ?? "-";
+    values[`${prefix}pendidikan_sedang`] = item.pendidikanSedang ?? "-";
+    values[`${prefix}pekerjaan`] = item.pekerjaan ?? "-";
+    values[`${prefix}status_kawin`] = item.statusKawin ?? "-";
+    values[`${prefix}hubungan_kk`] = item.hubunganKk ?? "-";
+    values[`${prefix}alamat`] = item.alamat ?? "-";
+    values[`${prefix}warga_negara`] = item.kewarganegaraan ?? "-";
+    values[`${prefix}golongan_darah`] = item.golonganDarah ?? "-";
+    values[`${prefix}nama_ayah`] = item.namaAyah ?? "-";
+    values[`${prefix}nik_ayah`] = item.nikAyah ?? "-";
+    values[`${prefix}nama_ibu`] = item.namaIbu ?? "-";
+    values[`${prefix}nik_ibu`] = item.nikIbu ?? "-";
+  });
+
+  return values;
+}
+
+/** Kode placeholder anggota keluarga yang tersedia (untuk bantuan di UI). */
+export const KLG_PLACEHOLDER_CODES = [
+  "no",
+  "nik",
+  "nama",
+  "jenis_kelamin",
+  "tempat_lahir",
+  "tempatlahir",
+  "tanggal_lahir",
+  "tanggallahir",
+  "ttl",
+  "tempat_tgl_lahir",
+  "usia",
+  "agama",
+  "pendidikan",
+  "pendidikan_kk",
+  "pendidikan_sedang",
+  "pekerjaan",
+  "status_kawin",
+  "hubungan_kk",
+  "alamat",
+  "warga_negara",
+  "golongan_darah",
+  "nama_ayah",
+  "nik_ayah",
+  "nama_ibu",
+  "nik_ibu",
+] as const;
 
 /**
  * Tambah bulan ke tanggal ISO (dipakai untuk masa berlaku surat).
@@ -197,6 +360,10 @@ export const jenisSuratFormSchema = z.object({
     .trim()
     .min(1, "Badan surat wajib diisi.")
     .max(20000, "Maksimal 20.000 karakter."),
+  /** JSON daftar isian dinamis (lihat `domain/isian.ts`). */
+  formIsian: z.string().trim().max(20000).optional().default("[]"),
+  /** JSON daftar id syarat surat. */
+  syaratSurat: z.string().trim().max(2000).optional().default("[]"),
   requiresResident: z.boolean().optional().default(true),
   isActive: z.boolean().optional().default(true),
   numberFormat: z
@@ -222,6 +389,8 @@ export const suratFormSchema = z.object({
   residentId: optionalSelectId,
   letterDate: z.iso.date("Tanggal surat tidak valid."),
   purpose: optionalText(255),
+  /** Nilai isian dinamis per jenis surat (kode isian → nilai). */
+  isiSurat: z.record(z.string(), z.string()).optional().default({}),
 });
 export type SuratInput = z.infer<typeof suratFormSchema>;
 
@@ -265,6 +434,10 @@ export interface JenisSuratDTO {
   classificationId: number | null;
   classificationName: string | null;
   templateBody: string;
+  /** JSON daftar isian dinamis jenis surat ini. */
+  formIsian: string | null;
+  /** JSON daftar id syarat surat yang wajib dilengkapi. */
+  syaratSurat: string | null;
   requiresResident: boolean;
   isActive: boolean;
   numberFormat: string;
@@ -283,8 +456,15 @@ export interface SuratListRow {
   typeCode: string;
   residentName: string | null;
   purpose: string | null;
+  /** JSON nilai isian dinamis (kode isian → nilai). */
+  nilaiIsian: string | null;
   createdAt: Date;
   issuedAt: Date | null;
+  verifikasiOperator: boolean | null;
+  verifikasiSekdes: boolean | null;
+  verifikasiKades: boolean | null;
+  logVerifikasi: string | null;
+  catatanVerifikasi: string | null;
 }
 
 export interface SuratDetail extends SuratListRow {
