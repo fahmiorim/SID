@@ -23,11 +23,13 @@ import {
   religions,
   rolePermissions,
   roles,
+  theme,
   users,
   villages,
 } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
+import { DEFAULT_THEME_MANIFEST } from "@/themes/manifests";
 
 import { KEUANGAN_TEMPLATE_SEEDS } from "./data/keuangan";
 import {
@@ -534,6 +536,39 @@ async function seedKonten(villageId: number): Promise<void> {
   }
 }
 
+/**
+ * Aktifkan tema publik bawaan bila desa belum punya tema aktif.
+ *
+ * Logika disalin dari `theme-repository` (bukan impor) karena skrip seed tidak
+ * dapat memuat modul `server-only`. Registry tema sendiri aman diimpor.
+ */
+async function seedTema(villageId: number): Promise<void> {
+  const [ada] = await db
+    .select({ slug: theme.slug })
+    .from(theme)
+    .where(and(eq(theme.villageId, villageId), eq(theme.aktif, true)))
+    .limit(1);
+
+  if (ada) return;
+
+  const manifest = DEFAULT_THEME_MANIFEST;
+
+  await db.transaction(async (tx) => {
+    await tx.update(theme).set({ aktif: false }).where(eq(theme.villageId, villageId));
+    await tx
+      .insert(theme)
+      .values({
+        villageId,
+        slug: manifest.slug,
+        nama: manifest.nama,
+        versi: manifest.versi,
+        sumber: "bawaan",
+        aktif: true,
+      })
+      .onDuplicateKeyUpdate({ set: { aktif: true, nama: manifest.nama, versi: manifest.versi } });
+  });
+}
+
 async function main(): Promise<void> {
   await seedReferenceCatalogs();
   console.log("• katalog referensi kependudukan disiapkan");
@@ -571,6 +606,9 @@ async function main(): Promise<void> {
 
   await seedKonten(villageId);
   console.log("• konten publik contoh disiapkan (profil, berita, galeri, dokumen, menu)");
+
+  await seedTema(villageId);
+  console.log("• tema publik bawaan diaktifkan");
 
   console.log("\nSelesai. Kredensial administrator:");
   console.log(`   username : ${ADMIN_USERNAME}`);

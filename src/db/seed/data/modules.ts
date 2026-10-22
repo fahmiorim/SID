@@ -298,6 +298,24 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
   },
 
   {
+    slug: "konten",
+    name: "Konten",
+    url: null,
+    icon: "layout-template",
+    sortOrder: 50,
+    isGroup: true,
+  },
+  {
+    slug: "tema",
+    name: "Tema Situs",
+    url: "/konten/tema",
+    icon: "palette",
+    sortOrder: 1,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+
+  {
     slug: "pengaturan",
     name: "Pengaturan",
     url: null,

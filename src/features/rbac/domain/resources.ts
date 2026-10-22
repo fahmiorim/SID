@@ -46,6 +46,8 @@ export const RESOURCES = {
    */
   permohonanSurat: "permohonan-surat",
   analisisSurvei: "analisis-survei",
+  /** Tema situs publik (Fase 1D). */
+  tema: "tema",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

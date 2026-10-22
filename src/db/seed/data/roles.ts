@@ -46,6 +46,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "laporan-penduduk": "read",
       "laporan-keuangan": "read",
       bumindes: "read",
+      tema: "read",
     },
   },
   {
@@ -67,6 +68,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "laporan-penduduk": "read",
       "laporan-keuangan": "read",
       bumindes: "read",
+      tema: "read",
     },
   },
   {
@@ -98,6 +100,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "permohonan-surat": "manage",
       "analisis-survei": "read",
       "identitas-desa": "read",
+      tema: "manage",
     },
   },
 ] as const;

@@ -28,4 +28,5 @@ export * from "./region";
 export * from "./resident";
 export * from "./rumah-tangga";
 export * from "./survey";
+export * from "./theme";
 export * from "./village";
