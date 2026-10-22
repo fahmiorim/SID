@@ -203,13 +203,17 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [ ] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
       `dokumen-publik`, `tema`. *(Selesai: `tema`, `berita`,
-      `berita-kategori`. Menyusul: galeri, profil, perangkat, menu, widget,
+      `berita-kategori`, `galeri`. Menyusul: profil, perangkat, menu, widget,
       slider, dokumen.)*
 - [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
       jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
       disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
       `domain/berita.test.ts`; CRUD diuji langsung ke DB dev.
-- [ ] **1F.3** `/konten/galeri`: album + multi-upload + urutan.
+- [x] **1F.3** `/konten/galeri` + `/konten/galeri/[id]`: CRUD album, unggah
+      banyak foto (maks. 20/permintaan), judul/keterangan/urutan/aktif, penanda
+      slider beranda, sampul album. Bukti: `features/konten/*galeri*`,
+      `domain/galeri.test.ts`, halaman admin; album & foto uji terverifikasi
+      tampil di admin dan `/desa/galeri` lalu dibersihkan.
 - [ ] **1F.4** `/konten/profil` dan `/konten/perangkat`.
 - [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`.
 - [ ] **1F.6** `/konten/dokumen` (unggah PDF + metadata).

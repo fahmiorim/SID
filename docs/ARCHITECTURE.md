@@ -74,7 +74,7 @@ Fitur yang sudah dibangun saat ini:
 | `bumindes`       | BUMDes: unit usaha (buku) dan item/katalog.                            |
 | `layanan-mandiri`| Permohonan surat warga (backend + action). Halaman admin kini di `/permohonan-surat`; rute publik `/layanan-mandiri` milik warga (UI login NIK+PIN belum dibangun). |
 | `publik`         | Situs publik: konten (berita, galeri, profil, perangkat, dokumen, menu, slider, widget, halaman), media sadar-tenant, sanitasi HTML, dan mesin tema per desa. |
-| `konten`         | CMS berita & kategori: CRUD, draf/terbit, jadwal, headline/slider, sanitasi HTML saat simpan, unggah sampul & lampiran PDF. |
+| `konten`         | CMS konten: berita & kategori (draf/terbit, jadwal, sanitasi HTML, unggah sampul/PDF) dan galeri (album, multi-unggah foto, urutan, slider). |
 | `desa`           | Identitas desa (termasuk nama & NIP kepala desa).                     |
 | `rbac`           | Role, matriks izin, `computeEffectivePermissions`.                    |
 | `modul`          | Katalog modul/menu (pohon `parent_id`).                               |

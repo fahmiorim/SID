@@ -206,3 +206,32 @@ lalu dibersihkan.
 
 **Belum diuji:** submit form lewat browser (Server Action + unggah berkas);
 galeri, profil, perangkat, menu, widget, slider, dan dokumen belum dibangun.
+
+---
+
+## 2026-10-23 — Fase 1F.3 (CMS galeri)
+
+- Modul & resource `galeri` (`/konten/galeri`): operator `manage`, sekdes/kades
+  `read`; seed kini menyiapkan 40 modul.
+- `features/konten`: domain album/foto (validasi, slug, batas 20 berkas per
+  unggah), repository scoped `villageId`, use case dengan otorisasi.
+- Unggah: sampul album + banyak foto sekali kirim; MIME/ukuran divalidasi lewat
+  helper bersama baru `features/publik/application/simpan-berkas-media.ts`
+  (dipakai juga oleh berita). Berkas yang gagal tidak membatalkan berkas lain
+  dan alasannya dikembalikan ke UI.
+- Pembersihan: ganti sampul menghapus berkas lama; hapus foto menghapus
+  berkasnya; hapus album mengumpulkan jalur foto **sebelum** baris dihapus lalu
+  membersihkan disk (FK `cascade` hanya menghapus baris).
+- Admin: `/konten/galeri` (daftar album, sampul, jumlah foto, status) dan
+  `/konten/galeri/[id]` (unggah banyak foto, ubah judul/keterangan/urutan,
+  aktif, penanda slider, hapus).
+- Test domain: 6 kasus (album, foto, slug).
+
+**Verifikasi:** `npm run check` hijau (32 file / 365 test), `npm run build`
+hijau (`/konten/galeri`, `/konten/galeri/[id]`), `db:seed` idempoten.
+Runtime: CRUD album/foto + unggah PNG nyata ke `storage/media` diuji ke DB dev;
+album uji tampil di `/konten/galeri`, `/konten/galeri/[id]`, `/desa/galeri`, dan
+`/desa/galeri/<slug>`, lalu dihapus beserta berkasnya (terverifikasi bersih).
+
+**Belum diuji:** unggah lewat form browser (Server Action). Berikutnya: 1F.4
+profil & perangkat desa, lalu 1F.5 menu/widget/slider dan 1F.6 dokumen.
