@@ -202,9 +202,13 @@ Mengacu `donjo-app/controllers/fweb/*`:
 
 - [ ] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
-      `dokumen-publik`, `tema`.
-- [ ] **1F.2** `/konten/berita` + kategori: CRUD, draft/publish, jadwal,
-      cover, penulis.
+      `dokumen-publik`, `tema`. *(Selesai: `tema`, `berita`,
+      `berita-kategori`. Menyusul: galeri, profil, perangkat, menu, widget,
+      slider, dokumen.)*
+- [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
+      jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
+      disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
+      `domain/berita.test.ts`; CRUD diuji langsung ke DB dev.
 - [ ] **1F.3** `/konten/galeri`: album + multi-upload + urutan.
 - [ ] **1F.4** `/konten/profil` dan `/konten/perangkat`.
 - [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`.
@@ -212,8 +216,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
       (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
-      *(Sudah dikerjakan lebih awal di 1C/1G karena render berita
-      membutuhkannya; tinggal sanitasi di sisi form CMS saat 1F dibangun.)*
+      *(Sanitasi render sudah di 1C/1G; sanitasi saat simpan kini aktif untuk
+      berita. Form CMS lain menyesuaikan saat dibangun.)*
 
 ### 1G. Test & kriteria selesai
 

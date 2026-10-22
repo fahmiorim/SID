@@ -178,3 +178,31 @@ konten) masih terbuka. Lihat status di `RENCANA-PERBAIKAN.md`.
 
 **Verifikasi:** `npm run check` hijau (30 file / 348 test). Uji HTTP dengan dua
 host nyata menyusul bersama aktivasi multi-desa.
+
+---
+
+## 2026-10-23 — Fase 1F.1–1F.2 (CMS berita & kategori)
+
+- Resource & modul baru: `berita` (`/konten/berita`) dan `berita-kategori`
+  (`/konten/berita/kategori`), dengan grant operator (`manage`) serta
+  sekdes/kades (`read`). Seed kini menyiapkan 39 modul.
+- `features/konten`: domain (skema form, status draf/terbit, slug, tanggal
+  terbit efektif), repository scoped `villageId`, use case dengan otorisasi,
+  slug unik per desa, kategori tervalidasi milik desa yang sama, sanitasi HTML
+  saat simpan, serta unggah sampul (gambar) dan lampiran (PDF) memakai
+  penyimpanan media 1C.
+- Admin: `/konten/berita` (pencarian, filter status, paginasi, headline),
+  `/konten/berita/baru`, `/konten/berita/[id]`, dan pengelolaan kategori.
+  Menghapus berita ikut membersihkan media; mengganti media menghapus berkas
+  lama; kategori yang dihapus membuat berita menjadi tanpa kategori.
+- Test domain: 11 kasus (validasi form, slug, kategori, tanggal terbit).
+
+**Verifikasi:** `npm run check` hijau (31 file / 359 test), `npm run build`
+hijau (rute `/konten/berita`, `/konten/berita/[id]`, `/baru`, `/kategori`).
+`db:seed` idempoten. Runtime: seluruh halaman admin 200 untuk sesi operator,
+daftar menampilkan berita seed, filter `draft`/`published`/pencarian bekerja,
+dan CRUD repository (kategori + berita, termasuk slug) diuji langsung ke DB dev
+lalu dibersihkan.
+
+**Belum diuji:** submit form lewat browser (Server Action + unggah berkas);
+galeri, profil, perangkat, menu, widget, slider, dan dokumen belum dibangun.
