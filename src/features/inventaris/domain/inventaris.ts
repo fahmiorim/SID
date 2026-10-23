@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { conflict } from "@/lib/errors";
+
 export const INVENTARIS_KATEGORI = [
   "tanah",
   "gedung_bangunan",
@@ -33,6 +35,61 @@ export const MUTASI_STATUS_LABELS: Record<MutasiStatus, string> = {
   disetujui: "Disetujui",
   ditolak: "Ditolak",
 };
+
+/** Tahap verifikasi mutasi, berurutan dari operator sampai kepala desa. */
+export const MUTASI_STEPS = ["operator", "sekdes", "kades"] as const;
+export type MutasiStep = (typeof MUTASI_STEPS)[number];
+
+export const MUTASI_STEP_LABELS: Readonly<Record<MutasiStep, string>> = {
+  operator: "Operator",
+  sekdes: "Sekretaris Desa",
+  kades: "Kepala Desa",
+};
+
+/** Slug role yang berwenang menjalankan tiap tahap. */
+export const MUTASI_STEP_ROLE_SLUGS: Readonly<Record<MutasiStep, readonly string[]>> = {
+  operator: ["operator"],
+  sekdes: ["sekretaris-desa"],
+  kades: ["kepala-desa"],
+};
+
+interface MutasiVerificationSnapshot {
+  status: MutasiStatus;
+  verifikasiOleh: string | null;
+  verifikasiSekdes: string | null;
+  verifikasiKades: string | null;
+}
+
+/** Tahap berikutnya, atau `null` bila mutasi sudah selesai/ditolak. */
+export function nextMutasiStep(mutasi: MutasiVerificationSnapshot): MutasiStep | null {
+  if (mutasi.status !== "diajukan") return null;
+  if (!mutasi.verifikasiOleh) return "operator";
+  if (!mutasi.verifikasiSekdes) return "sekdes";
+  if (!mutasi.verifikasiKades) return "kades";
+  return null;
+}
+
+/** Nilai `logVerifikasi` sebelum sebuah tahap disetujui. */
+export function mutasiLogBeforeStep(step: MutasiStep): string {
+  switch (step) {
+    case "operator":
+      return "diajukan";
+    case "sekdes":
+      return "operator";
+    case "kades":
+      return "sekdes";
+  }
+}
+
+/** Validasi peran: super admin boleh semua tahap. */
+export function roleCanApproveMutasiStep(
+  step: MutasiStep,
+  roleSlug: string | null,
+  isSuperadmin: boolean,
+): boolean {
+  if (isSuperadmin) return true;
+  return roleSlug !== null && MUTASI_STEP_ROLE_SLUGS[step].includes(roleSlug);
+}
 
 export const INVENTARIS_KATEGORI_LABELS: Record<InventarisKategoriGolongan, string> = {
   tanah: "Tanah",
@@ -100,6 +157,38 @@ export const inventarisMutasiFormSchema = z.object({
 
 export type InventarisMutasiInput = z.infer<typeof inventarisMutasiFormSchema>;
 
+/** Baris daftar inventaris yang ditampilkan di halaman admin. */
+export interface InventarisRow {
+  id: number;
+  kategoriId: number | null;
+  nomorInventaris: string | null;
+  namaBarang: string;
+  kodeBarang: string | null;
+  merk: string | null;
+  tipe: string | null;
+  spesifikasi: string | null;
+  jumlah: string;
+  satuan: string | null;
+  hargaSatuan: string | null;
+  nilaiAkhir: string | null;
+  tahunPembelian: number | null;
+  tanggalPembelian: string | null;
+  asal: InventarisAsal | null;
+  donatur: string | null;
+  kondisi: InventarisKondisi;
+  lokasi: string | null;
+  keterangan: string | null;
+}
+
+/** Kategori inventaris untuk pilihan formulir dan halaman kategori. */
+export interface InventarisKategoriRow {
+  id: number;
+  kode: string;
+  nama: string;
+  golongan: InventarisKategoriGolongan;
+  keterangan: string | null;
+}
+
 /** Baris daftar mutasi yang ditampilkan di halaman admin. */
 export interface MutasiRow {
   id: number;
@@ -113,6 +202,15 @@ export interface MutasiRow {
   alasan: string | null;
   namaBarang: string | null;
   nomorInventaris: string | null;
+  diajukanOleh: string | null;
+  verifikasiOleh: string | null;
+  verifikasiSekdes: string | null;
+  verifikasiKades: string | null;
+  logVerifikasi: string | null;
+  catatanVerifikasi: string | null;
+  catatanPenolakan: string | null;
+  disetujuiOleh: string | null;
+  tanggalPersetujuan: Date | null;
 }
 
 /** Pilihan barang untuk formulir pengajuan mutasi. */
@@ -122,4 +220,104 @@ export interface InventarisOption {
   nomorInventaris: string | null;
   jumlah: string;
   satuan: string | null;
+}
+
+export interface MutasiAssetSnapshot {
+  jumlah: string;
+  hargaSatuan: string | null;
+  nilaiAkhir: string | null;
+  kondisi: InventarisKondisi;
+  lokasi: string | null;
+  isDeleted: boolean;
+}
+
+export interface MutasiDetailSnapshot {
+  jenis: MutasiJenis;
+  lokasiBaru: string | null;
+  kondisiBaru: InventarisKondisi | null;
+  jumlahMutasi: string | null;
+}
+
+export interface InventarisAssetPatch {
+  jumlah?: string;
+  nilaiAkhir?: string | null;
+  kondisi?: InventarisKondisi;
+  lokasi?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: Date | null;
+}
+
+const TOLERANSI_JUMLAH = 0.0001;
+
+function angkaDesimal(value: string | null | undefined): number {
+  const number = Number(value ?? 0);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function nilaiAkhirBaru(hargaSatuan: string | null, jumlah: number): string | null {
+  if (hargaSatuan === null) return null;
+  return (angkaDesimal(hargaSatuan) * jumlah).toFixed(2);
+}
+
+/**
+ * Hitung perubahan data aset saat mutasi disetujui tahap akhir.
+ *
+ * Aturan:
+ * - `pindah`, `rusak`, dan `perbaikan` mengubah seluruh barang, sehingga
+ *   jumlah mutasi harus sama dengan jumlah aset.
+ * - `hapus` boleh sebagian; bila sisa nol, barang di-soft-delete.
+ * - Perubahan hanya dikembalikan sebagai patch; pemanggil menerapkannya di
+ *   dalam transaksi bersama persetujuan tahap akhir.
+ */
+export function hitungPerubahanAset(
+  aset: MutasiAssetSnapshot,
+  mutasi: MutasiDetailSnapshot,
+): InventarisAssetPatch {
+  if (aset.isDeleted) throw conflict("Barang inventaris sudah dihapus.");
+
+  const jumlahAset = angkaDesimal(aset.jumlah);
+  const jumlahMutasi = angkaDesimal(mutasi.jumlahMutasi);
+  if (jumlahMutasi <= 0) throw conflict("Jumlah mutasi harus lebih dari nol.");
+  if (jumlahMutasi > jumlahAset + TOLERANSI_JUMLAH) {
+    throw conflict("Jumlah mutasi melebihi jumlah aset yang tersedia.");
+  }
+
+  if (mutasi.jenis === "hapus") {
+    const sisa = Math.max(0, jumlahAset - jumlahMutasi);
+    if (sisa <= TOLERANSI_JUMLAH) {
+      return {
+        jumlah: "0.00",
+        nilaiAkhir: "0.00",
+        isDeleted: true,
+        deletedAt: new Date(),
+      };
+    }
+
+    return {
+      jumlah: sisa.toFixed(2),
+      nilaiAkhir: nilaiAkhirBaru(aset.hargaSatuan, sisa),
+    };
+  }
+
+  if (Math.abs(jumlahMutasi - jumlahAset) > TOLERANSI_JUMLAH) {
+    throw conflict(
+      "Mutasi pindah, rusak, dan perbaikan harus mencakup seluruh jumlah aset. Gunakan jenis hapus untuk mutasi sebagian.",
+    );
+  }
+
+  if (mutasi.jenis === "pindah") {
+    const lokasiBaru = mutasi.lokasiBaru?.trim();
+    if (!lokasiBaru) throw conflict("Lokasi baru wajib diisi untuk mutasi pindah.");
+    return { lokasi: lokasiBaru };
+  }
+
+  if (mutasi.jenis === "rusak") {
+    if (!mutasi.kondisiBaru || mutasi.kondisiBaru === "baik") {
+      throw conflict("Kondisi baru harus rusak ringan atau rusak berat untuk mutasi rusak.");
+    }
+    return { kondisi: mutasi.kondisiBaru };
+  }
+
+  const kondisiBaru = mutasi.kondisiBaru ?? "baik";
+  return { kondisi: kondisiBaru };
 }
