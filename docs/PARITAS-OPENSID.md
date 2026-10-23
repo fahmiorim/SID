@@ -40,11 +40,11 @@ Legenda status proyek kita:
 | Pembangunan | 1 | 0 | 0 | 1 |
 | Layanan mandiri & warga | 10 | 0 | 3 | 7 |
 | Analisis & statistik | 3 | 0 | 2 | 1 |
-| Web publik | 21 | 7 | 9 | 5 |
+| Web publik | 21 | 8 | 8 | 5 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **25** | **22** | **45** |
+| **Total** | **92** | **26** | **21** | **45** |
 
-**Paritas kasar saat ini: ±39%** (hitung ✅ penuh + setengah 🟡). Angka ini
+**Paritas kasar saat ini: ±40%** (hitung ✅ penuh + setengah 🟡). Angka ini
 dihitung ulang 23 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
 per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
 harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
@@ -82,7 +82,13 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > menyatakan bila indikator belum tersedia. Widget teks tampil di beranda dan
 > disanitasi saat simpan + render. 404/error publik memakai konvensi Next 16.
 > Smoke test produksi: seluruh halaman publik utama 200, tautan internal tanpa
-> 404. Sisa P1: Lighthouse dan test integrasi HTTP.
+> 404.
+>
+> Perbaikan 1G 23 Okt 2026: tema dan opsi dapat diganti dari `/konten/tema` dan
+> langsung tampil di situs publik tanpa deploy (halaman publik `force-dynamic`,
+> revalidasi layout). Uji integrasi memastikan draft/jadwal tidak tampil, slug
+> unik, unggahan tervalidasi, dan HTML tersanitasi. Lighthouse mobile produksi:
+> performance 97, accessibility 100. P1 selesai.
 
 ---
 
@@ -215,7 +221,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Kontak | `controllers/Kontak.php` | ✅ | **P0** |
 | Komentar & pengunjung | `controllers/{Komentar,Pengunjung}.php` | 🔴 | P2 |
 | Menu, widget, slider, teks berjalan, sosmed | `controllers/{Menu,Web_widget,Slider,Teks_berjalan,Sosmed}.php` | 🟡 | **P0** |
-| **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | 🟡 | **P0** |
+| **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | ✅ | - |
 | SEO: sitemap, robots, OG image | `controllers/{Sitemap,OgImage}.php` | 🟡 | P1 |
 | Multi-desa & domain per desa | tidak ada di OpenSID (fitur baru) | 🔴 | **P1** (setelah P0) |
 

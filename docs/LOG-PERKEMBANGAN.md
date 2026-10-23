@@ -6,6 +6,25 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-23 — 1G: verifikasi tema, konten, dan Lighthouse
+
+- **Tema & opsi**: uji admin `/konten/tema` pada build produksi `next start`;
+  mengganti tema esensi → natra dan menyimpan warna primer/radius/judul hero
+  langsung terlihat di beranda publik tanpa rebuild. `revalidatePath` layout +
+  halaman publik `force-dynamic` menjaga perilaku ini. Bukti: uji browser 23
+  Okt 2026, `theme.test.ts`, `registry.test.ts`.
+- **Konten publik**: draft dan berita `published` berjadwal tidak muncul di
+  `/desa/berita`; detail keduanya 404. Slug duplikat ditolak indeks unik
+  (`ER_DUP_ENTRY`). HTML berisi `<script>`, `onerror=`, dan `javascript:` yang
+  disisipkan langsung ke DB tersanitasi saat render. Slug kategori/album/jabatan
+  kini menyisakan ruang akhiran unik agar tetap muat kolom. Bukti: uji integrasi
+  `next start` + DB dev, `slug.test.ts`, `berita.test.ts`, `galeri.test.ts`,
+  `perangkat.test.ts`, `media.test.ts`, `sanitize.test.ts`.
+- **Lighthouse mobile** (build produksi): performance 97, accessibility 100
+  setelah kontras teks footer dinaikkan ke `text-foreground/70`.
+- **Verifikasi**: `npm run check` (423 tes / 38 file), `npm run build`, dan
+  Lighthouse 12 lulus. P1 selesai; lanjut Fase 2.
+
 ## 2026-10-23 — Perbaikan P0 (blocker kompilasi, tenant, token verifikasi)
 
 - **Inventaris/mutasi**: halaman dipecah menjadi server page + `MutasiManager`

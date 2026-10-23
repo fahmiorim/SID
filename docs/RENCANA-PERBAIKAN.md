@@ -292,13 +292,28 @@ Mengacu `donjo-app/controllers/fweb/*`:
       galeri, statistik, APBDes, dokumen, kelompok, inventaris, status desa,
       surat, analisis survei, IDM/SDGs, bantuan, kontak, dan layanan mandiri
       semuanya 200. Test otomatis HTTP menyusul.)*
-- [ ] Ganti tema & opsi langsung terlihat, tanpa deploy.
-- [ ] Draft tidak tampil; slug unik; unggahan tervalidasi; konten tersanitasi.
-      *(Query publik hanya menampilkan `published`+jadwal; slug unik via DB;
-      unggahan tervalidasi; sanitasi dua lapis — tinggal test integrasi.)*
+- [x] Ganti tema & opsi langsung terlihat, tanpa deploy. *(Uji admin
+      `/konten/tema` pada `next start` 23 Okt 2026: klik "Pakai tema ini" untuk
+      `natra`, simpan warna primer `#123456`, radius `1.25rem`, dan judul hero;
+      beranda publik langsung memakai `data-theme="natra"`,
+      `--pub-primary:#123456`, `--pub-radius:1.25rem`, dan teks hero baru tanpa
+      build/deploy. Keadaan awal (`esensi`, opsi `NULL`) dikembalikan.)*
+- [x] Draft tidak tampil; slug unik; unggahan tervalidasi; konten tersanitasi.
+      *(Uji integrasi `next start` + DB dev 23 Okt 2026: berita `draft` dan
+      `published` berjadwal besok tidak muncul di `/desa/berita`; detail
+      keduanya 404, sedangkan berita terbit tampil 200. Slug duplikat ditolak
+      indeks unik DB (`ER_DUP_ENTRY`, errno 1062); `slug.test.ts` menguji
+      `buatSlug`/`slugUnik`, dan test domain kategori/album/jabatan memastikan
+      akhiran unik tetap muat kolom. `media.test.ts` + `media-nama.test.ts`
+      menguji allowlist MIME/ukuran/ekstensi; HTML berisi `<script>`,
+      `onerror=`, dan `javascript:` yang disisipkan langsung ke DB hilang saat
+      dirender di detail berita, ditambah `sanitize.test.ts`.)*
 - [x] Tidak ada tautan 404. *(Crawler internal pada build produksi memeriksa
       19 halaman publik; tidak ada tautan internal yang mengembalikan 404.)*
-- [ ] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
+- [x] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
+      *(Build produksi `next start`, Lighthouse 12, emulasi mobile 23 Okt 2026:
+      performance **97**, accessibility **100** setelah kontras teks footer
+      dinaikkan dari `text-muted-foreground` ke `text-foreground/70`.)*
 
 **Selesai bila:** situs publik terasa seperti produk jadi, bukan placeholder.
 
