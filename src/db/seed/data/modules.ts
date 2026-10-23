@@ -254,15 +254,12 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: true,
   },
   {
-    // Belum selesai: form input & mutasi belum tersedia. Disembunyikan sampai
-    // modul benar-benar bisa dipakai agar tidak menampilkan halaman setengah jadi.
     slug: "inventaris",
     name: "Inventaris",
     url: "/inventaris",
     icon: "boxes",
     sortOrder: 1,
     isGroup: false,
-    isActive: false,
     parentSlug: "inventaris-grup",
   },
   {
@@ -272,7 +269,6 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     icon: "arrow-left-right",
     sortOrder: 2,
     isGroup: false,
-    isActive: false,
     parentSlug: "inventaris-grup",
   },
 
@@ -359,7 +355,51 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "konten",
   },
+  {
+    slug: "menu-publik",
+    name: "Menu Publik",
+    url: "/konten/menu",
+    icon: "menu",
+    sortOrder: 7,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
+    slug: "widget",
+    name: "Widget",
+    url: "/konten/widget",
+    icon: "square-dashed-bottom-right",
+    sortOrder: 8,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
+    slug: "slider",
+    name: "Slider",
+    url: "/konten/slider",
+    icon: "slideshow",
+    sortOrder: 9,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
+    slug: "dokumen-publik",
+    name: "Dokumen Publik",
+    url: "/konten/dokumen",
+    icon: "file-text",
+    sortOrder: 10,
+    isGroup: false,
+    parentSlug: "konten",
+  },
 
+  {
+    slug: "super-admin",
+    name: "Super Admin",
+    url: "/super-admin",
+    icon: "shield-alert",
+    sortOrder: 1,
+    isGroup: true,
+  },
   {
     slug: "pengaturan",
     name: "Pengaturan",
