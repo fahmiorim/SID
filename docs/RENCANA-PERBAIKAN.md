@@ -279,16 +279,18 @@ otorisasi, validasi, dan test.
 - [x] Migrasi kolom mutasi: `diajukan_oleh`, `diajukan_oleh_id`,
       `verifikasi_operator`, `verifikasi_sekdes`, `verifikasi_kades`,
       `log_verifikasi`, `catatan_verifikasi`.
-- [ ] State machine `nextMutasiStage()` (belum ada).
-- [ ] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
-      transaksi (`pindah` → lokasi, `rusak` → kondisi, `perbaikan` → baik,
-      `hapus` → soft-delete). *(Saat ini approval hanya satu tahap dan hanya
-      mengubah status mutasi; data barang belum diubah.)*
-- [ ] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
+- [x] State machine `nextMutasiStep()`: operator → sekdes → kades.
+- [x] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
+      transaksi (`pindah` → lokasi, `rusak` → kondisi, `perbaikan` → kondisi
+      baru, `hapus` → kurangi jumlah/soft-delete).
+- [x] Larangan: lompat tahap, approve ganda, dan approve oleh pengaju sendiri.
 - [x] Grant `inventaris` + `mutasi-inventaris` untuk sekdes & kades.
-- [x] UI: daftar inventaris, form mutasi, approval satu tahap.
-- [ ] UI: CRUD inventaris/kategori dan timeline verifikasi berjenjang.
-- [ ] Test transisi sah & ilegal.
+- [x] UI: daftar inventaris, form mutasi, approval berjenjang, dan timeline
+      verifikasi.
+- [x] UI: CRUD inventaris & kategori (tambah/ubah/hapus dengan validasi).
+- [x] Test transisi sah & ilegal di `domain/inventaris.test.ts` (14 test).
+      *Catatan: pengujian transaksi DB/tenant masih mengandalkan filter
+      `village_id` di repository; test integrasi DB menyusul.*
 
 ### 2B. Perangkat desa & lembaga (3 hari)
 
@@ -319,8 +321,10 @@ permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
 - [ ] Scoping: `residentId` **selalu dari sesi**, tidak dari `formData`.
 - [x] State machine status permohonan 0–5; tolak transisi ilegal.
 - [ ] Syarat nyata dari master surat (bukan `"[]"`).
-- [x] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
-- [x] UI admin: proses, kembalikan, batalkan, riwayat.
+- [ ] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
+      *(Halaman `/layanan-mandiri` masih informasi; action domain sudah ada.)*
+- [ ] UI admin: proses, kembalikan, batalkan, riwayat.
+      *(`/permohonan-surat` baru menampilkan daftar; action sudah tersedia.)*
 - [ ] Terbitkan surat dari permohonan (pakai use-case persuratan, bukan
       duplikasi penomoran) + simpan `surat_id`.
 - [ ] Test: akses lintas warga, akun tanpa `residentId`, paksa ganti PIN.
@@ -336,7 +340,8 @@ permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
 ### 2E. Persuratan: sisa gap (8 hari)
 
 - [ ] Penegakan syarat saat pengajuan (juga dipakai 2C).
-- [ ] Verifikasi publik QR/token + `/verifikasi-surat/[token]` (tenant-aware).
+- [x] Verifikasi publik token + `/desa/verifikasi-surat/[token]` (tenant-aware).
+      *(Gambar QR menyusul; saat ini tautan verifikasi dicetak sebagai teks.)*
 - [ ] Template surat, placeholder gambar (logo, TTD, stempel).
 - [ ] Terbilang & aritmetika isian.
 - [ ] Pengikut & penduduk luar.
@@ -567,8 +572,8 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
-| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi & CMS selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder kosong |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (daftar + mutasi satu tahap), perangkat, surat, keuangan ada; warga (NIK+PIN), bumindes, CRUD inventaris/kategori belum |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan halaman baca CMS selesai; CRUD CMS serta 3 halaman publik (Pembangunan, Pengaduan, Peta) belum |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan ada; warga (NIK+PIN), bumindes, CRUD CMS belum |
 | 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |
@@ -579,6 +584,7 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
 1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar belum dibuat (baru tautan teks).
 2. Halaman publik query DB langsung (melanggar arsitektur).
-3. RBAC: slug `super-admin` dan 4 modul CMS belum di-seed.
+3. RBAC: seed modul CMS dan role `super-admin` sudah ditambahkan; halaman
+   super-admin masih mockup dan belum menjadi fitur.
 4. Route typo `pertanaha` → `pertanahan` (sudah diperbaiki).
 5. Halaman statistik publik hardcoded `"0"`, tidak query DB.

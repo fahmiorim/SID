@@ -9,7 +9,9 @@ peserta), **Persuratan**
 (layanan surat, master surat, agenda masuk/keluar, cetak & PDF), dan
 **Keuangan** (APBDes: pohon rekening, pagu
 anggaran, realisasi, laporan RP APBDes & per bidang, ekspor CSV/Excel, serta
-arsip dokumen laporan per semester).
+arsip dokumen laporan per semester), **Inventaris** (barang, kategori, mutasi
+berjenjang), dan **Konten Situs Publik** (profil, perangkat, berita, galeri,
+menu, dokumen, serta tema).
 
 > Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -110,8 +112,8 @@ src/
 │  └─ seed/                  # data awal + katalog modul, role & referensi
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
 │  ├─ auth/  bantuan/  bumindes/  desa/  inventaris/  keluarga/  kelompok/
-│  ├─ keuangan/  layanan-mandiri/  modul/  navigation/  penduduk/  pengguna/
-│  ├─ rbac/  rumah-tangga/  surat/  wilayah/
+│  ├─ keuangan/  konten/  layanan-mandiri/  modul/  navigation/  penduduk/
+│  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  wilayah/
 ├─ themes/                   # (target) tema web publik yang dipasang saat build
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
@@ -155,8 +157,8 @@ Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
 database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
 keluarga, wilayah, pengguna, kelompok (slug, jabatan, keanggotaan), bantuan
 (status masa aktif, slug, validasi peserta),
-dan persuratan (nomor, template, tanggal), pemetaan
-kesalahan, serta validasi environment. CI menjalankan typecheck + lint + format +
+persuratan (nomor, template, tanggal), inventaris (transisi mutasi,
+perhitungan perubahan aset), pemetaan kesalahan, serta validasi environment. CI menjalankan typecheck + lint + format +
 test + build pada setiap push/PR.
 
 ```bash
@@ -194,8 +196,8 @@ Status lengkap dan urutan fase ada di
 5. **Persuratan** ✅ — layanan surat, syarat dinamis, penomoran, agenda masuk/keluar,
    verifikasi berjenjang, cetak HTML/PDF.
 6. **Keuangan** ✅ — APBDes, realisasi, laporan & dokumen, triwulan.
-7. **Inventaris** 🟡 — aset & mutasi ada; persetujuan mutasi belum menerapkan
-   perubahan aset secara transaksional.
+7. **Inventaris** ✅ — CRUD barang & kategori, mutasi berjenjang
+   operator → sekdes → kades, perubahan aset diterapkan atomik di tahap akhir.
 8. **Layanan Mandiri** 🟡 — domain/action ada; UI warga dan login NIK + PIN belum.
 9. **BUMDes** 🟡 — unit & item ada; action belum terhubung ke UI.
 10. **Analisis & Survei** 🟡 — kerangka skema ada; UI masih placeholder.

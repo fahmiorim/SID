@@ -30,6 +30,36 @@ approval mutasi berjenjang + penerapan perubahan ke aset.
 
 ---
 
+## 2026-10-23 — P1.0 & P1.1 (dokumentasi, CRUD inventaris, mutasi berjenjang)
+
+- **Dokumentasi**: `PARITAS-OPENSID.md` dihitung ulang dari baris matriks —
+  92 modul, 22 ✅ / 23 🟡 / 47 🔴, paritas kasar ±36%. Catatan duplikat di
+  bagian Web Publik dihapus; status perangkat desa, inventaris, APBDes publik,
+  status desa/IDM, dan verifikasi surat diselaraskan dengan kode. `README.md`
+  dan `RENCANA-PERBAIKAN.md` tidak lagi mengklaim inventaris read-only atau
+  UI warga/admin yang belum ada.
+- **Inventaris CRUD**: `/inventaris` memakai `InventarisManager`; tambah/ubah
+  barang lengkap (kategori, nilai, kondisi, lokasi, asal) dan hapus soft-delete.
+  `/inventaris/kategori` menyediakan CRUD kategori dengan cek duplikat kode dan
+  larangan hapus kategori yang masih dipakai. Modul `inventaris` dan
+  `mutasi-inventaris` diaktifkan di seed; sekdes/kades mendapat akses baca
+  inventaris dan tulis mutasi.
+- **Mutasi berjenjang**: state machine `nextMutasiStep()` (operator → sekdes →
+  kades), validasi role, larangan lompat tahap/approve ganda/self-approval,
+  serta timeline tahap di UI. Perubahan aset diterapkan hanya di tahap akhir
+  dalam satu transaksi: pindah → lokasi, rusak/perbaikan → kondisi, hapus →
+  kurangi jumlah atau soft-delete. Tahap nonfinal hanya mencatat verifikator.
+- **Migrasi**: `0021_bumpy_old_lace.sql` menambahkan kolom token verifikasi
+  surat, `users.must_change_pin`/`users.resident_id`, dan
+  `perangkat_desa.periode`; snapshot dan `_journal.json` ikut sehingga migrasi
+  bersih tidak lagi tertinggal dari skema.
+- **Bukti**: `npm run check` hijau (405 test) dan `npm run build` hijau.
+  Test baru: `src/features/inventaris/domain/inventaris.test.ts` (14 test
+  transisi dan perhitungan aset). Test integrasi DB untuk race/tenant belum ada;
+  isolasi tenant saat ini ditegakkan lewat filter `village_id` di repository.
+
+---
+
 ## 2026-10-23 — Audit Dokumentasi vs Kode
 
 ### Temuan

@@ -31,22 +31,24 @@ Legenda status proyek kita:
 
 | Kategori | Total modul | ✅ | 🟡 | 🔴 |
 |---|---:|---:|---:|---:|
-| Kependudukan & sosial | 11 | 4 | 1 | 6 |
-| Wilayah & pertanahan | 4 | 1 | 1 | 2 |
-| Pemerintahan | 8 | 2 | 1 | 5 |
-| Persuratan | 6 | 3 | 2 | 1 |
-| Keuangan | 6 | 3 | 1 | 2 |
-| Bumindes | 8 | 0 | 2 | 6 |
-| Pembangunan | 1 | 0 | 1 | 0 |
-| Layanan mandiri & warga | 9 | 0 | 2 | 7 |
+| Kependudukan & sosial | 12 | 4 | 0 | 8 |
+| Wilayah & pertanahan | 4 | 2 | 0 | 2 |
+| Pemerintahan | 8 | 3 | 2 | 3 |
+| Persuratan | 7 | 3 | 2 | 2 |
+| Keuangan | 6 | 3 | 2 | 1 |
+| Bumindes | 11 | 0 | 1 | 10 |
+| Pembangunan | 1 | 0 | 0 | 1 |
+| Layanan mandiri & warga | 10 | 0 | 3 | 7 |
 | Analisis & statistik | 3 | 0 | 2 | 1 |
-| Web publik | 20 | 0 | 12 | 8 |
-| Sistem & operasional | 9 | 3 | 1 | 5 |
-| **Total** | **85** | **16** | **23** | **46** |
+| Web publik | 21 | 5 | 9 | 7 |
+| Sistem & operasional | 9 | 2 | 2 | 5 |
+| **Total** | **92** | **22** | **23** | **47** |
 
-**Paritas kasar saat ini: ±43%** (hitung ✅ penuh + setengah 🟡). Untuk "tidak
-kalah" pada operasi harian desa, target realistis adalah menutup seluruh 🔴
-prioritas **P0** dan **P1** — bukan seluruh 85 modul.
+**Paritas kasar saat ini: ±36%** (hitung ✅ penuh + setengah 🟡). Angka ini
+dihitung ulang 23 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
+per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
+harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
+**P1** — bukan seluruh 92 modul.
 
 > Catatan 23 Okt 2026: Banyak halaman web publik sudah ada (beranda, berita,
 > galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat, analisis-
@@ -60,6 +62,11 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
 > APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
 > `/konten/dokumen` membaca data per desa. CRUD CMS dan QR gambar belum selesai.
+>
+> Perbaikan P1.1 23 Okt 2026: inventaris kini punya CRUD barang & kategori,
+> mutasi berjenjang operator → sekdes → kades, dan perubahan aset baru
+> diterapkan secara atomik pada tahap akhir. Modul inventaris diaktifkan kembali
+> di menu admin.
 
 ---
 
@@ -87,17 +94,17 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 | Wilayah administratif (dusun/RW/RT) | `controllers/Wilayah.php` | ✅ | — |
 | Peta / GIS (area, garis, titik, polygon) | `controllers/{Area,Garis,Point,Polygon}.php`, `fweb/Peta` | 🔴 | **P1** |
 | Data persil & Cdesa + mutasi | `controllers/{Data_persil,Cdesa,Cdesa_mutasi,Cdesa_rincian}.php` | 🔴 | P1 |
-| Inventaris aset (6 kategori + mutasi) | `controllers/Inventaris_*.php` | 🟡 | **P0** |
+| Inventaris aset (6 kategori + mutasi) | `controllers/Inventaris_*.php` | ✅ | — |
 
 ## C. Pemerintahan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
 | Identitas desa | `controllers/Identitas_desa.php` | ✅ | — |
-| Perangkat desa / pamong + jabatan | `controllers/{Pamong,Jabatan,Pengurus}.php` | 🔴 | **P0** (dibutuhkan web publik) |
+| Perangkat desa / pamong + jabatan | `controllers/{Pamong,Jabatan,Pengurus}.php` | ✅ | — |
 | Lembaga desa + anggota | `controllers/{Lembaga,Lembaga_anggota,Lembaga_master}.php` | 🟡 | P1 |
 | Kelompok masyarakat + anggota | `controllers/{Kelompok,Kelompok_anggota}.php` | ✅ | — |
-| Status desa / IDM | `controllers/Status_desa.php`, `fweb/Idm` | 🔴 | P2 |
+| Status desa / IDM | `controllers/Status_desa.php`, `fweb/Idm` | 🟡 | P2 |
 | Pemilihan (pilkes/rekap) | `controllers/Pemilihan.php` | 🔴 | P3 |
 | Sinergi program | `controllers/Sinergi_program.php` | 🔴 | P3 |
 | SOTK (struktur organisasi) | `fweb/Sotk` | 🔴 | P2 |
@@ -123,7 +130,7 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 | Dokumen laporan | `controllers/Dokumen.php` | ✅ | — |
 | Keuangan manual / rekonsiliasi | `controllers/Keuangan_manual.php` | 🔴 | P2 |
 | Inventaris kekayaan desa (buku) | `controllers/Bumindes_inventaris_kekayaan.php` | 🟡 | P1 |
-| Transparansi APBDes di web publik | `fweb` (APBDes) | 🔴 | **P0** |
+| Transparansi APBDes di web publik | `fweb` (APBDes) | 🟡 | **P0** |
 
 ## F. Bumindes
 
@@ -160,7 +167,7 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |
-| Verifikasi surat publik (QR/token) | `fweb/Verifikasi_surat`, `fmandiri/Verifikasi.php` | 🔴 | **P0** |
+| Verifikasi surat publik (QR/token) | `fweb/Verifikasi_surat`, `fmandiri/Verifikasi.php` | 🟡 | **P0** (token selesai; gambar QR menyusul) |
 
 ## I. Analisis & Statistik
 
@@ -195,19 +202,6 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 | **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | 🟡 | **P0** |
 | SEO: sitemap, robots, OG image | `controllers/{Sitemap,OgImage}.php` | 🟡 | P1 |
 | Multi-desa & domain per desa | tidak ada di OpenSID (fitur baru) | 🔴 | **P1** (setelah P0) |
-
-> Catatan 23 Okt 2026: Banyak halaman web publik sudah ada (beranda, berita,
-> galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat, analisis-
-> survei, dokumen, statistik, kontak, verifikasi-surat) tapi sebagian besar
-> masih berupa query DB langsung ke halaman (melanggar arsitektur) atau
-> placeholder tanpa backend. Diakui sebagai 🟡. Yang 🔴 adalah yang sama
-> sekali belum ada halamannya (kelompok, inventaris publik, suplemen,
-> lapak, dpt, komentar/pengunjung, tema diatur ulang, SEO OG image).
->
-> Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
-> (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
-> APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
-> `/konten/dokumen` membaca data per desa. CRUD CMS dan QR gambar belum selesai.
 
 ## K. Sistem & Operasional
 
