@@ -215,16 +215,12 @@ Mengacu `donjo-app/controllers/fweb/*`:
 
 ### 1F. CMS konten
 
-- [ ] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
+- [x] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
-      `dokumen-publik`, `tema`. *(Selesai: `tema`, `berita`,
-      `berita-kategori`, `galeri`, `profil-desa`, `perangkat-desa`. Menyusul:
-      menu, widget, slider, dokumen.)* ⚠ **Pelanggaran RBAC**: slug
-      `super-admin` ditambahkan di `resources.ts` tanpa entri di
-      `modules.ts` seed. Modul `menu-publik`, `widget`, `slider`,
-      `dokumen-publik` juga belum di-seed ke `modules.ts`, sehingga
-      halaman admin ini tidak muncul di navigasi dan tidak dapat diberi
-      izin melalui seeder. Perbaiki di Fase 2G.
+      `dokumen-publik`, `tema`, dan `super-admin` sudah punya slug resource +
+      entri `modules.ts`. Operator mendapat `manage` untuk empat modul CMS;
+      sekdes/kades `read`. Halaman `/super-admin` sendiri masih mockup dan
+      belum menjadi fitur (Fase 5).
 - [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
       jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
       disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
@@ -239,16 +235,25 @@ Mengacu `donjo-app/controllers/fweb/*`:
       jabatan, foto, status, urutan, dan penanda tangan; katalog jabatan CRUD.
       Bukti: `features/konten/*profil*`, `*perangkat*`, halaman admin; CRUD dan
       FK `set null` diuji ke DB dev.
-- [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`. *(`/konten/menu`
-      kini menampilkan daftar menu nyata per desa; widget/slider masih mockup
-      dan belum punya CRUD.)*
-- [ ] **1F.6** `/konten/dokumen`: *`/konten/dokumen` menampilkan daftar dokumen
-      publik nyata; form unggah/CRUD dan metadata belum tersedia.*
+- [x] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`: CRUD penuh
+      lewat `CmsCrudManager` bersama. Menu mendukung induk satu tingkat,
+      penolakan siklus/orphan, urutan, dan status; widget memvalidasi jenis
+      1–6 + JSON pengaturan; slider menyimpan gambar, tautan, urutan, status.
+      Daftar admin memuat baris nonaktif. Bukti: `features/konten/*menu*`,
+      `*widget*`, `*slider*`, `cms-crud-manager.tsx`, halaman admin, dan
+      `domain/cms.test.ts`.
+- [x] **1F.6** `/konten/dokumen`: CRUD metadata (nama, slug otomatis/unik,
+      kategori, jenis, nomor, tahun, berkas/tautan, keterangan, status).
+      Unggah berkas lewat UI **belum** ada; path media/tautan diisi manual.
+      Bukti: `features/konten/*dokumen*`, `dokumenSlugExists`, halaman admin,
+      dan `domain/cms.test.ts`.
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
       (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
-      *(Sanitasi render sudah di 1C/1G; sanitasi saat simpan kini aktif untuk
-      berita. Form CMS lain menyesuaikan saat dibangun.)*
+      *(Sanitasi render sudah di 1C/1G; sanitasi saat simpan aktif untuk berita.
+      Widget `isi` belum dirender di publik; saat render widget diaktifkan,
+      sanitasi simpan + render wajib ditambahkan. Menu/slider/dokumen tidak
+      memuat HTML bebas.)*
 
 ### 1G. Test & kriteria selesai
 
@@ -572,8 +577,8 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
-| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan halaman baca CMS selesai; CRUD CMS serta 3 halaman publik (Pembangunan, Pengaduan, Peta) belum |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan ada; warga (NIK+PIN), bumindes, CRUD CMS belum |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan, dan CRUD CMS ada; warga (NIK+PIN) dan bumindes belum |
 | 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |

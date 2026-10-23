@@ -11,7 +11,7 @@ peserta), **Persuratan**
 anggaran, realisasi, laporan RP APBDes & per bidang, ekspor CSV/Excel, serta
 arsip dokumen laporan per semester), **Inventaris** (barang, kategori, mutasi
 berjenjang), dan **Konten Situs Publik** (profil, perangkat, berita, galeri,
-menu, dokumen, serta tema).
+menu, widget, slider, dokumen, serta tema).
 
 > Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
 
@@ -201,6 +201,8 @@ Status lengkap dan urutan fase ada di
 8. **Layanan Mandiri** 🟡 — domain/action ada; UI warga dan login NIK + PIN belum.
 9. **BUMDes** 🟡 — unit & item ada; action belum terhubung ke UI.
 10. **Analisis & Survei** 🟡 — kerangka skema ada; UI masih placeholder.
+11. **Konten Situs Publik** 🟡 — CRUD admin menu/widget/slider/dokumen selesai;
+    sebagian halaman publik masih placeholder atau query langsung.
 
 Berikutnya (lihat rencana untuk detail):
 

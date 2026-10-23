@@ -60,6 +60,32 @@ approval mutasi berjenjang + penerapan perubahan ke aset.
 
 ---
 
+## 2026-10-23 — P1.2 (CRUD CMS menu, widget, slider, dokumen)
+
+- **CRUD CMS**: `/konten/menu`, `/konten/widget`, `/konten/slider`, dan
+  `/konten/dokumen` kini memakai satu `CmsCrudManager` bersama (dialog form,
+  tabel, konfirmasi hapus, toast, error per-field). Halaman tetap server
+  component dengan cek `NoAccess`; permission `read/update/delete` dipakai
+  konsisten. Operator mendapat `manage`, sekdes/kades `read`.
+- **Isolasi tenant**: `updateWidget`, `deleteWidget`, `updateDokumenPublik`,
+  dan `deleteDokumenPublik` sekarang memfilter `village_id` + `id`. Sebelumnya
+  hanya `id`, sehingga action dengan id desa lain bisa menyentuh baris tersebut.
+  Use case juga memeriksa keberadaan baris di desa sesi sebelum update/delete.
+- **Repository**: daftar admin memuat baris nonaktif (`includeInactive`);
+  `listWidget`/`listDokumenPublik` mengembalikan `aktif` (widget juga `urut`);
+  CRUD slider ditambahkan; slug dokumen dicek unik per desa dan dinormalisasi
+  dengan `buatSlug`.
+- **Validasi**: menu menolak induk hilang, diri sendiri, induk bertingkat,
+  siklus, dan penghapusan menu yang masih punya submenu; dokumen mewajibkan
+  berkas atau tautan; widget memvalidasi jenis 1–6 dan JSON `pengaturan`;
+  slider mewajibkan gambar. Test baru: `domain/cms.test.ts` (10 test).
+- **Batasan**: unggah berkas dokumen belum ada (path/URL manual); widget dan
+  teks berjalan belum dirender di tema publik. Halaman publik yang masih query
+  DB langsung tetap menjadi pekerjaan P1.3.
+- **Bukti**: `npm run check` hijau (415 test) dan `npm run build` hijau.
+
+---
+
 ## 2026-10-23 — Audit Dokumentasi vs Kode
 
 ### Temuan

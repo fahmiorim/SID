@@ -61,12 +61,19 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
 > APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
-> `/konten/dokumen` membaca data per desa. CRUD CMS dan QR gambar belum selesai.
+> `/konten/dokumen` membaca data per desa. QR gambar verifikasi belum dibuat.
 >
 > Perbaikan P1.1 23 Okt 2026: inventaris kini punya CRUD barang & kategori,
 > mutasi berjenjang operator → sekdes → kades, dan perubahan aset baru
 > diterapkan secara atomik pada tahap akhir. Modul inventaris diaktifkan kembali
 > di menu admin.
+>
+> Perbaikan P1.2 23 Okt 2026: `/konten/menu`, `/konten/widget`,
+> `/konten/slider`, dan `/konten/dokumen` kini punya CRUD lengkap dengan filter
+> `village_id` pada update/delete, daftar admin yang memuat baris nonaktif,
+> validasi domain, dan slug dokumen unik. Slider beranda sudah memakai data
+> aktif; widget dan teks berjalan belum dirender di tema publik. Unggah berkas
+> dokumen masih berupa path/URL manual.
 
 ---
 
