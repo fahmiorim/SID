@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, isNotNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, lte, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -348,13 +348,29 @@ export interface DokumenRingkas {
   berkas: string | null;
   tautan: string | null;
   keterangan: string | null;
+  aktif: boolean;
+}
+
+export interface DokumenPublikInput {
+  nama: string;
+  slug: string;
+  kategori: string;
+  jenis: string | null;
+  nomor: string | null;
+  tahun: number | null;
+  berkas: string | null;
+  tautan: string | null;
+  keterangan: string | null;
+  aktif: boolean;
 }
 
 export async function listDokumenPublik(
   villageId: number,
   kategori?: string,
+  includeInactive = false,
 ): Promise<DokumenRingkas[]> {
-  const kondisi = [eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.aktif, true)];
+  const kondisi = [eq(dokumenPublik.villageId, villageId)];
+  if (!includeInactive) kondisi.push(eq(dokumenPublik.aktif, true));
   if (kategori) kondisi.push(eq(dokumenPublik.kategori, kategori));
 
   return db
@@ -369,13 +385,35 @@ export async function listDokumenPublik(
       berkas: dokumenPublik.berkas,
       tautan: dokumenPublik.tautan,
       keterangan: dokumenPublik.keterangan,
+      aktif: dokumenPublik.aktif,
     })
     .from(dokumenPublik)
     .where(and(...kondisi))
     .orderBy(desc(dokumenPublik.tahun), asc(dokumenPublik.nama));
 }
 
-/* ----------------------------------------------------------- menu & widget */
+/** Cek slug dokumen unik per desa (kecuali baris yang sedang diubah). */
+export async function dokumenSlugExists(
+  villageId: number,
+  slug: string,
+  exceptId?: number,
+): Promise<boolean> {
+  const kondisi = [
+    eq(dokumenPublik.villageId, villageId),
+    eq(dokumenPublik.slug, slug),
+    exceptId === undefined ? undefined : ne(dokumenPublik.id, exceptId),
+  ];
+
+  const [row] = await db
+    .select({ id: dokumenPublik.id })
+    .from(dokumenPublik)
+    .where(and(...kondisi))
+    .limit(1);
+
+  return Boolean(row);
+}
+
+/* ------------------------------------------------------------------ menu */
 
 export interface MenuPublikRingkas {
   id: number;
@@ -412,7 +450,14 @@ export async function listMenuPublik(
 /** Menambahkan baris menu publik. */
 export async function createMenuPublik(
   villageId: number,
-  data: { nama: string; link: string; linkTipe: string; parentId?: number; urut?: number },
+  data: {
+    nama: string;
+    link: string;
+    linkTipe: string;
+    parentId?: number | null;
+    urut?: number;
+    aktif?: boolean;
+  },
 ): Promise<void> {
   await db.insert(menuPublik).values({ villageId, ...data });
 }
@@ -421,11 +466,18 @@ export async function createMenuPublik(
 export async function updateMenuPublik(
   villageId: number,
   id: number,
-  data: Partial<{ nama: string; link: string; linkTipe: string; parentId?: number; urut?: number }>,
+  data: Partial<{
+    nama: string;
+    link: string;
+    linkTipe: string;
+    parentId: number | null;
+    urut: number;
+    aktif: boolean;
+  }>,
 ): Promise<void> {
   await db
     .update(menuPublik)
-    .set({ villageId, ...data })
+    .set(data)
     .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.id, id)));
 }
 
@@ -436,16 +488,33 @@ export async function deleteMenuPublik(villageId: number, id: number): Promise<v
     .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.id, id)));
 }
 
-/* -------------------------------------------------------- halaman statis */
+/* ---------------------------------------------------------------- widget */
 export interface WidgetRingkas {
   id: number;
   judul: string | null;
   isi: string | null;
   jenis: number;
   pengaturan: string | null;
+  urut: number;
+  aktif: boolean;
 }
 
-export async function listWidget(villageId: number): Promise<WidgetRingkas[]> {
+export interface WidgetInput {
+  judul: string | null;
+  isi: string | null;
+  jenis: number;
+  pengaturan: string | null;
+  urut: number;
+  aktif: boolean;
+}
+
+export async function listWidget(
+  villageId: number,
+  includeInactive = false,
+): Promise<WidgetRingkas[]> {
+  const kondisi = [eq(widget.villageId, villageId)];
+  if (!includeInactive) kondisi.push(eq(widget.aktif, true));
+
   return db
     .select({
       id: widget.id,
@@ -453,71 +522,123 @@ export async function listWidget(villageId: number): Promise<WidgetRingkas[]> {
       isi: widget.isi,
       jenis: widget.jenis,
       pengaturan: widget.pengaturan,
+      urut: widget.urut,
+      aktif: widget.aktif,
     })
     .from(widget)
-    .where(and(eq(widget.villageId, villageId), eq(widget.aktif, true)))
+    .where(and(...kondisi))
     .orderBy(asc(widget.urut), asc(widget.id));
-} /** Menambahkan baris widget. */
-export async function createWidget(
-  villageId: number,
-  data: { judul: string | null; isi: string | null; jenis: number; pengaturan: string | null },
-): Promise<void> {
+}
+
+/** Menambahkan baris widget. */
+export async function createWidget(villageId: number, data: WidgetInput): Promise<void> {
   await db.insert(widget).values({ villageId, ...data });
 }
 
-/** Mengubah satu baris widget. */
+/** Mengubah satu baris widget; selalu dibatasi desa pemilik. */
 export async function updateWidget(
   villageId: number,
   id: number,
-  data: Partial<{
-    judul: string | null;
-    isi: string | null;
-    jenis: number;
-    pengaturan: string | null;
-  }>,
+  data: Partial<WidgetInput>,
 ): Promise<void> {
   await db
     .update(widget)
-    .set({ villageId, ...data })
-    .where(eq(widget.id, id));
+    .set(data)
+    .where(and(eq(widget.villageId, villageId), eq(widget.id, id)));
 }
 
-/** Menghapus satu baris widget. */
+/** Menghapus satu baris widget; selalu dibatasi desa pemilik. */
 export async function deleteWidget(villageId: number, id: number): Promise<void> {
-  await db.delete(widget).where(eq(widget.id, id));
+  await db.delete(widget).where(and(eq(widget.villageId, villageId), eq(widget.id, id)));
 }
 
+/* ---------------------------------------------------------------- slider */
+export interface SliderRingkas {
+  id: number;
+  gambar: string;
+  judul: string | null;
+  keterangan: string | null;
+  tautan: string | null;
+  urut: number;
+  aktif: boolean;
+}
+
+export interface SliderInput {
+  gambar: string;
+  judul: string | null;
+  keterangan: string | null;
+  tautan: string | null;
+  urut: number;
+  aktif: boolean;
+}
+
+export async function listSlider(
+  villageId: number,
+  includeInactive = false,
+): Promise<SliderRingkas[]> {
+  const kondisi = [eq(slider.villageId, villageId)];
+  if (!includeInactive) kondisi.push(eq(slider.aktif, true));
+
+  return db
+    .select({
+      id: slider.id,
+      gambar: slider.gambar,
+      judul: slider.judul,
+      keterangan: slider.keterangan,
+      tautan: slider.tautan,
+      urut: slider.urut,
+      aktif: slider.aktif,
+    })
+    .from(slider)
+    .where(and(...kondisi))
+    .orderBy(asc(slider.urut), asc(slider.id));
+}
+
+export async function createSlider(villageId: number, data: SliderInput): Promise<void> {
+  await db.insert(slider).values({ villageId, ...data });
+}
+
+export async function updateSlider(
+  villageId: number,
+  id: number,
+  data: Partial<SliderInput>,
+): Promise<void> {
+  await db
+    .update(slider)
+    .set(data)
+    .where(and(eq(slider.villageId, villageId), eq(slider.id, id)));
+}
+
+export async function deleteSlider(villageId: number, id: number): Promise<void> {
+  await db.delete(slider).where(and(eq(slider.villageId, villageId), eq(slider.id, id)));
+}
+
+/* ---------------------------------------------------------------- dokumen */
 /** Menambahkan baris dokumen publik. */
 export async function createDokumenPublik(
   villageId: number,
-  data: { nama: string; slug: string; kategori: string; keterangan: string },
+  data: DokumenPublikInput,
 ): Promise<void> {
   await db.insert(dokumenPublik).values({ villageId, ...data });
 }
 
-/** Mengubah satu baris dokumen publik. */
+/** Mengubah satu baris dokumen publik; selalu dibatasi desa pemilik. */
 export async function updateDokumenPublik(
   villageId: number,
   id: number,
-  data: Partial<{
-    nama: string;
-    slug: string;
-    kategori: string;
-    keterangan: string;
-    berkas: string | null;
-    tautan: string | null;
-    tahun: number | null;
-  }>,
+  data: Partial<DokumenPublikInput>,
 ): Promise<void> {
   await db
     .update(dokumenPublik)
-    .set({ villageId, ...data })
-    .where(eq(dokumenPublik.id, id));
+    .set(data)
+    .where(and(eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.id, id)));
 }
 
-/** Menghapus satu baris dokumen publik. */
+/** Menghapus satu baris dokumen publik; selalu dibatasi desa pemilik. */
 export async function deleteDokumenPublik(villageId: number, id: number): Promise<void> {
-  await db.delete(dokumenPublik).where(eq(dokumenPublik.id, id));
+  await db
+    .delete(dokumenPublik)
+    .where(and(eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.id, id)));
 }
 
 /* -------------------------------------------------------- halaman statis */

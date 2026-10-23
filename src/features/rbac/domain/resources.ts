@@ -48,12 +48,18 @@ export const RESOURCES = {
   analisisSurvei: "analisis-survei",
   /** Tema situs publik (Fase 1D). */
   tema: "tema",
+  /** Role khusus untuk super-admin yang mengelola banyak desa. */
+  superAdmin: "super-admin",
   /** Konten situs publik (Fase 1F). */
   berita: "berita",
   beritaKategori: "berita-kategori",
   galeri: "galeri",
   profilDesa: "profil-desa",
   perangkatDesa: "perangkat-desa",
+  menuPublik: "menu-publik",
+  widget: "widget",
+  slider: "slider",
+  dokumenPublik: "dokumen-publik",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];
