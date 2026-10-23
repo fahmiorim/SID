@@ -74,7 +74,7 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
 
       <footer className="tema-esensi-footer mt-auto border-t">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-6 text-xs text-foreground/70 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <p>
             © {new Date().getFullYear()} {nama} · {tema.nama}
           </p>
