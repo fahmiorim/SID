@@ -7,11 +7,14 @@ import {
   bulanRomawi,
   canVerifyStep,
   formatTanggalIndonesia,
+  generateVerificationToken,
+  hashVerificationToken,
   jenisSuratFormSchema,
   nextVerificationStep,
   renderSuratTemplate,
   roleCanVerifyStep,
   suratFormSchema,
+  VERIFICATION_TOKEN_LENGTH,
 } from "./surat";
 
 describe("buildSuratNumber", () => {
@@ -187,5 +190,24 @@ describe("skema formulir surat", () => {
     expect(parsed.classificationId).toBeNull();
     expect(parsed.numberFormat).toBe("[kode_surat]/[nomor]/[kode_desa]/[tahun]");
     expect(parsed.validityMonths).toBe(6);
+  });
+});
+
+describe("token verifikasi publik", () => {
+  it("menghasilkan token hex 64 karakter dengan hash SHA-256 yang cocok", async () => {
+    const { token, hash } = await generateVerificationToken();
+
+    expect(token).toMatch(/^[0-9a-f]+$/);
+    expect(token).toHaveLength(VERIFICATION_TOKEN_LENGTH);
+    expect(hash).toMatch(/^[0-9a-f]{64}$/);
+    expect(await hashVerificationToken(token)).toBe(hash);
+  });
+
+  it("menghasilkan token berbeda pada setiap pemanggilan", async () => {
+    const pertama = await generateVerificationToken();
+    const kedua = await generateVerificationToken();
+
+    expect(pertama.token).not.toBe(kedua.token);
+    expect(pertama.hash).not.toBe(kedua.hash);
   });
 });

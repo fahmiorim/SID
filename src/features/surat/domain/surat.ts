@@ -452,8 +452,10 @@ export interface SuratListRow {
   number: string | null;
   status: LetterStatus;
   letterDate: string;
+  /** Tahun surat (dari letterDate). */
+  year: number;
   typeName: string;
-  typeCode: string;
+  typeCode: string | null;
   residentName: string | null;
   purpose: string | null;
   /** JSON nilai isian dinamis (kode isian → nilai). */
@@ -469,6 +471,13 @@ export interface SuratListRow {
 
 export interface SuratDetail extends SuratListRow {
   content?: string | null;
+  /**
+   * Token mentah untuk tautan verifikasi publik.
+   *
+   * Disimpan agar admin dapat mencetak ulang tautan/QR; pencarian publik tetap
+   * memakai `verificationTokenHash` sehingga tidak bergantung pada PK numerik.
+   */
+  verificationToken: string | null;
 }
 
 export interface SuratMasukDTO {
@@ -506,4 +515,49 @@ export interface Option {
 /** Placeholder contoh untuk ditampilkan di formulir jenis surat. */
 export function placeholderHelp(): string {
   return SURAT_PLACEHOLDERS.map((item) => `[${item.key}]`).join(", ");
+}
+
+// ── Token verifikasi publik (Fase 2E — perbaikan IDOR) ──────────────────
+
+/**
+ * Panjang token mentah (byte). 32 byte = 256 bit entropy — tidak feasible
+ * untuk di-brute-force tanpa kunci.
+ */
+export const VERIFICATION_TOKEN_BYTES = 32;
+/** Panjang token dalam representasi hex (2 char per byte). */
+export const VERIFICATION_TOKEN_LENGTH = VERIFICATION_TOKEN_BYTES * 2;
+
+/**
+ * Hasil generate token: token mentah (dipakai di URL/QR) + hash (kunci
+ * pencarian di DB). Keduanya hex-encoded.
+ */
+export interface VerificationToken {
+  token: string;
+  hash: string;
+}
+
+/**
+ * Hasilkan token verifikasi acak beserta hash SHA-256-nya.
+ *
+ * Token mentah ditampilkan di URL `/desa/verifikasi-surat/[token]` dan
+ * disimpan agar tautan dapat dicetak ulang dari halaman surat. Hash dipakai
+ * sebagai kunci pencarian sehingga halaman publik tidak pernah menerima PK
+ * numerik surat.
+ *
+ * `crypto` diimpor secara dinamis agar fungsi ini bisa dipakai di test
+ * (tanpa `server-only`) maupun di server action.
+ */
+export async function generateVerificationToken(): Promise<VerificationToken> {
+  const { randomBytes, createHash } = await import("node:crypto");
+  const token = randomBytes(VERIFICATION_TOKEN_BYTES).toString("hex");
+  const hash = createHash("sha256").update(token).digest("hex");
+  return { token, hash };
+}
+
+/**
+ * Hash token dari klien (URL) untuk dipakai sebagai kunci pencarian di DB.
+ */
+export async function hashVerificationToken(token: string): Promise<string> {
+  const { createHash } = await import("node:crypto");
+  return createHash("sha256").update(token).digest("hex");
 }

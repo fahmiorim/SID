@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, like, max, or, type SQL } from "drizzle-orm";
+import { and, count, desc, eq, like, max, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { incomingLetters, letters, letterTypes, outgoingLetters, residents } from "@/db/schema";
@@ -24,6 +24,7 @@ const listColumns = {
   number: letters.number,
   status: letters.status,
   letterDate: letters.letterDate,
+  year: sql<number>`EXTRACT(YEAR FROM ${letters.letterDate})`,
   typeName: letters.typeName,
   typeCode: letterTypes.code,
   residentName: residents.name,
@@ -109,6 +110,7 @@ export async function getSurat(villageId: number, id: number): Promise<SuratDeta
     .select({
       ...listColumns,
       content: letters.content,
+      verificationToken: letters.verificationToken,
     })
     .from(letters)
     .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
@@ -196,6 +198,8 @@ export async function issueSuratRecord(
     content: string;
     issuedAt: Date;
     logVerifikasi?: string | null;
+    verificationToken?: string | null;
+    verificationTokenHash?: string | null;
   },
 ): Promise<void> {
   await db
@@ -209,8 +213,54 @@ export async function issueSuratRecord(
       issuedAt: input.issuedAt,
       verifikasiKades: true,
       logVerifikasi: input.logVerifikasi ?? "kades",
+      verificationToken: input.verificationToken ?? null,
+      verificationTokenHash: input.verificationTokenHash ?? null,
     })
     .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
+}
+
+/**
+ * Cari surat berdasarkan hash token verifikasi publik, ter-scope tenant.
+ * Dipakai halaman `/desa/verifikasi-surat/[token]`. Token mentah tidak
+ * dijadikan kunci pencarian; hash SHA-256 yang disimpan di DB dipakai agar
+ * halaman publik tidak pernah menerima PK numerik surat.
+ */
+export async function findSuratByTokenHash(
+  villageId: number,
+  tokenHash: string,
+): Promise<SuratDetail | null> {
+  const [row] = await db
+    .select({
+      id: letters.id,
+      typeId: letters.typeId,
+      residentId: letters.residentId,
+      number: letters.number,
+      status: letters.status,
+      letterDate: letters.letterDate,
+      typeName: letters.typeName,
+      typeCode: letterTypes.code,
+      year: sql<number>`EXTRACT(YEAR FROM ${letters.letterDate})`,
+      residentName: residents.name,
+      purpose: letters.purpose,
+      nilaiIsian: letters.nilaiIsian,
+      content: letters.content,
+      verificationToken: letters.verificationToken,
+      createdAt: letters.createdAt,
+      issuedAt: letters.issuedAt,
+      verifikasiOperator: letters.verifikasiOperator,
+      verifikasiSekdes: letters.verifikasiSekdes,
+      verifikasiKades: letters.verifikasiKades,
+      logVerifikasi: letters.logVerifikasi,
+      catatanVerifikasi: letters.catatanVerifikasi,
+    })
+    .from(letters)
+    .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
+    .leftJoin(residents, eq(letters.residentId, residents.id))
+    .where(and(eq(letters.villageId, villageId), eq(letters.verificationTokenHash, tokenHash)))
+    .limit(1);
+
+  if (!row) return null;
+  return { ...row, typeCode: row.typeCode ?? "" };
 }
 
 // Mode 2: per jenis surat

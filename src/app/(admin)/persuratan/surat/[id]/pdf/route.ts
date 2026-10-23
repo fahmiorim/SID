@@ -4,6 +4,7 @@ import { SURAT_RESOURCE } from "@/features/surat/domain/surat";
 import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
+import { getRequestOrigin } from "@/lib/request-origin";
 
 export async function GET(
   _request: Request,
@@ -25,6 +26,10 @@ export async function GET(
 
   try {
     const { surat, jenis, desa, content } = await getSuratPrintData(suratId);
+    const origin = await getRequestOrigin();
+    const verificationUrl = surat.verificationToken
+      ? `${origin}/desa/verifikasi-surat/${surat.verificationToken}`
+      : null;
 
     const pdf = await buildSuratPdf({
       desa,
@@ -32,6 +37,7 @@ export async function GET(
       nomor: surat.number,
       tanggal: surat.letterDate,
       content,
+      verificationUrl,
     });
 
     const filename = `surat-${(surat.number ?? String(surat.id)).replace(/[^a-zA-Z0-9._-]+/g, "-")}.pdf`;

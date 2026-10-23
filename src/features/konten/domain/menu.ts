@@ -6,7 +6,7 @@ import { z } from "zod";
  * baris tersebut. Untuk instalasi baru bila belum ada menu, dipakai
  * `PUBLIC_NAV` bawaan.
  */
-export const MENU_RESOURCE = "menuPublik";
+export const MENU_RESOURCE = "menu-publik";
 
 /** Skema form menu publik. */
 export const menuPublikFormSchema = z.object({

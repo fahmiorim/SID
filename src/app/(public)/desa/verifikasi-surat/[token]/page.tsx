@@ -1,25 +1,18 @@
-import { eq } from "drizzle-orm";
-
-import { db } from "@/db";
-import { letters } from "@/db/schema/letters";
+import { verifikasiSuratPublik } from "@/features/surat/application/verifikasi-publik";
 import { VERIFICATION_STEP_LABELS } from "@/features/surat/domain/surat";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: { token: string } }) {
-  const token = params.token;
-  const [letter] = await db
-    .select({ status: letters.status, typeId: letters.typeId, year: letters.year })
-    .from(letters)
-    .where(eq(letters.id, Number(token)))
-    .limit(1);
+export async function generateMetadata({ params }: PageProps<"/desa/verifikasi-surat/[token]">) {
+  const { token } = await params;
+  const { surat } = await verifikasiSuratPublik(token);
 
   let title = "Verifikasi Surat";
   let description = "";
 
-  if (letter) {
-    title = `Verifikasi Surat · ${letter.status}`;
-    description = `Halaman verifikasi surat ${letter.status.toLowerCase()} di desa`;
+  if (surat) {
+    title = `Verifikasi Surat · ${surat.status}`;
+    description = `Halaman verifikasi surat ${surat.status.toLowerCase()} di desa`;
   } else {
     title = "Verifikasi Surat · Tidak Ditemukan";
     description = "Surat dengan token yang Anda cari tidak ditemukan";
@@ -28,49 +21,33 @@ export async function generateMetadata({ params }: { params: { token: string } }
   return { title, description };
 }
 
-export default async function VerifikasiSuratPage({ params }: { params: { token: string } }) {
-  const token = params.token;
+export default async function VerifikasiSuratPage({
+  params,
+}: PageProps<"/desa/verifikasi-surat/[token]">) {
+  const { token } = await params;
+  const { surat } = await verifikasiSuratPublik(token);
 
-  // Cari surat berdasarkan ID token
-  const [letter] = await db
-    .select({
-      id: letters.id,
-      typeId: letters.typeId,
-      year: letters.year,
-      status: letters.status,
-      verifikasiOperator: letters.verifikasiOperator,
-      verifikasiSekdes: letters.verifikasiSekdes,
-      verifikasiKades: letters.verifikasiKades,
-      logVerifikasi: letters.logVerifikasi,
-      catatanVerifikasi: letters.catatanVerifikasi,
-      createdAt: letters.createdAt,
-      tte: letters.tte,
-    })
-    .from(letters)
-    .where(eq(letters.id, Number(token)))
-    .limit(1);
-
-  if (!letter) {
+  if (!surat) {
     return <VerifikasiTidakDitemukan />;
   }
 
   // Determine verification state
-  const isVerified = letter.verifikasiOperator && letter.verifikasiSekdes && letter.verifikasiKades;
+  const isVerified = surat.verifikasiOperator && surat.verifikasiSekdes && surat.verifikasiKades;
 
   const statusLabel =
-    letter.status === "issued"
+    surat.status === "issued"
       ? "Siap Diambil"
-      : letter.status === "verifikasi"
+      : surat.status === "verifikasi"
         ? isVerified
           ? "Sudah Diverifikasi"
           : "Menunggu Verifikasi"
-        : letter.status;
+        : surat.status;
 
   const verificationStep =
-    letter.status === "verifikasi"
-      ? letter.verifikasiOperator && !letter.verifikasiSekdes
+    surat.status === "verifikasi"
+      ? surat.verifikasiOperator && !surat.verifikasiSekdes
         ? "operator"
-        : letter.verifikasiOperator && letter.verifikasiSekdes && !letter.verifikasiKades
+        : surat.verifikasiOperator && surat.verifikasiSekdes && !surat.verifikasiKades
           ? "sekdes"
           : "kades"
       : null;
@@ -85,13 +62,13 @@ export default async function VerifikasiSuratPage({ params }: { params: { token:
 
       <div className="mb-8 rounded-lg bg-white p-6 shadow">
         <h2 className="mb-4 text-xl font-semibold">
-          {letter.typeId ?? "Surat"} {letter.year ?? ""}
+          {surat.typeName ?? "Surat"} {surat.year}
         </h2>
 
         <div className="space-y-4">
           <div>
             <p className="text-sm text-muted-foreground">Nomor Surat</p>
-            <p className="font-medium">{letter.id}</p>
+            <p className="font-medium">{surat.number ?? "—"}</p>
           </div>
 
           <div>
@@ -103,35 +80,35 @@ export default async function VerifikasiSuratPage({ params }: { params: { token:
             </span>
           </div>
 
-          {letter.status === "verifikasi" && (
+          {surat.status === "verifikasi" && (
             <div>
               <p className="text-sm text-muted-foreground">Tahap Verifikasi</p>
               <p className="font-medium">{stepLabel}</p>
             </div>
           )}
 
-          {letter.logVerifikasi && (
+          {surat.logVerifikasi && (
             <div>
               <p className="text-sm text-muted-foreground">Catatan Verifikasi</p>
-              <p>{letter.logVerifikasi}</p>
+              <p>{surat.logVerifikasi}</p>
             </div>
           )}
 
-          {letter.catatanVerifikasi && (
+          {surat.catatanVerifikasi && (
             <div>
               <p className="text-sm text-muted-foreground">Alasan Penolakan</p>
-              <p>{letter.catatanVerifikasi}</p>
+              <p>{surat.catatanVerifikasi}</p>
             </div>
           )}
 
           <div>
             <p className="text-sm text-muted-foreground">Dibuat Pada</p>
-            <p>{letter.createdAt.toLocaleDateString()}</p>
+            <p>{surat.createdAt.toLocaleDateString()}</p>
           </div>
         </div>
       </div>
 
-      {letter.status === "issued" && (
+      {surat.status === "issued" && (
         <div className="mt-8 rounded-lg bg-green-50 p-6">
           <h2 className="mb-4 text-xl font-semibold">Surat Sudah Terbit</h2>
           <p className="text-base">

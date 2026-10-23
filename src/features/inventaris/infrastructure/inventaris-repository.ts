@@ -8,6 +8,7 @@ import type {
   InventarisInput,
   InventarisKategoriInput,
   InventarisMutasiInput,
+  MutasiRow,
 } from "@/features/inventaris/domain/inventaris";
 
 export async function listInventarisKategori(villageId: number) {
@@ -154,7 +155,7 @@ export async function softDeleteInventaris(villageId: number, id: number) {
     .where(and(eq(inventaris.villageId, villageId), eq(inventaris.id, id)));
 }
 
-export async function listMutasi(villageId: number, inventarisId?: number) {
+export async function listMutasi(villageId: number, inventarisId?: number): Promise<MutasiRow[]> {
   const where = inventarisId
     ? and(
         eq(inventarisMutasi.villageId, villageId),

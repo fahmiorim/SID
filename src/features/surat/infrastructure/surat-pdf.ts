@@ -21,6 +21,8 @@ export interface SuratPdfInput {
   nomor: string | null;
   tanggal: string;
   content: string;
+  /** Tautan verifikasi publik; dicetak di footer bila tersedia. */
+  verificationUrl?: string | null;
 }
 
 const PAGE_WIDTH = 595.28;
@@ -174,6 +176,29 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
     const nip = clean(`NIP. ${desa.nipKepalaDesa}`);
     const nipWidth = font.widthOfTextAtSize(nip, 9);
     page.drawText(nip, { x: PAGE_WIDTH - MARGIN - nipWidth, y, size: 9, font });
+  }
+
+  if (input.verificationUrl) {
+    const footer = wrap(clean(`Verifikasi: ${input.verificationUrl}`), font, 8, CONTENT_WIDTH);
+
+    // Footer selalu di dasar halaman; pindah halaman bila tanda tangan terlalu
+    // dekat dengan batas bawah agar tidak bertumpuk.
+    if (y < MARGIN + 30) {
+      page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    }
+
+    let footerY = MARGIN;
+    for (const line of footer) {
+      const width = font.widthOfTextAtSize(line, 8);
+      page.drawText(line, {
+        x: (PAGE_WIDTH - width) / 2,
+        y: footerY,
+        size: 8,
+        font,
+        color: rgb(0, 0, 0),
+      });
+      footerY += 10;
+    }
   }
 
   return pdf.save();

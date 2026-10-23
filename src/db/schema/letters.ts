@@ -70,6 +70,18 @@ export const letters = mysqlTable(
     /** Relasi ke tabel urls untuk QR verifikasi */
     urlsId: int("urls_id"),
 
+    /**
+     * Token verifikasi publik (Fase 2E — perbaikan IDOR).
+     *
+     * Nilai acak (32 byte hex) dihasilkan saat surat diterbitkan. Halaman
+     * publik `/desa/verifikasi-surat/[token]` mencari surat berdasarkan
+     * `verification_token_hash`, bukan `id`, sehingga surat tidak dapat
+     * ditebak. Token mentah disimpan agar tautan/QR dapat dicetak ulang dari
+     * halaman surat; hash dipakai sebagai kunci pencarian.
+     */
+    verificationToken: varchar("verification_token", { length: 64 }),
+    verificationTokenHash: varchar("verification_token_hash", { length: 64 }),
+
     /** Nama pemohon / informasi pelengkap */
     pemohon: varchar("pemohon", { length: 200 }),
 

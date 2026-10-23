@@ -1,169 +1,63 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import { FileText } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { daftarDokumenAction } from "@/features/konten/presentation/dokumen-actions";
-import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-media";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { daftarDokumen } from "@/features/konten/application/dokumen-use-cases";
 
-interface DokumenItem {
-  id: number;
-  nama: string;
-  slug: string;
-  kategori: string;
-  tahun: number | null;
-  berkas: string | null;
-  tautan: string | null;
-  keterangan: string | null;
-  aktif: boolean;
-}
-
-export default function DokumenPage() {
-  const [dokumen, setDokumen] = useState<DokumenItem[]>([]);
-
-  useEffect(() => {
-    async function loadDokumen() {
-      const result = await daftarDokumenAction(null, new FormData());
-      if (Array.isArray(result)) {
-        setDokumen(result);
-      }
-    }
-    loadDokumen();
-  }, []);
-
-  const onSubmit = async (e: React.SubmitEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const formData = new FormData(form);
-
-    const villageId = 1; // akan diambil dari sesi di aplikasi lengkap
-    if (formData.get("berkas")) {
-      const jalur = await simpanBerkasMedia(
-        villageId,
-        {
-          nama: formData.get("berkas") as string,
-          mime: (formData.get("berkaMime") as string) || "application/pdf",
-          ukuran: Number(formData.get("berkaSize")),
-          isi: new Uint8Array(),
-        },
-        "dokumen",
-        "berkas",
-      );
-      formData.set("berkas", jalur);
-    }
-
-    // Submit via action
-    const result = await daftarDokumenAction(null, formData);
-    if (Array.isArray(result)) {
-      setDokumen(result);
-    }
-  };
+export default async function DokumenPage() {
+  const dokumen = await daftarDokumen();
 
   return (
-    <Card className="mx-auto max-w-7xl">
-      <CardContent>
-        <PageHeader title="Kelola Dokumen Publik" />
+    <div className="space-y-6">
+      <PageHeader title="Dokumen Publik" description="Dokumen yang tampil di situs publik desa." />
 
-        <div className="mb-6">
-          <Button variant="secondary" onClick={() => {}}>
-            Tambah Dokumen
-          </Button>
-        </div>
-
-        <form onSubmit={onSubmit} className="mt-6 space-y-4">
-          <input type="hidden" name="id" defaultValue="" />
-
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Nama</label>
-              <Input name="nama" placeholder="Nama dokumen" defaultValue="" />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">Slug</label>
-              <Input name="slug" placeholder="slug-dokumen" defaultValue="" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Kategori</label>
-              <Input name="kategori" placeholder="kategori" defaultValue="" />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">Tahun</label>
-              <Input type="number" name="tahun" placeholder="Contoh: 2024" defaultValue="" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <div>
-              <label className="mb-2 block text-sm font-medium">Keterangan</label>
-              <Input name="keterangan" placeholder="Keterangan" defaultValue="" />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium">Tautan (opsional)</label>
-              <Input name="tautan" placeholder="https://..." defaultValue="" />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">Berkas (PDF)</label>
-            <Input type="file" accept="application/pdf" name="berkas" />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">Aktif</label>
-            <Checkbox defaultChecked />
-          </div>
-
-          <Button type="submit" variant="secondary">
-            Simpan
-          </Button>
-        </form>
-
-        <div className="mt-8">
-          <h3 className="mb-4 font-medium">Daftar Dokumen</h3>
+      <Card>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableCell className="font-medium">#</TableCell>
-                <TableCell className="font-medium">Nama</TableCell>
-                <TableCell className="font-medium">Slug</TableCell>
-                <TableCell className="font-medium">Kategori</TableCell>
-                <TableCell className="font-medium">Tahun</TableCell>
-                <TableCell className="font-medium">Aktif</TableCell>
+                <TableHead>Nama</TableHead>
+                <TableHead>Kategori</TableHead>
+                <TableHead>Tahun</TableHead>
+                <TableHead>Jenis</TableHead>
+                <TableHead>Nomor</TableHead>
+                <TableHead>Berkas/Tautan</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {dokumen.map((d: DokumenItem) => (
-                <TableRow key={d.id}>
-                  <TableCell>{d.id}</TableCell>
-                  <TableCell>{d.nama}</TableCell>
-                  <TableCell>{d.slug}</TableCell>
-                  <TableCell>{d.kategori}</TableCell>
-                  <TableCell>{d.tahun}</TableCell>
-                  <TableCell>
-                    {d.aktif ? (
-                      <Badge variant="secondary">Aktif</Badge>
-                    ) : (
-                      <Badge variant="outline">Nonaktif</Badge>
-                    )}
+              {dokumen.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-28 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center gap-2">
+                      <FileText className="size-5" />
+                      <p>Belum ada dokumen publik.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                dokumen.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.nama}</TableCell>
+                    <TableCell>{item.kategori}</TableCell>
+                    <TableCell>{item.tahun ?? "-"}</TableCell>
+                    <TableCell>{item.jenis ?? "-"}</TableCell>
+                    <TableCell>{item.nomor ?? "-"}</TableCell>
+                    <TableCell>{item.berkas ?? item.tautan ?? "-"}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

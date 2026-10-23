@@ -12,7 +12,7 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 
 /** Halaman publik: boleh diakses tanpa sesi. */
-const PUBLIC_PATHS = ["/desa", "/layanan-mandiri", "/masuk", "/verifikasi-surat"] as const;
+const PUBLIC_PATHS = ["/desa", "/layanan-mandiri", "/masuk"] as const;
 
 /**
  * Berkas metadata yang harus selalu dapat diambil mesin pencari tanpa sesi.

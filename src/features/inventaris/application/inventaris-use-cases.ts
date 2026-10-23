@@ -5,6 +5,7 @@ import type {
   InventarisInput,
   InventarisKategoriInput,
   InventarisMutasiInput,
+  InventarisOption,
 } from "@/features/inventaris/domain/inventaris";
 import {
   createInventaris,
@@ -95,9 +96,23 @@ export async function tolakMutasiData(id: number, catatanPenolakan: string) {
 export async function getMutasiPageData(inventarisId?: number) {
   const user = await requirePermission(INVENTARIS_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
-  const [data, kategori] = await Promise.all([
+  const [data, inventarisData] = await Promise.all([
     listMutasi(villageId, inventarisId),
-    listInventarisKategori(villageId),
+    listInventaris(villageId, ""),
   ]);
-  return { rows: data, kategori };
+
+  const inventaris: InventarisOption[] = inventarisData.rows.map((item) => ({
+    id: item.id,
+    namaBarang: item.namaBarang,
+    nomorInventaris: item.nomorInventaris,
+    jumlah: item.jumlah,
+    satuan: item.satuan,
+  }));
+
+  return {
+    rows: data,
+    inventaris,
+    canWrite: hasPermission(user.permissions, INVENTARIS_RESOURCE, "update"),
+    canManage: hasPermission(user.permissions, INVENTARIS_RESOURCE, "delete"),
+  };
 }

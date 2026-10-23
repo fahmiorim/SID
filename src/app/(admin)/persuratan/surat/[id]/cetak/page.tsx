@@ -8,6 +8,7 @@ import { getSuratPrintData } from "@/features/surat/application/surat-use-cases"
 import { formatTanggalIndonesia, LETTER_STATUS_LABELS } from "@/features/surat/domain/surat";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
 import { isAppError } from "@/lib/errors";
+import { getRequestOrigin } from "@/lib/request-origin";
 
 export default async function CetakSuratPage({
   params,
@@ -22,6 +23,11 @@ export default async function CetakSuratPage({
     if (isAppError(error) && error.code === "NOT_FOUND") notFound();
     throw error;
   });
+
+  const origin = await getRequestOrigin();
+  const verificationUrl = surat.verificationToken
+    ? `${origin}/desa/verifikasi-surat/${surat.verificationToken}`
+    : null;
 
   const headerLines = [
     desa.namaPropinsi ? `PEMERINTAH ${desa.namaPropinsi.toUpperCase()}` : null,
@@ -97,6 +103,14 @@ export default async function CetakSuratPage({
           </p>
           {desa.nipKepalaDesa ? <p className="mt-1 text-xs">NIP. {desa.nipKepalaDesa}</p> : null}
         </div>
+
+        {verificationUrl ? (
+          <div className="mt-8 border-t border-black/40 pt-2 text-center text-[10px] leading-4">
+            <p>Verifikasi keaslian surat ini melalui:</p>
+            <p className="font-medium break-all">{verificationUrl}</p>
+            <p className="mt-1 break-all">Token: {surat.verificationToken}</p>
+          </div>
+        ) : null}
       </article>
     </div>
   );

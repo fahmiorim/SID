@@ -387,7 +387,13 @@ export interface MenuPublikRingkas {
   aktif: boolean;
 }
 
-export async function listMenuPublik(villageId: number): Promise<MenuPublikRingkas[]> {
+export async function listMenuPublik(
+  villageId: number,
+  includeInactive = false,
+): Promise<MenuPublikRingkas[]> {
+  const kondisi = [eq(menuPublik.villageId, villageId)];
+  if (!includeInactive) kondisi.push(eq(menuPublik.aktif, true));
+
   return db
     .select({
       id: menuPublik.id,
@@ -399,7 +405,7 @@ export async function listMenuPublik(villageId: number): Promise<MenuPublikRingk
       aktif: menuPublik.aktif,
     })
     .from(menuPublik)
-    .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.aktif, true)))
+    .where(and(...kondisi))
     .orderBy(asc(menuPublik.urut), asc(menuPublik.id));
 }
 
@@ -420,12 +426,14 @@ export async function updateMenuPublik(
   await db
     .update(menuPublik)
     .set({ villageId, ...data })
-    .where(eq(menuPublik.id, id));
+    .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.id, id)));
 }
 
 /** Menghapus satu baris menu publik. */
 export async function deleteMenuPublik(villageId: number, id: number): Promise<void> {
-  await db.delete(menuPublik).where(eq(menuPublik.id, id));
+  await db
+    .delete(menuPublik)
+    .where(and(eq(menuPublik.villageId, villageId), eq(menuPublik.id, id)));
 }
 
 /* -------------------------------------------------------- halaman statis */

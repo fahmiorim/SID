@@ -27,7 +27,7 @@ export default async function APBDesPage() {
   const villageId = desa.id;
 
   // Ambil data keuangan (anggaran & realisasi per rekening)
-  const [rows] = await db
+  const rows = await db
     .select({
       id: keuangan.id,
       templateUuid: keuangan.templateUuid,
@@ -39,30 +39,19 @@ export default async function APBDesPage() {
     .from(keuangan)
     .where(eq(keuangan.villageId, villageId));
 
-  const safeRows = (rows ?? []) as Array<{
-    id: number;
-    templateUuid: string;
-    tahun: number;
-    anggaran: string;
-    realisasi: string;
-    createdAt: Date;
-  }>;
-
   return (
     <div className="mx-auto max-w-3xl py-12">
       <h1 className="mb-12 text-2xl font-bold">Laporan Keuangan</h1>
 
-      <p className="mb-8 text-sm text-muted-foreground">
-        Total catatan anggaran: {safeRows.length}
-      </p>
+      <p className="mb-8 text-sm text-muted-foreground">Total catatan anggaran: {rows.length}</p>
 
-      {safeRows.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="rounded-lg bg-white p-6 text-center shadow">
           <p className="text-muted-foreground">Belum ada data keuangan di desa ini.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {safeRows.map((r) => (
+          {rows.map((r) => (
             <div
               key={r.id}
               className="rounded-md border border-border bg-white p-4 shadow-sm transition-shadow hover:shadow-lg"

@@ -31,6 +31,7 @@ import {
   canVerifyStep,
   DEFAULT_NUMBER_FORMAT,
   formatTanggalIndonesia,
+  generateVerificationToken,
   nextVerificationStep,
   renderSuratTemplate,
   roleCanVerifyStep,
@@ -350,7 +351,7 @@ async function terbitkanSurat(
   villageId: number,
   surat: SuratDetail,
   desa: IdentitasDesa,
-): Promise<{ number: string }> {
+): Promise<{ number: string; verificationToken: string }> {
   const jenis = await loadJenis(villageId, surat.typeId);
   const penduduk = surat.residentId
     ? await getPendudukSuratData(villageId, surat.residentId)
@@ -392,15 +393,23 @@ async function terbitkanSurat(
     buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, number),
   );
 
+  // Token verifikasi publik: token mentah dipakai untuk tautan/QR dan
+  // disimpan agar bisa dicetak ulang; hash dipakai sebagai kunci pencarian.
+  // Surat lama yang sudah terbit tanpa token tetap valid — token hanya
+  // dihasilkan saat penerbitan baru.
+  const { token, hash } = await generateVerificationToken();
+
   await issueSuratRecord(villageId, surat.id, {
     number,
     sequence,
     content,
     issuedAt: new Date(),
     logVerifikasi: "kades",
+    verificationToken: token,
+    verificationTokenHash: hash,
   });
 
-  return { number };
+  return { number, verificationToken: token };
 }
 
 /**
@@ -412,7 +421,7 @@ async function terbitkanSurat(
 export async function verifySuratData(
   id: number,
   step: VerificationStep,
-): Promise<{ number: string | null }> {
+): Promise<{ number: string | null; verificationToken: string | null }> {
   const user = await requirePermission(SURAT_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
 
@@ -442,7 +451,7 @@ export async function verifySuratData(
       logVerifikasi: "operator",
       status: "verifikasi",
     });
-    return { number: null };
+    return { number: null, verificationToken: null };
   }
 
   if (step === "sekdes") {
@@ -451,13 +460,13 @@ export async function verifySuratData(
       logVerifikasi: "sekdes",
       status: "verifikasi",
     });
-    return { number: null };
+    return { number: null, verificationToken: null };
   }
 
   const desa = await getIdentitasDesa(villageId);
   if (!desa) throw notFound("Identitas desa belum dikonfigurasi.");
-  const { number } = await terbitkanSurat(villageId, surat, desa);
-  return { number };
+  const { number, verificationToken } = await terbitkanSurat(villageId, surat, desa);
+  return { number, verificationToken };
 }
 
 export async function rejectSuratData(id: number, reason: string): Promise<void> {

@@ -180,8 +180,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
 
 - [x] `/` beranda: hero, sambutan, berita terbaru, statistik ringkas, slider.
       *(Agenda menyusul.)*
-- [ ] `/desa/profil`: visi, misi, sejarah, sambutan, peta. *(Visi/misi/sejarah/
-      sambutan + koordinat sudah tampil; peta interaktif menyusul.)*
+- [x] `/desa/profil`: visi, misi, sejarah, sambutan, koordinat, peta statis.
+      *(Peta interaktif GIS menyusul Fase 3B.)*
 - [x] `/desa/perangkat`: perangkat + jabatan + foto (SOTK).
 - [x] `/desa/berita` + `/desa/berita/[slug]`. *(`/desa/berita/arsip`
       menyusul — daftar berita memakai filter kategori.)*
@@ -190,13 +190,28 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [x] `/desa/statistik` (penduduk, bantuan, APBDes).
 - [ ] `/desa/kelompok` (kelompok & lembaga).
 - [ ] `/desa/inventaris` (ringkasan aset).
-- [x] `/desa/apbdes` (transparansi keuangan).
+- [x] `/desa/apbdes` (transparansi keuangan). *UI dasar: query DB langsung
+      ke `keuangan`, menampilkan data mentah tanpa agregasi ke template.
+      Belum memenuhi DoD — perlu di-refactor lewat use case.*
 - [x] `/desa/kontak`.
-- [ ] `/verifikasi-surat/[token]`.
+- [x] `/desa/verifikasi-surat/[token]` + `/desa/verifikasi-surat` (form token).
+      *Token dicari lewat hash SHA-256 dan ter-scope tenant; token mentah
+      disimpan agar tautan dapat dicetak ulang. Parameter `params` sudah
+      di-`await` (Next 16).*
 - [x] `/desa/halaman/[slug]` (halaman statis dari `halaman_statis`).
-- [ ] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
-      `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **struktur
-      dulu**, data menyusul di Fase 4.
+- [x] `/desa/status-des`: profil desa lengkap + ringkasan inventaris.
+      *(Query DB langsung, belum lewat use case.)*
+- [x] `/desa/idm-sdgs`: laporan triwulan. *⚠ Logika salah: realisasi =
+      anggaran, selalu 100%. SDGs hanya teks statis.*
+- [x] `/desa/surat`: daftar jenis surat. *⚠ Masih hardcoded, bukan dari DB.
+      Tautan verifikasi kini menuju halaman form token yang valid.*
+- [x] `/desa/analisis-survei`: daftar survei aktif. *⚠ Hanya judul +
+      deskripsi, tanpa pertanyaan/jawaban. Query DB langsung (melanggar
+      arsitektur).*
+- [x] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
+      `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **hanya
+      placeholder kosong** dengan komentar TODO. Tidak ada backend
+      (`src/features/pembangunan/` tidak ada). Data menyusul Fase 3B/3C/3D.
 
 ### 1F. CMS konten
 
@@ -204,7 +219,12 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
       `dokumen-publik`, `tema`. *(Selesai: `tema`, `berita`,
       `berita-kategori`, `galeri`, `profil-desa`, `perangkat-desa`. Menyusul:
-      menu, widget, slider, dokumen.)*
+      menu, widget, slider, dokumen.)* ⚠ **Pelanggaran RBAC**: slug
+      `super-admin` ditambahkan di `resources.ts` tanpa entri di
+      `modules.ts` seed. Modul `menu-publik`, `widget`, `slider`,
+      `dokumen-publik` juga belum di-seed ke `modules.ts`, sehingga
+      halaman admin ini tidak muncul di navigasi dan tidak dapat diberi
+      izin melalui seeder. Perbaiki di Fase 2G.
 - [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
       jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
       disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
@@ -219,9 +239,11 @@ Mengacu `donjo-app/controllers/fweb/*`:
       jabatan, foto, status, urutan, dan penanda tangan; katalog jabatan CRUD.
       Bukti: `features/konten/*profil*`, `*perangkat*`, halaman admin; CRUD dan
       FK `set null` diuji ke DB dev.
-- [x] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`. Semua halaman admin terbangun dan tervalidasi.
-- [x] **1F.6** `/konten/dokumen`: CRUD dokumen publik dengan form nama, slug, kategori, tahun, berkas/tautan, status. Halaman admin di `/konten/dokumen`.
-- [ ] **1F.6** `/konten/dokumen` (unggah PDF + metadata).
+- [ ] **1F.5** `/konten/menu`, `/konten/widget`, `/konten/slider`. *(`/konten/menu`
+      kini menampilkan daftar menu nyata per desa; widget/slider masih mockup
+      dan belum punya CRUD.)*
+- [ ] **1F.6** `/konten/dokumen`: *`/konten/dokumen` menampilkan daftar dokumen
+      publik nyata; form unggah/CRUD dan metadata belum tersedia.*
 - [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
       (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
@@ -254,17 +276,19 @@ otorisasi, validasi, dan test.
 
 ### 2A. Inventaris + approval berjenjang (6 hari)
 
-- [x] Migrasi `inventaris_mutasi`: `diajukan_oleh`, `diajukan_oleh_id`,
+- [x] Migrasi kolom mutasi: `diajukan_oleh`, `diajukan_oleh_id`,
       `verifikasi_operator`, `verifikasi_sekdes`, `verifikasi_kades`,
       `log_verifikasi`, `catatan_verifikasi`.
-- [x] State machine `nextMutasiStage()` (mirror persuratan).
-- [x] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
+- [ ] State machine `nextMutasiStage()` (belum ada).
+- [ ] Approve per tahap; **aset berubah hanya di tahap final**, dalam satu
       transaksi (`pindah` → lokasi, `rusak` → kondisi, `perbaikan` → baik,
-      `hapus` → soft-delete).
-- [x] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
+      `hapus` → soft-delete). *(Saat ini approval hanya satu tahap dan hanya
+      mengubah status mutasi; data barang belum diubah.)*
+- [ ] Larangan: lompat tahap, approve ganda, approve oleh pengaju sendiri.
 - [x] Grant `inventaris` + `mutasi-inventaris` untuk sekdes & kades.
-- [x] UI: CRUD inventaris, kategori, form mutasi, timeline verifikasi.
-- [x] Test transisi sah & ilegal.
+- [x] UI: daftar inventaris, form mutasi, approval satu tahap.
+- [ ] UI: CRUD inventaris/kategori dan timeline verifikasi berjenjang.
+- [ ] Test transisi sah & ilegal.
 
 ### 2B. Perangkat desa & lembaga (3 hari)
 
@@ -533,6 +557,28 @@ Fase 3A–3H bisa dipecah ke beberapa developer.
 
 ## Status Dokumen
 
-Diperbarui 22 Oktober 2026 dari audit `commit ded8f5f` + pemetaan source
-OpenSID di `D:\laragon\www\opensid`. Urutan prioritas: web publik → admin
-berfungsi → paritas OpenSID → multi-desa.
+Diperbarui 23 Oktober 2026 dari audit dokumen vs kode. Urutan prioritas:
+web publik → admin berfungsi → paritas OpenSID → multi-desa.
+
+---
+
+## Status Akhir (diperbarui 23 Oktober 2026)
+
+| Fase | Status | Catatan |
+|------|--------|---------|
+| 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi & CMS selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder kosong |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (daftar + mutasi satu tahap), perangkat, surat, keuangan ada; warga (NIK+PIN), bumindes, CRUD inventaris/kategori belum |
+| 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
+| 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
+| 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |
+| 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
+
+**Keseluruhan: ±15%** (Fase 0 + sebagian Fase 1–2).
+
+Masalah kritis yang perlu diperbaiki sebelum lanjut:
+1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar belum dibuat (baru tautan teks).
+2. Halaman publik query DB langsung (melanggar arsitektur).
+3. RBAC: slug `super-admin` dan 4 modul CMS belum di-seed.
+4. Route typo `pertanaha` → `pertanahan` (sudah diperbaiki).
+5. Halaman statistik publik hardcoded `"0"`, tidak query DB.

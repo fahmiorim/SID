@@ -28,6 +28,12 @@ export type MutasiJenis = (typeof MUTASI_JENIS)[number];
 export const MUTASI_STATUS = ["diajukan", "disetujui", "ditolak"] as const;
 export type MutasiStatus = (typeof MUTASI_STATUS)[number];
 
+export const MUTASI_STATUS_LABELS: Record<MutasiStatus, string> = {
+  diajukan: "Menunggu Persetujuan",
+  disetujui: "Disetujui",
+  ditolak: "Ditolak",
+};
+
 export const INVENTARIS_KATEGORI_LABELS: Record<InventarisKategoriGolongan, string> = {
   tanah: "Tanah",
   gedung_bangunan: "Gedung & Bangunan",
@@ -93,3 +99,27 @@ export const inventarisMutasiFormSchema = z.object({
 });
 
 export type InventarisMutasiInput = z.infer<typeof inventarisMutasiFormSchema>;
+
+/** Baris daftar mutasi yang ditampilkan di halaman admin. */
+export interface MutasiRow {
+  id: number;
+  inventarisId: number;
+  jenis: MutasiJenis;
+  status: MutasiStatus;
+  tanggalMutasi: string;
+  lokasiBaru: string | null;
+  kondisiBaru: InventarisKondisi | null;
+  jumlahMutasi: string | null;
+  alasan: string | null;
+  namaBarang: string | null;
+  nomorInventaris: string | null;
+}
+
+/** Pilihan barang untuk formulir pengajuan mutasi. */
+export interface InventarisOption {
+  id: number;
+  namaBarang: string;
+  nomorInventaris: string | null;
+  jumlah: string;
+  satuan: string | null;
+}

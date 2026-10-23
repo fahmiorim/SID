@@ -3,92 +3,97 @@
 import { revalidatePath } from "next/cache";
 
 import {
-  createMenuPublik,
-  deleteMenuPublik,
-  listMenuPublik,
-  updateMenuPublik,
-} from "@/features/publik/infrastructure/content-repository";
+  createMenu,
+  deleteMenu,
+  listMenu,
+  updateMenu,
+} from "@/features/konten/application/menu-use-cases";
+import type { MenuPublikRingkas } from "@/features/publik/infrastructure/content-repository";
+
+const PATH = "/konten/menu";
+
+function text(formData: FormData, name: string) {
+  const value = formData.get(name);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function parseId(raw: FormDataEntryValue | null) {
+  if (typeof raw !== "string" || raw.trim() === "") return null;
+  const value = Number(raw);
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
 
 export async function daftarMenu(
   _previousState: unknown,
   _formData: FormData,
 ): Promise<MenuPublikRingkas[]> {
   try {
-    const menus = (await listMenuPublik(0)) as MenuPublikRingkas[];
-    return menus;
-  } catch (_error) {
+    return await listMenu({ search: "", status: "", page: 1 });
+  } catch {
     return [];
   }
 }
 
 export async function tambahMenu(
   _previousState: unknown,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
-  const nama = (_formData.get("nama") as string) || "";
-  const link = (_formData.get("link") as string) || "";
+  const nama = text(formData, "nama");
+  const link = text(formData, "link");
+  const linkTipe = text(formData, "linkTipe") === "external" ? "external" : "internal";
+  const urut = Number(text(formData, "urut") || "0");
 
   if (!nama || !link) {
     return { success: false, error: "Nama dan link wajib diisi." };
   }
 
   try {
-    await createMenuPublik(0, { nama, link, linkTipe: "internal" });
-    revalidatePath("/konten/menu");
+    await createMenu({ nama, link, linkTipe, urut: Number.isFinite(urut) ? urut : 0 });
+    revalidatePath(PATH);
     return { success: true };
-  } catch (_error) {
-    if ((_error as Error)?.message?.includes("sudah ada")) {
-      return { success: false, error: (_error as Error).message };
-    }
-    return { success: false, error: "Gagal menambah menu." };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Gagal menambah menu." };
   }
 }
 
 export async function ubahMenu(
   _previousState: unknown,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
-  const id = parseInt((_formData.get("id") as string) || "0");
-  const nama = (_formData.get("nama") as string) || "";
-  const link = (_formData.get("link") as string) || "";
+  const id = parseId(formData.get("id"));
+  const nama = text(formData, "nama");
+  const link = text(formData, "link");
+  const linkTipe = text(formData, "linkTipe") === "external" ? "external" : "internal";
+  const urut = Number(text(formData, "urut") || "0");
 
   if (!id || !nama || !link) {
     return { success: false, error: "ID, nama, dan link wajib diisi." };
   }
 
   try {
-    await updateMenuPublik(0, id, { nama, link });
-    revalidatePath("/konten/menu");
+    await updateMenu(id, { nama, link, linkTipe, urut: Number.isFinite(urut) ? urut : 0 });
+    revalidatePath(PATH);
     return { success: true };
-  } catch (_error) {
-    return { success: false, error: "Gagal mengubah menu." };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Gagal mengubah menu." };
   }
 }
 
 export async function hapusMenu(
   _previousState: unknown,
-  _formData: FormData,
+  formData: FormData,
 ): Promise<{ success: boolean; error?: string }> {
-  const id = parseInt((_formData.get("id") as string) || "0");
+  const id = parseId(formData.get("id"));
 
   if (!id) {
     return { success: false, error: "ID menu wajib diisi." };
   }
 
   try {
-    await deleteMenuPublik(0, id);
-    revalidatePath("/konten/menu");
+    await deleteMenu(id);
+    revalidatePath(PATH);
     return { success: true };
-  } catch (_error) {
-    return { success: false, error: "Gagal menghapus menu." };
+  } catch (error) {
+    return { success: false, error: (error as Error).message || "Gagal menghapus menu." };
   }
-}
-
-export interface MenuPublikRingkas {
-  id: number;
-  nama: string;
-  link: string;
-  linkTipe: string;
-  urut: number;
-  aktif: boolean;
 }

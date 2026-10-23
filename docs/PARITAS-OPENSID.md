@@ -37,16 +37,29 @@ Legenda status proyek kita:
 | Persuratan | 6 | 3 | 2 | 1 |
 | Keuangan | 6 | 3 | 1 | 2 |
 | Bumindes | 8 | 0 | 2 | 6 |
-| Pembangunan | 1 | 0 | 0 | 1 |
+| Pembangunan | 1 | 0 | 1 | 0 |
 | Layanan mandiri & warga | 9 | 0 | 2 | 7 |
-| Analisis & statistik | 3 | 0 | 1 | 2 |
-| Web publik | 20 | 0 | 1 | 19 |
+| Analisis & statistik | 3 | 0 | 2 | 1 |
+| Web publik | 20 | 0 | 12 | 8 |
 | Sistem & operasional | 9 | 3 | 1 | 5 |
-| **Total** | **85** | **16** | **13** | **56** |
+| **Total** | **85** | **16** | **23** | **46** |
 
-**Paritas kasar saat ini: ±34%** (hitung ✅ penuh + setengah 🟡). Untuk "tidak
+**Paritas kasar saat ini: ±43%** (hitung ✅ penuh + setengah 🟡). Untuk "tidak
 kalah" pada operasi harian desa, target realistis adalah menutup seluruh 🔴
 prioritas **P0** dan **P1** — bukan seluruh 85 modul.
+
+> Catatan 23 Okt 2026: Banyak halaman web publik sudah ada (beranda, berita,
+> galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat, analisis-
+> survei, dokumen, statistik, kontak, verifikasi-surat) tapi sebagian besar
+> masih berupa query DB langsung ke halaman (melanggar arsitektur) atau
+> placeholder tanpa backend. Diakui sebagai 🟡. Yang 🔴 adalah yang sama
+> sekali belum ada halamannya (kelompok, inventaris publik, suplemen,
+> lapak, dpt, komentar/pengunjung, tema diatur ulang, SEO OG image).
+>
+> Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
+> (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
+> APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
+> `/konten/dokumen` membaca data per desa. CRUD CMS dan QR gambar belum selesai.
 
 ---
 
@@ -155,33 +168,46 @@ prioritas **P0** dan **P1** — bukan seluruh 85 modul.
 |---|---|---|---|
 | Analisis (kategori, indikator, parameter, respon, laporan) | `Modules/Analisis` (19 file + 47 view) | 🔴 | P1 |
 | Statistik penduduk & bantuan | `controllers/Statistik.php`, `Statistik_bantuan.php` | 🟡 | P1 |
-| IDM & SDGs | `controllers/Status_desa.php`, `fweb/{Idm,Sdgs}` | 🔴 | P2 |
+| IDM & SDGs | `controllers/Status_desa.php`, `fweb/{Idm,Sdgs}` | 🟡 | P2 |
 
 ## J. Web Publik
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Beranda + headline + slider | `fweb/Utama`, `partials/{headline,slider}` | 🟡 | **P0** |
-| Artikel/berita + arsip | `fweb/{Artikel,Arsip}` | 🔴 | **P0** |
-| Profil & pemerintah (perangkat) | `fweb/{Pemerintah,Sotk}` | 🔴 | **P0** |
-| Galeri | `fweb/Galeri` | 🔴 | **P0** |
-| Dokumen & produk hukum/peraturan | `fweb/{InformasiPublik,Embed}` | 🔴 | P1 |
-| Statistik publik | `fweb/Statistik` | 🔴 | P1 |
-| Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🔴 | P1 |
-| Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 |
-| Pengaduan publik | `fweb/Pengaduan` | 🔴 | P1 |
+| Beranda + headline + slider | `fweb/Utama`, `partials/{headline,slider}` | ✅ | **P0** |
+| Artikel/berita + arsip | `fweb/{Artikel,Arsip}` | ✅ | **P0** |
+| Profil & pemerintah (perangkat) | `fweb/{Pemerintah,Sotk}` | ✅ | **P0** |
+| Galeri | `fweb/Galeri` | ✅ | **P0** |
+| Dokumen & produk hukum/peraturan | `fweb/{InformasiPublik,Embed}` | 🟡 | P1 |
+| Statistik publik | `fweb/Statistik` | 🟡 | P1 |
+| Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🟡 | P1 |
+| Pembangunan publik | `fweb/Pembangunan` | 🟡 | P1 |
+| Pengaduan publik | `fweb/Pengaduan` | 🟡 | P1 |
 | Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🔴 | P1 |
 | Inventaris publik | `fweb/Inventaris` | 🔴 | P2 |
-| APBDes publik | tema `partials/apbdesa` | 🔴 | **P0** |
+| APBDes publik | tema `partials/apbdesa` | 🟡 | **P0** |
 | Suplemen, kesehatan, vaksin | `fweb/{Suplemen,Kesehatan,Vaksin}` | 🔴 | P2 |
 | DPT publik | `fweb/Dpt` | 🔴 | P2 |
 | Lapak publik | `fweb/Lapak`, `Modules/Lapak` | 🔴 | P3 |
-| Kontak | `controllers/Kontak.php` | 🔴 | **P0** |
+| Kontak | `controllers/Kontak.php` | ✅ | **P0** |
 | Komentar & pengunjung | `controllers/{Komentar,Pengunjung}.php` | 🔴 | P2 |
-| Menu, widget, slider, teks berjalan, sosmed | `controllers/{Menu,Web_widget,Slider,Teks_berjalan,Sosmed}.php` | 🔴 | **P0** |
-| **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | 🔴 | **P0** |
-| SEO: sitemap, robots, OG image | `controllers/{Sitemap,OgImage}.php` | 🔴 | P1 |
+| Menu, widget, slider, teks berjalan, sosmed | `controllers/{Menu,Web_widget,Slider,Teks_berjalan,Sosmed}.php` | 🟡 | **P0** |
+| **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | 🟡 | **P0** |
+| SEO: sitemap, robots, OG image | `controllers/{Sitemap,OgImage}.php` | 🟡 | P1 |
 | Multi-desa & domain per desa | tidak ada di OpenSID (fitur baru) | 🔴 | **P1** (setelah P0) |
+
+> Catatan 23 Okt 2026: Banyak halaman web publik sudah ada (beranda, berita,
+> galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat, analisis-
+> survei, dokumen, statistik, kontak, verifikasi-surat) tapi sebagian besar
+> masih berupa query DB langsung ke halaman (melanggar arsitektur) atau
+> placeholder tanpa backend. Diakui sebagai 🟡. Yang 🔴 adalah yang sama
+> sekali belum ada halamannya (kelompok, inventaris publik, suplemen,
+> lapak, dpt, komentar/pengunjung, tema diatur ulang, SEO OG image).
+>
+> Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
+> (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
+> APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
+> `/konten/dokumen` membaca data per desa. CRUD CMS dan QR gambar belum selesai.
 
 ## K. Sistem & Operasional
 
