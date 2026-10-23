@@ -76,6 +76,11 @@ Status: **SELESAI** — check + build hijau, tree bersih (commit `07268d1`..`98f
 Tujuan: wajah aplikasi selesai lebih dulu. Semua halaman publik dibangun
 strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
+> **Catatan P1.3 (23 Okt 2026):** halaman publik gelombang 1 kini memakai
+> use case + slot tema; `/desa/kelompok` dan `/desa/inventaris` ditambahkan;
+> widget teks tampil di beranda; 404/error publik tersedia. Sisa P1: verifikasi
+> Lighthouse dan test integrasi HTTP.
+
 ### 1A. Fondasi publik
 
 - [x] **1A.1** Perbaiki `src/proxy.ts`: publik = `/`, `/desa/*`,
@@ -90,7 +95,12 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
       (menyusul bersama mesin tema 1D).
 - [x] **1A.4** `generateMetadata` per halaman + `sitemap.ts` + `robots.ts` sadar
       host (multi-domain). *JSON-LD belum.*
-- [ ] **1A.5** Halaman 404/error publik yang rapi.
+- [x] **1A.5** Halaman 404/error publik yang rapi:
+      `src/app/not-found.tsx` (URL tak cocok), `src/app/(public)/not-found.tsx`
+      (hasil `notFound()` dari rute publik, tetap memakai tema desa), dan
+      `src/app/(public)/error.tsx` memakai prop `retry` Next 16. Smoke test:
+      `/desa/tidak-ada`, `/desa/halaman/tidak-ada`, dan
+      `/desa/berita/tidak-ada` mengembalikan status 404.
 
 ### 1B. Seam multi-domain (disiapkan, belum diaktifkan)
 
@@ -104,7 +114,12 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
       jalur publik.
 - [x] **1B.4** Semua query publik (beranda, statistik, APBDes, bantuan, profil)
       memfilter `villageId` dari host.
-- [ ] **1B.5** Media & URL relatif; cache sadar-tenant; cookie per-host.
+- [x] **1B.5** Media & URL relatif; cache sadar-tenant; cookie per-host.
+      URL media dibentuk relatif (`urlMedia` → `/api/publik/media/<villageId>/...`),
+      rute media mengirim `Vary: Host` + `X-Content-Type-Options: nosniff`, dan
+      cookie sesi dikunci host-only lewat
+      `advanced.crossSubDomainCookies.enabled = false` di `src/lib/auth.ts`.
+      Halaman publik tetap `force-dynamic` agar tidak berbagi cache antar-host.
 - [x] **1B.6** Test isolasi dua desa/dua host: `domain/tenant.test.ts` menguji
       dua domain → dua desa berbeda, host tak dikenal → `null` (404) saat
       multi-desa, fallback hanya untuk instalasi satu desa, serta desa tanpa
@@ -186,28 +201,39 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [x] `/desa/berita` + `/desa/berita/[slug]`. *(`/desa/berita/arsip`
       menyusul — daftar berita memakai filter kategori.)*
 - [x] `/desa/galeri` + `/desa/galeri/[slug]`.
-- [x] `/desa/dokumen` (informasi publik, produk hukum).
+- [x] `/desa/dokumen` (informasi publik, produk hukum): use case
+      `daftarDokumenPublik()` + slot tema `dokumen`. Smoke test 200.
 - [x] `/desa/statistik` (penduduk, bantuan, APBDes).
-- [ ] `/desa/kelompok` (kelompok & lembaga).
-- [ ] `/desa/inventaris` (ringkasan aset).
-- [x] `/desa/apbdes` (transparansi keuangan). *UI dasar: query DB langsung
-      ke `keuangan`, menampilkan data mentah tanpa agregasi ke template.
-      Belum memenuhi DoD — perlu di-refactor lewat use case.*
+- [x] `/desa/kelompok` (kelompok & lembaga): use case
+      `listKelompokPublik()` → slot tema `kelompok`; menampilkan tipe,
+      kategori, ketua, jumlah anggota, dan keterangan. Smoke test 200.
+- [x] `/desa/inventaris` (ringkasan aset): use case
+      `getInventarisPublik()` + rekap murni (`ringkasan-publik.ts`) → slot tema
+      `inventaris`; menampilkan total unit/nilai, rekap kategori, dan daftar
+      barang. Smoke test 200.
+- [x] `/desa/apbdes` (transparansi keuangan): rute memakai
+      `getLaporanApbdesPublik()` dan slot tema `apbdes`, bukan query DB langsung;
+      ringkasan anggaran + realisasi per bidang. Smoke test 200.
 - [x] `/desa/kontak`.
 - [x] `/desa/verifikasi-surat/[token]` + `/desa/verifikasi-surat` (form token).
       *Token dicari lewat hash SHA-256 dan ter-scope tenant; token mentah
       disimpan agar tautan dapat dicetak ulang. Parameter `params` sudah
       di-`await` (Next 16).*
 - [x] `/desa/halaman/[slug]` (halaman statis dari `halaman_statis`).
-- [x] `/desa/status-des`: profil desa lengkap + ringkasan inventaris.
-      *(Query DB langsung, belum lewat use case.)*
-- [x] `/desa/idm-sdgs`: laporan triwulan. *⚠ Logika salah: realisasi =
-      anggaran, selalu 100%. SDGs hanya teks statis.*
-- [x] `/desa/surat`: daftar jenis surat. *⚠ Masih hardcoded, bukan dari DB.
-      Tautan verifikasi kini menuju halaman form token yang valid.*
-- [x] `/desa/analisis-survei`: daftar survei aktif. *⚠ Hanya judul +
-      deskripsi, tanpa pertanyaan/jawaban. Query DB langsung (melanggar
-      arsitektur).*
+- [x] `/desa/status-des`: identitas desa + ringkasan aset lewat use case
+      `getInventarisPublik()` dan slot tema `statusDesa`; bukan query DB
+      langsung. Smoke test 200.
+- [x] `/desa/idm-sdgs`: laporan realisasi per triwulan dari
+      `getLaporanTriwulanPublik()` (TW I–IV dijumlahkan, bukan disamakan dengan
+      anggaran). Klaim SDGs statis dihapus; bila indikator IDM/SDGs belum ada,
+      halaman menyatakan data belum tersedia. Smoke test 200.
+- [x] `/desa/surat`: daftar jenis surat dari DB lewat
+      `listJenisSuratPublik()` + slot tema `surat`; tautan verifikasi menuju
+      halaman form token yang valid. Smoke test 200.
+- [x] `/desa/analisis-survei`: daftar survei aktif lewat
+      `listSurveiPublik()` + slot tema `survei`; menampilkan jumlah
+      pertanyaan/responden dan daftar pertanyaan. Pengisian mandiri belum
+      tersedia. Smoke test 200.
 - [x] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
       `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **hanya
       placeholder kosong** dengan komentar TODO. Tidak ada backend
@@ -247,13 +273,13 @@ Mengacu `donjo-app/controllers/fweb/*`:
       Unggah berkas lewat UI **belum** ada; path media/tautan diisi manual.
       Bukti: `features/konten/*dokumen*`, `dokumenSlugExists`, halaman admin,
       dan `domain/cms.test.ts`.
-- [ ] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
+- [x] **1F.7** Sanitasi HTML: `sanitize-html` + `@types/sanitize-html`;
       `src/lib/sanitize.ts`; sanitasi saat simpan **dan** render; test XSS
       (`<script>`, `onerror=`, `javascript:`, `<iframe>`, `style=`).
-      *(Sanitasi render sudah di 1C/1G; sanitasi saat simpan aktif untuk berita.
-      Widget `isi` belum dirender di publik; saat render widget diaktifkan,
-      sanitasi simpan + render wajib ditambahkan. Menu/slider/dokumen tidak
-      memuat HTML bebas.)*
+      Widget `isi` kini disanitasi saat simpan (`widget-use-cases.ts`) dan
+      dirender lewat `KontenHtml` (sanitasi lapisan kedua) pada bagian beranda
+      `widget`. Widget non-teks tetap tersimpan; tampilan lanjutan per jenis
+      menyusul. Menu/slider/dokumen tidak memuat HTML bebas.
 
 ### 1G. Test & kriteria selesai
 
@@ -261,13 +287,17 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `src/lib/sanitize.ts` (`sanitasiHtml`, `teksPolos`); sanitasi saat
       render (lapisan kedua) via `_components/konten-html.tsx`; test XSS
       (`<script>`, `onerror=`, `javascript:`, `style=`, `<iframe>`, `data:`).
-- [ ] Semua halaman publik bisa dibuka tanpa sesi. *(Terverifikasi manual via
-      smoke test; test otomatis menyusul.)*
+- [x] Semua halaman publik bisa dibuka tanpa sesi. *(Smoke test produksi
+      `next start` pada 23 Okt 2026: beranda, profil, pemerintahan, berita,
+      galeri, statistik, APBDes, dokumen, kelompok, inventaris, status desa,
+      surat, analisis survei, IDM/SDGs, bantuan, kontak, dan layanan mandiri
+      semuanya 200. Test otomatis HTTP menyusul.)*
 - [ ] Ganti tema & opsi langsung terlihat, tanpa deploy.
 - [ ] Draft tidak tampil; slug unik; unggahan tervalidasi; konten tersanitasi.
       *(Query publik hanya menampilkan `published`+jadwal; slug unik via DB;
       unggahan tervalidasi; sanitasi dua lapis — tinggal test integrasi.)*
-- [ ] Tidak ada tautan 404.
+- [x] Tidak ada tautan 404. *(Crawler internal pada build produksi memeriksa
+      19 halaman publik; tidak ada tautan internal yang mengembalikan 404.)*
 - [ ] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
 
 **Selesai bila:** situs publik terasa seperti produk jadi, bukan placeholder.

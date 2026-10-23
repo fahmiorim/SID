@@ -44,6 +44,15 @@ export const auth = betterAuth({
     },
   },
 
+  /**
+   * Cookie sesi bersifat host-only: jangan bagikan ke subdomain. Pada mode
+   * multi-domain, sesi desa A tidak boleh terbaca oleh desa B yang memakai
+   * domain lain meskipun keduanya berbagi root domain.
+   */
+  advanced: {
+    crossSubDomainCookies: { enabled: false },
+  },
+
   user: {
     additionalFields: {
       // Nullable untuk mode satu-desa; diisi saat multi-desa aktif.

@@ -14,7 +14,7 @@ describe("themeOptionsSchema", () => {
     expect(opsi.warnaPrimer).toBe("#1a7f4b");
     expect(opsi.font).toBe("system");
     expect(opsi.tampilMenu).toBe(true);
-    expect(opsi.beranda).toEqual(["hero", "statistik", "berita", "kontak"]);
+    expect(opsi.beranda).toEqual(["hero", "statistik", "widget", "berita", "kontak"]);
   });
 
   it("menolak warna yang bukan heks 6 digit", () => {

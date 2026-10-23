@@ -11,9 +11,22 @@ import {
   totalLaporan,
 } from "@/features/keuangan/domain/keuangan";
 import {
+  buildTriwulanRows,
+  totalTriwulan,
+  type TriwulanBarisInput,
+} from "@/features/keuangan/domain/laporan-triwulan";
+import {
   listKeuanganTahun,
   listKeuanganTahunTersedia,
+  listKeuanganTriwulan,
 } from "@/features/keuangan/infrastructure/keuangan-repository";
+
+const TAHUN_MIN = 2000;
+const TAHUN_MAX = 2100;
+
+function tahunValid(value: number): boolean {
+  return Number.isInteger(value) && value >= TAHUN_MIN && value <= TAHUN_MAX;
+}
 
 /**
  * Laporan APBDes untuk **situs publik**.
@@ -47,4 +60,43 @@ export async function getLaporanApbdesPublik(villageId: number) {
     totalBidang: totalLaporan(bidang),
     grafik: seriGrafik(baris),
   };
+}
+
+/**
+ * Laporan realisasi triwulan untuk situs publik.
+ *
+ * Nilai triwulan dibaca langsung dari `keuangan_triwulan`; pagu anggaran tetap
+ * berasal dari `keuangan` pada tahun yang sama. Tidak ada estimasi
+ * `realisasi = anggaran` seperti versi lama halaman `/desa/idm-sdgs`.
+ */
+export async function getLaporanTriwulanPublik(villageId: number, tahunParam?: number) {
+  const tersedia = await listKeuanganTahunTersedia(villageId);
+  const tahun =
+    tahunParam !== undefined && tahunValid(tahunParam)
+      ? tahunParam
+      : (tersedia.at(-1) ?? new Date().getFullYear());
+
+  const [rows, tersimpan] = await Promise.all([
+    listKeuanganTahun(villageId, tahun),
+    listKeuanganTriwulan(villageId, tahun),
+  ]);
+
+  const byKode = new Map(tersimpan.map((row) => [row.templateUuid, row]));
+  const bidang = listBidangBelanja(rows);
+  const input: TriwulanBarisInput[] = bidang.map((row) => {
+    const nilai = byKode.get(row.templateUuid);
+    return {
+      kode: row.templateUuid,
+      uraian: row.uraian,
+      anggaran: row.anggaran,
+      tw1: nilai?.tw1 ?? "0.00",
+      tw2: nilai?.tw2 ?? "0.00",
+      tw3: nilai?.tw3 ?? "0.00",
+      tw4: nilai?.tw4 ?? "0.00",
+    };
+  });
+
+  const baris = buildTriwulanRows(input);
+
+  return { tahun, tersedia, baris, total: totalTriwulan(baris) };
 }

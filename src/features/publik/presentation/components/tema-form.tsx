@@ -25,6 +25,7 @@ const BERANDA_OPTIONS: { value: string; label: string }[] = [
   { value: "hero", label: "Sambutan / hero" },
   { value: "slider", label: "Sorotan desa" },
   { value: "statistik", label: "Data kependudukan" },
+  { value: "widget", label: "Widget informasi" },
   { value: "berita", label: "Berita terbaru" },
   { value: "surat", label: "Surat layanan terbaru" },
   { value: "kontak", label: "Kontak desa" },

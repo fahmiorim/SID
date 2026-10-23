@@ -130,6 +130,28 @@ export async function listJenisSurat(villageId: number): Promise<JenisSuratDTO[]
     .orderBy(asc(letterTypes.sortOrder), asc(letterTypes.name));
 }
 
+/**
+ * Jenis surat aktif dengan kolom aman untuk situs publik.
+ *
+ * Template isi dan konfigurasi internal tidak diambil agar halaman publik tidak
+ * pernah menerima data yang bukan untuk ditampilkan.
+ */
+export async function listJenisSuratAktifPublik(villageId: number) {
+  return db
+    .select({
+      id: letterTypes.id,
+      code: letterTypes.code,
+      name: letterTypes.name,
+      classificationName: letterClassifications.name,
+      requiresResident: letterTypes.requiresResident,
+      validityMonths: letterTypes.validityMonths,
+    })
+    .from(letterTypes)
+    .leftJoin(letterClassifications, eq(letterTypes.classificationId, letterClassifications.id))
+    .where(and(eq(letterTypes.villageId, villageId), eq(letterTypes.isActive, true)))
+    .orderBy(asc(letterTypes.sortOrder), asc(letterTypes.name));
+}
+
 export async function getJenisSurat(villageId: number, id: number): Promise<JenisSuratDTO | null> {
   const [row] = await db
     .select(jenisColumns)

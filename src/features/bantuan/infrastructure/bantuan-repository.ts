@@ -318,6 +318,27 @@ export async function listBantuanProgramPublik(villageId: number): Promise<Bantu
   return rows;
 }
 
+/** Ringkasan jumlah program dan peserta bantuan untuk statistik publik. */
+export async function getRingkasanBantuanPublik(
+  villageId: number,
+): Promise<{ program: number; peserta: number }> {
+  const [programRow, pesertaRow] = await Promise.all([
+    db
+      .select({ value: count() })
+      .from(bantuanProgram)
+      .where(eq(bantuanProgram.villageId, villageId)),
+    db
+      .select({ value: count() })
+      .from(bantuanPeserta)
+      .where(eq(bantuanPeserta.villageId, villageId)),
+  ]);
+
+  return {
+    program: programRow[0]?.value ?? 0,
+    peserta: pesertaRow[0]?.value ?? 0,
+  };
+}
+
 /**
  * Peserta sebuah program, diurutkan menurut nama sasaran.
  *

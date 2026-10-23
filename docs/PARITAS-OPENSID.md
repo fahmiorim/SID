@@ -35,28 +35,27 @@ Legenda status proyek kita:
 | Wilayah & pertanahan | 4 | 2 | 0 | 2 |
 | Pemerintahan | 8 | 3 | 2 | 3 |
 | Persuratan | 7 | 3 | 2 | 2 |
-| Keuangan | 6 | 3 | 2 | 1 |
+| Keuangan | 6 | 4 | 1 | 1 |
 | Bumindes | 11 | 0 | 1 | 10 |
 | Pembangunan | 1 | 0 | 0 | 1 |
 | Layanan mandiri & warga | 10 | 0 | 3 | 7 |
 | Analisis & statistik | 3 | 0 | 2 | 1 |
-| Web publik | 21 | 5 | 9 | 7 |
+| Web publik | 21 | 7 | 9 | 5 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **22** | **23** | **47** |
+| **Total** | **92** | **25** | **22** | **45** |
 
-**Paritas kasar saat ini: ±36%** (hitung ✅ penuh + setengah 🟡). Angka ini
+**Paritas kasar saat ini: ±39%** (hitung ✅ penuh + setengah 🟡). Angka ini
 dihitung ulang 23 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
 per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
 harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 **P1** — bukan seluruh 92 modul.
 
-> Catatan 23 Okt 2026: Banyak halaman web publik sudah ada (beranda, berita,
-> galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat, analisis-
-> survei, dokumen, statistik, kontak, verifikasi-surat) tapi sebagian besar
-> masih berupa query DB langsung ke halaman (melanggar arsitektur) atau
-> placeholder tanpa backend. Diakui sebagai 🟡. Yang 🔴 adalah yang sama
-> sekali belum ada halamannya (kelompok, inventaris publik, suplemen,
-> lapak, dpt, komentar/pengunjung, tema diatur ulang, SEO OG image).
+> Catatan 23 Okt 2026: Halaman web publik gelombang 1 sudah tersedia (beranda,
+> berita, galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat,
+> analisis-survei, dokumen, statistik, kontak, verifikasi-surat, kelompok,
+> inventaris) dan memakai use case + slot tema. Yang masih 🔴 adalah halaman
+> yang belum ada sama sekali (suplemen, lapak, dpt, komentar/pengunjung, SEO OG
+> image) serta fitur lanjutan.
 >
 > Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
@@ -74,6 +73,16 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > validasi domain, dan slug dokumen unik. Slider beranda sudah memakai data
 > aktif; widget dan teks berjalan belum dirender di tema publik. Unggah berkas
 > dokumen masih berupa path/URL manual.
+>
+> Perbaikan P1.3 23 Okt 2026: `/desa/apbdes`, `/desa/statistik`,
+> `/desa/dokumen`, `/desa/status-des`, `/desa/surat`, `/desa/analisis-survei`,
+> dan `/desa/idm-sdgs` di-refactor lewat use case + slot tema. Halaman baru
+> `/desa/kelompok` dan `/desa/inventaris` tersedia. IDM/SDGs tidak lagi memakai
+> realisasi palsu (`realisasi = anggaran`); laporan memakai jumlah TW I–IV dan
+> menyatakan bila indikator belum tersedia. Widget teks tampil di beranda dan
+> disanitasi saat simpan + render. 404/error publik memakai konvensi Next 16.
+> Smoke test produksi: seluruh halaman publik utama 200, tautan internal tanpa
+> 404. Sisa P1: Lighthouse dan test integrasi HTTP.
 
 ---
 
@@ -137,7 +146,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Dokumen laporan | `controllers/Dokumen.php` | ✅ | — |
 | Keuangan manual / rekonsiliasi | `controllers/Keuangan_manual.php` | 🔴 | P2 |
 | Inventaris kekayaan desa (buku) | `controllers/Bumindes_inventaris_kekayaan.php` | 🟡 | P1 |
-| Transparansi APBDes di web publik | `fweb` (APBDes) | 🟡 | **P0** |
+| Transparansi APBDes di web publik | `fweb` (APBDes) | ✅ | — |
 
 ## F. Bumindes
 
@@ -197,9 +206,9 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🟡 | P1 |
 | Pembangunan publik | `fweb/Pembangunan` | 🟡 | P1 |
 | Pengaduan publik | `fweb/Pengaduan` | 🟡 | P1 |
-| Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🔴 | P1 |
-| Inventaris publik | `fweb/Inventaris` | 🔴 | P2 |
-| APBDes publik | tema `partials/apbdesa` | 🟡 | **P0** |
+| Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🟡 | P1 (halaman publik ada; anggota lembaga menyusul) |
+| Inventaris publik | `fweb/Inventaris` | ✅ | — |
+| APBDes publik | tema `partials/apbdesa` | ✅ | — |
 | Suplemen, kesehatan, vaksin | `fweb/{Suplemen,Kesehatan,Vaksin}` | 🔴 | P2 |
 | DPT publik | `fweb/Dpt` | 🔴 | P2 |
 | Lapak publik | `fweb/Lapak`, `Modules/Lapak` | 🔴 | P3 |

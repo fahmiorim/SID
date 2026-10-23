@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...halamanStatis,
     { url: `${base}/desa/bantuan`, changeFrequency: "weekly", priority: 0.6 },
     { url: `${base}/desa/dokumen`, changeFrequency: "weekly", priority: 0.6 },
+    { url: `${base}/desa/kelompok`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/inventaris`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/status-des`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/surat`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/analisis-survei`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/idm-sdgs`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/layanan-mandiri`, changeFrequency: "monthly", priority: 0.5 },
   ];
 

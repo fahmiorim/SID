@@ -66,7 +66,11 @@ export async function GET(
     return new Response(Buffer.from(isi), {
       headers: {
         "Content-Type": mimeDariJalur(relatif),
+        // URL memuat villageId, tetapi cache bersama juga harus memisahkan
+        // respons menurut host agar media satu desa tidak tersaji ke host lain.
+        Vary: "Host",
         "Cache-Control": "public, max-age=31536000, immutable",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {

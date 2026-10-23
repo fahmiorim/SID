@@ -23,6 +23,12 @@ export const THEME_SLOTS = [
   "dokumen",
   "statistik",
   "apbdes",
+  "kelompok",
+  "inventaris",
+  "surat",
+  "status-desa",
+  "survei",
+  "triwulan",
   "bantuan",
   "kontak",
   "layanan-mandiri",
@@ -44,6 +50,12 @@ export const THEME_SLOT_LABELS: Record<ThemeSlot, string> = {
   dokumen: "Informasi Publik / Dokumen",
   statistik: "Statistik Desa",
   apbdes: "Transparansi APBDes",
+  kelompok: "Kelompok & Lembaga",
+  inventaris: "Inventaris & Aset",
+  surat: "Jenis Surat",
+  "status-desa": "Status Desa",
+  survei: "Analisis & Survei",
+  triwulan: "Laporan Triwulan",
   bantuan: "Program Bantuan",
   kontak: "Kontak",
   "layanan-mandiri": "Layanan Mandiri",
@@ -55,6 +67,7 @@ export const HOME_SECTION_IDS = [
   "hero",
   "slider",
   "statistik",
+  "widget",
   "berita",
   "surat",
   "kontak",
@@ -66,6 +79,7 @@ export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
   hero: "Sambutan / hero",
   slider: "Sorotan desa",
   statistik: "Data kependudukan",
+  widget: "Widget informasi",
   berita: "Berita terbaru",
   surat: "Surat layanan terbaru",
   kontak: "Kontak desa",
@@ -85,7 +99,7 @@ export const FONT_LABELS: Record<FontChoice, string> = {
 export const HEADER_VARIANTS = ["terang", "berwarna"] as const;
 
 /** Maksimal jumlah bagian beranda yang boleh diatur sekaligus. */
-const DEFAULT_HOME_SECTIONS: HomeSectionId[] = ["hero", "statistik", "berita", "kontak"];
+const DEFAULT_HOME_SECTIONS: HomeSectionId[] = ["hero", "statistik", "widget", "berita", "kontak"];
 
 /**
  * Opsi tema yang boleh diatur operator. Divalidasi sebelum disimpan dan saat

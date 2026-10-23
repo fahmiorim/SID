@@ -10,6 +10,7 @@ import {
   getProfilDesa,
   listBerita,
   listSliderBeranda,
+  listWidget,
 } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
@@ -27,12 +28,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BerandaPage() {
   const { ctx, tema, desa } = await siapkanTema();
 
-  const [statistik, surat, slider, berita, profil] = await Promise.all([
+  const [statistik, surat, slider, berita, profil, widget] = await Promise.all([
     getStatistikDesa(desa.id),
     listSuratTerbitTerbaru(desa.id, 5),
     listSliderBeranda(desa.id),
     listBerita(desa.id, { limit: 3 }),
     getProfilDesa(desa.id),
+    listWidget(desa.id),
   ]);
 
   const Home = tema.home;
@@ -43,6 +45,7 @@ export default async function BerandaPage() {
       sambutan={profil?.sambutan ?? null}
       slider={slider}
       statistik={statistik}
+      widget={widget}
       berita={berita}
       surat={surat}
     />

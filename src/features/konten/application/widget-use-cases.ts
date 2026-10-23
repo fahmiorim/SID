@@ -14,6 +14,7 @@ import {
 } from "@/features/publik/infrastructure/content-repository";
 import { requirePermission } from "@/lib/dal";
 import { notFound } from "@/lib/errors";
+import { sanitasiHtml } from "@/lib/sanitize";
 
 /** Daftar seluruh widget desa, termasuk yang nonaktif, untuk halaman admin. */
 export async function daftarWidgetAdmin(): Promise<WidgetRow[]> {
@@ -34,7 +35,9 @@ export async function simpanWidget(input: WidgetFormInput, id?: number): Promise
 
   const data = {
     judul: input.judul || null,
-    isi: input.isi || null,
+    // Widget teks dirender sebagai HTML di beranda; bersihkan sekali lagi saat
+    // simpan. `KontenHtml` tetap melakukan sanitasi lapisan kedua saat render.
+    isi: input.isi ? sanitasiHtml(input.isi) : null,
     jenis: input.jenis,
     pengaturan: input.pengaturan || null,
     urut: input.urut,

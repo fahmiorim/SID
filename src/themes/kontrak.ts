@@ -12,12 +12,18 @@ import type {
   GaleriListProps,
   HalamanProps,
   HomeProps,
+  InventarisProps,
+  KelompokProps,
   KontakProps,
   LayananMandiriProps,
   LayoutProps,
   PerangkatProps,
   ProfilProps,
   StatistikProps,
+  StatusDesaProps,
+  SuratProps,
+  SurveiProps,
+  TriwulanProps,
 } from "./types";
 
 /**
@@ -41,6 +47,12 @@ export interface ThemeComponents {
   dokumen: ComponentType<DokumenProps>;
   statistik: ComponentType<StatistikProps>;
   apbdes: ComponentType<ApbdesProps>;
+  kelompok: ComponentType<KelompokProps>;
+  inventaris: ComponentType<InventarisProps>;
+  surat: ComponentType<SuratProps>;
+  statusDesa: ComponentType<StatusDesaProps>;
+  survei: ComponentType<SurveiProps>;
+  triwulan: ComponentType<TriwulanProps>;
   bantuan: ComponentType<BantuanProps>;
   kontak: ComponentType<KontakProps>;
   layananMandiri: ComponentType<LayananMandiriProps>;
@@ -61,6 +73,12 @@ export function slotTerpenuhi(manifest: ThemeManifest): boolean {
     "dokumen",
     "statistik",
     "apbdes",
+    "kelompok",
+    "inventaris",
+    "surat",
+    "status-desa",
+    "survei",
+    "triwulan",
     "bantuan",
     "kontak",
     "layanan-mandiri",

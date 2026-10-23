@@ -1,12 +1,17 @@
 import type { ReactNode } from "react";
 
 import type { StatistikDesa, SuratPublikRow } from "@/features/desa/application/statistik-desa";
+import type { StatistikPublik } from "@/features/desa/application/statistik-publik";
 import type { IdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
+import type { TriwulanBaris, TriwulanTotal } from "@/features/keuangan/domain/laporan-triwulan";
+import type { SurveiPublik } from "@/features/publik/application/survei-publik";
+import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
   BeritaDetail,
   BeritaRingkas,
 } from "@/features/publik/infrastructure/content-repository";
+import type { JenisSuratPublik } from "@/features/surat/application/surat-publik-use-cases";
 
 /**
  * Kontrak data yang diberikan halaman publik kepada tema (Fase 1D).
@@ -42,6 +47,7 @@ export interface HomeProps {
   sambutan: string | null;
   slider: { id: number; gambar: string | null; judul: string | null }[];
   statistik: StatistikDesa;
+  widget: { id: number; judul: string | null; isi: string | null; jenis: number }[];
   berita: BeritaRingkas[];
   surat: SuratPublikRow[];
 }
@@ -117,7 +123,62 @@ export interface DokumenProps {
 
 export interface StatistikProps {
   ctx: ThemeContext;
-  statistik: StatistikDesa;
+  statistik: StatistikPublik;
+}
+
+export interface KelompokProps {
+  ctx: ThemeContext;
+  kelompok: {
+    id: number;
+    nama: string;
+    tipe: string;
+    kategori: string | null;
+    ketua: string | null;
+    jumlahAnggota: number;
+    kode: string | null;
+    keterangan: string | null;
+  }[];
+}
+
+export interface InventarisProps {
+  ctx: ThemeContext;
+  rekap: RekapInventaris;
+  inventaris: {
+    id: number;
+    nama: string;
+    kategori: string | null;
+    kode: string | null;
+    jumlah: string;
+    satuan: string | null;
+    kondisi: string;
+    lokasi: string | null;
+    tahun: number | null;
+    nilai: string | null;
+  }[];
+}
+
+export interface SuratProps {
+  ctx: ThemeContext;
+  jenis: JenisSuratPublik[];
+}
+
+export interface StatusDesaProps {
+  ctx: ThemeContext;
+  desa: IdentitasDesa;
+  inventaris: RekapInventaris;
+}
+
+export interface SurveiProps {
+  ctx: ThemeContext;
+  survei: SurveiPublik[];
+}
+
+export interface TriwulanProps {
+  ctx: ThemeContext;
+  tahun: number;
+  tersedia: number[];
+  baris: TriwulanBaris[];
+  total: TriwulanTotal;
 }
 
 export interface ApbdesProps {

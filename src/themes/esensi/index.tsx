@@ -11,11 +11,17 @@ import { EsensiGaleri } from "./pages/galeri";
 import { EsensiGaleriDetail } from "./pages/galeri-detail";
 import { EsensiHalaman } from "./pages/halaman";
 import { EsensiHome } from "./pages/home";
+import { EsensiInventaris } from "./pages/inventaris";
+import { EsensiKelompok } from "./pages/kelompok";
 import { EsensiKontak } from "./pages/kontak";
 import { EsensiLayananMandiri } from "./pages/layanan-mandiri";
 import { EsensiPerangkat } from "./pages/perangkat";
 import { EsensiProfil } from "./pages/profil";
 import { EsensiStatistik } from "./pages/statistik";
+import { EsensiStatusDesa } from "./pages/status-desa";
+import { EsensiSurat } from "./pages/surat";
+import { EsensiSurvei } from "./pages/survei";
+import { EsensiTriwulan } from "./pages/triwulan";
 
 import "./theme.css";
 
@@ -33,6 +39,12 @@ export const esensi: ThemeComponents = {
   dokumen: EsensiDokumen,
   statistik: EsensiStatistik,
   apbdes: EsensiApbdes,
+  kelompok: EsensiKelompok,
+  inventaris: EsensiInventaris,
+  surat: EsensiSurat,
+  statusDesa: EsensiStatusDesa,
+  survei: EsensiSurvei,
+  triwulan: EsensiTriwulan,
   bantuan: EsensiBantuan,
   kontak: EsensiKontak,
   layananMandiri: EsensiLayananMandiri,

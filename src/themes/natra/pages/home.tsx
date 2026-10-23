@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { formatTanggal, ringkasTeks, urlMedia } from "@/features/publik/domain/format";
 import type { HomeProps } from "@/themes/types";
+import { KontenHtml } from "@/themes/ui";
 
 /**
  * Beranda tema `natra` — hero berwarna penuh, statistik sebagai pita sorotan,
@@ -11,6 +12,7 @@ import type { HomeProps } from "@/themes/types";
  */
 export function NatraHome(props: HomeProps) {
   const { ctx, slider, statistik, berita, surat } = props;
+  const widgetTampil = props.widget.filter((item) => item.judul || item.isi);
 
   const bagian: Record<string, ReactNode> = {
     hero: <Hero key="hero" {...props} />,
@@ -34,6 +36,28 @@ export function NatraHome(props: HomeProps) {
         ))}
       </section>
     ),
+    widget:
+      widgetTampil.length > 0 ? (
+        <section key="widget" className="space-y-4">
+          <h2 className="text-2xl font-bold tracking-tight">Informasi Desa</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {widgetTampil.map((item) => (
+              <div
+                key={item.id}
+                className="tema-natra-card space-y-2 rounded-2xl border bg-card p-5"
+              >
+                {item.judul ? <h3 className="font-semibold">{item.judul}</h3> : null}
+                {item.isi ? (
+                  <KontenHtml
+                    html={item.isi}
+                    className="prose-desa text-sm leading-relaxed text-muted-foreground"
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null,
     berita:
       berita.length > 0 ? (
         <section key="berita" className="space-y-4">

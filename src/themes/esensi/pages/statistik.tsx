@@ -1,13 +1,14 @@
+import { formatRupiah } from "@/features/keuangan/domain/keuangan";
 import type { StatistikProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader, ThemeStatGrid } from "@/themes/ui";
 
-/** Statistik kependudukan desa. */
+/** Statistik kependudukan, bantuan, dan ringkasan keuangan desa. */
 export function EsensiStatistik({ ctx, statistik }: StatistikProps) {
   return (
     <div className="space-y-10">
       <ThemePageHeader
         title="Statistik Desa"
-        description={`Data kependudukan ${ctx.desa.namaDesa ?? "desa"} yang bersumber dari basis data desa.`}
+        description={`Data kependudukan dan ringkasan program ${ctx.desa.namaDesa ?? "desa"} yang bersumber dari basis data desa.`}
       />
 
       <ThemeStatGrid
@@ -18,6 +19,32 @@ export function EsensiStatistik({ ctx, statistik }: StatistikProps) {
           { label: "Kartu Keluarga", nilai: statistik.keluarga },
         ]}
       />
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Bantuan & Keuangan</h2>
+        <ThemeStatGrid
+          items={[
+            { label: "Program Bantuan", nilai: statistik.bantuan.program },
+            { label: "Peserta Bantuan", nilai: statistik.bantuan.peserta },
+            {
+              label: `Pendapatan ${statistik.keuangan.tahun}`,
+              nilai: formatRupiah(statistik.keuangan.pendapatan),
+            },
+            { label: "Belanja", nilai: formatRupiah(statistik.keuangan.belanja) },
+          ]}
+        />
+        <ThemeCard className="p-5 text-sm text-muted-foreground">
+          Realisasi belanja tahun {statistik.keuangan.tahun}:{" "}
+          <span className="font-medium text-foreground">
+            {formatRupiah(statistik.keuangan.realisasiBelanja)}
+          </span>
+          . Rincian ada di halaman{" "}
+          <a className="underline underline-offset-4" href="/desa/apbdes">
+            APBDes
+          </a>
+          .
+        </ThemeCard>
+      </section>
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Sebaran per Dusun</h2>

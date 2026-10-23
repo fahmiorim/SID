@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { formatTanggal, ringkasTeks, urlMedia } from "@/features/publik/domain/format";
 import type { HomeProps } from "@/themes/types";
-import { ThemeCard, ThemeEmpty, ThemeStatGrid } from "@/themes/ui";
+import { KontenHtml, ThemeCard, ThemeEmpty, ThemeStatGrid } from "@/themes/ui";
 
 /**
  * Beranda tema `esensi`.
@@ -15,6 +15,7 @@ import { ThemeCard, ThemeEmpty, ThemeStatGrid } from "@/themes/ui";
 export function EsensiHome(props: HomeProps) {
   const { ctx, slider, statistik, berita, surat } = props;
   const nama = ctx.desa.namaDesa ?? "Desa";
+  const widgetTampil = props.widget.filter((item) => item.judul || item.isi);
 
   const bagian: Record<string, ReactNode> = {
     hero: <Hero key="hero" {...props} />,
@@ -35,6 +36,28 @@ export function EsensiHome(props: HomeProps) {
         />
       </section>
     ),
+    widget:
+      widgetTampil.length > 0 ? (
+        <section key="widget" className="space-y-4">
+          <SectionTitle
+            title="Informasi Desa"
+            description="Pengumuman dan informasi tambahan dari pengelola desa."
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {widgetTampil.map((item) => (
+              <ThemeCard key={item.id} className="space-y-2 p-5">
+                {item.judul ? <h3 className="font-medium">{item.judul}</h3> : null}
+                {item.isi ? (
+                  <KontenHtml
+                    html={item.isi}
+                    className="prose-desa text-sm leading-relaxed text-muted-foreground"
+                  />
+                ) : null}
+              </ThemeCard>
+            ))}
+          </div>
+        </section>
+      ) : null,
     berita:
       berita.length > 0 ? (
         <section key="berita" className="space-y-4">
