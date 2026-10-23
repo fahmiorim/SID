@@ -6,6 +6,15 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-23 — 2B: perangkat desa & lembaga
+
+- Modul jabatan master sudah tersedia di `/konten/perangkat` lewat
+  `JabatanManager`; tidak memerlukan route terpisah.
+- `/kelompok` menangani kelompok & lembaga (filter tipe, kategori, CRUD) serta
+  anggota lewat `AnggotaDialog`; halaman publik `/desa/pemerintahan` dan
+  `/desa/kelompok` mengembalikan 200 pada build produksi.
+- Bukti: `perangkat.test.ts`, `kelompok.test.ts`, smoke test 23 Okt 2026.
+
 ## 2026-10-23 — 1G: verifikasi tema, konten, dan Lighthouse
 
 - **Tema & opsi**: uji admin `/konten/tema` pada build produksi `next start`;

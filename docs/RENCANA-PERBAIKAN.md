@@ -345,10 +345,15 @@ otorisasi, validasi, dan test.
 ### 2B. Perangkat desa & lembaga (3 hari)
 
 - [x] Modul `perangkat-desa`: CRUD, jabatan, urutan, foto, periode, aktif.
-- [ ] Modul `jabatan` (master) bila diperlukan.
-- [ ] Lembaga desa memakai `kelompok` tipe `lembaga` yang sudah ada; lengkapi
-      anggota lembaga + UI.
-- [ ] Data ini dipakai halaman publik `/desa/perangkat` (Fase 1E).
+- [x] Modul jabatan (master) tersedia sebagai `JabatanManager` di
+      `/konten/perangkat`; tidak perlu route terpisah.
+- [x] Lembaga desa memakai `kelompok` tipe `lembaga`; `/kelompok` punya filter
+      tipe, CRUD, kategori, dan `AnggotaDialog` untuk menambah/mengeluarkan
+      anggota.
+- [x] Data perangkat dipakai halaman publik `/desa/pemerintahan` (bukan
+      `/desa/perangkat`) lewat `listPerangkatDesa` + slot tema `perangkat`;
+      `/desa/kelompok` menampilkan kelompok & lembaga. Smoke test produksi
+      23 Okt 2026: keduanya 200.
 
 ### 2C. Akun warga (NIK + PIN) + Layanan Mandiri (10 hari)
 
