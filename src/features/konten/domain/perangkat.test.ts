@@ -72,6 +72,13 @@ describe("helper perangkat", () => {
     expect(slugJabatan("!!!")).toBe("jabatan");
   });
 
+  it("menyisakan ruang akhiran unik agar slug jabatan tetap muat kolom 100", () => {
+    const dasar = slugJabatan("a".repeat(200));
+
+    expect(dasar.length).toBeLessThanOrEqual(96);
+    expect(`${dasar}-200`.length).toBeLessThanOrEqual(100);
+  });
+
   it("memberi label jenis kelamin dan status", () => {
     expect(labelJenisKelamin("male")).toBe("Laki-laki");
     expect(labelJenisKelamin("female")).toBe("Perempuan");

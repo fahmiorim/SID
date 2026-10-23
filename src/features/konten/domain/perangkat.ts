@@ -97,9 +97,14 @@ export const perangkatFormSchema = z.object({
 
 export type PerangkatFormInput = z.infer<typeof perangkatFormSchema>;
 
-/** Slug jabatan dari nama; tidak pernah kosong. */
+/**
+ * Slug jabatan dari nama; tidak pernah kosong.
+ *
+ * Kolom `jabatan_perangkat.slug` hanya 100 karakter. Akhiran unik `-2` … `-200`
+ * memakai maksimal 4 karakter, jadi slug dasar dibatasi 96 karakter.
+ */
 export function slugJabatan(nama: string): string {
-  const dasar = buatSlug(nama, 100);
+  const dasar = buatSlug(nama, 96);
   return dasar === "" ? "jabatan" : dasar;
 }
 

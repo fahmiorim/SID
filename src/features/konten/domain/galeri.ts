@@ -48,9 +48,14 @@ export type FotoFormInput = z.infer<typeof fotoFormSchema>;
 /** Maksimal berkas per satu unggahan agar satu permintaan tidak terlalu besar. */
 export const MAKS_FOTO_PER_UNGGAH = 20;
 
-/** Slug album dari nama; tidak pernah kosong. */
+/**
+ * Slug album dari nama; tidak pernah kosong.
+ *
+ * Kolom `galeri_album.slug` hanya 150 karakter. Akhiran unik `-2` … `-200`
+ * memakai maksimal 4 karakter, jadi slug dasar dibatasi 146 karakter.
+ */
 export function slugAlbum(nama: string): string {
-  const dasar = buatSlug(nama, 150);
+  const dasar = buatSlug(nama, 146);
   return dasar === "" ? "album" : dasar;
 }
 

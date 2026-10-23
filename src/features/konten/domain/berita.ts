@@ -70,9 +70,15 @@ export function slugBerita(judul: string): string {
   return dasar === "" ? "berita" : dasar.slice(0, PANJANG_SLUG_MAKS);
 }
 
-/** Slug dasar kategori dari nama. */
+/**
+ * Slug dasar kategori dari nama.
+ *
+ * Kolom `berita_kategori.slug` hanya 100 karakter, sedangkan penanganan slug
+ * unik menambahkan akhiran `-2` … `-200` (maksimal 4 karakter). Sisakan ruang
+ * tersebut agar kandidat unik tidak pernah melewati batas kolom.
+ */
 export function slugKategoriBerita(nama: string): string {
-  const dasar = buatSlug(nama, 100);
+  const dasar = buatSlug(nama, 96);
   return dasar === "" ? "kategori" : dasar;
 }
 

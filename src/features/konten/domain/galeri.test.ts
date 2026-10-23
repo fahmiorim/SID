@@ -59,4 +59,11 @@ describe("slugAlbum", () => {
   it("memberi awalan album bila nama tidak menyisakan karakter sah", () => {
     expect(slugAlbum("!!!")).toBe("album");
   });
+
+  it("menyisakan ruang akhiran unik agar slug album tetap muat kolom 150", () => {
+    const dasar = slugAlbum("a".repeat(200));
+
+    expect(dasar.length).toBeLessThanOrEqual(146);
+    expect(`${dasar}-200`.length).toBeLessThanOrEqual(150);
+  });
 });

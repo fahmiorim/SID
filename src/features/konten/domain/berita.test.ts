@@ -65,6 +65,13 @@ describe("slugBerita", () => {
     expect(slugBerita("!!!")).toBe("berita");
     expect(slugKategoriBerita("—")).toBe("kategori");
   });
+
+  it("menyisakan ruang akhiran unik agar slug kategori tetap muat kolom 100", () => {
+    const dasar = slugKategoriBerita("a".repeat(200));
+
+    expect(dasar.length).toBeLessThanOrEqual(96);
+    expect(`${dasar}-200`.length).toBeLessThanOrEqual(100);
+  });
 });
 
 describe("kategoriBeritaFormSchema", () => {
