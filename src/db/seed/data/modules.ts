@@ -289,8 +289,7 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     icon: "chart-column",
     sortOrder: 45,
     isGroup: false,
-    // Halaman masih berupa kerangka tanpa data.
-    isActive: false,
+    isActive: true,
   },
 
   {
