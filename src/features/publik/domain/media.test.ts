@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { JENIS_MEDIA, namaBerkasAman, validasiMedia } from "./media";
+import {
+  isKategoriMediaPublik,
+  JENIS_MEDIA,
+  namaBerkasAman,
+  validasiBerkasSyarat,
+  validasiMedia,
+} from "./media";
 
 describe("validasiMedia", () => {
   it("menerima JPEG dan menandai ekstensi kanonik", () => {
@@ -30,6 +36,34 @@ describe("validasiMedia", () => {
   it("menolak MIME kosong", () => {
     expect(validasiMedia(null, 10).ok).toBe(false);
     expect(validasiMedia(undefined, 10).ok).toBe(false);
+  });
+});
+
+describe("kategori media publik", () => {
+  it("mengizinkan kategori konten dan menolak berkas permohonan warga", () => {
+    expect(isKategoriMediaPublik("berita")).toBe(true);
+    expect(isKategoriMediaPublik("dokumen")).toBe(true);
+    expect(isKategoriMediaPublik("permohonan")).toBe(false);
+    expect(isKategoriMediaPublik("")).toBe(false);
+  });
+});
+
+describe("validasiBerkasSyarat", () => {
+  it("menerima JPG/PNG/WEBP/PDF dalam batas ukuran", () => {
+    expect(validasiBerkasSyarat("image/jpeg", 1024).ok).toBe(true);
+    expect(validasiBerkasSyarat("application/pdf", 1024).ok).toBe(true);
+  });
+
+  it("menolak SVG, GIF, dan tipe lain meski media publik mengizinkannya", () => {
+    expect(validasiBerkasSyarat("image/svg+xml", 100).ok).toBe(false);
+    expect(validasiBerkasSyarat("image/gif", 100).ok).toBe(false);
+    expect(validasiBerkasSyarat("text/html", 100).ok).toBe(false);
+  });
+
+  it("menolak berkas kosong dan melebihi batas", () => {
+    const maks = JENIS_MEDIA["image/png"]?.maksByte ?? 0;
+    expect(validasiBerkasSyarat("image/png", 0).ok).toBe(false);
+    expect(validasiBerkasSyarat("image/png", maks + 1).ok).toBe(false);
   });
 });
 

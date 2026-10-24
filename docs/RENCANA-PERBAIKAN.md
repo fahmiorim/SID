@@ -76,18 +76,23 @@ Status: **SELESAI** — check + build hijau, tree bersih (commit `07268d1`..`98f
 Tujuan: wajah aplikasi selesai lebih dulu. Semua halaman publik dibangun
 strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
-> **Catatan P1.3 (23 Okt 2026):** halaman publik gelombang 1 kini memakai
-> use case + slot tema; `/desa/kelompok` dan `/desa/inventaris` ditambahkan;
-> widget teks tampil di beranda; 404/error publik tersedia. Sisa P1: verifikasi
-> Lighthouse dan test integrasi HTTP.
+> **Catatan P1.3 (23 Okt 2026):** halaman publik gelombang 1 memakai slot tema;
+> `/desa/apbdes`, `/desa/statistik`, `/desa/dokumen`, `/desa/status-des`,
+> `/desa/surat`, `/desa/analisis-survei`, dan `/desa/idm-sdgs` sudah lewat use
+> case. `/desa/kelompok` dan `/desa/inventaris` ditambahkan; widget teks tampil
+> di beranda; 404/error publik tersedia. **Sisa:** beranda, berita, galeri,
+> profil, pemerintahan, dan bantuan masih mengimpor repository langsung, dan
+> `/desa/pertanahan` masih query `db` mentah — perlu dirapikan ke use case.
+> Test integrasi HTTP juga belum ada.
 
 ### 1A. Fondasi publik
 
 - [x] **1A.1** Perbaiki `src/proxy.ts`: publik = `/`, `/desa/*`,
-      `/layanan-mandiri/*`, `/masuk`, `/verifikasi-surat/*`, plus berkas
-      metadata (`/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`,
-      `/icon.svg`); sisanya terproteksi. Tidak ada redirect pengguna login dari
-      halaman publik (kecuali `/masuk` → `/beranda`).
+      `/layanan-mandiri` (halaman informasi), `/masuk`, plus berkas metadata
+      (`/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`, `/icon.svg`);
+      sisanya terproteksi. Sejak 2C, `/layanan-mandiri/*` (dasbor warga)
+      **wajib sesi**, dan pengalihan pengguna yang sudah login ditangani
+      `/masuk` di server agar akun staf dan warga diarahkan ke area berbeda.
 - [x] **1A.2** Beranda desa di `src/app/(public)/page.tsx` (redirect dihapus);
       `src/app/page.tsx` lama dihapus, `/desa` dialihkan ke `/`.
 - [x] **1A.3** `src/app/(public)/layout.tsx`: header (logo, menu, drawer mobile,
@@ -357,32 +362,46 @@ otorisasi, validasi, dan test.
 
 ### 2C. Akun warga (NIK + PIN) + Layanan Mandiri (10 hari)
 
-**Route:** warga di `/layanan-mandiri` (login & dasbor). Halaman admin
-permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
+**Route:** warga di `/layanan-mandiri/*` (login lewat `/masuk`, dasbor di
+`/layanan-mandiri/beranda`). Halaman admin permohonan tetap di
+`/permohonan-surat` agar tidak bentrok; `/layanan-mandiri` (tanpa subpath)
+masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
-- [x] Migrasi `users.resident_id`, `users.must_change_pin`.
-- [ ] Login warga: `username = NIK`, password = PIN 6 digit.
-  - Set `minPasswordLength: 6` di better-auth; **kebijakan staf tetap ≥ 8**
-    ditegakkan di form/use-case.
-  - Aktifkan rate limit login.
-- [ ] Operator membuat akun dari detail penduduk:
-  - generate PIN 6 digit, tampilkan **sekali**, tombol salin;
+- [x] Migrasi `users.resident_id`, `users.must_change_pin` (`0021`), dan FK
+      `permohonan_surat.letter_id` + indeks unik `users.resident_id` (`0022`).
+- [x] Login warga: `username = NIK`, password = PIN 6 digit
+      (`src/features/auth/actions.ts`, `src/features/warga/*`).
+  - `minPasswordLength: 6` di better-auth; **kebijakan staf tetap ≥ 8**
+    ditegakkan di `features/pengguna/domain/pengguna.ts`.
+  - Rate limit login aktif: 5 percobaan/menit untuk `/sign-in/username`
+    (`src/lib/auth.ts`).
+- [x] Operator membuat akun dari baris penduduk (`PendudukRowActions`):
+  - generate PIN 6 digit, tampilkan **sekali** di `KredensialWargaDialog`
+    dengan tombol salin;
   - `mustChangePin = true`; reset PIN oleh operator;
   - kirim PIN otomatis menyusul di Fase 3H (SMS/WA); sekarang manual.
-- [ ] Area `(warga)`: `/layanan-mandiri`, `/layanan-mandiri/beranda`,
-      `/layanan-mandiri/surat`, `/layanan-mandiri/dokumen`,
-      `/layanan-mandiri/pesan`, `/layanan-mandiri/profil`,
-      `/layanan-mandiri/ubah-pin`.
-- [ ] Scoping: `residentId` **selalu dari sesi**, tidak dari `formData`.
-- [x] State machine status permohonan 0–5; tolak transisi ilegal.
-- [ ] Syarat nyata dari master surat (bukan `"[]"`).
-- [ ] UI warga: ajukan surat + isian dinamis + unggah syarat + status.
-      *(Halaman `/layanan-mandiri` masih informasi; action domain sudah ada.)*
-- [ ] UI admin: proses, kembalikan, batalkan, riwayat.
-      *(`/permohonan-surat` baru menampilkan daftar; action sudah tersedia.)*
-- [ ] Terbitkan surat dari permohonan (pakai use-case persuratan, bukan
-      duplikasi penomoran) + simpan `surat_id`.
-- [ ] Test: akses lintas warga, akun tanpa `residentId`, paksa ganti PIN.
+- [x] Area `(warga)`: `/layanan-mandiri/beranda`, `/layanan-mandiri/surat`,
+      `/layanan-mandiri/dokumen`, `/layanan-mandiri/pesan`,
+      `/layanan-mandiri/profil`, `/layanan-mandiri/ubah-pin`. Halaman ubah PIN
+      sengaja di luar layout gerbang agar PIN sementara bisa diganti.
+- [x] Scoping: `residentId` **selalu dari sesi** (`requireWarga`/
+      `requireWargaAktif` di `src/lib/dal.ts`), tidak dari `formData`. PDF surat
+      warga juga memeriksa `residentId` + status `issued`.
+- [x] State machine status permohonan 0–5; transisi ilegal ditolak
+      (`PERMOHONAN_TRANSITIONS`, `prosesPermohonan`).
+- [x] Syarat nyata dari master surat: `letter_types.syarat_surat` di-resolve ke
+      `letter_requirements` (bukan `"[]"`).
+- [x] UI warga: ajukan surat + isian dinamis + unggah syarat + status
+      (`form-ajukan-surat.tsx`). Berkas syarat disimpan di media privat
+      (kategori `permohonan`) dan diunduh lewat route ber-otentikasi.
+- [x] UI admin: detail permohonan, proses status, kembalikan dengan alasan,
+      batalkan, dan riwayat (`PermohonanDetailDialog`, `/permohonan-surat`).
+- [x] Terbitkan surat dari permohonan: `buatKonsepSuratPermohonanData` memakai
+      use case persuratan (bukan duplikasi penomoran), menyimpan `letter_id`,
+      dan menyinkronkan status saat surat terbit/ditolak.
+- [ ] Test otomatis akses lintas warga, akun tanpa `residentId`, dan paksa ganti
+      PIN. *(Proteksi ada di repository + `requireWarga`; test integrasi HTTP/DB
+      belum ditulis. Test domain: `warga.test.ts`, `layanan-mandiri.test.ts`.)*
 
 ### 2D. Bumindes (4 hari)
 
@@ -394,7 +413,8 @@ permohonan dipindah ke `/permohonan-surat` agar tidak bentrok.
 
 ### 2E. Persuratan: sisa gap (8 hari)
 
-- [ ] Penegakan syarat saat pengajuan (juga dipakai 2C).
+- [ ] Penegakan syarat saat pengajuan. *(Jalur warga sudah mewajibkan unggah
+      semua syarat; jalur operator/konsep manual belum memeriksanya.)*
 - [x] Verifikasi publik token + `/desa/verifikasi-surat/[token]` (tenant-aware).
       *(Gambar QR menyusul; saat ini tautan verifikasi dicetak sebagai teks.)*
 - [ ] Template surat, placeholder gambar (logo, TTD, stempel).
@@ -622,24 +642,29 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 
 ---
 
-## Status Akhir (diperbarui 23 Oktober 2026)
+## Status Akhir (diperbarui 24 Oktober 2026)
 
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan, dan CRUD CMS ada; warga (NIK+PIN) dan bumindes belum |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan, CRUD CMS, dan **layanan mandiri warga (NIK+PIN)** selesai; bumindes, analisis, dan sisa persuratan belum |
 | 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
 
-**Keseluruhan: ±15%** (Fase 0 + sebagian Fase 1–2).
+**Keseluruhan: ±20%** (Fase 0, sebagian besar Fase 1, dan separuh Fase 2).
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
 1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar belum dibuat (baru tautan teks).
-2. Halaman publik query DB langsung (melanggar arsitektur).
+2. Sebagian halaman publik masih mengimpor repository langsung (beranda,
+   berita, galeri, profil, pemerintahan, bantuan) dan `/desa/pertanahan` masih
+   query `db` mentah — melanggar konvensi use case.
 3. RBAC: seed modul CMS dan role `super-admin` sudah ditambahkan; halaman
    super-admin masih mockup dan belum menjadi fitur.
 4. Route typo `pertanaha` → `pertanahan` (sudah diperbaiki).
-5. Halaman statistik publik hardcoded `"0"`, tidak query DB.
+5. ~~Halaman statistik publik hardcoded `"0"`~~ — **selesai**: memakai
+   `getStatistikPublik()`.
+6. Test integrasi HTTP untuk area warga (akses lintas warga, akun tanpa
+   `residentId`, paksa ganti PIN) belum ada.

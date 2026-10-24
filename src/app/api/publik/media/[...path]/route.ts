@@ -1,4 +1,5 @@
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { isKategoriMediaPublik } from "@/features/publik/domain/media";
 import { bacaMedia, jalurAbsolutMedia } from "@/features/publik/infrastructure/media-storage";
 import { isAppError } from "@/lib/errors";
 
@@ -55,6 +56,12 @@ export async function GET(
 
   // Segmen pertama harus menunjuk desa pemilik host.
   if (segmen[0] !== String(desa.id)) {
+    return new Response("Media tidak ditemukan.", { status: 404 });
+  }
+
+  // Hanya kategori publik yang boleh disajikan. `permohonan` berisi berkas
+  // pribadi warga dan hanya dapat diakses lewat route ber-otentikasi.
+  if (!isKategoriMediaPublik(segmen[1] ?? "")) {
     return new Response("Media tidak ditemukan.", { status: 404 });
   }
 

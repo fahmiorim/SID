@@ -28,6 +28,7 @@ import {
 import { PendudukCreateButton } from "@/features/penduduk/presentation/components/penduduk-create-button";
 import { PendudukRowActions } from "@/features/penduduk/presentation/components/penduduk-row-actions";
 import { hasPermission } from "@/features/rbac/application/authorization";
+import { listWargaAccountsForResidents } from "@/features/warga/application/warga-use-cases";
 import { verifySession } from "@/lib/dal";
 
 export const metadata: Metadata = {
@@ -69,6 +70,9 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
 
   const canManage = hasPermission(user.permissions, PENDUDUK_RESOURCE, "update");
   const reference = canManage ? await getPendudukReference() : null;
+  const akunWarga = canManage
+    ? await listWargaAccountsForResidents(result.rows.map((row) => row.id))
+    : new Map();
 
   const today = new Date();
   const from = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
@@ -198,7 +202,11 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                         </TableCell>
                         {canManage && reference ? (
                           <TableCell className="text-right">
-                            <PendudukRowActions penduduk={row} reference={reference} />
+                            <PendudukRowActions
+                              penduduk={row}
+                              reference={reference}
+                              akunWarga={akunWarga.get(row.id) ?? null}
+                            />
                           </TableCell>
                         ) : null}
                       </TableRow>

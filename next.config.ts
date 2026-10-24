@@ -28,6 +28,18 @@ const nextConfig: NextConfig = {
       },
     },
   },
+
+  /**
+   * Permohonan surat mengunggah beberapa berkas syarat sekaligus lewat Server
+   * Action. Batas bawaan 1 MB terlalu kecil untuk PDF 20 MB + beberapa gambar,
+   * jadi beri ruang untuk total maksimum satu formulir (termasuk overhead
+   * multipart).
+   */
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "35mb",
+    },
+  },
 };
 
 export default nextConfig;

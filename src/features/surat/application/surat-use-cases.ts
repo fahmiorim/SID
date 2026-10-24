@@ -5,6 +5,7 @@ import {
   getIdentitasDesa,
   type IdentitasDesa,
 } from "@/features/desa/infrastructure/desa-repository";
+import { sinkronStatusSuratPermohonan } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
 import { calculateAge, GENDER_LABELS } from "@/features/penduduk/domain/penduduk";
 import {
   getPendudukSuratData,
@@ -62,7 +63,7 @@ import {
   updateSuratDraft,
   updateSuratVerification,
 } from "@/features/surat/infrastructure/surat-repository";
-import { requirePermission } from "@/lib/dal";
+import { requirePermission, requireWargaAktif } from "@/lib/dal";
 import { conflict, forbidden, notFound, validationError } from "@/lib/errors";
 
 export interface SuratPrintData {
@@ -466,6 +467,10 @@ export async function verifySuratData(
   const desa = await getIdentitasDesa(villageId);
   if (!desa) throw notFound("Identitas desa belum dikonfigurasi.");
   const { number, verificationToken } = await terbitkanSurat(villageId, surat, desa);
+
+  // Permohonan warga yang terhubung menjadi "Siap Diambil" begitu surat terbit.
+  await sinkronStatusSuratPermohonan(villageId, id, 3);
+
   return { number, verificationToken };
 }
 
@@ -481,13 +486,13 @@ export async function rejectSuratData(id: number, reason: string): Promise<void>
   if (!reason?.trim()) throw conflict("Alasan penolakan wajib diisi.");
 
   await rejectSurat(villageId, id, reason.trim());
+
+  // Surat yang ditolak membuat permohonan terkait ikut dibatalkan dengan alasan.
+  await sinkronStatusSuratPermohonan(villageId, id, 5, reason.trim());
 }
 
-/** Data lengkap untuk halaman cetak & PDF (konsep memakai render sementara). */
-export async function getSuratPrintData(id: number): Promise<SuratPrintData> {
-  const user = await requirePermission(SURAT_RESOURCE, "read");
-  const villageId = await resolveVillageId(user);
-
+/** Susun data cetak/PDF untuk desa & surat tertentu (tanpa cek izin). */
+async function loadSuratPrintData(villageId: number, id: number): Promise<SuratPrintData> {
   const surat = await getSurat(villageId, id);
   if (!surat) throw notFound("Surat tidak ditemukan.");
 
@@ -510,4 +515,33 @@ export async function getSuratPrintData(id: number): Promise<SuratPrintData> {
     );
 
   return { surat, jenis, desa, penduduk, content };
+}
+
+/** Data lengkap untuk halaman cetak & PDF (konsep memakai render sementara). */
+export async function getSuratPrintData(id: number): Promise<SuratPrintData> {
+  const user = await requirePermission(SURAT_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  return loadSuratPrintData(villageId, id);
+}
+
+/**
+ * Data cetak untuk warga pemilik surat.
+ *
+ * Hanya surat yang `residentId`-nya sama dengan sesi yang boleh dibaca. Surat
+ * yang belum terbit (draft/verifikasi) tidak ditampilkan sebagai dokumen warga.
+ */
+export async function getSuratPrintDataWarga(id: number): Promise<SuratPrintData> {
+  const user = await requireWargaAktif();
+  const villageId = await resolveVillageId(user);
+  const data = await loadSuratPrintData(villageId, id);
+
+  if (data.surat.residentId !== user.residentId) {
+    throw notFound("Surat tidak ditemukan.");
+  }
+
+  if (data.surat.status !== "issued") {
+    throw notFound("Surat belum terbit.");
+  }
+
+  return data;
 }

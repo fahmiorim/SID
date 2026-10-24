@@ -29,6 +29,46 @@ export const JENIS_MEDIA: Record<string, JenisMedia> = {
 
 export type HasilValidasiMedia = { ok: true; jenis: JenisMedia } | { ok: false; pesan: string };
 
+/** Kategori media yang boleh disajikan lewat route publik. */
+export const KATEGORI_MEDIA_PUBLIK = [
+  "berita",
+  "galeri",
+  "slider",
+  "perangkat",
+  "dokumen",
+  "umum",
+] as const;
+
+export function isKategoriMediaPublik(kategori: string): boolean {
+  return (KATEGORI_MEDIA_PUBLIK as readonly string[]).includes(kategori);
+}
+
+/** MIME yang diizinkan untuk berkas syarat permohonan warga. */
+export const MIME_SYARAT_PERMOHONAN = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+] as const;
+
+/**
+ * Validasi berkas syarat permohonan.
+ *
+ * Sengaja lebih ketat dari media publik: SVG dan GIF tidak diterima karena
+ * berkas syarat disajikan inline pada origin aplikasi.
+ */
+export function validasiBerkasSyarat(
+  mime: string | null | undefined,
+  ukuranByte: number,
+): HasilValidasiMedia {
+  if (!mime) return { ok: false, pesan: "Tipe berkas tidak dikenali." };
+  const normalized = mime.toLowerCase();
+  if (!(MIME_SYARAT_PERMOHONAN as readonly string[]).includes(normalized)) {
+    return { ok: false, pesan: "Gunakan berkas JPG, PNG, WEBP, atau PDF." };
+  }
+  return validasiMedia(normalized, ukuranByte);
+}
+
 /** Berkas unggahan yang sudah dibaca dari `FormData` (isi, bukan jalur). */
 export interface BerkasUnggahan {
   nama: string;

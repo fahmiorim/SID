@@ -72,7 +72,8 @@ Fitur yang sudah dibangun saat ini:
 | `bantuan`        | Program bantuan, peserta penduduk/KK/RTM, snapshot kartu, sebaran wilayah. |
 | `inventaris`     | Aset desa, kategori, mutasi/penghapusan, persetujuan berjenjang.       |
 | `bumindes`       | BUMDes: unit usaha (buku) dan item/katalog.                            |
-| `layanan-mandiri`| Permohonan surat warga (backend + action). Halaman admin kini di `/permohonan-surat`; rute publik `/layanan-mandiri` milik warga (UI login NIK+PIN belum dibangun). |
+| `layanan-mandiri`| Permohonan surat: pengajuan warga (isian dinamis + unggah syarat), riwayat, dan pengelolaan operator. Halaman admin di `/permohonan-surat`; area warga di `/layanan-mandiri/*`. |
+| `warga`          | Akun warga (NIK + PIN): pembuatan/reset oleh operator, kredensial sekali tampil, ubah PIN, profil warga. |
 | `publik`         | Situs publik: konten (berita, galeri, profil, perangkat, dokumen, menu, slider, widget, halaman), media sadar-tenant, sanitasi HTML, dan mesin tema per desa. |
 | `konten`         | CMS konten: berita & kategori (draf/terbit, jadwal, sanitasi HTML, unggah sampul/PDF), galeri (album, multi-unggah foto, urutan, slider), profil desa, serta perangkat desa + jabatan (foto, SOTK, penanda tangan). |
 | `desa`           | Identitas desa (termasuk nama & NIP kepala desa).                     |
@@ -183,6 +184,9 @@ yang bisa berbeda dari data anggotanya. Menghapus KK melepas tautan
   `delete` butuh `manage`.
 - **Super admin** = role dengan `slug === "administrator"`; semua pemeriksaan
   dilewati.
+- **Akun warga** tidak memakai RBAC: `roleId`-nya `NULL` dan otorisasinya lewat
+  `requireWarga()`/`requireWargaAktif()` (sesi + `residentId`). Jangan memakai
+  `requirePermission` untuk endpoint warga.
 - **Modul `beranda` selalu dapat dibaca.**
 - **Pewarisan anak→induk:** bila minimal satu anak punya akses, modul grup
   induknya otomatis dapat dibaca agar grup menunya ikut tampil (tingkat anak
@@ -311,11 +315,15 @@ diimplementasikan. Statusnya ada di
 - `(public)` — situs desa: `/` (beranda), `/desa/*`, dan `/layanan-mandiri`
   (halaman informasi/CTA warga). **Sudah berjalan**; seluruh halaman dirender
   oleh tema aktif lewat `src/app/(public)/layout.tsx`.
-- `(warga)` — *belum ada*: login NIK + PIN dan dasbor warga di
-  `/layanan-mandiri/*` (rencana Fase 2).
+- `(warga)` — dasbor warga di `/layanan-mandiri/beranda`, `/surat`,
+  `/dokumen`, `/pesan`, `/profil`, dan `/ubah-pin`. Login memakai halaman
+  `/masuk` yang sama dengan staf (kolom "Username atau NIK"); `signInAction`
+  mengarahkan akun ber-`residentId` ke area warga dan akun staf ke `/beranda`.
+  `/layanan-mandiri/ubah-pin` berada di luar layout gerbang agar warga dengan
+  PIN sementara tetap bisa menggantinya.
 - `(admin)` — panel staf di `/beranda` dan modulnya. Permohonan surat warga ada
   di `/permohonan-surat`.
-- `(auth)` — `/masuk` untuk staf.
+- `(auth)` — `/masuk` (staf & warga) dan `/super-admin` (mockup).
 
 Root `/` adalah beranda publik, bukan redirect ke login. `/beranda` tetap admin.
 Rute admin lama `/layanan-mandiri` sudah dipindah ke `/permohonan-surat`, dan
@@ -338,9 +346,26 @@ slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
 ### Warga
 
 - Login NIK + PIN (6 digit) mengikuti perilaku OpenSID, bukan email/username.
-- Akun warga dibuat operator (tanpa pendaftaran mandiri), dengan `resident_id` +
-  `must_change_pin`; PIN direset operator.
-- `users` tetap dipakai better-auth; identitas warga ditautkan ke `residents`.
+  `username` akun warga = NIK; `email` internal diisi
+  `<nik>.<villageId>@warga.desa.local` agar tetap unik lintas desa.
+- Akun warga dibuat operator (tanpa pendaftaran mandiri) lewat aksi baris tabel
+  penduduk. Aturan bisnisnya ada di
+  `features/warga/application/warga-use-cases.ts`: penduduk harus hidup, punya
+  NIK 16 digit, dan belum punya akun. PIN 6 digit dibuat acak, ditampilkan
+  **sekali** di `KredensialWargaDialog`, lalu hanya hash yang tersimpan.
+- `users.resident_id` unik (satu akun per penduduk) + `users.must_change_pin`.
+  Akun warga **tidak punya `roleId`**; otorisasinya memakai
+  `requireWarga()`/`requireWargaAktif()` di `src/lib/dal.ts`, bukan matriks RBAC.
+- `verifyWargaSession()` dipakai layout warga: tanpa sesi → `/masuk`, akun staf
+  → `/beranda`. Aksi/route memakai `requireWarga()` yang melempar galat.
+- `residentId` **selalu** dari sesi, tidak pernah dari `formData`/URL; semua
+  query permohonan & surat warga difilter `villageId` + `residentId`.
+- PIN 6 digit dilindungi rate limit login (5 percobaan/menit untuk
+  `/sign-in/username`); staf tetap wajib kata sandi ≥ 8 karakter di skema
+  `features/pengguna/domain/pengguna.ts`.
+- Berkas syarat permohonan disimpan di media kategori `permohonan`; route
+  `/api/publik/media/*` menolak kategori itu, sehingga hanya route
+  ber-otentikasi (warga pemilik atau operator) yang dapat mengunduhnya.
 
 ### Tema publik
 

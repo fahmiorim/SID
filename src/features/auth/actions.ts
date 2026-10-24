@@ -3,7 +3,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { touchLastLogin } from "@/features/auth/infrastructure/auth-repository";
+import {
+  getAccountLoginContext,
+  touchLastLogin,
+} from "@/features/auth/infrastructure/auth-repository";
 import { errorState, toErrorState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/logger";
@@ -37,26 +40,40 @@ export async function signInAction(
     return errorState("Periksa kembali isian Anda.", zodToFieldErrors(parsed.error));
   }
 
-  const redirectTo = safeRedirectTarget(formData.get("next"));
+  const requestedRedirect = safeRedirectTarget(formData.get("next"));
+
+  let redirectTo = requestedRedirect;
 
   try {
     const result = await auth.api.signInUsername({
       body: { username: parsed.data.username, password: parsed.data.password },
     });
 
-    // `signInUsername` tidak mengetik additionalFields; nilainya tetap dikirim.
-    const signedInUser = result.user as unknown as { active?: boolean };
-    if (signedInUser.active === false) {
+    const context = await getAccountLoginContext(result.user.id);
+    if (!context?.active) {
       await auth.api.signOut({ headers: await headers() });
       return errorState("Akun Anda dinonaktifkan. Hubungi administrator.");
     }
 
     await touchLastLogin(result.user.id);
+
+    if (context.residentId !== null) {
+      // Akun warga tidak boleh diarahkan ke area admin, dan wajib mengganti
+      // PIN sementara sebelum memakai layanan.
+      if (context.mustChangePin) {
+        redirectTo = "/layanan-mandiri/ubah-pin";
+      } else if (!requestedRedirect.startsWith("/layanan-mandiri")) {
+        redirectTo = "/layanan-mandiri/beranda";
+      }
+    } else if (requestedRedirect.startsWith("/layanan-mandiri")) {
+      // Akun staf yang mencoba membuka area warga dikembalikan ke beranda.
+      redirectTo = "/beranda";
+    }
   } catch (error) {
     logger.warn("Login gagal", { username: parsed.data.username });
     // better-auth melempar APIError untuk kredensial salah; jangan bocorkan detail.
     if (error instanceof Error && error.name === "APIError") {
-      return errorState("Username atau kata sandi salah.");
+      return errorState("Username atau NIK atau PIN salah.");
     }
     return toErrorState(error);
   }

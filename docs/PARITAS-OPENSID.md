@@ -38,14 +38,14 @@ Legenda status proyek kita:
 | Keuangan | 6 | 4 | 1 | 1 |
 | Bumindes | 11 | 0 | 1 | 10 |
 | Pembangunan | 1 | 0 | 0 | 1 |
-| Layanan mandiri & warga | 10 | 0 | 3 | 7 |
+| Layanan mandiri & warga | 10 | 4 | 3 | 3 |
 | Analisis & statistik | 3 | 0 | 2 | 1 |
-| Web publik | 21 | 8 | 8 | 5 |
+| Web publik | 21 | 8 | 5 | 8 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **26** | **21** | **45** |
+| **Total** | **92** | **30** | **18** | **44** |
 
-**Paritas kasar saat ini: ±40%** (hitung ✅ penuh + setengah 🟡). Angka ini
-dihitung ulang 23 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
+**Paritas kasar saat ini: ±42%** (hitung ✅ penuh + setengah 🟡). Angka ini
+dihitung ulang 24 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
 per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
 harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 **P1** — bukan seluruh 92 modul.
@@ -53,9 +53,10 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > Catatan 23 Okt 2026: Halaman web publik gelombang 1 sudah tersedia (beranda,
 > berita, galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat,
 > analisis-survei, dokumen, statistik, kontak, verifikasi-surat, kelompok,
-> inventaris) dan memakai use case + slot tema. Yang masih 🔴 adalah halaman
-> yang belum ada sama sekali (suplemen, lapak, dpt, komentar/pengunjung, SEO OG
-> image) serta fitur lanjutan.
+> inventaris) dan memakai slot tema (sebagian masih mengimpor repository
+> langsung). Yang masih 🔴 adalah halaman yang belum punya data/backend
+> (pembangunan, pengaduan, peta, suplemen, lapak, dpt, komentar/pengunjung, SEO
+> OG image) serta fitur lanjutan.
 >
 > Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
@@ -83,6 +84,15 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > disanitasi saat simpan + render. 404/error publik memakai konvensi Next 16.
 > Smoke test produksi: seluruh halaman publik utama 200, tautan internal tanpa
 > 404.
+>
+> Perbaikan 2C 24 Okt 2026: **layanan mandiri warga berjalan end-to-end** — akun
+> NIK + PIN dibuat/direset operator (PIN tampil sekali, wajib diganti), login
+> warga lewat `/masuk`, area `(warga)` berisi beranda/surat/dokumen/pesan/profil/
+> ubah-PIN, pengajuan surat dengan isian dinamis + unggah syarat, dan surat
+> dibuat operator dari permohonan lalu terbit lewat verifikasi berjenjang.
+> Berkas syarat disimpan di media privat dan diunduh lewat route ber-otentikasi.
+> Test domain `warga.test.ts` + `layanan-mandiri.test.ts`; test integrasi HTTP
+> lintas warga belum ada.
 >
 > Perbaikan 1G 23 Okt 2026: tema dan opsi dapat diganti dari `/konten/tema` dan
 > langsung tampil di situs publik tanpa deploy (halaman publik `force-dynamic`,
@@ -180,11 +190,11 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Akun warga **NIK + PIN**, dibuat operator, reset PIN | `controllers/Mandiri.php`, `Setting_mandiri.php` | 🔴 | **P0** |
-| Login & beranda warga | `controllers/fmandiri/Beranda.php` | 🔴 | **P0** |
-| Pengajuan surat warga | `fmandiri/Surat.php` | 🟡 | **P0** |
-| Dokumen warga | `fmandiri/Dokumen.php` | 🔴 | P1 |
-| Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🔴 | P2 |
+| Akun warga **NIK + PIN**, dibuat operator, reset PIN | `controllers/Mandiri.php`, `Setting_mandiri.php` | ✅ | — |
+| Login & beranda warga | `controllers/fmandiri/Beranda.php` | ✅ | — |
+| Pengajuan surat warga | `fmandiri/Surat.php` | ✅ | — |
+| Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
+| Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
 | Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🔴 | P1 |
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
@@ -209,9 +219,9 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Galeri | `fweb/Galeri` | ✅ | **P0** |
 | Dokumen & produk hukum/peraturan | `fweb/{InformasiPublik,Embed}` | 🟡 | P1 |
 | Statistik publik | `fweb/Statistik` | 🟡 | P1 |
-| Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🟡 | P1 |
-| Pembangunan publik | `fweb/Pembangunan` | 🟡 | P1 |
-| Pengaduan publik | `fweb/Pengaduan` | 🟡 | P1 |
+| Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
+| Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
+| Pengaduan publik | `fweb/Pengaduan` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
 | Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🟡 | P1 (halaman publik ada; anggota lembaga menyusul) |
 | Inventaris publik | `fweb/Inventaris` | ✅ | — |
 | APBDes publik | tema `partials/apbdesa` | ✅ | — |
@@ -269,9 +279,10 @@ T3 tidak perlu dikejar sekarang.
 ## Kesimpulan
 
 1. Proyek ini sudah kuat di **inti administrasi** (penduduk, KK, RTM, surat,
-   keuangan, bantuan, kelompok) tetapi **jauh tertinggal di web publik, layanan
-   mandiri warga, dan modul transparansi**.
+   keuangan, bantuan, kelompok) dan **layanan mandiri warga** sudah berjalan
+   end-to-end; yang masih tertinggal adalah **web publik bagian lanjutan**
+   (pembangunan, pengaduan, peta) dan **modul transparansi/analisis**.
 2. Prioritas yang Anda tetapkan sudah tepat: **web publik dulu**, karena itu
-   satu-satunya bagian yang dilihat warga dan saat ini hampir kosong.
+   bagian yang paling dilihat warga.
 3. "Tidak kalah dengan OpenSID" bukan satu fase, melainkan **T1 + T2** yang
    masing-masing butuh berminggu-minggu. Dokumen rencana memecahnya per fase.

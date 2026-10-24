@@ -22,7 +22,8 @@ import { namaBerkasAman, validasiMedia } from "@/features/publik/domain/media";
 const AKAR_PENYIMPANAN = path.join(process.cwd(), "storage", "media");
 
 /** Kategori menentukan subfolder; memudahkan pemisahan jenis konten. */
-export type KategoriMedia = "berita" | "galeri" | "slider" | "perangkat" | "dokumen" | "umum";
+export type KategoriMedia =
+  "berita" | "galeri" | "slider" | "perangkat" | "dokumen" | "permohonan" | "umum";
 
 export function akarPenyimpananMedia(): string {
   return AKAR_PENYIMPANAN;

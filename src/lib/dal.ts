@@ -25,7 +25,16 @@ export interface CurrentUser {
   image: string | null;
   villageId: number | null;
   roleId: number | null;
+  /** Penduduk yang ditautkan ke akun; hanya untuk akun warga. */
+  residentId: number | null;
+  /** Warga wajib mengganti PIN sementara sebelum memakai layanan. */
+  mustChangePin: boolean;
   permissions: EffectivePermissions;
+}
+
+/** Pengguna yang sudah dipastikan memiliki akun warga. */
+export interface WargaUser extends CurrentUser {
+  residentId: number;
 }
 
 /**
@@ -53,7 +62,11 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   // Status aktif dibaca dari DB (bukan cookie cache sesi) agar akun yang
   // dinonaktifkan lewat modul Pengguna langsung kehilangan akses.
   const [account] = await db
-    .select({ active: users.active })
+    .select({
+      active: users.active,
+      residentId: users.residentId,
+      mustChangePin: users.mustChangePin,
+    })
     .from(users)
     .where(eq(users.id, user.id))
     .limit(1);
@@ -74,6 +87,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     image: user.image ?? null,
     villageId: (user.villageId as number | null) ?? null,
     roleId: (user.roleId as number | null) ?? null,
+    residentId: account.residentId,
+    mustChangePin: account.mustChangePin,
     permissions,
   };
 });
@@ -98,6 +113,51 @@ export async function verifySession(redirectTo = "/masuk"): Promise<CurrentUser>
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser();
   if (!user) throw unauthenticated();
+  return user;
+}
+
+/**
+ * Pastikan sesi aktif adalah akun warga (punya `residentId`).
+ *
+ * Dipakai Server Component area warga. Pengguna staf yang membuka area warga
+ * dialihkan ke beranda admin; pengguna tanpa sesi ke halaman masuk.
+ */
+export async function verifyWargaSession(): Promise<WargaUser> {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/masuk?next=%2Flayanan-mandiri%2Fberanda");
+  }
+
+  if (user.residentId === null) {
+    redirect("/beranda");
+  }
+
+  return user as WargaUser;
+}
+
+/**
+ * Versi `verifyWargaSession` untuk Server Action/Route Handler: tidak mengalihkan,
+ * tetapi melempar kesalahan yang aman.
+ */
+export async function requireWarga(): Promise<WargaUser> {
+  const user = await requireUser();
+
+  if (user.residentId === null) {
+    throw forbidden("Akun ini bukan akun warga.");
+  }
+
+  return user as WargaUser;
+}
+
+/** Warga yang sudah boleh memakai layanan (PIN sementara sudah diganti). */
+export async function requireWargaAktif(): Promise<WargaUser> {
+  const user = await requireWarga();
+
+  if (user.mustChangePin) {
+    throw forbidden("Ganti PIN sementara terlebih dahulu sebelum memakai layanan.");
+  }
+
   return user;
 }
 

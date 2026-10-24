@@ -12,7 +12,7 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 
 /** Halaman publik: boleh diakses tanpa sesi. */
-const PUBLIC_PATHS = ["/desa", "/layanan-mandiri", "/masuk"] as const;
+const PUBLIC_PATHS = ["/desa", "/masuk"] as const;
 
 /**
  * Berkas metadata yang harus selalu dapat diambil mesin pencari tanpa sesi.
@@ -30,6 +30,10 @@ function isPublicPath(pathname: string): boolean {
   // Beranda publik.
   if (pathname === "/") return true;
 
+  // Halaman informasi layanan mandiri boleh dibaca tanpa sesi; area warga di
+  // bawahnya (`/layanan-mandiri/beranda`, dst.) tetap dilindungi.
+  if (pathname === "/layanan-mandiri") return true;
+
   if (PUBLIC_FILES.includes(pathname as (typeof PUBLIC_FILES)[number])) return true;
 
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -45,11 +49,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Pengguna yang sudah masuk tidak perlu melihat form login lagi.
-  if (pathname === "/masuk" && sessionCookie) {
-    return NextResponse.redirect(new URL("/beranda", request.url));
-  }
-
+  // Pengalihan pengguna yang sudah masuk ditangani halaman `/masuk` di server
+  // karena proxy tidak dapat membedakan akun staf dan akun warga.
   return NextResponse.next();
 }
 

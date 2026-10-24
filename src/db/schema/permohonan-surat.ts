@@ -1,6 +1,7 @@
 import { index, int, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 import { letterTypes } from "./letter-types";
+import { letters } from "./letters";
 import { residents } from "./resident";
 import { villages } from "./village";
 
@@ -25,6 +26,9 @@ export const permohonanSurat = mysqlTable(
       .notNull()
       .references(() => letterTypes.id, { onDelete: "cascade" }),
 
+    /** Surat dinas yang dibuat dari permohonan ini (bila sudah diproses). */
+    letterId: int("letter_id").references(() => letters.id, { onDelete: "set null" }),
+
     /** Nomor antrian yang diberikan saat permohonan dikirim. */
     noAntrian: varchar("no_antrian", { length: 30 }),
     status: int("status").notNull().default(1),
@@ -47,6 +51,7 @@ export const permohonanSurat = mysqlTable(
   (table) => [
     index("permohonan_surat_village_status_idx").on(table.villageId, table.status),
     index("permohonan_surat_village_created_idx").on(table.villageId, table.createdAt),
+    index("permohonan_surat_letter_idx").on(table.letterId),
   ],
 );
 

@@ -6,6 +6,46 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2C: akun warga (NIK + PIN) & layanan mandiri
+
+Masih di working tree (belum di-commit); status dokumen otoritatif sudah
+diperbarui agar tidak mendahului kode.
+
+- **Akun warga**: operator membuat akun dari baris tabel penduduk
+  (`penduduk-row-actions.tsx` → `KredensialWargaDialog`). PIN 6 digit dibuat
+  acak (`generatePin`), ditampilkan **sekali** dengan tombol salin, dan hanya
+  hash-nya disimpan. Penduduk wajib berstatus hidup dan punya NIK 16 digit;
+  satu penduduk hanya boleh punya satu akun (indeks unik `users.resident_id`,
+  migrasi `0022`).
+- **Login**: `username` = NIK, password = PIN. `minPasswordLength` better-auth
+  diturunkan ke 6, kebijakan staf ≥ 8 tetap di `domain/pengguna.ts`; rate limit
+  login 5 percobaan/menit untuk `/sign-in/username`. `signInAction` membaca
+  `residentId`/`mustChangePin` dari DB lalu mengarahkan warga ke
+  `/layanan-mandiri/ubah-pin` atau `/layanan-mandiri/beranda`, dan menolak
+  akun staf yang mencoba masuk area warga.
+- **Area warga** `(warga)`: beranda (ringkasan + permohonan terbaru), ajukan
+  surat (isian dinamis + unggah syarat), riwayat dengan catatan operator,
+  dokumen (unduh PDF + tautan verifikasi), pesan, profil, dan ubah PIN.
+  `verifyWargaSession` menjaga layout; `requireWarga`/`requireWargaAktif`
+  menjaga action & route. `residentId` selalu dari sesi.
+- **Pengajuan surat**: syarat diambil dari `letter_requirements` (bukan `"[]"`),
+  divalidasi lengkap, lalu berkas disimpan di media privat kategori
+  `permohonan`. Route `/api/publik/media/*` menolak kategori tersebut; unduhan
+  hanya lewat route ber-otentikasi (pemilik atau operator).
+- **Operator**: `/permohonan-surat` menampilkan kartu status, filter, detail
+  permohonan, dan aksi proses/kembalikan/batalkan. “Buat konsep surat” memakai
+  use case persuratan (penomoran tidak diduplikasi), menyimpan
+  `permohonan_surat.letter_id`, lalu status permohonan menjadi 2. Saat Kades
+  menerbitkan surat status menjadi 3; saat surat ditolak menjadi 5 dengan
+  alasan.
+- **Migrasi**: `0022` menambahkan `permohonan_surat.letter_id` + FK + indeks,
+  serta indeks unik `users.resident_id`.
+- **Bukti**: `npm run check` hijau (436 test / 40 file) dan `npm run build`
+  hijau. Test domain: `src/features/warga/domain/warga.test.ts` (5) dan
+  `src/features/layanan-mandiri/domain/layanan-mandiri.test.ts` (4).
+  **Belum ada** test integrasi HTTP/DB untuk akses lintas warga, akun tanpa
+  `residentId`, atau paksa ganti PIN.
+
 ## 2026-10-23 — 2B: perangkat desa & lembaga
 
 - Modul jabatan master sudah tersedia di `/konten/perangkat` lewat

@@ -52,6 +52,9 @@ export const users = mysqlTable(
     uniqueIndex("users_email_uq").on(t.email),
     uniqueIndex("users_username_uq").on(t.username),
     index("users_role_idx").on(t.roleId),
+    // Satu akun warga per penduduk. MySQL mengizinkan banyak NULL, sehingga
+    // akun staf (tanpa residentId) tetap aman.
+    uniqueIndex("users_resident_uq").on(t.residentId),
   ],
 );
 

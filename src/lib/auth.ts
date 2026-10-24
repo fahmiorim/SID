@@ -30,7 +30,10 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    minPasswordLength: 8,
+    // PIN warga hanya 6 digit; kebijakan staf minimal 8 tetap ditegakkan di
+    // skema form/use case pengguna. better-auth hanya menetapkan batas bawah
+    // teknis agar kedua jenis akun dapat memakai mekanisme kredensial yang sama.
+    minPasswordLength: 6,
     maxPasswordLength: 72,
     requireEmailVerification: false,
   },
@@ -41,6 +44,20 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // cache cookie 5 menit untuk mengurangi query DB
+    },
+  },
+
+  /**
+   * Batasi percobaan login. PIN warga hanya 6 digit, jadi perlindungan
+   * brute-force sangat penting. Nilai bawaan tetap longgar untuk endpoint
+   * lain; login username dibatasi 5 percobaan per menit per IP.
+   */
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 30,
+    customRules: {
+      "/sign-in/username": { window: 60, max: 5 },
     },
   },
 
@@ -61,6 +78,10 @@ export const auth = betterAuth({
       roleId: { type: "number", required: false, input: false },
       active: { type: "boolean", required: false, defaultValue: true, input: false },
       lastLoginAt: { type: "date", required: false, input: false },
+      // FK ke `residents.id`; hanya diisi untuk akun warga.
+      residentId: { type: "number", required: false, input: false },
+      // Warga wajib mengganti PIN sementara sebelum memakai layanan.
+      mustChangePin: { type: "boolean", required: false, defaultValue: true, input: false },
     },
   },
 

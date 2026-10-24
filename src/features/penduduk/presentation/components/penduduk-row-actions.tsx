@@ -1,6 +1,15 @@
 "use client";
 
-import { AlertCircle, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  KeyRound,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +35,9 @@ import {
   type PendudukListRow,
   type PendudukReferenceData,
 } from "@/features/penduduk/domain/penduduk";
+import type { KredensialWarga, WargaAccountSummary } from "@/features/warga/domain/warga";
+import { buatAkunWargaAction, resetPinWargaAction } from "@/features/warga/presentation/actions";
+import { KredensialWargaDialog } from "@/features/warga/presentation/components/kredensial-warga-dialog";
 import { idleActionState } from "@/lib/action-state";
 
 import { deletePendudukAction } from "../actions";
@@ -34,16 +46,46 @@ import { PendudukFormDialog } from "./penduduk-form-dialog";
 interface PendudukRowActionsProps {
   penduduk: PendudukListRow;
   reference: PendudukReferenceData;
+  /** Akun warga yang sudah ada, atau `null` bila belum dibuat. */
+  akunWarga: WargaAccountSummary | null;
 }
 
-/** Menu aksi per baris: ubah & hapus (dengan konfirmasi). */
-export function PendudukRowActions({ penduduk, reference }: PendudukRowActionsProps) {
+/** Menu aksi per baris: akun warga, ubah, & hapus (dengan konfirmasi). */
+export function PendudukRowActions({ penduduk, reference, akunWarga }: PendudukRowActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [kredensial, setKredensial] = useState<KredensialWarga | null>(null);
+  const [kredensialOpen, setKredensialOpen] = useState(false);
+  const [kredensialJudul, setKredensialJudul] = useState("Akun warga");
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const label = pendudukLabel(penduduk);
+
+  /** Buat akun atau reset PIN, lalu tampilkan PIN sekali pada dialog. */
+  function handleAkunWarga(mode: "buat" | "reset") {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("residentId", String(penduduk.id));
+
+      const result =
+        mode === "buat"
+          ? await buatAkunWargaAction(idleActionState, formData)
+          : await resetPinWargaAction(idleActionState, formData);
+
+      if (result.status === "success") {
+        setKredensial(result.data);
+        setKredensialJudul(mode === "buat" ? "Akun warga dibuat" : "PIN warga direset");
+        setKredensialOpen(true);
+        toast.success(result.message);
+        router.refresh();
+        return;
+      }
+
+      toast.error(result.status === "error" ? result.message : "Gagal memproses akun warga.");
+    });
+  }
 
   /**
    * Hapus lewat `startTransition` + pemanggilan Server Action langsung, sehingga
@@ -78,6 +120,17 @@ export function PendudukRowActions({ penduduk, reference }: PendudukRowActionsPr
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
+          {akunWarga ? (
+            <DropdownMenuItem disabled={isPending} onSelect={() => handleAkunWarga("reset")}>
+              <KeyRound className="size-4" />
+              Reset PIN warga
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled={isPending} onSelect={() => handleAkunWarga("buat")}>
+              <UserPlus className="size-4" />
+              Buat akun warga
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <Pencil className="size-4" />
             Ubah
@@ -100,6 +153,13 @@ export function PendudukRowActions({ penduduk, reference }: PendudukRowActionsPr
         onOpenChange={setEditOpen}
         reference={reference}
         penduduk={penduduk}
+      />
+
+      <KredensialWargaDialog
+        open={kredensialOpen}
+        onOpenChange={setKredensialOpen}
+        kredensial={kredensial}
+        judul={kredensialJudul}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

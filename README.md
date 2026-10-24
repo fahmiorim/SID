@@ -90,16 +90,18 @@ Buka `http://localhost:3000` → dialihkan ke `/masuk`.
 ```
 src/
 ├─ app/                      # Rute (App Router)
-│  ├─ (auth)/masuk/          # Halaman masuk staf
+│  ├─ (auth)/masuk/          # Halaman masuk staf & warga
 │  ├─ (admin)/               # Area terproteksi + kerangka admin
 │  │  ├─ beranda/  penduduk/  keluarga/  rumah-tangga/  wilayah/
 │  │  ├─ kelompok/  kelompok/kategori/
 │  │  ├─ bantuan/  inventaris/  bumindes/  analisis-survei/
 │  │  ├─ persuratan/{surat,jenis,klasifikasi,syarat,surat-masuk,surat-keluar}/
 │  │  ├─ keuangan/{anggaran,triwulan,laporan,laporan-dokumen}/
-│  │  ├─ layanan-mandiri/    # sementara: admin; akan dipindah ke /permohonan-surat
+│  │  ├─ permohonan-surat/   # Pengelolaan permohonan surat warga
 │  │  └─ pengaturan/{desa,pengguna,grup,modul,profil}/
-│  ├─ (public)/              # Situs desa (target: /, /desa/*, /layanan-mandiri/*)
+│  ├─ (public)/              # Situs desa (/, /desa/*, /layanan-mandiri)
+│  ├─ (warga)/layanan-mandiri/  # Dasbor warga: beranda, surat, dokumen, pesan,
+│  │                          # profil, ubah-pin
 │  ├─ api/auth/[...all]/     # Handler better-auth
 │  └─ layout.tsx  page.tsx  globals.css
 ├─ components/
@@ -113,7 +115,7 @@ src/
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
 │  ├─ auth/  bantuan/  bumindes/  desa/  inventaris/  keluarga/  kelompok/
 │  ├─ keuangan/  konten/  layanan-mandiri/  modul/  navigation/  penduduk/
-│  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  wilayah/
+│  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  warga/  wilayah/
 ├─ themes/                   # (target) tema web publik yang dipasang saat build
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
@@ -124,8 +126,10 @@ Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
 
 ## Autentikasi & Hak Akses
 
-- **Login memakai username** (email opsional) — sesuai kebiasaan operator desa.
-- Sesi disimpan sebagai cookie `HttpOnly` berlaku **7 hari**.
+- **Staf login memakai username** (email opsional) — sesuai kebiasaan operator
+  desa. **Warga login memakai NIK + PIN 6 digit**; akun dibuat operator.
+- Sesi disimpan sebagai cookie `HttpOnly` berlaku **7 hari**. Login dibatasi
+  5 percobaan/menit per IP.
 - **RBAC** memakai tabel sendiri: `modules` (katalog modul/menu), `roles`
   (role), dan `role_permissions` (matriks izin). Tingkat akses bernama —
   `read` (lihat), `write` (lihat + tambah/ubah), `manage` (semuanya, termasuk
@@ -136,6 +140,8 @@ Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
   pemeriksaan). Modul `beranda` selalu dapat dibaca.
 - Otorisasi ditegakkan **di dalam use-case aplikasi** (`requirePermission`),
   bukan hanya di UI — sehingga setiap pemanggil terlindungi.
+- Akun warga tidak memakai RBAC (tanpa `roleId`); area warga dijaga
+  `requireWarga`/`requireWargaAktif` dan `residentId` selalu diambil dari sesi.
 
 ## Keamanan
 
@@ -158,8 +164,10 @@ database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
 keluarga, wilayah, pengguna, kelompok (slug, jabatan, keanggotaan), bantuan
 (status masa aktif, slug, validasi peserta),
 persuratan (nomor, template, tanggal), inventaris (transisi mutasi,
-perhitungan perubahan aset), pemetaan kesalahan, serta validasi environment. CI menjalankan typecheck + lint + format +
-test + build pada setiap push/PR.
+perhitungan perubahan aset), akun warga (PIN, ubah PIN), permohonan surat
+(transisi status, berkas syarat), pemetaan kesalahan, serta validasi
+environment. CI menjalankan typecheck + lint + format + test + build pada
+setiap push/PR.
 
 ```bash
 npm run test        # sekali jalan
@@ -198,7 +206,9 @@ Status lengkap dan urutan fase ada di
 6. **Keuangan** ✅ — APBDes, realisasi, laporan & dokumen, triwulan.
 7. **Inventaris** ✅ — CRUD barang & kategori, mutasi berjenjang
    operator → sekdes → kades, perubahan aset diterapkan atomik di tahap akhir.
-8. **Layanan Mandiri** 🟡 — domain/action ada; UI warga dan login NIK + PIN belum.
+8. **Layanan Mandiri** ✅ — akun warga NIK + PIN dibuat/direset operator,
+   dasbor warga, pengajuan surat dengan isian dinamis + unggah syarat, riwayat
+   status, dan unduh PDF surat.
 9. **BUMDes** 🟡 — unit & item ada; action belum terhubung ke UI.
 10. **Analisis & Survei** 🟡 — kerangka skema ada; UI masih placeholder.
 11. **Konten Situs Publik** 🟡 — CRUD admin menu/widget/slider/dokumen selesai;
@@ -206,9 +216,10 @@ Status lengkap dan urutan fase ada di
 
 Berikutnya (lihat rencana untuk detail):
 
-- **Fase 1** — web publik (beranda, profil, berita, statistik, tema), lalu pindahkan
-  `/layanan-mandiri` milik admin menjadi `/permohonan-surat`.
-- **Fase 2** — menuntaskan seluruh menu admin yang ada.
+- **Fase 1** — menuntaskan 3 halaman publik yang masih placeholder
+  (pembangunan, pengaduan, peta) dan merapikan halaman publik yang masih
+  mengimpor repository langsung ke use case.
+- **Fase 2** — bumindes, analisis/survei, dan sisa persuratan (template, TTE).
 - **Fase 3** — paritas OpenSID T1 + T2.
 - **Fase 4** — multi-desa & multi-domain.
 
@@ -315,12 +326,12 @@ belum termasuk dan menjadi pekerjaan berikutnya:
 
 | Fitur rujukan | Status |
 | ------------- | ------ |
-| Layanan Mandiri (warga mengajukan surat sendiri) | belum |
-| Verifikasi berjenjang (operator → sekdes → kades) | belum |
+| Layanan Mandiri (warga mengajukan surat sendiri) | ✅ |
+| Verifikasi berjenjang (operator → sekdes → kades) | ✅ |
 | Tanda Tangan Elektronik (TTE/BSRE) | belum |
-| QR verifikasi publik & tabel `urls` | belum |
-| Form isian dinamis per surat (`form_isian` JSON) | belum |
-| Kode isian kustom & mesin placeholder lengkap (aritmatika, terbilang, `klgx_`) | belum |
-| Master syarat surat (`ref_syarat_surat`) | belum |
+| QR verifikasi publik & tabel `urls` | 🟡 (token & tautan verifikasi ada; gambar QR belum) |
+| Form isian dinamis per surat (`form_isian` JSON) | ✅ |
+| Kode isian kustom & mesin placeholder lengkap (aritmatika, terbilang, `klgx_`) | sebagian |
+| Master syarat surat (`ref_syarat_surat`) | ✅ |
 | Impor katalog 43 surat sistem | belum (seed memuat katalog contoh) |
-| Empat mode penomoran surat | belum (dipakai: per jenis + tahun) |
+| Empat mode penomoran surat | ✅ |

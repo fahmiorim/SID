@@ -35,7 +35,7 @@ export function LoginForm({ next }: { next: string }) {
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="username">Username</Label>
+        <Label htmlFor="username">Username atau NIK</Label>
         <Input
           id="username"
           name="username"
@@ -44,6 +44,9 @@ export function LoginForm({ next }: { next: string }) {
           required
           aria-invalid={Boolean(fieldErrors?.username)}
         />
+        <p className="text-xs text-muted-foreground">
+          Staf memakai username; warga memakai NIK yang terdaftar.
+        </p>
         {fieldErrors?.username?.map((message) => (
           <p key={message} className="text-xs text-destructive">
             {message}
@@ -52,7 +55,7 @@ export function LoginForm({ next }: { next: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Kata sandi</Label>
+        <Label htmlFor="password">Kata sandi / PIN</Label>
         <Input
           id="password"
           name="password"

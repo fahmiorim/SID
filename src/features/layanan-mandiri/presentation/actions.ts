@@ -1,91 +1,61 @@
 "use server";
 
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
-import { db } from "@/db";
-import { users } from "@/db/schema";
-import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
-  buatPermohonan,
-  kembalikanPermohonan,
-  listPermohonan,
-  listSuratMandiri,
-  prosesPermohonan,
-} from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
-import { RESOURCES } from "@/features/rbac/domain/resources";
+  buatKonsepSuratPermohonanData,
+  getPermohonanAdminData,
+  kembalikanPermohonanAdminData,
+  ubahStatusPermohonanData,
+} from "@/features/layanan-mandiri/application/admin-use-cases";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
-import { requirePermission } from "@/lib/dal";
 
-const PATH = "/layanan-mandiri";
+const PATH = "/permohonan-surat";
 
+/** Data halaman operator permohonan surat. */
 export async function getLayananMandiriData() {
-  const user = await requirePermission(RESOURCES.permohonanSurat, "read");
-  const villageId = await resolveVillageId(user);
-  const [surat, permohonan] = await Promise.all([
-    listSuratMandiri(villageId),
-    listPermohonan(villageId),
-  ]);
-  return { surat, permohonan };
+  const permohonan = await getPermohonanAdminData();
+  return { permohonan };
 }
 
-export async function ajukanSuratMandiriAction(
-  _s: ActionState,
+export async function buatKonsepSuratPermohonanAction(
+  _previousState: ActionState<{ id: number } | null>,
   formData: FormData,
-): Promise<ActionState> {
-  const user = await requirePermission(RESOURCES.permohonanSurat, "update");
-  const villageId = await resolveVillageId(user);
-  // residentId diambil dari DB, bukan dari formData warga
-  const [userRow] = await db
-    .select({ residentId: users.residentId })
-    .from(users)
-    .where(eq(users.id, user.id));
-  const residentId = userRow?.residentId ?? 0;
-  const letterTypeId = Number(formData.get("idSurat"));
-
-  if (
-    !Number.isInteger(letterTypeId) ||
-    letterTypeId < 1 ||
-    !Number.isInteger(residentId) ||
-    residentId < 1
-  ) {
-    return errorState("Data tidak valid.");
-  }
+): Promise<ActionState<{ id: number } | null>> {
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id < 1) return errorState("Permohonan tidak valid.");
 
   try {
-    await buatPermohonan({
-      villageId,
-      residentId,
-      letterTypeId,
-      isianForm: String(formData.get("isianForm") || ""),
-      noHpAktif: String(formData.get("noHpAktif") || ""),
-      keterangan: String(formData.get("keterangan") || ""),
-      syarat: "[]",
-    });
+    const surat = await buatKonsepSuratPermohonanData(id);
     revalidatePath(PATH);
-    return successState("Permohonan surat diajukan.");
+    revalidatePath("/persuratan/surat");
+    revalidatePath("/layanan-mandiri/beranda");
+    revalidatePath("/layanan-mandiri/surat");
+    return successState(`Konsep surat #${surat.id} dibuat dan diajukan ke verifikasi.`, surat);
   } catch (error) {
     return toErrorState(error);
   }
 }
 
 export async function prosesPermohonanAction(
-  _s: ActionState,
+  _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const user = await requirePermission(RESOURCES.permohonanSurat, "update");
-  const villageId = await resolveVillageId(user);
   const id = Number(formData.get("id"));
   const status = Number(formData.get("status"));
-  const alasan = String(formData.get("alasan") || "");
+  const alasan = String(formData.get("alasan") ?? "");
 
   if (!Number.isInteger(id) || id < 1 || !Number.isInteger(status)) {
     return errorState("Data tidak valid.");
   }
 
   try {
-    await prosesPermohonan(villageId, id, status, alasan);
+    await ubahStatusPermohonanData(id, status, alasan);
     revalidatePath(PATH);
+    revalidatePath("/layanan-mandiri/beranda");
+    revalidatePath("/layanan-mandiri/surat");
+    revalidatePath("/layanan-mandiri/dokumen");
+    revalidatePath("/layanan-mandiri/pesan");
     return successState("Status permohonan diperbarui.");
   } catch (error) {
     return toErrorState(error);
@@ -93,21 +63,22 @@ export async function prosesPermohonanAction(
 }
 
 export async function kembalikanPermohonanAction(
-  _s: ActionState,
+  _previousState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  const user = await requirePermission(RESOURCES.permohonanSurat, "update");
-  const villageId = await resolveVillageId(user);
   const id = Number(formData.get("id"));
-  const alasan = String(formData.get("alasan") || "");
+  const alasan = String(formData.get("alasan") ?? "");
 
   if (!Number.isInteger(id) || id < 1) return errorState("Data tidak valid.");
   if (!alasan.trim()) return errorState("Alasan wajib diisi.");
 
   try {
-    await kembalikanPermohonan(villageId, id, alasan.trim());
+    await kembalikanPermohonanAdminData(id, alasan);
     revalidatePath(PATH);
-    return successState("Permohonan dikembalikan.");
+    revalidatePath("/layanan-mandiri/beranda");
+    revalidatePath("/layanan-mandiri/surat");
+    revalidatePath("/layanan-mandiri/pesan");
+    return successState("Permohonan dikembalikan dengan catatan.");
   } catch (error) {
     return toErrorState(error);
   }

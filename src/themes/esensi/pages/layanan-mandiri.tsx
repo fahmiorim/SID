@@ -45,6 +45,26 @@ export function EsensiLayananMandiri({ ctx }: LayananMandiriProps) {
           title="Layanan Mandiri Warga"
           description={`Ajukan surat administrasi ${ctx.desa.namaDesa ?? "desa"} tanpa harus mengantre di kantor.`}
         />
+        <div className="flex flex-wrap gap-3 pt-2">
+          <Link
+            href="/masuk?next=%2Flayanan-mandiri%2Fberanda"
+            className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold"
+            style={{
+              backgroundColor: "var(--pub-primary)",
+              color: "var(--pub-primary-foreground, #fff)",
+              borderRadius: "var(--pub-radius)",
+            }}
+          >
+            <KeyRound className="size-4" />
+            Masuk dengan NIK & PIN
+          </Link>
+          <Link
+            href="/desa/kontak"
+            className="tema-link-primary inline-flex items-center px-1 py-2.5 text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Belum punya akun? Hubungi desa
+          </Link>
+        </div>
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2">
