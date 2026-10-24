@@ -499,10 +499,16 @@ ketergantungan halaman publik.
 - [x] Backend pengaduan: skema `pengaduan` (migrasi `0024`), domain
       (`features/pengaduan/domain/pengaduan.ts`), use case + kirim warga
       (`application/use-cases.ts`, `kirim-pengaduan.ts`), media kategori
-      `pengaduan`, dan Server Actions. *(Belum ada UI — klaim "berfungsi"
-      menunggu halaman + test; fitur belum diaktifkan di menu.)*
-- [ ] UI admin pengaduan (daftar, tanggapan, status, publikasi).
-- [ ] Halaman publik pengaduan (`/desa/pengaduan`) + form kirim warga.
+      `pengaduan`, dan Server Actions.
+      *(Verifikasi 24 Okt 2026: migrate + seed sukses di DB dev, tabel
+      `pengaduan` & indeks dikonfirmasi ada.)*
+- [x] UI admin pengaduan `/pengaduan`: daftar berfilter, statistik, detail
+      (tanggapan/status), publikasi ke web (`setPublikPengaduan`), dan hapus.
+      *(Bukti: `src/app/(admin)/pengaduan/page.tsx`,
+      `presentation/components/pengaduan-{detail-dialog,row-actions}.tsx`.
+      Uji alur di browser masih menunggu.)*
+- [ ] Halaman publik pengaduan (`/desa/pengaduan`) + form kirim warga
+      (`publik-actions.ts` sudah disiapkan, belum di-wire ke halaman).
 
 ### 3E. Dokumen, produk hukum, surat dinas (2 minggu)
 
@@ -680,9 +686,9 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, dan **survei** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
-| 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
-| 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, **survei**, dan **UI admin pengaduan** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
+| 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 2 dari ~30 item dicentang (backend + UI admin pengaduan); sisanya belum |
+| 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Placeholder pembangunan/pengaduan/peta menunggu backend; aksi publik pengaduan sudah disiapkan |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Halaman `/super-admin` masih mockup statis (sudah ter-commit, tanpa backend dan tanpa RBAC nyata) |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
 
