@@ -6,6 +6,7 @@ import {
   type PDFImage,
   type PDFPage,
 } from "pdf-lib";
+import { toBuffer as qrToBuffer } from "qrcode";
 
 import { bacaMedia } from "@/features/publik/infrastructure/media-storage";
 import { formatTanggalIndonesia } from "@/features/surat/domain/surat";
@@ -142,11 +143,22 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
   const font = await pdf.embedFont(StandardFonts.TimesRoman);
   const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
 
-  // Muat gambar desa (dapat null → dicetak tanpa gambar terkait).
-  const [logo, ttd, stamp] = await Promise.all([
+  // Muat gambar desa (dapat null → dicetak tanpa gambar terkait) + QR
+  // verifikasi (PNG dibuat lokal dari ketergantungan `qrcode`).
+  const qrBytes = input.verificationUrl
+    ? await qrToBuffer(input.verificationUrl, {
+        type: "png",
+        margin: 1,
+        width: 240,
+        errorCorrectionLevel: "M",
+      })
+    : null;
+
+  const [logo, ttd, stamp, qr] = await Promise.all([
     tanamGambar(pdf, await muatBytesGambar(input.desa.logo)),
     tanamGambar(pdf, await muatBytesGambar(input.desa.tandaTangan)),
     tanamGambar(pdf, await muatBytesGambar(input.desa.stempel)),
+    tanamGambar(pdf, qrBytes),
   ]);
 
   let page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -291,25 +303,37 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
   }
 
   if (input.verificationUrl) {
-    const footer = wrap(clean(`Verifikasi: ${input.verificationUrl}`), font, 8, CONTENT_WIDTH);
+    const ukuranQr = qr ? 66 : 0;
+    const footer = wrap(
+      clean(`Verifikasi: ${input.verificationUrl}`),
+      font,
+      8,
+      CONTENT_WIDTH - (qr ? ukuranQr + 10 : 0),
+    );
+    const tinggiFooter = Math.max(ukuranQr, footer.length * 10);
 
     // Footer selalu di dasar halaman; pindah halaman bila tanda tangan terlalu
-    // dekat dengan batas bawah agar tidak bertumpuk.
-    if (y < MARGIN + 30) {
+    // dekat dengan batas bawah agar tidak bertumpuk dengan QR/teks.
+    if (y < MARGIN + tinggiFooter + 8) {
       page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
     }
 
-    let footerY = MARGIN;
+    if (qr) {
+      page.drawImage(qr, { x: MARGIN, y: MARGIN, width: ukuranQr, height: ukuranQr });
+    }
+
+    let footerY = MARGIN + tinggiFooter - 8;
     for (const line of footer) {
       const width = font.widthOfTextAtSize(line, 8);
       page.drawText(line, {
-        x: (PAGE_WIDTH - width) / 2,
+        // QR di kiri, teks di kanannya; tanpa QR teks tetap di tengah.
+        x: qr ? MARGIN + ukuranQr + 10 : (PAGE_WIDTH - width) / 2,
         y: footerY,
         size: 8,
         font,
         color: rgb(0, 0, 0),
       });
-      footerY += 10;
+      footerY -= 10;
     }
   }
 

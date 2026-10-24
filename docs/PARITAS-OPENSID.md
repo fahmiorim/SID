@@ -61,7 +61,8 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
 > APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
-> `/konten/dokumen` membaca data per desa. QR gambar verifikasi belum dibuat.
+> `/konten/dokumen` membaca data per desa. QR gambar verifikasi dibuat 24 Okt
+> 2026 (SVG di halaman cetak, PNG di PDF, `domain/verifikasi.ts`).
 >
 > Perbaikan P1.1 23 Okt 2026: inventaris kini punya CRUD barang & kategori,
 > mutasi berjenjang operator → sekdes → kades, dan perubahan aset baru

@@ -1,6 +1,7 @@
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
 import { SURAT_RESOURCE } from "@/features/surat/domain/surat";
+import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
@@ -28,7 +29,7 @@ export async function GET(
     const { surat, jenis, desa, content } = await getSuratPrintData(suratId);
     const origin = await getRequestOrigin();
     const verificationUrl = surat.verificationToken
-      ? `${origin}/desa/verifikasi-surat/${surat.verificationToken}`
+      ? buildVerificationUrl(origin, surat.verificationToken)
       : null;
 
     const pdf = await buildSuratPdf({

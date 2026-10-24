@@ -1,12 +1,14 @@
 import { ArrowLeft, FileDown } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { toString as qrToString } from "qrcode";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { urlMedia } from "@/features/publik/domain/format";
 import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
 import { formatTanggalIndonesia, LETTER_STATUS_LABELS } from "@/features/surat/domain/surat";
+import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
 import { isAppError } from "@/lib/errors";
 import { getRequestOrigin } from "@/lib/request-origin";
@@ -27,7 +29,16 @@ export default async function CetakSuratPage({
 
   const origin = await getRequestOrigin();
   const verificationUrl = surat.verificationToken
-    ? `${origin}/desa/verifikasi-surat/${surat.verificationToken}`
+    ? buildVerificationUrl(origin, surat.verificationToken)
+    : null;
+  // SVG lokal (tanpa layanan pihak ketiga) agar QR tajam saat dicetak.
+  const qrSvg = verificationUrl
+    ? await qrToString(verificationUrl, {
+        type: "svg",
+        margin: 1,
+        width: 96,
+        errorCorrectionLevel: "M",
+      })
     : null;
 
   const headerLines = [
@@ -135,10 +146,21 @@ export default async function CetakSuratPage({
         </div>
 
         {verificationUrl ? (
-          <div className="mt-8 border-t border-black/40 pt-2 text-center text-[10px] leading-4">
-            <p>Verifikasi keaslian surat ini melalui:</p>
-            <p className="font-medium break-all">{verificationUrl}</p>
-            <p className="mt-1 break-all">Token: {surat.verificationToken}</p>
+          <div className="mt-8 flex items-center justify-center gap-3 border-t border-black/40 pt-2 text-[10px] leading-4">
+            {qrSvg ? (
+              <div
+                role="img"
+                aria-label="Kode QR verifikasi keaslian surat"
+                className="size-24 shrink-0 [&>svg]:size-full"
+                // SVG dihasilkan pustaka `qrcode` dari URL internal (bukan input pengguna).
+                dangerouslySetInnerHTML={{ __html: qrSvg }}
+              />
+            ) : null}
+            <div className="text-left">
+              <p>Pindai kode QR atau buka tautan berikut untuk verifikasi:</p>
+              <p className="font-medium break-all">{verificationUrl}</p>
+              <p className="mt-1 break-all">Token: {surat.verificationToken}</p>
+            </div>
           </div>
         ) : null}
       </article>

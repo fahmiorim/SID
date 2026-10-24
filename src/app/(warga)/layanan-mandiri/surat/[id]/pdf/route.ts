@@ -1,4 +1,5 @@
 import { getSuratPrintDataWarga } from "@/features/surat/application/surat-use-cases";
+import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
@@ -28,7 +29,7 @@ export async function GET(
     const { surat, jenis, desa, content } = await getSuratPrintDataWarga(suratId);
     const origin = await getRequestOrigin();
     const verificationUrl = surat.verificationToken
-      ? `${origin}/desa/verifikasi-surat/${surat.verificationToken}`
+      ? buildVerificationUrl(origin, surat.verificationToken)
       : null;
 
     const pdf = await buildSuratPdf({

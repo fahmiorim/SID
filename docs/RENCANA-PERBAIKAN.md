@@ -442,14 +442,17 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       warga tetap lolos (`true`) karena warga sudah wajib mengunggah semua
       berkas syarat.
 - [x] Verifikasi publik token + `/desa/verifikasi-surat/[token]` (tenant-aware).
-      *(Gambar QR menyusul; saat ini tautan verifikasi dicetak sebagai teks.)*
+      QR gambar dibuat lokal dengan pustaka `qrcode` (tanpa layanan pihak
+      ketiga): SVG di halaman cetak admin dan PNG di PDF admin/warga, berisi
+      URL verifikasi dari helper bersama `domain/verifikasi.ts`. Token tetap
+      dicetak sebagai teks cadangan.
 - [x] Template surat, placeholder gambar (logo, TTD, stempel). Kolom baru
       `villages.signature` & `villages.stamp` (migration 0025), unggahan
       kategori media `umum` lewat Pengaturan > Desa (logo/ttd/stempel),
       disajikan `/api/publik/media/`. Kop surat cetak menampilkan logo; blok
       TTD menampilkan gambar tanda tangan + stempel menimpa; PDF
       (`surat-pdf.ts`) menanam PNG/JPG yang sama (fallback URL bila jalur
-      berupa http). *(QR pada templat verifikasi tetap menyusul.)*
+      berupa http). QR verifikasi ikut ditanam di footer PDF.
 - [x] Terbilang & aritmetika isian. `domain/terbilang.ts` (murni + 12 test):
       token `[terbilang:KODE]`, `[terbilang_rupiah:KODE]`,
       `[hitung:EKSPRESI]` (+ - * / %, kurung; token gagal dibiarkan utuh);

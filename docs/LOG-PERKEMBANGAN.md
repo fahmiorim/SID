@@ -6,6 +6,26 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — sisa Fase 2 chip A: QR verifikasi surat
+
+- **Pustaka**: `qrcode` (MIT, pure JS) + `@types/qrcode` — gambar dibuat lokal,
+  tanpa layanan pihak ketiga.
+- **Domain** `features/surat/domain/verifikasi.ts` + 3 test:
+  `buildVerificationUrl(origin, token)` menormalkan garis miring/spasi dan
+  meng-encode token; dipakai tiga pemanggil (halaman cetak admin, PDF admin,
+  PDF warga) agar isi QR & tautan selalu identik.
+- **Cetak HTML** (`/persuratan/surat/[id]/cetak`): QR SVG 96px di footer
+  verifikasi, berdampingan dengan tautan + token; QR diberi `role="img"` dan
+  `aria-label`.
+- **PDF** (`surat-pdf.ts`): QR PNG 240px ditanam lewat `embedPng` (`tanamGambar`)
+  di footer kiri; teks verifikasi di kanannya dan halaman baru dibuat bila
+  ruang tanda tangan kurang. Test baru `surat-pdf.test.ts` (2 case): PDF valid
+  dan PDF ber-QR lebih besar (QR benar-benar tertanam).
+
+Format/lint/typecheck/build/test (509 test, 50 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — test integrasi DB area warga (`desa_test`)
 
 - **Berkas uji** `features/layanan-mandiri/integrasi-warga.test.ts` (5 case):
