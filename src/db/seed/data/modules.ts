@@ -288,8 +288,7 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     icon: "mail-check",
     sortOrder: 40,
     isGroup: false,
-    // Alur pengajuan warga (form, syarat, cetak) belum dibangun.
-    isActive: false,
+    isActive: true,
   },
   {
     slug: "analisis-survei",
