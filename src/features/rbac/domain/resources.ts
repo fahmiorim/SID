@@ -46,6 +46,10 @@ export const RESOURCES = {
    */
   permohonanSurat: "permohonan-surat",
   analisisSurvei: "analisis-survei",
+  /** Pengaduan/saran warga (Fase 3D). */
+  pengaduan: "pengaduan",
+  /** Proyek pembangunan desa (Fase 3C). */
+  pembangunan: "pembangunan",
   /** Tema situs publik (Fase 1D). */
   tema: "tema",
   /** Role khusus untuk super-admin yang mengelola banyak desa. */
