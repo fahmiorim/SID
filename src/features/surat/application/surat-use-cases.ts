@@ -59,6 +59,7 @@ import {
   type VerificationStep,
 } from "@/features/surat/domain/surat";
 import { isiTerbilangDanHitung, terbilangIsi } from "@/features/surat/domain/terbilang";
+import { parseKonfigTte, siapTte, tandaiTte, type KlienTte } from "@/features/surat/domain/tte";
 import {
   getJenisSurat,
   listJenisSurat,
@@ -76,6 +77,7 @@ import {
   nextSuratSequenceGlobal,
   recapSuratByStatus,
   rejectSurat,
+  setSuratTte,
   suratNumberExists,
   suratNumberExistsWithAgenda,
   updateSuratDraft,
@@ -419,6 +421,44 @@ async function nomorSudahDipakai(
 }
 
 /**
+ * Jalur TTE pasca-penerbitan (Fase 2E — adapter nonaktif).
+ *
+ * Konfigurasi dibaca dari variabel `TTE_*` lingkungan. Selama mode
+ * `nonaktif` (default), fungsi ini keluar segera tanpa I/O — penerbitan
+ * surat tidak pernah menunggu/karena TTE. Ketika adapter BSRE nanti
+ * dipasang (`KLIEN_TTE` diganti implementasi jaringan) dan konfigurasi
+ * lengkap, hasil tanda tangan mengisi kolom `letters.tte`.
+ */
+const KLIEN_TTE: KlienTte = null; // Adapter jaringan BSRE belum diimplementasi.
+
+async function prosesTteSurat(
+  villageId: number,
+  suratId: number,
+  nomor: string,
+  pdf: Uint8Array | null,
+): Promise<void> {
+  const config = parseKonfigTte(process.env as Record<string, string | undefined>);
+  if (!siapTte(config)) return;
+
+  const permintaan = {
+    villageId,
+    suratId,
+    nomor,
+    pdf: pdf ?? new Uint8Array(),
+  };
+  const hasil = await tandaiTte(config, permintaan, KLIEN_TTE);
+
+  if (hasil.ok) {
+    await setSuratTte(villageId, suratId, true);
+    return;
+  }
+
+  // Kegagalan TTE tidak memblokir penerbitan; cukup catatan untuk operator
+  // memeriksa konfigurasi.
+  console.warn(`TTE tidak diterapkan pada surat ${nomor}: ${hasil.alasan}`);
+}
+
+/**
  * Terbitkan surat setelah tahap Kades disetujui.
  *
  * Nomor baru diberikan pada tahap akhir agar surat yang ditolak tidak
@@ -484,6 +524,9 @@ async function terbitkanSurat(
     verificationToken: token,
     verificationTokenHash: hash,
   });
+
+  // TTE pasca-terbit: mode nonaktif (default) → keluar segera tanpa I/O.
+  await prosesTteSurat(villageId, surat.id, number, null);
 
   return { number, verificationToken: token };
 }

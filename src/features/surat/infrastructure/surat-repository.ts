@@ -220,6 +220,19 @@ export async function issueSuratRecord(
 }
 
 /**
+ * Tandai surat sudah ter-tanda tangan elektronik (`letters.tte`).
+ *
+ * Hanya dipanggil dari jalur TTE yang berhasil; surat terbit tanpa TTE
+ * membiarkan kolom ini `null` (lihat domain/tte.ts).
+ */
+export async function setSuratTte(villageId: number, id: number, nilai: boolean): Promise<void> {
+  await db
+    .update(letters)
+    .set({ tte: nilai })
+    .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
+}
+
+/**
  * Cari surat berdasarkan hash token verifikasi publik, ter-scope tenant.
  * Dipakai halaman `/desa/verifikasi-surat/[token]`. Token mentah tidak
  * dijadikan kunci pencarian; hash SHA-256 yang disimpan di DB dipakai agar

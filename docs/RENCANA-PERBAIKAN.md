@@ -466,7 +466,13 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       `features/surat/{application,infrastructure,presentation}` +
       halaman `/persuratan/surat-dinas` (cari, CRUD, unggah/buka/hapus
       lampiran media kategori `umum`, hapus berkas ikut membersihkan storage).
-- [ ] TTE/BSRE: adapter mode nonaktif (jangan blokir fase lain).
+- [x] TTE/BSRE: adapter mode nonaktif. Scaffolding di `domain/tte.ts`
+      (murni + 7 test): konfigurasi dari env `TTE_*` (`parseKonfigTte`,
+      mode `nonaktif`/`manual`/`bsre` — nilai asing jatuh aman ke nonaktif),
+      tipe adapter `KlienTte` siap ditukar dengan klien jaringan nanti.
+      `terbitkanSurat` memanggil `prosesTteSurat` (repo `setSuratTte`) yang
+      keluar segera saat nonaktif — penerbitan surat tidak pernah diblokir;
+      hasil `ok: false` hanya dicatat.
 
 ### 2F. Keuangan (3 hari)
 

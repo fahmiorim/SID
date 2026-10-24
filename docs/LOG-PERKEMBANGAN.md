@@ -6,6 +6,30 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2E chip 6: adapter TTE/BSRE mode nonaktif (tanpa blokir)
+
+- **Domain murni** `features/surat/domain/tte.ts` (+ test `tte.test.ts`,
+  7 case): `parseKonfigTte(env)` membaca `TTE_MODE`/`TTE_API`/
+  `TTE_USERNAME`/`TTE_PASSWORD`/`TTE_SSL` — mode dikenal `nonaktif`
+  (default), `manual`, `bsre`; nilai asing jatuh aman ke nonaktif.
+  `siapTte()` menganggap bsre siap hanya bila API + kredensial lengkap;
+  `tandaiTte()` mengembalikan `HasilTte` (`ok: false` + alasan) dan tidak
+  pernah melempar error.
+- **Adapter jaringan ditempatkan sebagai tipe** `KlienTte = null` dengan
+  signature `POST api/sign/pdf` agar implementasi BSRE berikutnya cukup
+  menimpa nilai tanpa mengubah pemanggil (parity OpenSID `external_api/Tte`,
+  sign invisible, timpa PDF, flag `log_surat.tte`).
+- **Integrasi**: `terbitkanSurat` memanggil `prosesTteSurat` setelah catatan
+  surat diterbitkan — saat nonaktif keluar segera (tidak ada I/O, tidak ada
+  biaya); bila sukses kolom `letters.tte` diisi (`setSuratTte` di
+  `surat-repository.ts`), gagal hanya `console.warn` alasan. UI tidak
+  diblokir: surat terbit normal tanpa TTE.
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2E TTE ✅ (mode nonaktif).
+Format/lint/typecheck/build/test (496 test, 46 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — 2E chip 5: surat dinas + arsip
 
 - **Skema**: tabel `letter_dinas` (migration `0026_cute_thaddeus_ross.sql`,
