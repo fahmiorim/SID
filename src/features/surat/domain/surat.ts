@@ -332,6 +332,18 @@ export function addMonthsIso(value: string, months: number): string {
   return `${String(targetYear).padStart(4, "0")}-${String(targetMonth + 1).padStart(2, "0")}-${String(Math.min(day, lastDay)).padStart(2, "0")}`;
 }
 
+// --- Pengajuan verifikasi: penegakan syarat (Fase 2E) ----------------------
+
+/**
+ * Pengajuan verifikasi dari jalur operator wajib konfirmasi syarat bila jenis
+ * suratnya menuntut syarat. Jalur permohonan warga tidak butuh konfirmasi
+ * ulang: warga sudah wajib mengunggah semua berkas syarat sebelum permohonan
+ * bisa diperiksa, jadi admin cukup meneruskan.
+ */
+export function butuhKonfirmasiSyarat(jumlahSyarat: number): boolean {
+  return jumlahSyarat > 0;
+}
+
 // --- Skema formulir --------------------------------------------------------
 
 const codeField = z.string().trim().min(1, "Kode wajib diisi.").max(20, "Maksimal 20 karakter.");

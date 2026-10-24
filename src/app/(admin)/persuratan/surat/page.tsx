@@ -49,7 +49,10 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
   const search = typeof params.q === "string" ? params.q.trim() : "";
   const status = toStatus(typeof params.status === "string" ? params.status : "");
 
-  const { rows, total, jenis, penduduk, recap } = await listSuratWithMeta({ search, status });
+  const { rows, total, jenis, penduduk, recap, syarat } = await listSuratWithMeta({
+    search,
+    status,
+  });
   const canManage = hasPermission(user.permissions, SURAT_RESOURCE, "update");
   const role = user.roleId === null ? null : await findRoleById(user.roleId);
 
@@ -181,6 +184,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
                           surat={row}
                           jenis={jenis}
                           penduduk={penduduk}
+                          syarat={syarat}
                           canManage={canManage}
                           roleSlug={role?.slug ?? null}
                           isSuperadmin={user.permissions.isSuperadmin}

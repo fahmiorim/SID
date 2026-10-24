@@ -184,6 +184,13 @@ export function JenisSuratFormDialog({
               aria-invalid={Boolean(fieldErrors?.templateBody)}
             />
             <p className="text-xs text-muted-foreground">Placeholder: {placeholderHelp()}</p>
+            <p className="text-xs text-muted-foreground">
+              Isian angka mendapat padanan kata otomatis: isian <code>jumlah</code> bisa ditulis
+              sebagai <code>[jumlah_terbilang]</code>. Token lanjutan:{" "}
+              <code>[terbilang:jumlah]</code>, <code>[terbilang_rupiah:biaya]</code>, dan{" "}
+              <code>[hitung:jumlah * 1500]</code> (+ - * / %, kurung). Token bawa gagal dihitung
+              dibiarkan utuh di surat.
+            </p>
             <FieldError messages={fieldErrors?.templateBody} />
           </div>
 

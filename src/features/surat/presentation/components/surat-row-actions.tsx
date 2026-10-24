@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { parseSyaratIds, type SyaratSuratDTO } from "@/features/surat/domain/isian";
 import {
   nextVerificationStep,
   roleCanVerifyStep,
@@ -65,6 +67,8 @@ interface SuratRowActionsProps {
   surat: SuratListRow;
   jenis: JenisSuratDTO[];
   penduduk: PendudukOption[];
+  /** Master syarat surat desa (untuk penegakan syarat saat pengajuan). */
+  syarat: SyaratSuratDTO[];
   canManage: boolean;
   roleSlug: string | null;
   isSuperadmin: boolean;
@@ -74,6 +78,7 @@ export function SuratRowActions({
   surat,
   jenis,
   penduduk,
+  syarat,
   canManage,
   roleSlug,
   isSuperadmin,
@@ -84,6 +89,7 @@ export function SuratRowActions({
   const [verifyOpen, setVerifyOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [verifyStep, setVerifyStep] = useState<VerificationStep>("operator");
+  const [syaratOk, setSyaratOk] = useState(false);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -93,6 +99,18 @@ export function SuratRowActions({
   const isIssued = surat.status === "issued";
   const nextStep = nextVerificationStep(surat);
   const canRunNextStep = nextStep !== null && roleCanVerifyStep(nextStep, roleSlug, isSuperadmin);
+
+  // Syarat yang dituntut jenis surat ini (nama dari master syarat).
+  const jenisSurat = jenis.find((item) => item.id === surat.typeId);
+  const syaratWajib = parseSyaratIds(jenisSurat?.syaratSurat).map(
+    (id) => syarat.find((item) => item.id === id)?.name ?? `Syarat #${id}`,
+  );
+
+  function openSubmit() {
+    setError(null);
+    setSyaratOk(false);
+    setSubmitOpen(true);
+  }
 
   function openVerify(step: VerificationStep) {
     setVerifyStep(step);
@@ -105,6 +123,11 @@ export function SuratRowActions({
     startTransition(async () => {
       const formData = new FormData();
       formData.set("id", String(surat.id));
+      // Penegakan syarat jalur operator: hanya terkirim bila operator
+      // mencentang kelengkapan syarat pada dialog pengajuan.
+      if (syaratWajib.length > 0) {
+        formData.set("syaratDiperiksa", syaratOk ? "1" : "0");
+      }
       const result = await ajukanVerifikasiSuratAction(idleActionState, formData);
 
       if (result.status === "success") {
@@ -208,8 +231,7 @@ export function SuratRowActions({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={() => {
-                  setError(null);
-                  setSubmitOpen(true);
+                  openSubmit();
                 }}
               >
                 <Send className="size-4" />
@@ -268,6 +290,27 @@ export function SuratRowActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
 
+          {syaratWajib.length > 0 ? (
+            <div className="space-y-2 rounded-lg border p-3" data-testid="syarat-wajib">
+              <p className="text-sm font-medium">Syarat wajib ({syaratWajib.length})</p>
+              <ul className="list-disc space-y-0.5 pl-5 text-sm text-muted-foreground">
+                {syaratWajib.map((nama) => (
+                  <li key={nama}>{nama}</li>
+                ))}
+              </ul>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id={`syarat-diperiksa-${surat.id}`}
+                  checked={syaratOk}
+                  onCheckedChange={(value) => setSyaratOk(value === true)}
+                />
+                <Label htmlFor={`syarat-diperiksa-${surat.id}`} className="text-sm font-normal">
+                  Kelengkapan semua syarat di atas sudah saya periksa
+                </Label>
+              </div>
+            </div>
+          ) : null}
+
           {error ? (
             <Alert variant="destructive">
               <AlertCircle />
@@ -279,7 +322,11 @@ export function SuratRowActions({
             <AlertDialogCancel type="button" disabled={isPending}>
               Batal
             </AlertDialogCancel>
-            <Button type="button" disabled={isPending} onClick={handleSubmit}>
+            <Button
+              type="button"
+              disabled={isPending || (syaratWajib.length > 0 && !syaratOk)}
+              onClick={handleSubmit}
+            >
               {isPending ? <Loader2 className="animate-spin" /> : null}
               Ajukan
             </Button>

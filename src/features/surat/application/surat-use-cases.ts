@@ -20,6 +20,7 @@ import {
   isianErrorsToFieldErrors,
   parseIsianFields,
   parseNilaiIsian,
+  parseSyaratIds,
   serializeNilaiIsian,
   validateIsianValues,
   type IsianField,
@@ -29,6 +30,7 @@ import {
   addMonthsIso,
   buildKlgPlaceholders,
   buildSuratNumber,
+  butuhKonfirmasiSyarat,
   canVerifyStep,
   DEFAULT_NUMBER_FORMAT,
   formatTanggalIndonesia,
@@ -45,7 +47,12 @@ import {
   type SuratInput,
   type VerificationStep,
 } from "@/features/surat/domain/surat";
-import { getJenisSurat, listJenisSurat } from "@/features/surat/infrastructure/master-repository";
+import { isiTerbilangDanHitung, terbilangIsi } from "@/features/surat/domain/terbilang";
+import {
+  getJenisSurat,
+  listJenisSurat,
+  listSyaratSurat,
+} from "@/features/surat/infrastructure/master-repository";
 import {
   createSuratDraft,
   deleteSurat,
@@ -149,6 +156,9 @@ function buildValues(
     keperluan: text(surat.purpose ?? "-"),
     berlaku_sampai: formatTanggalIndonesia(berlakuSampai),
     ...buildKlgPlaceholders(anggotaKeluarga),
+    // Nilai isian angka otomatis mendapat padanan kata `[<kode>_terbilang]`
+    // untuk penulisan "sejumlah ... rupiah" (lihat domain/terbilang.ts).
+    ...terbilangIsi(parseNilaiIsian(surat.nilaiIsian)),
   };
 }
 
@@ -177,11 +187,12 @@ export async function listSuratWithMeta(params: { search: string; status: Letter
   const user = await requirePermission(SURAT_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
 
-  const [result, jenis, penduduk, recap] = await Promise.all([
+  const [result, jenis, penduduk, recap, syarat] = await Promise.all([
     listSurat({ villageId, ...params }),
     listJenisSurat(villageId),
     listPendudukOptions(villageId),
     recapSuratByStatus(villageId),
+    listSyaratSurat(villageId),
   ]);
 
   return {
@@ -189,6 +200,7 @@ export async function listSuratWithMeta(params: { search: string; status: Letter
     jenis: jenis.filter((item) => item.isActive),
     penduduk,
     recap,
+    syarat,
   };
 }
 
@@ -291,13 +303,26 @@ export async function deleteSuratData(id: number): Promise<void> {
 }
 
 /** Ajukan konsep ke antrean verifikasi (operator → sekdes → kades). */
-export async function ajukanVerifikasiSuratData(id: number): Promise<void> {
+export async function ajukanVerifikasiSuratData(
+  id: number,
+  konfirmasiSyarat = false,
+): Promise<void> {
   const user = await requirePermission(SURAT_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
 
   const surat = await getSurat(villageId, id);
   if (!surat) throw notFound("Surat tidak ditemukan.");
   if (surat.status !== "draft") throw conflict("Hanya konsep surat yang dapat diajukan.");
+
+  // Penegakan syarat jalur operator: bila jenis surat ini menuntut syarat,
+  // pengajuan harus diikuti konfirmasi kelengkapan dari pencetus (lihat
+  // `butuhKonfirmasiSyarat`). Tanpa ini surat bisa terbit walau dokumen
+  // persyaratannya belum lengkap.
+  const jenis = await getJenisSurat(villageId, surat.typeId);
+  const jumlahSyarat = jenis === null ? 0 : parseSyaratIds(jenis.syaratSurat).length;
+  if (butuhKonfirmasiSyarat(jumlahSyarat) && !konfirmasiSyarat) {
+    throw validationError("Tandai kelengkapan syarat surat sebelum mengajukan verifikasi.");
+  }
 
   await updateSuratVerification(villageId, id, {
     status: "verifikasi",
@@ -389,10 +414,8 @@ async function terbitkanSurat(
 
   if (number === "") throw conflict("Gagal menentukan nomor surat. Coba lagi.");
 
-  const content = renderSuratTemplate(
-    jenis.templateBody,
-    buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, number),
-  );
+  const values = buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, number);
+  const content = isiTerbilangDanHitung(renderSuratTemplate(jenis.templateBody, values), values);
 
   // Token verifikasi publik: token mentah dipakai untuk tautan/QR dan
   // disimpan agar bisa dicetak ulang; hash dipakai sebagai kunci pencarian.
@@ -507,12 +530,16 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
     : null;
   const anggotaKeluarga = await loadAnggotaKeluarga(villageId, penduduk);
 
+  const values = buildValues(
+    surat,
+    jenis,
+    desa,
+    penduduk,
+    anggotaKeluarga,
+    surat.number ?? "KONSEP",
+  );
   const content =
-    surat.content ??
-    renderSuratTemplate(
-      jenis.templateBody,
-      buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, surat.number ?? "KONSEP"),
-    );
+    surat.content ?? isiTerbilangDanHitung(renderSuratTemplate(jenis.templateBody, values), values);
 
   return { surat, jenis, desa, penduduk, content };
 }

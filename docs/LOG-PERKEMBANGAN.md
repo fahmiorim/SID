@@ -6,6 +6,30 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2E chip 1-2: penegakan syarat pengajuan + terbilang & aritmetika isian
+
+- **Penegakan syarat jalur operator**: `butuhKonfirmasiSyarat()` di
+  `domain/surat.ts`; `ajukanVerifikasiSuratData(id, konfirmasiSyarat)` menolak
+  pengajuan tanpa konfirmasi bila jenis surat bersyarat (server-enforced).
+  Dialog "Ajukan Verifikasi" (`surat-row-actions.tsx`) menampilkan daftar
+  syarat wajib dari master (`listSuratWithMeta` kini membawa `syarat`) dengan
+  checkbox; tombol Ajukan nonaktif sebelum dicentang. Jalur permohonan warga
+  (`layanan-mandiri/admin-use-cases.ts`) meneruskan `true` karena warga sudah
+  wajib mengunggah semua berkas syarat.
+- **Terbilang & aritmetika**: `domain/terbilang.ts` murni (12 test di
+  `terbilang.test.ts`) — token `[terbilang:KODE]`, `[terbilang_rupiah:KODE]`,
+  `[hitung:EKSPRESI]` (+ - * / % dan kurung, parser recursive-descent); token
+  gagal dihitung dibiarkan utuh. Isian angka otomatis mendapat padanan
+  `[<kode>_terbilang]` via `buildValues`. Diterapkan pada render terbit
+  (`terbitkanSurat`) dan render cetak/PDF/warga (`loadSuratPrintData`);
+  bantuan token ditambahkan di form jenis surat
+  (`jenis-surat-form-dialog.tsx`).
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2E (dua item ✅). Prettier/lint/test
+(481 test, 43 file)/typecheck/build hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — 3D diperlengkapi: seed modul, route lampiran, dan web publik pengaduan
 
 Tiga celah hasil audit kode-vs-dokumen hari ini ditutup:

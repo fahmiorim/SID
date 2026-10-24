@@ -77,7 +77,9 @@ export async function buatKonsepSuratPermohonanData(permohonanId: number): Promi
   });
 
   await tautkanSuratPermohonan(villageId, permohonan.id, surat.id);
-  await ajukanVerifikasiSuratData(surat.id);
+  // Jalur permohonan tidak butuh konfirmasi syarat ulang: warga sudah wajib
+  // mengunggah semua berkas syarat sebelum permohonan bisa diperiksa.
+  await ajukanVerifikasiSuratData(surat.id, true);
 
   return surat;
 }

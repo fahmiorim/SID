@@ -90,8 +90,11 @@ export async function ajukanVerifikasiSuratAction(
   const id = parseId(formData.get("id"));
   if (id === null) return errorState("Data surat tidak valid.");
 
+  // Checkbox syarat hanya ada pada dialog ajukan untuk jenis surat bersyarat.
+  const konfirmasiSyarat = formData.get("syaratDiperiksa") === "1";
+
   try {
-    await ajukanVerifikasiSuratData(id);
+    await ajukanVerifikasiSuratData(id, konfirmasiSyarat);
     revalidatePath(SURAT_PATH);
     return successState("Surat diajukan untuk verifikasi.");
   } catch (error) {

@@ -430,12 +430,21 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
 ### 2E. Persuratan: sisa gap (8 hari)
 
-- [ ] Penegakan syarat saat pengajuan. *(Jalur warga sudah mewajibkan unggah
-      semua syarat; jalur operator/konsep manual belum memeriksanya.)*
+- [x] Penegakan syarat saat pengajuan. Jalur operator memaksa konfirmasi
+      kelengkapan syarat (checkbox pada dialog Ajukan Verifikasi,
+      server-enforced di `ajukanVerifikasiSuratData(id, konfirmasiSyarat)`;
+      daftar syarat wajib ditampilkan dari master syarat). Jalur permohonan
+      warga tetap lolos (`true`) karena warga sudah wajib mengunggah semua
+      berkas syarat.
 - [x] Verifikasi publik token + `/desa/verifikasi-surat/[token]` (tenant-aware).
       *(Gambar QR menyusul; saat ini tautan verifikasi dicetak sebagai teks.)*
 - [ ] Template surat, placeholder gambar (logo, TTD, stempel).
-- [ ] Terbilang & aritmetika isian.
+- [x] Terbilang & aritmetika isian. `domain/terbilang.ts` (murni + 12 test):
+      token `[terbilang:KODE]`, `[terbilang_rupiah:KODE]`,
+      `[hitung:EKSPRESI]` (+ - * / %, kurung; token gagal dibiarkan utuh);
+      isian angka otomatis mendapat `[<kode>_terbilang]`. Diterapkan pada
+      render terbit (`terbitkanSurat`) dan render cetak/PDF/warga
+      (`loadSuratPrintData`), plus bantuan token di form jenis surat.
 - [ ] Pengikut & penduduk luar.
 - [ ] Surat dinas + arsip.
 - [ ] TTE/BSRE: adapter mode nonaktif (jangan blokir fase lain).
