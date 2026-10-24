@@ -476,10 +476,16 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
 ### 2F. Keuangan (3 hari)
 
-- [ ] Pastikan seluruh halaman anggaran, triwulan, laporan, dokumen bebas
-      error dan konsisten.
-- [ ] Ekspor CSV/Excel & cetak.
-- [ ] Data untuk `/desa/apbdes` publik.
+- [x] Halaman anggaran, triwulan, laporan, dokumen bebas error dan konsisten:
+      check/lint/build/test hijau; sumber data admin & publik lewat fungsi
+      domain yang sama sehingga angka saling konsisten.
+- [x] Ekspor CSV/Excel & cetak. Laporan RP APBDes sudah punya cetak + CSV +
+      Excel; kini lengkap juga: **triwulan** mendapat tombol Cetak & Ekspor
+      CSV (`triwulan/ekspor` route, `laporan-triwulan-csv.ts` + 3 test) dan
+      **anggaran** mendapat tombol Cetak + kop cetak (input pagu/realisasi
+      otomatis dirender sebagai teks saat cetak via `print:hidden`).
+- [x] Data untuk `/desa/apbdes` publik tersedia lewat `getLaporanApbdesPublik`
+      (villageId dari host, domain sama dengan admin).
 - [ ] Rekonsiliasi/manual (bila diperlukan) — P2.
 
 ### 2G. Analisis/survei (5 hari)

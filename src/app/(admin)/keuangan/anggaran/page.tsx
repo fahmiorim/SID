@@ -5,6 +5,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { listKeuangan } from "@/features/keuangan/application/keuangan-use-cases";
 import {
   formatRupiah,
@@ -12,6 +13,7 @@ import {
   ringkasRpApbd,
 } from "@/features/keuangan/domain/keuangan";
 import { AnggaranTable } from "@/features/keuangan/presentation/components/anggaran-table";
+import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -32,7 +34,10 @@ export default async function AnggaranPage({
 
   const params = await searchParams;
   const tahunParam = params.tahun ? Number(params.tahun) : undefined;
-  const { tahun, tersedia, rows } = await listKeuangan(tahunParam);
+  const [{ tahun, tersedia, rows }, desa] = await Promise.all([
+    listKeuangan(tahunParam),
+    getIdentitas(),
+  ]);
   const canManage = hasPermission(user.permissions, KEUANGAN_RESOURCE, "update");
 
   const ringkas = ringkasRpApbd(rows);
@@ -44,7 +49,7 @@ export default async function AnggaranPage({
         title="APBDes"
         description="Pagu anggaran dan realisasi per rekening (Siskeudes)."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
             {tahunList.map((item) => (
               <Link
                 key={item}
@@ -56,9 +61,19 @@ export default async function AnggaranPage({
                 {item}
               </Link>
             ))}
+            <LaporanPrintButton />
           </div>
         }
       />
+
+      <div className="hidden text-center print:block">
+        <p className="text-lg font-bold uppercase">Pagu &amp; Realisasi APBDes</p>
+        <p className="text-sm">
+          {desa?.namaDesa ? `Desa ${desa.namaDesa}` : "Desa"}
+          {desa?.namaKecamatan ? `, Kecamatan ${desa.namaKecamatan}` : ""}
+        </p>
+        <p className="text-sm">Tahun Anggaran {tahun}</p>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[

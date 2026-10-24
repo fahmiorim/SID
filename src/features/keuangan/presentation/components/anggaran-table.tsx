@@ -125,28 +125,39 @@ export function AnggaranTable({
                   </TableCell>
                   <TableCell className="text-right">
                     {canManage && isLeaf ? (
-                      <Input
-                        className="h-8 text-right tabular-nums"
-                        inputMode="numeric"
-                        value={anggaran}
-                        onChange={(event) =>
-                          setDraft(row.templateUuid, { anggaran: event.target.value })
-                        }
-                      />
+                      <>
+                        <Input
+                          className="h-8 text-right tabular-nums print:hidden"
+                          inputMode="numeric"
+                          value={anggaran}
+                          onChange={(event) =>
+                            setDraft(row.templateUuid, { anggaran: event.target.value })
+                          }
+                        />
+                        {/* Cetak: tampilkan nilai sebagai teks, bukan kolom input. */}
+                        <span className="hidden tabular-nums print:inline">
+                          {formatRupiah(anggaran)}
+                        </span>
+                      </>
                     ) : (
                       <span className="tabular-nums">{formatRupiah(anggaran)}</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
                     {canManage && isLeaf ? (
-                      <Input
-                        className="h-8 text-right tabular-nums"
-                        inputMode="numeric"
-                        value={realisasi}
-                        onChange={(event) =>
-                          setDraft(row.templateUuid, { realisasi: event.target.value })
-                        }
-                      />
+                      <>
+                        <Input
+                          className="h-8 text-right tabular-nums print:hidden"
+                          inputMode="numeric"
+                          value={realisasi}
+                          onChange={(event) =>
+                            setDraft(row.templateUuid, { realisasi: event.target.value })
+                          }
+                        />
+                        <span className="hidden tabular-nums print:inline">
+                          {formatRupiah(realisasi)}
+                        </span>
+                      </>
                     ) : (
                       <span className="tabular-nums">{formatRupiah(realisasi)}</span>
                     )}

@@ -6,6 +6,27 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2F cetak keuangan: anggaran & triwulan dapat dicetak, triwulan ekspor CSV
+
+- **Triwulan**: tombol Cetak (window.print via `LaporanPrintButton`) dan
+  Ekspor CSV (`/keuangan/triwulan/ekspor` route — sesi + izin `read` +
+  tenant dari sesi; `laporan-triwulan-csv.ts` murni + 3 test; BOM UTF-8,
+  separator `;`, angka desimal polos, footer Jumlah). Kop cetak
+  `print:block` sudah ada sebelumnya; tombol tahun akses kini `print:hidden`.
+- **Anggaran**: tombol Cetak + kop cetak (judul, desa/kecamatan, tahun).
+  Input pagu/realisasi saat `canManage` dirender `print:hidden` dengan
+  pengganti teks `hidden print:inline` sehingga hasil cetak rapi.
+- **Laporan & dokumen**: sudah punya cetak + CSV (`laporan/ekspor`) + Excel
+  (`laporan/ekspor-excel` SpreadsheetML) — tidak diubah.
+- **Publik**: `/desa/apbdes` dan laporan triwulan publik memakai
+  `getLaporanApbdesPublik`/`getLaporanTriwulanPublik` dengan fungsi domain
+  yang sama seperti admin, sehingga angka publik = angka admin.
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2F (empat item, sisanya rekonsiliasi P2).
+Format/lint/typecheck/build/test (499 test, 47 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — 2E chip 6: adapter TTE/BSRE mode nonaktif (tanpa blokir)
 
 - **Domain murni** `features/surat/domain/tte.ts` (+ test `tte.test.ts`,

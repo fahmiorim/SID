@@ -18,6 +18,7 @@ import {
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { getLaporanTriwulan } from "@/features/keuangan/application/keuangan-use-cases";
 import { formatRupiah, KEUANGAN_RESOURCE } from "@/features/keuangan/domain/keuangan";
+import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
 import { TriwulanInputTable } from "@/features/keuangan/presentation/components/triwulan-input-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
@@ -49,7 +50,7 @@ export default async function LaporanTriwulanPage({
         title="Laporan Triwulan APBDes"
         description="Realisasi belanja per bidang per triwulan."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
             {tahunList.map((item) => (
               <Link
                 key={item}
@@ -60,8 +61,15 @@ export default async function LaporanTriwulanPage({
               </Link>
             ))}
             <Button variant="outline" asChild>
-              <Link href="/keuangan/laporan">
+              <a href={`/keuangan/triwulan/ekspor?tahun=${tahun}`}>
                 <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
+            <LaporanPrintButton />
+            <Button variant="outline" asChild>
+              <Link href="/keuangan/laporan">
+                <Table2 className="size-4" />
                 Kembali ke Laporan
               </Link>
             </Button>
