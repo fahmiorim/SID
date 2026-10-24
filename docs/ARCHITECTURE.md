@@ -73,6 +73,7 @@ Fitur yang sudah dibangun saat ini:
 | `inventaris`     | Aset desa, kategori, mutasi/penghapusan, persetujuan berjenjang.       |
 | `bumindes`       | Buku administrasi desa: katalog buku inti, item buku (CRUD), nomor urut unik per buku. |
 | `survey`         | Survei warga: builder pertanyaan (isian/angka/pilihan), responden, jawaban, dan rekap. |
+| `pengaduan`      | Pengaduan/saran warga: kirim publik (anonim, lampiran), pelacakan tiket, tanggapan & status, publikasi ke web. |
 | `layanan-mandiri`| Permohonan surat: pengajuan warga (isian dinamis + unggah syarat), riwayat, dan pengelolaan operator. Halaman admin di `/permohonan-surat`; area warga di `/layanan-mandiri/*`. |
 | `warga`          | Akun warga (NIK + PIN): pembuatan/reset oleh operator, kredensial sekali tampil, ubah PIN, profil warga. |
 | `publik`         | Situs publik: konten (berita, galeri, profil, perangkat, dokumen, menu, slider, widget, halaman), media sadar-tenant, sanitasi HTML, dan mesin tema per desa. |
@@ -111,9 +112,9 @@ Fitur yang sudah dibangun saat ini:
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
   domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
   `resident.ts`, `family.ts`, `rumah-tangga.ts`, `kelompok.ts`, `bantuan.ts`,
-  `inventaris.ts`, `bumindes.ts`, `survey.ts`, `letters*.ts`,
-  `permohonan-surat.ts`, `keuangan.ts`, `content.ts`, `theme.ts`) dan digabung
-  di `index.ts`.
+  `inventaris.ts`, `bumindes.ts`, `survey.ts`, `pengaduan.ts`,
+  `pembangunan.ts`, `letters*.ts`, `letter-dinas.ts`, `permohonan-surat.ts`,
+  `keuangan.ts`, `content.ts`, `theme.ts`) dan digabung di `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -378,7 +379,8 @@ src/themes/<slug>/
   layout.tsx    # header & footer
   pages/*.tsx   # home, profil, perangkat, berita(+detail), galeri(+detail),
                 # dokumen, statistik, apbdes, bantuan, kontak, halaman,
-                # layanan-mandiri
+                # layanan-mandiri, kelompok, inventaris, surat, status-desa,
+                # survei, triwulan
   theme.css
 ```
 
@@ -421,6 +423,8 @@ src/themes/<slug>/
 Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 
 - `npm run build` berhasil.
+- `npm run smoke` (server `npm run start` harus berjalan) memeriksa halaman
+  publik: 24 halaman wajib 200, tiga kasus 404, dan tautan internal tanpa 404.
 - Perubahan otorisasi diuji untuk **dua peran**: super admin dan peran terbatas
   (menu yang tampil serta akses langsung ke URL modul yang tidak diizinkan).
 - Perubahan skema disertai berkas migrasi yang ikut di-commit.

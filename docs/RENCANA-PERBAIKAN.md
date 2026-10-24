@@ -93,8 +93,10 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
 - [x] **1A.1** Perbaiki `src/proxy.ts`: publik = `/`, `/desa/*`,
       `/layanan-mandiri` (halaman informasi), `/masuk`, plus berkas metadata
-      (`/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`, `/icon.svg`);
-      sisanya terproteksi. Sejak 2C, `/layanan-mandiri/*` (dasbor warga)
+      (`/sitemap.xml`, `/robots.txt`, `/icon.svg`); sisanya terproteksi.
+      `/manifest.webmanifest` dan `/opengraph-image` belum dibuat sehingga
+      **tidak** di-whitelist (dikeluarkan 25 Okt 2026); rencananya di Fase 4.
+      Sejak 2C, `/layanan-mandiri/*` (dasbor warga)
       **wajib sesi**, dan pengalihan pengguna yang sudah login ditangani
       `/masuk` di server agar akun staf dan warga diarahkan ke area berbeda.
 - [x] **1A.2** Beranda desa di `src/app/(public)/page.tsx` (redirect dihapus);
@@ -206,7 +208,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
       *(Agenda menyusul.)*
 - [x] `/desa/profil`: visi, misi, sejarah, sambutan, koordinat, peta statis.
       *(Peta interaktif GIS menyusul Fase 3B.)*
-- [x] `/desa/perangkat`: perangkat + jabatan + foto (SOTK).
+- [x] `/desa/pemerintahan`: perangkat + jabatan + foto (SOTK). Rute lama
+      `/desa/perangkat` tidak ada.
 - [x] `/desa/berita` + `/desa/berita/[slug]`. *(`/desa/berita/arsip`
       menyusul — daftar berita memakai filter kategori.)*
 - [x] `/desa/galeri` + `/desa/galeri/[slug]`.
@@ -243,20 +246,23 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `listSurveiPublik()` + slot tema `survei`; menampilkan jumlah
       pertanyaan/responden dan daftar pertanyaan. Pengisian mandiri belum
       tersedia. Smoke test 200.
-- [x] `/desa/pembangunan`, `/desa/peta`, `/desa/idm`,
-      `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **hanya
-      placeholder kosong** dengan komentar TODO. Tidak ada backend
-      (`src/features/pembangunan/` tidak ada). Data menyusul Fase 3B/3C.
+- [x] `/desa/pembangunan` dan `/desa/peta` — **hanya placeholder kosong**
+      dengan komentar TODO. Tidak ada backend (`src/features/pembangunan/`
+      tidak ada). Data menyusul Fase 3B/3C.
       (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
+- [ ] `/desa/idm`, `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak`
+      — **rute belum dibuat** (404), bukan placeholder. `/desa/idm-sdgs` sudah
+      nyata; sisanya menunggu backend Fase 3A/3E/3I.
 
 ### 1F. CMS konten
 
 - [x] **1F.1** Resource & modul seed: `berita`, `berita-kategori`, `galeri`,
       `profil-desa`, `perangkat-desa`, `menu-publik`, `widget`, `slider`,
       `dokumen-publik`, `tema`, dan `super-admin` sudah punya slug resource +
-      entri `modules.ts`. Operator mendapat `manage` untuk empat modul CMS;
-      sekdes/kades `read`. Halaman `/super-admin` sendiri masih mockup dan
-      belum menjadi fitur (Fase 5).
+      entri `modules.ts`. Operator mendapat `manage` untuk sepuluh modul CMS
+      (tema, berita, berita-kategori, galeri, profil, perangkat, menu, widget,
+      slider, dokumen); sekdes/kades `read`. Halaman `/super-admin` sendiri
+      masih mockup dan belum menjadi fitur (Fase 5).
 - [x] **1F.2** `/konten/berita` + `/konten/berita/kategori`: CRUD, draf/terbit,
       jadwal, sampul, lampiran PDF, penulis dari sesi, slug unik per desa, isi
       disanitasi saat simpan. Bukti: `features/konten/*`, halaman admin, dan
@@ -297,11 +303,10 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `src/lib/sanitize.ts` (`sanitasiHtml`, `teksPolos`); sanitasi saat
       render (lapisan kedua) via `_components/konten-html.tsx`; test XSS
       (`<script>`, `onerror=`, `javascript:`, `style=`, `<iframe>`, `data:`).
-- [x] Semua halaman publik bisa dibuka tanpa sesi. *(Smoke test produksi
-      `next start` pada 23 Okt 2026: beranda, profil, pemerintahan, berita,
-      galeri, statistik, APBDes, dokumen, kelompok, inventaris, status desa,
-      surat, analisis survei, IDM/SDGs, bantuan, kontak, dan layanan mandiri
-      semuanya 200. Test otomatis HTTP menyusul.)*
+- [x] Semua halaman publik bisa dibuka tanpa sesi. *(Sejak 25 Okt 2026
+      dibuktikan otomatis: `npm run smoke` memeriksa 24 halaman wajib 200 +
+      tiga kasus 404 + seluruh tautan internal pada build produksi
+      `next start`; lulus tanpa tautan mati.)*
 - [x] Ganti tema & opsi langsung terlihat, tanpa deploy. *(Uji admin
       `/konten/tema` pada `next start` 23 Okt 2026: klik "Pakai tema ini" untuk
       `natra`, simpan warna primer `#123456`, radius `1.25rem`, dan judul hero;
@@ -318,9 +323,11 @@ Mengacu `donjo-app/controllers/fweb/*`:
       menguji allowlist MIME/ukuran/ekstensi; HTML berisi `<script>`,
       `onerror=`, dan `javascript:` yang disisipkan langsung ke DB hilang saat
       dirender di detail berita, ditambah `sanitize.test.ts`.)*
-- [x] Tidak ada tautan 404. *(Crawler internal pada build produksi memeriksa
-      19 halaman publik; tidak ada tautan internal yang mengembalikan 404.)*
+- [x] Tidak ada tautan 404. *(Dijelaskan oleh `npm run smoke`: penelusuran
+      tautan internal dari halaman publik (detail berita + filter kategori)
+      tidak menemukan 404; kasus 404 yang diharapkan tetap sesuai.)*
 - [x] Lighthouse mobile ≥ 90 untuk performance & accessibility (target awal).
+      *(Pengukuran manual; belum ada artefak yang bisa dijalankan ulang.)*
       *(Build produksi `next start`, Lighthouse 12, emulasi mobile 23 Okt 2026:
       performance **97**, accessibility **100** setelah kontras teks footer
       dinaikkan dari `text-muted-foreground` ke `text-foreground/70`.)*
@@ -401,6 +408,9 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       (kategori `permohonan`) dan diunduh lewat route ber-otentikasi.
 - [x] UI admin: detail permohonan, proses status, kembalikan dengan alasan,
       batalkan, dan riwayat (`PermohonanDetailDialog`, `/permohonan-surat`).
+      Modul `permohonan-surat` aktif di menu sejak 25 Okt 2026 dengan operator
+      `manage` serta sekretaris desa & kepala desa `read` (hanya melihat; aksi
+      proses butuh `update` dan ditolak server untuk peran read).
 - [x] Terbitkan surat dari permohonan: `buatKonsepSuratPermohonanData` memakai
       use case persuratan (bukan duplikasi penomoran), menyimpan `letter_id`,
       dan menyinkronkan status saat surat terbit/ditolak.
@@ -622,8 +632,14 @@ terdokumentasi, dengan test.
 - [ ] `/desa/peta` memakai data Fase 3B.
 - [ ] `/desa/dokumen` + produk hukum memakai Fase 3E.
 - [ ] `/desa/statistik` + `/desa/apbdes` final.
-- [ ] `/desa/suplemen`, `/desa/dpt`, `/desa/idm`, `/desa/sdgs` bila datanya ada.
-- [ ] Widget, slider, menu dinamis dari CMS.
+- [ ] `/desa/suplemen`, `/desa/dpt`, `/desa/idm`, `/desa/sdgs` — rute belum
+      ada; buat setelah backend Fase 3A/3E tersedia.
+- [x] Widget, slider, menu dinamis dari CMS — menu (`listMenuPublik`),
+      slider, dan widget teks sudah dibaca dari DB; teks berjalan & sosmed
+      belum dibuat.
+- [ ] Manifest PWA per desa (`manifest.ts`) dan gambar OG
+      (`opengraph-image.tsx`) sebagai metadata route, lalu daftarkan kembali di
+      `PUBLIC_FILES` proxy agar perayap tidak dialihkan ke halaman masuk.
 - [ ] Audit tautan mati + uji aksesibilitas.
 - [ ] Test regresi proxy & isolasi tenant.
 
@@ -746,19 +762,20 @@ Fase 3A–3H bisa dipecah ke beberapa developer.
 
 ## Status Dokumen
 
-Diperbarui 23 Oktober 2026 dari audit dokumen vs kode. Urutan prioritas:
-web publik → admin berfungsi → paritas OpenSID → multi-desa.
+Diperbarui 25 Oktober 2026 dari audit dokumen vs kode (angka & status
+diselaraskan kembali dengan checklist dan rute yang benar-benar ada). Urutan
+prioritas: web publik → admin berfungsi → paritas OpenSID → multi-desa.
 
 ---
 
-## Status Akhir (diperbarui 24 Oktober 2026)
+## Status Akhir (diperbarui 25 Oktober 2026)
 
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; halaman publik Pembangunan & Peta masih placeholder (Pengaduan sudah nyata di Fase 3D) |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, **survei**, dan **pengaduan (admin + publik)** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
-| 3 — Paritas OpenSID T1+T2 | 🟡 **2D & 3D pengaduan berjalan** | 3 item pengaduan (backend, UI admin, publik) dicentang; ±27 item lain belum |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, **survei**, dan **pengaduan (admin + publik)** selesai; sisa pekerjaan lanjutan: pembukuan manual keuangan (P2) dan notifikasi status pengaduan |
+| 3 — Paritas OpenSID T1+T2 | 🟡 **2D & 3D pengaduan berjalan** | 3 item pengaduan (backend, UI admin, publik) dicentang; 22 item lain belum (dihitung dari checklist §3A–§3I) |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Pengaduan sudah ter-wire (dikerjakan dulu di 3D); pembangunan/peta & sisanya menunggu backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Halaman `/super-admin` masih mockup statis (sudah ter-commit, tanpa backend dan tanpa RBAC nyata) |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
@@ -766,7 +783,7 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 **Keseluruhan: ±25%** (Fase 0, sebagian besar Fase 1, dan sebagian besar Fase 2).
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
-1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar belum dibuat (baru tautan teks).
+1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar dibuat 24 Okt 2026 (SVG di halaman cetak, PNG di PDF).
 2. ~~Sebagian halaman publik masih mengimpor repository langsung~~ —
    **selesai**: beranda, berita, galeri, profil, pemerintahan, bantuan,
    halaman statis, dan pertanahan kini lewat use case publik; tidak ada lagi

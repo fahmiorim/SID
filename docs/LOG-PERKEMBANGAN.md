@@ -6,6 +6,27 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-25 — smoke test HTTP publik + daftar putih proxy dirapikan
+
+- **Skrip** `scripts/smoke.mts` + `npm run smoke`: memeriksa 24 halaman publik
+  wajib 200 (`/`, seluruh `/desa/*`, `/layanan-mandiri`, `/masuk`), tiga kasus
+  yang harus 404 (`/desa/tidak-ada`, `/desa/halaman/tidak-ada`,
+  `/desa/berita/tidak-ada`), lalu menelusuri tautan internal dari setiap
+  halaman HTML (maks. 200 URL) dan menggagalkan proses bila ada 404/5xx.
+  `SMOKE_BASE_URL` dan `SMOKE_VERBOSE=1` opsional; keluar status 1 saat gagal.
+- **Hasil** build produksi `next start` (25 Okt 2026): **33 URL** diperiksa —
+  termasuk detail berita dan empat filter kategori — semua halaman 200, tiga
+  kasus 404 sesuai, tidak ada tautan mati.
+- **Proxy** `src/proxy.ts`: `/manifest.webmanifest` dan `/opengraph-image`
+  dikeluarkan dari `PUBLIC_FILES` karena berkasnya belum ada (sebelumnya
+  daftar putih menunjuk URL mati). Rencana pembuatan manifest/OG sebagai
+  metadata route dicatat di `RENCANA-PERBAIKAN.md` Fase 4.
+- **Docs sinkron**: `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md`
+  (tabel perintah); `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run
+  build` hijau (540 test / 53 file).
+
+---
+
 ## 2026-10-24 — sisa Fase 2 chip D: rekonsiliasi realisasi keuangan
 
 - **Domain** `features/keuangan/domain/rekonsiliasi.ts` + 7 test:

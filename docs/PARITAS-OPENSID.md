@@ -31,32 +31,34 @@ Legenda status proyek kita:
 
 | Kategori | Total modul | ✅ | 🟡 | 🔴 |
 |---|---:|---:|---:|---:|
-| Kependudukan & sosial | 12 | 4 | 0 | 8 |
+| Kependudukan & sosial | 12 | 3 | 1 | 8 |
 | Wilayah & pertanahan | 4 | 2 | 0 | 2 |
 | Pemerintahan | 8 | 3 | 2 | 3 |
-| Persuratan | 7 | 4 | 2 | 1 |
-| Keuangan | 6 | 4 | 1 | 1 |
+| Persuratan | 7 | 6 | 0 | 1 |
+| Keuangan | 6 | 4 | 2 | 0 |
 | Bumindes | 11 | 2 | 5 | 4 |
 | Pembangunan | 1 | 0 | 0 | 1 |
-| Layanan mandiri & warga | 10 | 5 | 3 | 2 |
+| Layanan mandiri & warga | 10 | 6 | 1 | 3 |
 | Analisis & statistik | 3 | 0 | 3 | 0 |
 | Web publik | 21 | 9 | 5 | 7 |
-| Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **34** | **23** | **35** |
+| Sistem & operasional | 9 | 2 | 1 | 6 |
+| **Total** | **92** | **37** | **20** | **35** |
 
-**Paritas kasar saat ini: ±49%** (hitung ✅ penuh + setengah 🟡). Angka ini
-dihitung ulang 24 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
-per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
-harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
-**P1** — bukan seluruh 92 modul.
+**Paritas kasar saat ini: ±51%** (hitung ✅ penuh + setengah 🟡 — 37 + 10 = 47
+dari 92). Angka ini dihitung ulang 25 Oktober 2026 langsung dari baris
+matriks; jumlah ✅ + 🟡 + 🔴 per kategori harus sama dengan kolom total.
+Untuk "tidak kalah" pada operasi harian desa, target realistis adalah menutup
+seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
 
-> Catatan 23 Okt 2026: Halaman web publik gelombang 1 sudah tersedia (beranda,
-> berita, galeri, profil, perangkat, apbdes, status-des, idm-sdgs, surat,
-> analisis-survei, dokumen, statistik, kontak, verifikasi-surat, kelompok,
-> inventaris) dan memakai slot tema (sebagian masih mengimpor repository
-> langsung). Yang masih 🔴 adalah halaman yang belum punya data/backend
-> (pembangunan, pengaduan, peta, suplemen, lapak, dpt, komentar/pengunjung, SEO
-> OG image) serta fitur lanjutan.
+> Catatan 23 Okt 2026 (status diselaraskan 25 Okt 2026): Halaman web publik
+> gelombang 1 sudah tersedia (beranda, berita, galeri, profil, pemerintahan,
+> apbdes, status-des, idm-sdgs, surat, analisis-survei, dokumen, statistik,
+> kontak, verifikasi-surat, kelompok, inventaris, pengaduan) dan seluruhnya
+> memakai use case + slot tema. Yang masih 🔴 adalah halaman yang belum punya
+> data/backend (pembangunan, peta, suplemen, lapak, dpt, komentar/pengunjung)
+> serta fitur lanjutan. SEO sitemap & robots sudah ada; gambar OG belum (🟡).
+> Rute `/desa/idm`, `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, dan
+> `/desa/lapak` **belum dibuat** (404), bukan placeholder.
 >
 > Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
 > (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
@@ -133,7 +135,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Data penduduk (CRUD, filter, cetak, ekspor) | `controllers/Penduduk.php`, `views/admin/penduduk` | ✅ | — |
+| Data penduduk (CRUD, filter; cetak & ekspor menyusul) | `controllers/Penduduk.php`, `views/admin/penduduk` | 🟡 | P2 (CRUD, cari, filter, dan paginasi selesai; cetak biodata & ekspor daftar penduduk belum — ekspor baru tersedia untuk laporan) |
 | Riwayat/log penduduk (lahir, mati, pindah, datang) | `controllers/Penduduk_log.php` | 🔴 | **P1** |
 | Keluarga / Kartu Keluarga + cetak | `controllers/Keluarga.php` | ✅ | — |
 | Rumah tangga (RTM) | `controllers/Rtm.php` | ✅ | — |
@@ -176,8 +178,8 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Surat masuk & surat keluar | `controllers/{Surat_masuk,Surat_keluar}.php` | ✅ | — |
 | Klasifikasi & syarat surat | `controllers/{Klasifikasi,Syaratan_surat}.php` | ✅ | — |
 | Surat dinas + arsip | `controllers/{Surat_dinas,Surat_dinas_arsip}.php` | ✅ | — |
-| Template surat, QR, verifikasi publik | `controllers/Qr_code.php`, `fweb/Verifikasi_surat` | 🟡 | **P0** |
-| Permohonan surat admin | `controllers/Permohonan_surat_admin.php` | 🟡 | **P0** |
+| Template surat, QR, verifikasi publik | `controllers/Qr_code.php`, `fweb/Verifikasi_surat` | ✅ | **P0** (template jenis surat, QR di cetak/PDF, dan token verifikasi tenant-aware selesai 24 Okt 2026) |
+| Permohonan surat admin | `controllers/Permohonan_surat_admin.php` | ✅ | **P0** (halaman `/permohonan-surat`, dialog detail, proses/kembalikan/batalkan, konsep surat, dan PDF; modul aktif di menu sejak 25 Okt 2026 dengan operator `manage` serta sekdes/kades `read`) |
 | Buku agenda / arsip surat | `controllers/Bumindes_arsip.php` | 🔴 | P2 |
 
 ## E. Keuangan
@@ -223,7 +225,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
 | Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
 | Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | ✅ | P1 (backend + UI admin + halaman publik, form warga, dan pelacakan tiket mandiri selesai; sisa notifikasi status) |
-| Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
+| Bantuan untuk warga | `fmandiri/Bantuan.php` | 🔴 | P2 (belum ada halaman maupun use case bantuan di area warga) |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |
 | Verifikasi surat publik (QR/token) | `fweb/Verifikasi_surat`, `fmandiri/Verifikasi.php` | ✅ | **P0** (token + QR gambar di cetak & PDF selesai 24 Okt 2026) |
@@ -268,7 +270,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 |---|---|---|---|
 | Pengguna, grup, modul, RBAC | `controllers/{Pengguna,Man_user,Grup,Modul}.php` | ✅ | — |
 | Identitas & pengaturan aplikasi | `controllers/{Identitas_desa,Setting_aplikasi}.php` | ✅ | — |
-| Shortcut / menu admin | `controllers/Shortcut.php` | 🟡 | P2 |
+| Shortcut / menu admin | `controllers/Shortcut.php` | 🔴 | P2 (belum ada fitur shortcut) |
 | Notifikasi, mailbox, SMS gateway | `controllers/{Notifikasi,Mailbox,Sms*}.php` | 🔴 | P2 |
 | Database: backup/restore/optimasi | `controllers/{Database,Koneksi_database,Optimasi_gambar}.php` | 🔴 | P1 |
 | Sinkronisasi & OpenDK | `controllers/{Sinkronisasi,Opendk_pesan}.php`, `fweb` | 🔴 | P3 |
@@ -308,7 +310,7 @@ T3 tidak perlu dikejar sekarang.
 1. Proyek ini sudah kuat di **inti administrasi** (penduduk, KK, RTM, surat,
    keuangan, bantuan, kelompok) dan **layanan mandiri warga** sudah berjalan
    end-to-end; yang masih tertinggal adalah **web publik bagian lanjutan**
-   (pembangunan, pengaduan, peta) dan **modul transparansi/analisis**.
+   (pembangunan, peta, suplemen/DPT) dan **modul transparansi/analisis**.
 2. Prioritas yang Anda tetapkan sudah tepat: **web publik dulu**, karena itu
    bagian yang paling dilihat warga.
 3. "Tidak kalah dengan OpenSID" bukan satu fase, melainkan **T1 + T2** yang
