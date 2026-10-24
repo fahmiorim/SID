@@ -11,6 +11,10 @@ import { defineConfig } from "vitest/config";
  * environment saat modulnya di-import (fail fast). Nilainya fiktif — tidak ada
  * koneksi database yang dibuka dalam pengujian unit.
  *
+ * Test unit murni berjalan tanpa setup khusus. Test integrasi menyentuh
+ * `desa_test`: migrasi programatik dijalankan sendiri dan suite di-skip
+ * bila MySQL tidak tersedia.
+ *
  * Berkas ini memakai ekstensi `.mts` karena `package.json` tidak bertipe module.
  */
 export default defineConfig({
@@ -26,6 +30,11 @@ export default defineConfig({
       NODE_ENV: "test",
       DATABASE_URL: "mysql://root:@127.0.0.1:3306/desa_test",
       BETTER_AUTH_SECRET: "rahasia-uji-coba-minimal-32-karakter",
+    },
+    // Package `server-only` melempar error meski di-import dari Node murni
+    // (test integrasi meng-import repository). Alias ke stub kosong.
+    alias: {
+      "server-only": fileURLToPath(new URL("./src/testing/server-only.ts", import.meta.url)),
     },
   },
 });

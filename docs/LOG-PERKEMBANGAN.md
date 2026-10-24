@@ -6,6 +6,31 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — test integrasi DB area warga (`desa_test`)
+
+- **Berkas uji** `features/layanan-mandiri/integrasi-warga.test.ts` (5 case):
+  pertama kali menyentuh MySQL dari Vitest. Setup dalam `beforeAll`:
+  buat database bila belum ada (idempotent), probe koneksi, migrasi
+  programatik via `migrate()` Drizzle, seed tenant uji (2 desa, 2 penduduk,
+  1 jenis surat) dengan akhiran UUID agar tidak bentrok antar run; `afterAll`
+  menghapus `users` lalu `villages` (cascade penduduk/jenis/permohonan).
+  Suite otomatis **di-skip** bila MySQL tidak tersedia — pipeline tetap hijau
+  di mesin tanpa DB.
+- **`vitest.config.mts`**: alias `server-only` → stub `src/testing/
+  server-only.ts` (package asli melempar error meski di-import dari Node);
+  dokumen komentar config diperbarui.
+- **Cakupan**: (1) `getPermohonanWarga`/`listPermohonanWarga` menolak permohonan
+  warga lain di desa sama; (2) permohonan tidak terlihat dari context desa
+  lain; (3) `listSuratUntukWarga` hanya menampilkan jenis surat desa sendiri;
+  (4) siklus akun `createWargaAccount` → `mustChangePin` →
+  `clearMustChangePin` → `resetWargaPin` (memaksa ganti PIN lagi, aktifkan
+  akun); (5) `findResidentForAccount` menolak penduduk desa lain.
+  Nomor antrian otomatis `AN-<timestamp>` juga dipastikan.
+
+Format/lint/typecheck/build/test (504 test, 48 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — 2F cetak keuangan: anggaran & triwulan dapat dicetak, triwulan ekspor CSV
 
 - **Triwulan**: tombol Cetak (window.print via `LaporanPrintButton`) dan

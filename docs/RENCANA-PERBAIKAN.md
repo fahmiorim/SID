@@ -404,9 +404,14 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 - [x] Terbitkan surat dari permohonan: `buatKonsepSuratPermohonanData` memakai
       use case persuratan (bukan duplikasi penomoran), menyimpan `letter_id`,
       dan menyinkronkan status saat surat terbit/ditolak.
-- [ ] Test otomatis akses lintas warga, akun tanpa `residentId`, dan paksa ganti
-      PIN. *(Proteksi ada di repository + `requireWarga`; test integrasi HTTP/DB
-      belum ditulis. Test domain: `warga.test.ts`, `layanan-mandiri.test.ts`.)*
+- [x] Test integrasi DB akses lintas warga & siklus PIN (`integrasi-warga.test.ts`,
+      5 case, berjalan pada `desa_test` — auto-skip bila MySQL tak tersedia):
+      permohonan tidak terlihat lintas warga/lintas desa, mapping spec item 4;
+      jenis surat hanya muncul pada desa pemilik; `createWargaAccount` →
+      `mustChangePin` → `clearMustChangePin` → `resetWargaPin` memaksa ganti PIN
+      lagi; `findResidentForAccount` menolak penduduk desa lain. Proteksi
+      sesi (`requireWarga`/`requireWargaAktif`) tetap dari `lib/dal.ts`.
+      Untuk test integrasi HTTP, lihat catatan daftar akhir.
 
 ### 2D. Bumindes (4 hari)
 
@@ -755,4 +760,5 @@ Masalah kritis yang perlu diperbaiki sebelum lanjut:
 5. ~~Halaman statistik publik hardcoded `"0"`~~ — **selesai**: memakai
    `getStatistikPublik()`.
 6. Test integrasi HTTP untuk area warga (akses lintas warga, akun tanpa
-   `residentId`, paksa ganti PIN) belum ada.
+   `residentId`, proteksi `requireWarga`) — R2. Test integrasi DB dasar
+   sudah ada (`integrasi-warga.test.ts`).
