@@ -1,4 +1,4 @@
-import { FileDown, Table2 } from "lucide-react";
+import { FileDown, Scale, Table2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -67,6 +67,12 @@ export default async function LaporanTriwulanPage({
               </a>
             </Button>
             <LaporanPrintButton />
+            <Button variant="outline" asChild>
+              <Link href={`/keuangan/rekonsiliasi?tahun=${tahun}`}>
+                <Scale className="size-4" />
+                Rekonsiliasi
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href="/keuangan/laporan">
                 <Table2 className="size-4" />

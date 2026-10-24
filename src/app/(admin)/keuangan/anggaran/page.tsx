@@ -1,9 +1,10 @@
-import { Wallet } from "lucide-react";
+import { Scale, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { listKeuangan } from "@/features/keuangan/application/keuangan-use-cases";
@@ -61,6 +62,12 @@ export default async function AnggaranPage({
                 {item}
               </Link>
             ))}
+            <Button variant="outline" asChild>
+              <Link href={`/keuangan/rekonsiliasi?tahun=${tahun}`}>
+                <Scale className="size-4" />
+                Rekonsiliasi
+              </Link>
+            </Button>
             <LaporanPrintButton />
           </div>
         }

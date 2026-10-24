@@ -187,7 +187,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | APBDes / anggaran | `controllers/{Keuangan_laporan,Laporan_apbdes}.php` | ✅ | — |
 | Realisasi & laporan triwulan | `controllers/Keuangan_laporan.php` | ✅ | — |
 | Dokumen laporan | `controllers/Dokumen.php` | ✅ | — |
-| Keuangan manual / rekonsiliasi | `controllers/Keuangan_manual.php` | 🔴 | P2 |
+| Keuangan manual / rekonsiliasi | `controllers/Keuangan_manual.php` | 🟡 | P2 (rekonsiliasi realisasi tahunan vs triwulan selesai; pembukuan manual/saldo bank belum) |
 | Inventaris kekayaan desa (buku) | `controllers/Bumindes_inventaris_kekayaan.php` | 🟡 | P1 |
 | Transparansi APBDes di web publik | `fweb` (APBDes) | ✅ | — |
 

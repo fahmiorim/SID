@@ -21,6 +21,7 @@ import {
   triwulanBarisFormSchema,
   type TriwulanBarisInput,
 } from "@/features/keuangan/domain/laporan-triwulan";
+import { rekonsiliasiBidang, totalRekonsiliasi } from "@/features/keuangan/domain/rekonsiliasi";
 import {
   listKeuanganTahun,
   listKeuanganTahunTersedia,
@@ -121,6 +122,45 @@ export async function getLaporanTriwulan(tahunParam?: number) {
   const baris = buildTriwulanRows(input);
 
   return { tahun, tersedia, baris, total: totalTriwulan(baris) };
+}
+
+/**
+ * Rekonsiliasi realisasi belanja: realisasi tahunan APBDes dibandingkan
+ * dengan jumlah realisasi triwulan per bidang (`5.x`).
+ *
+ * Kode yang hanya ada di salah satu sumber tetap ditampilkan agar data yang
+ * belum lengkap terlihat. Tidak ada penulisan data di sini.
+ */
+export async function getRekonsiliasiKeuangan(tahunParam?: number) {
+  const { villageId, tahun, tersedia, rows } = await listKeuangan(tahunParam);
+  const bidang = listBidangBelanja(rows);
+  const tersimpan = await listKeuanganTriwulan(villageId, tahun);
+  const byKode = new Map(tersimpan.map((row) => [row.templateUuid, row]));
+  const uraianBidang = new Map(bidang.map((row) => [row.templateUuid, row]));
+
+  // Gabungkan kode dari kedua sisi supaya bidang yang hanya punya salah satu
+  // data (mis. triwulan terisi tetapi baris APBDes belum ada) ikut tampil.
+  const kode = [...new Set([...uraianBidang.keys(), ...byKode.keys()])].sort((a, b) =>
+    a.localeCompare(b),
+  );
+
+  const triwulan: TriwulanBarisInput[] = kode.map((item) => {
+    const dasar = uraianBidang.get(item);
+    const nilai = byKode.get(item);
+    return {
+      kode: item,
+      uraian: dasar?.uraian ?? item,
+      anggaran: dasar?.anggaran ?? "0.00",
+      tw1: nilai?.tw1 ?? "0.00",
+      tw2: nilai?.tw2 ?? "0.00",
+      tw3: nilai?.tw3 ?? "0.00",
+      tw4: nilai?.tw4 ?? "0.00",
+    };
+  });
+
+  const baris = rekonsiliasiBidang(bidang, triwulan);
+
+  return { tahun, tersedia, baris, total: totalRekonsiliasi(baris) };
 }
 
 /** Simpan realisasi triwulan per bidang belanja (`5.x`). */

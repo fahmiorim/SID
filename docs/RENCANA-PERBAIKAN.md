@@ -494,7 +494,12 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       otomatis dirender sebagai teks saat cetak via `print:hidden`).
 - [x] Data untuk `/desa/apbdes` publik tersedia lewat `getLaporanApbdesPublik`
       (villageId dari host, domain sama dengan admin).
-- [ ] Rekonsiliasi/manual (bila diperlukan) — P2.
+- [x] Rekonsiliasi realisasi (P2, 24 Okt 2026): `/keuangan/rekonsiliasi`
+      membandingkan realisasi tahunan APBDes dengan jumlah TW I–IV per bidang
+      belanja (`domain/rekonsiliasi.ts` + 7 test), menampilkan selisih per
+      bidang, status cocok/perlu dicek, dan total tahun. Murni baca; tautan
+      tersedia dari halaman APBDes & Laporan Triwulan. Saldo rekening koran
+      bank belum dicatat aplikasi (di luar cakupan).
 
 ### 2G. Analisis/survei (5 hari)
 

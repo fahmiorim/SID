@@ -6,6 +6,28 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — sisa Fase 2 chip D: rekonsiliasi realisasi keuangan
+
+- **Domain** `features/keuangan/domain/rekonsiliasi.ts` + 7 test:
+  `rekonsiliasiBidang` mencocokkan realisasi tahunan (`keuangan`) dengan
+  penjumlahan TW I–IV (`keuangan_triwulan`) per kode bidang `5.x`
+  (union kedua sisi, perbandingan sen, persentase terhadap pagu), dan
+  `totalRekonsiliasi` merangkum total + jumlah bidang cocok/beda.
+- **Use case** `getRekonsiliasiKeuangan(tahun)` memakai izin `read` dan
+  tenant sesi; menggabungkan bidang dari kedua sumber agar data yang hanya
+  ada di satu sisi tetap terlihat.
+- **UI** `/keuangan/rekonsiliasi`: kartu total (tahunan, triwulan, selisih,
+  status bidang), tabel rincian dengan badge Cocok/Perlu dicek, pemilih
+  tahun, cetak, dan tautan ke APBDes/Triwulan untuk perbaikan. Tombol
+  "Rekonsiliasi" ditambahkan di header halaman APBDes & Laporan Triwulan.
+- Cakupan: rekonsiliasi data internal (tahunan vs triwulan). Saldo rekening
+  koran bank belum dicatat aplikasi; item P2 ditandai selesai sebagian di
+  `PARITAS-OPENSID.md`.
+
+Format/lint/typecheck/build/test (540 test, 53 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — sisa Fase 2 chip C: ekspor & impor respons survei
 
 - **Domain** `features/survey/domain/survey-csv.ts` + 13 test: `csvCell`
