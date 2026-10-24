@@ -11,6 +11,7 @@ import {
   getPendudukSuratData,
   listAnggotaKeluargaSurat,
   listPendudukOptions,
+  listPendudukSuratByIds,
   type AnggotaKeluargaSuratRow,
   type PendudukSuratData,
 } from "@/features/penduduk/infrastructure/penduduk-repository";
@@ -25,6 +26,16 @@ import {
   validateIsianValues,
   type IsianField,
 } from "@/features/surat/domain/isian";
+import {
+  buildPengikutPlaceholders,
+  KUNCI_ISIAN_LUAR,
+  KUNCI_ISIAN_PENGIKUT,
+  parsePendudukLuar,
+  parsePengikutIds,
+  serializePendudukLuar,
+  serializePengikutIds,
+  type PendudukLuarSurat,
+} from "@/features/surat/domain/pengikut";
 import { normalizePenomoranMode, type PenomoranSuratMode } from "@/features/surat/domain/penomoran";
 import {
   addMonthsIso,
@@ -124,6 +135,7 @@ function buildValues(
   desa: IdentitasDesa,
   penduduk: PendudukSuratData | null,
   anggotaKeluarga: readonly AnggotaKeluargaSurat[],
+  pengikutSurat: { pengikut: readonly AnggotaKeluargaSurat[]; luar: readonly PendudukLuarSurat[] },
   number: string,
 ): Record<string, string> {
   const effectiveLetterDate = surat.letterDate ?? "-";
@@ -156,6 +168,8 @@ function buildValues(
     keperluan: text(surat.purpose ?? "-"),
     berlaku_sampai: formatTanggalIndonesia(berlakuSampai),
     ...buildKlgPlaceholders(anggotaKeluarga),
+    // Pengikut surat (penduduk desa) & penduduk luar desa (Fase 2E).
+    ...buildPengikutPlaceholders(pengikutSurat.pengikut, pengikutSurat.luar),
     // Nilai isian angka otomatis mendapat padanan kata `[<kode>_terbilang]`
     // untuk penulisan "sejumlah ... rupiah" (lihat domain/terbilang.ts).
     ...terbilangIsi(parseNilaiIsian(surat.nilaiIsian)),
@@ -240,6 +254,43 @@ function resolveIsianValues(
   return { fields, values };
 }
 
+/**
+ * Gabungkan nilai tersembunyi pengikut & penduduk luar ke peta isian.
+ *
+ * Disimpan sebagai kunci `__pengikut`/`__luar` (lihat domain/pengikut.ts);
+ * hanya diisi bila datanya tidak kosong agar JSON tetap ringkas.
+ */
+function denganPengikut(
+  values: Record<string, string>,
+  pengikut: readonly number[],
+  luar: readonly PendudukLuarSurat[],
+): Record<string, string> {
+  const hasil = { ...values };
+  const csv = serializePengikutIds(pengikut);
+  if (csv !== "") hasil[KUNCI_ISIAN_PENGIKUT] = csv;
+  if (luar.length > 0) hasil[KUNCI_ISIAN_LUAR] = serializePendudukLuar(luar);
+  return hasil;
+}
+
+/**
+ * Baca data pengikut surat & penduduk luar dari nilai isian tersimpan.
+ *
+ * Pengikut berupa id penduduk yang dimuat ulang dari database warga terkait;
+ * penduduk luar langsung dibaca dari baris JSON.
+ */
+async function loadPengikutSurat(
+  villageId: number,
+  nilaiIsian: string | null,
+): Promise<{ pengikut: AnggotaKeluargaSurat[]; luar: PendudukLuarSurat[] }> {
+  const isian = parseNilaiIsian(nilaiIsian);
+  const ids = parsePengikutIds(isian[KUNCI_ISIAN_PENGIKUT]);
+  const luar = parsePendudukLuar(isian[KUNCI_ISIAN_LUAR]);
+  if (ids.length === 0) return { pengikut: [], luar };
+
+  const rows = await listPendudukSuratByIds(villageId, ids);
+  return { pengikut: toAnggotaKeluarga(rows), luar };
+}
+
 export async function createSuratDraftData(input: SuratInput): Promise<{ id: number }> {
   const user = await requirePermission(SURAT_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
@@ -259,7 +310,7 @@ export async function createSuratDraftData(input: SuratInput): Promise<{ id: num
     year,
     purpose: input.purpose,
     typeName: jenis.name,
-    nilaiIsian: serializeNilaiIsian(values),
+    nilaiIsian: serializeNilaiIsian(denganPengikut(values, input.pengikut ?? [], input.luar ?? [])),
     createdBy: user.id,
   });
 
@@ -287,7 +338,7 @@ export async function updateSuratDraftData(id: number, input: SuratInput): Promi
     year: Number(letterDate.slice(0, 4)),
     purpose: input.purpose,
     typeName: jenis.name,
-    nilaiIsian: serializeNilaiIsian(values),
+    nilaiIsian: serializeNilaiIsian(denganPengikut(values, input.pengikut ?? [], input.luar ?? [])),
   });
 }
 
@@ -387,6 +438,7 @@ async function terbitkanSurat(
   }
 
   const anggotaKeluarga = await loadAnggotaKeluarga(villageId, penduduk);
+  const pengikutSurat = await loadPengikutSurat(villageId, surat.nilaiIsian);
   const letterDate = surat.letterDate ?? "-";
   const year = Number(letterDate.slice(0, 4));
   const month = Number(letterDate.slice(5, 7));
@@ -414,7 +466,7 @@ async function terbitkanSurat(
 
   if (number === "") throw conflict("Gagal menentukan nomor surat. Coba lagi.");
 
-  const values = buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, number);
+  const values = buildValues(surat, jenis, desa, penduduk, anggotaKeluarga, pengikutSurat, number);
   const content = isiTerbilangDanHitung(renderSuratTemplate(jenis.templateBody, values), values);
 
   // Token verifikasi publik: token mentah dipakai untuk tautan/QR dan
@@ -529,6 +581,7 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
     ? await getPendudukSuratData(villageId, surat.residentId)
     : null;
   const anggotaKeluarga = await loadAnggotaKeluarga(villageId, penduduk);
+  const pengikutSurat = await loadPengikutSurat(villageId, surat.nilaiIsian);
 
   const values = buildValues(
     surat,
@@ -536,6 +589,7 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
     desa,
     penduduk,
     anggotaKeluarga,
+    pengikutSurat,
     surat.number ?? "KONSEP",
   );
   const content =

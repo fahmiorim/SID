@@ -11,6 +11,7 @@ import {
   verifySuratData,
 } from "@/features/surat/application/surat-use-cases";
 import { ISIAN_FIELD_PREFIX } from "@/features/surat/domain/isian";
+import { kumpulkanPendudukLuar } from "@/features/surat/domain/pengikut";
 import { suratFormSchema } from "@/features/surat/domain/surat";
 import {
   errorState,
@@ -64,6 +65,12 @@ export async function saveSuratAction(
     letterDate: text(formData, "letterDate"),
     purpose: text(formData, "purpose"),
     isiSurat: collectIsian(formData),
+    // Pengikut penduduk desa dikirim sebagai checkbox ber-id; penduduk luar
+    // sebagai baris dinamis `luar_*` (lihat domain/pengikut.ts).
+    pengikut: [...formData.getAll("pengikut")].filter(
+      (value): value is string => typeof value === "string" && value.trim() !== "",
+    ),
+    luar: kumpulkanPendudukLuar(formData),
   });
 
   if (!parsed.success) {

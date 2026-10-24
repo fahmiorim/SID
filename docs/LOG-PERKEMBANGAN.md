@@ -6,6 +6,30 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2E chip 3: pengikut surat & penduduk luar desa
+
+- **Domain** `features/surat/domain/pengikut.ts` (+ test `pengikut.test.ts`,
+  6 case): parser/serializer `__pengikut` (CSV id) & `__luar` (JSON baris),
+  `buildPengikutPlaceholders()` untuk `pengikut<n>_*`/`pengikut_jumlah`/
+  `pengikut_daftar` dan `luar<n>_*`/`luar_jumlah`/`luar_daftar` (nama, nik,
+  jenis_kelamin, ttl, tempat_lahir, tanggal_lahir, usia, pekerjaan, alamat,
+  keterangan). `PENGIKUT_PLACEHOLDER_CODES` untuk bantuan template.
+- **Schema & penyimpanan**: `suratFormSchema` menyetujui `pengikut` (id penduduk
+  desa) dan `luar` (baris manual, maks 10); keduanya ditekan ke kunci
+  tersembunyi di `nilaiIsian` tanpa migrasi. `actions.ts` mengumpulkan dari
+  FormData (checkbox + baris `luar_*`).
+- **Render**: `buildValues` menyisipkan placeholder pengikut/luar di
+  `terbitkanSurat` dan `loadSuratPrintData` (cetak/PDF/warga); data pengikut
+  dimuat `listPendudukSuratByIds` (`penduduk-repository.ts`).
+- **UI**: `surat-form-dialog.tsx` — checkbox pengikut penduduk desa (maks 10,
+  counter), tambah/hapus baris penduduk luar (maks 10), nilai awal dari konsep
+  tersimpan; bantuan placeholder diperbarui di form jenis surat.
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2E item pengikut & penduduk luar ✅.
+Format/lint/test (487+ test)/typecheck/build hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — 2E chip 1-2: penegakan syarat pengajuan + terbilang & aritmetika isian
 
 - **Penegakan syarat jalur operator**: `butuhKonfirmasiSyarat()` di

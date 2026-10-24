@@ -335,6 +335,61 @@ export async function listAnggotaKeluargaSurat(
     .limit(10);
 }
 
+/**
+ * Data penduduk untuk placeholder pengikut surat (`pengikut1_*` … `pengikut10_*`).
+ *
+ * Boleh dipakai ≤10 id per panggilan (mengikuti batas pengikut surat); id yang
+ * tidak ditemukan / bukan warga desa ini diabaikan.
+ */
+export async function listPendudukSuratByIds(
+  villageId: number,
+  ids: readonly number[],
+): Promise<AnggotaKeluargaSuratRow[]> {
+  if (ids.length === 0) return [];
+
+  const educationsSedang = alias(educations, "educations_sedang");
+  const rows: AnggotaKeluargaSuratRow[] = [];
+  for (const id of ids.slice(0, 10)) {
+    const [row] = await db
+      .select({
+        id: residents.id,
+        nationalId: residents.nationalId,
+        name: residents.name,
+        gender: residents.gender,
+        birthPlace: residents.birthPlace,
+        birthDate: residents.birthDate,
+        religionName: religions.name,
+        educationName: educations.name,
+        educationSedangName: educationsSedang.name,
+        occupationName: occupations.name,
+        maritalStatusName: maritalStatuses.name,
+        familyRelationName: familyRelations.name,
+        citizenshipName: citizenships.name,
+        bloodTypeName: bloodTypes.name,
+        address: residents.address,
+        fatherName: residents.fatherName,
+        motherName: residents.motherName,
+        fatherNationalId: residents.fatherNationalId,
+        motherNationalId: residents.motherNationalId,
+      })
+      .from(residents)
+      .leftJoin(religions, eq(residents.religionId, religions.id))
+      .leftJoin(educations, eq(residents.educationId, educations.id))
+      .leftJoin(educationsSedang, eq(residents.educationSedangId, educationsSedang.id))
+      .leftJoin(occupations, eq(residents.occupationId, occupations.id))
+      .leftJoin(maritalStatuses, eq(residents.maritalStatusId, maritalStatuses.id))
+      .leftJoin(familyRelations, eq(residents.familyRelationId, familyRelations.id))
+      .leftJoin(citizenships, eq(residents.citizenshipId, citizenships.id))
+      .leftJoin(bloodTypes, eq(residents.bloodTypeId, bloodTypes.id))
+      .where(and(eq(residents.villageId, villageId), eq(residents.id, id)))
+      .limit(1);
+
+    if (row) rows.push(row);
+  }
+
+  return rows;
+}
+
 export async function insertPenduduk(villageId: number, input: PendudukFormInput): Promise<number> {
   const [inserted] = await db
     .insert(residents)

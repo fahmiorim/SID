@@ -186,10 +186,16 @@ export function JenisSuratFormDialog({
             <p className="text-xs text-muted-foreground">Placeholder: {placeholderHelp()}</p>
             <p className="text-xs text-muted-foreground">
               Isian angka mendapat padanan kata otomatis: isian <code>jumlah</code> bisa ditulis
-              sebagai <code>[jumlah_terbilang]</code>. Token lanjutan:{" "}
-              <code>[terbilang:jumlah]</code>, <code>[terbilang_rupiah:biaya]</code>, dan{" "}
-              <code>[hitung:jumlah * 1500]</code> (+ - * / %, kurung). Token bawa gagal dihitung
-              dibiarkan utuh di surat.
+              sebagai <code>[jumlah_terbilang]</code>. Pengikut surat memakai{" "}
+              <code>[pengikut1_nama]</code>, <code>[pengikut_daftar]</code>,{" "}
+              <code>[pengikut_jumlah]</code>; penduduk luar memakai <code>[luar1_nik]</code>,{" "}
+              <code>[luar1_ttl]</code>, <code>[luar_jumlah]</code> (kode baris sama seperti klg:
+              nama, nik, jenis_kelamin, ttl, usia, pekerjaan, alamat, keterangan).{" "}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Token lanjutan: <code>[terbilang:jumlah]</code>, <code>[terbilang_rupiah:biaya]</code>
+              , dan <code>[hitung:jumlah * 1500]</code> (+ - * / %, kurung). Token yang gagal
+              dihitung dibiarkan utuh di surat.
             </p>
             <FieldError messages={fieldErrors?.templateBody} />
           </div>

@@ -445,7 +445,14 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       isian angka otomatis mendapat `[<kode>_terbilang]`. Diterapkan pada
       render terbit (`terbitkanSurat`) dan render cetak/PDF/warga
       (`loadSuratPrintData`), plus bantuan token di form jenis surat.
-- [ ] Pengikut & penduduk luar.
+- [x] Pengikut & penduduk luar. `domain/pengikut.ts` (+6 test): pengikut
+      penduduk desa (placeholder `pengikut<n>_*`, `pengikut_daftar`,
+      `pengikut_jumlah`) dan penduduk luar desa diisi manual (`luar<n>_*`,
+      `luar_daftar`, `luar_jumlah`). Disimpan di `nilaiIsian` JSON kunci
+      `__pengikut`/`__luar` tanpa migrasi; data pengikut dimuat ulang dari
+      penduduk (`listPendudukSuratByIds`). UI: dialog surat diberi checkbox
+      pengikut (maks 10) + baris dinami penduduk luar (maks 10) melalui
+      `surat-form-dialog.tsx`; bantuan placeholder di form jenis surat.
 - [ ] Surat dinas + arsip.
 - [ ] TTE/BSRE: adapter mode nonaktif (jangan blokir fase lain).
 

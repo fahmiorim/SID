@@ -3,6 +3,8 @@ import { z } from "zod";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { optionalIsoDate, optionalSelectId, optionalText } from "@/lib/forms";
 
+import { MAKS_PENDUDUK_LUAR, MAKS_PENGIKUT, pendudukLuarSchema } from "./pengikut";
+
 export const SURAT_RESOURCE = RESOURCES.surat;
 export const JENIS_SURAT_RESOURCE = RESOURCES.jenisSurat;
 export const KLASIFIKASI_SURAT_RESOURCE = RESOURCES.klasifikasiSurat;
@@ -403,6 +405,10 @@ export const suratFormSchema = z.object({
   purpose: optionalText(255),
   /** Nilai isian dinamis per jenis surat (kode isian → nilai). */
   isiSurat: z.record(z.string(), z.string()).optional().default({}),
+  /** Id penduduk desa yang mengikuti surat (placeholder `pengikut<n>_*`). */
+  pengikut: z.array(z.coerce.number().int().positive()).max(MAKS_PENGIKUT).optional(),
+  /** Baris penduduk luar desa yang diisi manual (placeholder `luar<n>_*`). */
+  luar: z.array(pendudukLuarSchema).max(MAKS_PENDUDUK_LUAR).optional(),
 });
 export type SuratInput = z.infer<typeof suratFormSchema>;
 
