@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound as nextNotFound } from "next/navigation";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { halamanStatisPublik } from "@/features/publik/application/konten-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
-import { getHalamanBySlug } from "@/features/publik/infrastructure/content-repository";
 import { teksPolos } from "@/lib/sanitize";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function generateMetadata({
 }: PageProps<"/desa/halaman/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const desa = await getIdentitasFromRequest();
-  const halaman = await getHalamanBySlug(desa.id, slug);
+  const halaman = await halamanStatisPublik(desa.id, slug);
   if (!halaman) return { title: `Halaman tidak ditemukan · ${desa.namaDesa ?? "Desa"}` };
   return {
     title: `${halaman.judul} · ${desa.namaDesa ?? "Desa"}`,
@@ -24,7 +24,7 @@ export async function generateMetadata({
 export default async function HalamanStatisPage({ params }: PageProps<"/desa/halaman/[slug]">) {
   const { slug } = await params;
   const { ctx, tema, desa } = await siapkanTema();
-  const halaman = await getHalamanBySlug(desa.id, slug);
+  const halaman = await halamanStatisPublik(desa.id, slug);
 
   if (!halaman) nextNotFound();
 

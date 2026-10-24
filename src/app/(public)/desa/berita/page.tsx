@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 
+import { daftarBerita, daftarKategoriBerita } from "@/features/publik/application/konten-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
-import {
-  listBerita,
-  listKategoriBerita,
-} from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +19,8 @@ export default async function BeritaPage({ searchParams }: PageProps<"/desa/beri
 
   const { ctx, tema, desa } = await siapkanTema();
   const [berita, kategoriList] = await Promise.all([
-    listBerita(desa.id, { limit: 30, kategoriSlug: kategori }),
-    listKategoriBerita(desa.id),
+    daftarBerita(desa.id, { limit: 30, kategoriSlug: kategori }),
+    daftarKategoriBerita(desa.id),
   ]);
 
   const Berita = tema.berita;

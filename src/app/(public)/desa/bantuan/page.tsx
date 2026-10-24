@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { listBantuanProgramPublik } from "@/features/bantuan/infrastructure/bantuan-repository";
+import { listBantuanProgramPublik } from "@/features/bantuan/application/publik-use-cases";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";

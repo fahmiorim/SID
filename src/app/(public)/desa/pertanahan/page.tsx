@@ -1,20 +1,16 @@
-import { count, eq } from "drizzle-orm";
+import type { Metadata } from "next";
 
-import { db } from "@/db";
-import { inventaris } from "@/db/schema";
+import { listCatatanPertanahan } from "@/features/publik/application/pertanahan-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata() {
-  const { desa } = await siapkanTema();
+export async function generateMetadata(): Promise<Metadata> {
+  const { desa, ctx } = await siapkanTema();
+  void ctx;
 
-  const [countResult] = await db
-    .select({ value: count() })
-    .from(inventaris)
-    .where(eq(inventaris.villageId, desa.id));
-
-  const total = countResult?.value ?? 0;
+  const rows = await listCatatanPertanahan(desa.id);
+  const total = rows.length;
 
   return {
     title: `Pertanahan · ${desa.namaDesa ?? "Desa"}`,
@@ -22,59 +18,36 @@ export async function generateMetadata() {
   };
 }
 
-export default async function PertanahaPage() {
+export default async function PertanahanPage() {
   const { desa } = await siapkanTema();
-  const villageId = desa.id;
-
-  // Ambil data inventaris
-  const result = await db
-    .select({
-      id: inventaris.id,
-      nama: inventaris.namaBarang,
-      kode: inventaris.kodeBarang,
-      keterangan: inventaris.keterangan,
-      createdAt: inventaris.createdAt,
-    })
-    .from(inventaris)
-    .where(eq(inventaris.villageId, villageId));
-
-  // Type assertion: result adalah array of rows atau empty
-  const rows: Array<{
-    id: number;
-    nama: string;
-    kode: string | null;
-    keterangan: string | null;
-    createdAt: Date;
-  }> = result;
-
-  const formatNumber = (num: number) => num.toLocaleString("id-ID");
+  const rows = await listCatatanPertanahan(desa.id);
 
   return (
     <div className="mx-auto max-w-3xl py-12">
       <h1 className="mb-12 text-2xl font-bold">Data Pertanahan</h1>
 
       <p className="mb-8 text-sm text-muted-foreground">
-        Total catatan inventaris: {formatNumber(rows.length)}
+        Total catatan: {rows.length.toLocaleString("id-ID")}
       </p>
 
       {rows.length === 0 ? (
         <div className="rounded-lg bg-white p-6 text-center shadow">
-          <p className="text-muted-foreground">Belum ada data inventaris di desa ini.</p>
+          <p className="text-muted-foreground">Belum ada data pertanahan di desa ini.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((r) => (
+          {rows.map((row) => (
             <div
-              key={r.id}
+              key={row.id}
               className="rounded-md border border-border bg-white p-4 shadow-sm transition-shadow hover:shadow-lg"
             >
               <div className="flex items-start justify-between">
-                <h3 className="text-medium">{r.nama || "—"}</h3>
-                <span className="text-xs text-muted-foreground">Kd: {r.kode || "—"}</span>
+                <h3 className="text-medium">{row.nama || "—"}</h3>
+                <span className="text-xs text-muted-foreground">Kd: {row.kode || "—"}</span>
               </div>
-              <p className="mb-1 text-xs text-muted-foreground">{r.keterangan || "—"}</p>
+              <p className="mb-1 text-xs text-muted-foreground">{row.keterangan || "—"}</p>
               <p className="text-xs text-muted-foreground">
-                Ditambahkan: {r.createdAt.toLocaleDateString()}
+                Ditambahkan: {row.createdAt.toLocaleDateString("id-ID")}
               </p>
             </div>
           ))}

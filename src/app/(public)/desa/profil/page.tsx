@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
+import { profilDesaPublik } from "@/features/publik/application/konten-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 import { parseMisi } from "@/features/publik/domain/format";
-import { getProfilDesa } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Profil Desa" };
 
 export default async function ProfilDesaPage() {
   const { ctx, tema, desa } = await siapkanTema();
-  const profil = await getProfilDesa(desa.id);
+  const profil = await profilDesaPublik(desa.id);
 
   const Profil = tema.profil;
 

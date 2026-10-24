@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound as nextNotFound } from "next/navigation";
 
+import { daftarFotoAlbum, detailAlbumGaleri } from "@/features/publik/application/konten-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
-import { getAlbumBySlug, listFotoAlbum } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ export async function generateMetadata({
 }: PageProps<"/desa/galeri/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const { desa } = await siapkanTema();
-  const album = await getAlbumBySlug(desa.id, slug);
+  const album = await detailAlbumGaleri(desa.id, slug);
   if (!album) return { title: `Album tidak ditemukan · ${desa.namaDesa ?? "Desa"}` };
   return { title: `${album.nama} · Galeri ${desa.namaDesa ?? "Desa"}` };
 }
@@ -19,11 +19,11 @@ export async function generateMetadata({
 export default async function AlbumGaleriPage({ params }: PageProps<"/desa/galeri/[slug]">) {
   const { slug } = await params;
   const { ctx, tema, desa } = await siapkanTema();
-  const album = await getAlbumBySlug(desa.id, slug);
+  const album = await detailAlbumGaleri(desa.id, slug);
 
   if (!album) nextNotFound();
 
-  const foto = await listFotoAlbum(desa.id, album.id);
+  const foto = await daftarFotoAlbum(desa.id, album.id);
 
   const GaleriDetail = tema.galeriDetail;
 

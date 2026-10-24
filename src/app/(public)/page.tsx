@@ -5,13 +5,13 @@ import {
   getStatistikDesa,
   listSuratTerbitTerbaru,
 } from "@/features/desa/application/statistik-desa";
-import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 import {
-  getProfilDesa,
-  listBerita,
-  listSliderBeranda,
-  listWidget,
-} from "@/features/publik/infrastructure/content-repository";
+  daftarBerita,
+  daftarSliderBeranda,
+  daftarWidgetPublik,
+  profilDesaPublik,
+} from "@/features/publik/application/konten-publik";
+import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +31,10 @@ export default async function BerandaPage() {
   const [statistik, surat, slider, berita, profil, widget] = await Promise.all([
     getStatistikDesa(desa.id),
     listSuratTerbitTerbaru(desa.id, 5),
-    listSliderBeranda(desa.id),
-    listBerita(desa.id, { limit: 3 }),
-    getProfilDesa(desa.id),
-    listWidget(desa.id),
+    daftarSliderBeranda(desa.id),
+    daftarBerita(desa.id, { limit: 3 }),
+    profilDesaPublik(desa.id),
+    daftarWidgetPublik(desa.id),
   ]);
 
   const Home = tema.home;

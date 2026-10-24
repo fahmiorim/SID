@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { PUBLIC_NAV } from "@/features/publik/domain/menu";
 import {
-  listAlbumGaleri,
-  listSlugBerita,
-  listSlugHalaman,
-} from "@/features/publik/infrastructure/content-repository";
+  daftarAlbumGaleri,
+  daftarSlugBerita,
+  daftarSlugHalaman,
+} from "@/features/publik/application/konten-publik";
+import { PUBLIC_NAV } from "@/features/publik/domain/menu";
 import { getRequestOrigin } from "@/lib/request-origin";
 
 /**
@@ -46,9 +46,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const desa = await getIdentitasFromRequest();
     const [slugBerita, album, slugHalaman] = await Promise.all([
-      listSlugBerita(desa.id),
-      listAlbumGaleri(desa.id),
-      listSlugHalaman(desa.id),
+      daftarSlugBerita(desa.id),
+      daftarAlbumGaleri(desa.id),
+      daftarSlugHalaman(desa.id),
     ]);
 
     return [

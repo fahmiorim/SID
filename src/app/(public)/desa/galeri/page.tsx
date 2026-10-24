@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
+import { daftarAlbumGaleri } from "@/features/publik/application/konten-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
-import { listAlbumGaleri } from "@/features/publik/infrastructure/content-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function GaleriPage() {
   const { ctx, tema, desa } = await siapkanTema();
-  const album = await listAlbumGaleri(desa.id);
+  const album = await daftarAlbumGaleri(desa.id);
 
   const Galeri = tema.galeri;
 
