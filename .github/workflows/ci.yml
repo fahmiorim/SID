@@ -82,3 +82,64 @@ jobs:
 
       - name: Build produksi
         run: npm run build
+
+  smoke:
+    name: Smoke test HTTP halaman publik
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sid_desa
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      HUSKY: "0"
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/sid_desa
+      BETTER_AUTH_SECRET: rahasia-ci-minimal-32-karakter-aman
+      APP_URL: http://localhost:3000
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_NAME: Sistem Informasi Desa
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Pasang dependensi
+        run: npm ci
+
+      - name: Siapkan skema & data contoh
+        run: |
+          npm run db:migrate
+          npm run db:seed
+
+      - name: Build produksi
+        run: npm run build
+
+      # Server dijalankan di latar belakang; skrip smoke menunggu sendiri bila
+      # server belum siap, jadi tunggu di sini sampai halaman masuk merespons.
+      - name: Jalankan server & smoke test
+        run: |
+          npm run start > /tmp/next-start.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3000/masuk; then break; fi
+            sleep 2
+          done
+          curl -fsS -o /dev/null http://localhost:3000/masuk || { tail -50 /tmp/next-start.log; exit 1; }
+          npm run smoke
+
+      - name: Tampilkan log server bila gagal
+        if: failure()
+        run: tail -100 /tmp/next-start.log || true

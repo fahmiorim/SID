@@ -24,6 +24,10 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 - **Docs sinkron**: `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md`
   (tabel perintah); `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run
   build` hijau (540 test / 53 file).
+- **CI**: job `smoke` di `.github/workflows/ci.yml` — MySQL `mariadb:11`,
+  `db:migrate` + `db:seed`, `npm run build`, `npm run start` di latar belakang,
+  tunggu `/masuk` merespons, lalu `npm run smoke`. Log server ditampilkan saat
+  gagal. Diuji lokal dengan blok perintah yang sama (tanpa `npm ci`).
 - **Permohonan Surat (RBAC UI)**: `getPermohonanAdminData` kini mengembalikan
   `canManage` (`hasPermission(..., "update")`); halaman meneruskannya ke
   `PermohonanDetailButton` → `PermohonanDetailDialog`, sehingga tombol

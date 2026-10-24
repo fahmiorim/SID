@@ -438,8 +438,10 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   sesi, atau `next/headers`; itu diuji lewat smoke test HTTP.
 - Karena `src/lib/env.ts` memvalidasi environment saat impor, variabel wajib
   disuplai lewat `test.env` di konfigurasi Vitest.
-- CI (`.github/workflows/ci.yml`) menjalankan `npm run check` + `npm run build`
-  pada setiap push/PR.
+- CI (`.github/workflows/ci.yml`) menjalankan tiga job pada setiap push/PR:
+  `migrate` (migrasi + seed dari DB kosong, idempoten), `verify`
+  (`npm run check` + `npm run build`), dan `smoke` (MySQL + migrate + seed +
+  build produksi + `npm run start` + `npm run smoke`).
 
 Perkakas browser otomatis (`chrome-devtools` MCP) tidak selalu tersedia; skrip
 smoke test berbasis HTTP di direktori sementara dapat dipakai sebagai gantinya.

@@ -168,8 +168,9 @@ keluarga, wilayah, pengguna, kelompok (slug, jabatan, keanggotaan), bantuan
 persuratan (nomor, template, tanggal), inventaris (transisi mutasi,
 perhitungan perubahan aset), akun warga (PIN, ubah PIN), permohonan surat
 (transisi status, berkas syarat), pemetaan kesalahan, serta validasi
-environment. CI menjalankan typecheck + lint + format + test + build pada
-setiap push/PR.
+environment. CI menjalankan typecheck + lint + format + test + build, lalu
+smoke test HTTP pada build produksi (MySQL + migrate + seed), pada setiap
+push/PR.
 
 ```bash
 npm run test        # sekali jalan
