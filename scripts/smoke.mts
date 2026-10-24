@@ -20,8 +20,8 @@
 const baseUrl = new URL(process.env.SMOKE_BASE_URL ?? "http://localhost:3000");
 const verbose = process.env.SMOKE_VERBOSE === "1";
 
-/** Halaman publik yang wajib terbuka tanpa sesi. */
-const HALAMAN_WAJIB_200 = [
+/** Halaman publik + berkas metadata yang wajib terbuka tanpa sesi. */
+const URL_WAJIB_200 = [
   "/",
   "/desa/profil",
   "/desa/pemerintahan",
@@ -46,6 +46,8 @@ const HALAMAN_WAJIB_200 = [
   "/desa/peta",
   "/layanan-mandiri",
   "/masuk",
+  "/manifest.webmanifest",
+  "/opengraph-image",
 ] as const;
 
 /** URL yang memang tidak ada — harus 404, bukan 200 atau 500. */
@@ -115,7 +117,7 @@ try {
 }
 
 const diperiksa = new Map<string, Hasil>();
-const antre: string[] = [...HALAMAN_WAJIB_200];
+const antre: string[] = [...URL_WAJIB_200];
 
 // Telusuri halaman publik dan detail yang tertaut (berita, galeri, halaman).
 while (antre.length > 0 && diperiksa.size < MAKS_URL) {
@@ -135,7 +137,7 @@ while (antre.length > 0 && diperiksa.size < MAKS_URL) {
 
 const kegagalan: string[] = [];
 
-for (const path of HALAMAN_WAJIB_200) {
+for (const path of URL_WAJIB_200) {
   const res = diperiksa.get(path);
   if (!res) {
     kegagalan.push(`${path} — tidak diperiksa`);
@@ -165,13 +167,13 @@ for (const [path, res] of diperiksa) {
 // Hindari duplikat bila kasus 404 juga ditemukan lewat penelusuran.
 const unik = [...new Set(kegagalan)];
 
-const jumlahHalaman = HALAMAN_WAJIB_200.length;
+const jumlahWajib = URL_WAJIB_200.length;
 const jumlah404 = HARUS_404.length;
 const jumlahTautan = diperiksa.size;
 
 console.log("");
 console.log(`Base URL          : ${baseUrl.origin}`);
-console.log(`Halaman wajib 200 : ${jumlahHalaman}`);
+console.log(`URL wajib 200     : ${jumlahWajib}`);
 console.log(`Kasus wajib 404   : ${jumlah404}`);
 console.log(`URL diperiksa     : ${jumlahTautan} (termasuk tautan internal)`);
 

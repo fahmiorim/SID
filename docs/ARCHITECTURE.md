@@ -409,6 +409,11 @@ src/themes/<slug>/
   blok, bukan memuat kode asing.
 - Konten berita memakai HTML tervalidasi + sanitizer di server sebelum disimpan
   dan sebelum dirender (`src/lib/sanitize.ts`; lapisan kedua di `ThemeProse`).
+- **Metadata publik per desa**: `src/app/manifest.ts` (`/manifest.webmanifest`)
+  dan `src/app/opengraph-image.tsx` (`/opengraph-image`) adalah metadata route
+  dinamis yang membaca identitas desa dari host + warna tema aktif, dengan
+  fallback nilai umum bila host tak dikenal. Keduanya masuk `PUBLIC_FILES` di
+  `src/proxy.ts` agar perayap tidak dialihkan ke halaman masuk.
 
 ### Batas keamanan
 
@@ -423,8 +428,9 @@ src/themes/<slug>/
 Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 
 - `npm run build` berhasil.
-- `npm run smoke` (server `npm run start` harus berjalan) memeriksa halaman
-  publik: 24 halaman wajib 200, tiga kasus 404, dan tautan internal tanpa 404.
+- `npm run smoke` (server `npm run start` harus berjalan) memeriksa 24 halaman
+  publik + 2 berkas metadata (26 URL) wajib 200, tiga kasus 404, dan tautan
+  internal tanpa 404.
 - Perubahan otorisasi diuji untuk **dua peran**: super admin dan peran terbatas
   (menu yang tampil serta akses langsung ke URL modul yang tidak diizinkan).
 - Perubahan skema disertai berkas migrasi yang ikut di-commit.

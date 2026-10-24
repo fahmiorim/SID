@@ -15,15 +15,21 @@ import { NextResponse, type NextRequest } from "next/server";
 const PUBLIC_PATHS = ["/desa", "/masuk"] as const;
 
 /**
- * Berkas metadata yang harus selalu dapat diambil mesin pencari tanpa sesi.
- * Tidak boleh dialihkan ke halaman masuk.
+ * Berkas metadata yang harus selalu dapat diambil mesin pencari/perayap tanpa
+ * sesi. Tidak boleh dialihkan ke halaman masuk.
  *
- * Hanya berisi berkas yang benar-benar ada. Manifest PWA dan gambar OG belum
- * dibuat; bila nanti ditambahkan sebagai metadata route
- * (`src/app/manifest.ts` / `src/app/opengraph-image.tsx`), daftarkan ulang di
- * sini agar perayap tidak dialihkan ke halaman masuk.
+ * Semuanya benar-benar ada: `sitemap.ts`/`robots.ts` (`/sitemap.xml`,
+ * `/robots.txt`), `icon.svg`, serta metadata route `manifest.ts` dan
+ * `opengraph-image.tsx` yang menghasilkan `/manifest.webmanifest` dan
+ * `/opengraph-image`.
  */
-const PUBLIC_FILES = ["/sitemap.xml", "/robots.txt", "/icon.svg"] as const;
+const PUBLIC_FILES = [
+  "/sitemap.xml",
+  "/robots.txt",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/opengraph-image",
+] as const;
 
 function isPublicPath(pathname: string): boolean {
   // Beranda publik.

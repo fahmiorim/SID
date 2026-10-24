@@ -9,7 +9,8 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 ## 2026-10-25 — smoke test HTTP publik + daftar putih proxy dirapikan
 
 - **Skrip** `scripts/smoke.mts` + `npm run smoke`: memeriksa 24 halaman publik
-  wajib 200 (`/`, seluruh `/desa/*`, `/layanan-mandiri`, `/masuk`), tiga kasus
+  + 2 berkas metadata (26 URL) wajib 200 (`/`, seluruh `/desa/*`,
+  `/layanan-mandiri`, `/masuk`, `/manifest.webmanifest`, `/opengraph-image`), tiga kasus
   yang harus 404 (`/desa/tidak-ada`, `/desa/halaman/tidak-ada`,
   `/desa/berita/tidak-ada`), lalu menelusuri tautan internal dari setiap
   halaman HTML (maks. 200 URL) dan menggagalkan proses bila ada 404/5xx.
@@ -24,6 +25,14 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 - **Docs sinkron**: `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md`
   (tabel perintah); `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run
   build` hijau (540 test / 53 file).
+- **Manifest & OG per desa**: `src/app/manifest.ts` dan
+  `src/app/opengraph-image.tsx` — metadata route dinamis yang memakai
+  `getIdentitasFromRequest()` + `getTemaAktif()` (nama, keterangan, warna tema
+  mengikuti desa pemilik host; fallback umum bila host tak dikenal). Keduanya
+  dikembalikan ke `PUBLIC_FILES` di `src/proxy.ts`. Bukti 25 Okt 2026: manifest
+  200 `application/manifest+json` (Desa Contoh, `theme_color` `#1a7f4b`), OG 200
+  `image/png` 1200x630 (37 KB), halaman publik memuat `<link rel="manifest">`
+  dan `og:image`; `npm run smoke` lulus (26 URL wajib 200, 35 diperiksa).
 - **CI**: job `smoke` di `.github/workflows/ci.yml` — MySQL `mariadb:11`,
   `db:migrate` + `db:seed`, `npm run build`, `npm run start` di latar belakang,
   tunggu `/masuk` merespons, lalu `npm run smoke`. Log server ditampilkan saat

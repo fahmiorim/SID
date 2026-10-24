@@ -93,9 +93,9 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
 - [x] **1A.1** Perbaiki `src/proxy.ts`: publik = `/`, `/desa/*`,
       `/layanan-mandiri` (halaman informasi), `/masuk`, plus berkas metadata
-      (`/sitemap.xml`, `/robots.txt`, `/icon.svg`); sisanya terproteksi.
-      `/manifest.webmanifest` dan `/opengraph-image` belum dibuat sehingga
-      **tidak** di-whitelist (dikeluarkan 25 Okt 2026); rencananya di Fase 4.
+      (`/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest`, `/icon.svg`,
+      `/opengraph-image`); sisanya terproteksi. Manifest & gambar OG dibuat
+      sebagai metadata route per desa pada 25 Okt 2026 (Fase 4).
       Sejak 2C, `/layanan-mandiri/*` (dasbor warga)
       **wajib sesi**, dan pengalihan pengguna yang sudah login ditangani
       `/masuk` di server agar akun staf dan warga diarahkan ke area berbeda.
@@ -105,7 +105,8 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
       CTA Layanan Mandiri) + footer (tautan + kontak). *Mode gelap belum*
       (menyusul bersama mesin tema 1D).
 - [x] **1A.4** `generateMetadata` per halaman + `sitemap.ts` + `robots.ts` sadar
-      host (multi-domain). *JSON-LD belum.*
+      host (multi-domain). Manifest PWA & gambar OG per host ditambahkan 25 Okt
+      2026 (lihat Fase 4). *JSON-LD belum.*
 - [x] **1A.5** Halaman 404/error publik yang rapi:
       `src/app/not-found.tsx` (URL tak cocok), `src/app/(public)/not-found.tsx`
       (hasil `notFound()` dari rute publik, tetap memakai tema desa), dan
@@ -304,9 +305,9 @@ Mengacu `donjo-app/controllers/fweb/*`:
       render (lapisan kedua) via `_components/konten-html.tsx`; test XSS
       (`<script>`, `onerror=`, `javascript:`, `style=`, `<iframe>`, `data:`).
 - [x] Semua halaman publik bisa dibuka tanpa sesi. *(Sejak 25 Okt 2026
-      dibuktikan otomatis: `npm run smoke` memeriksa 24 halaman wajib 200 +
-      tiga kasus 404 + seluruh tautan internal pada build produksi
-      `next start`; lulus tanpa tautan mati.)*
+      dibuktikan otomatis: `npm run smoke` memeriksa 24 halaman publik + 2
+      berkas metadata (26 URL) wajib 200, tiga kasus 404, dan seluruh tautan
+      internal pada build produksi `next start`; lulus tanpa tautan mati.)*
 - [x] Ganti tema & opsi langsung terlihat, tanpa deploy. *(Uji admin
       `/konten/tema` pada `next start` 23 Okt 2026: klik "Pakai tema ini" untuk
       `natra`, simpan warna primer `#123456`, radius `1.25rem`, dan judul hero;
@@ -638,9 +639,13 @@ terdokumentasi, dengan test.
 - [x] Widget, slider, menu dinamis dari CMS — menu (`listMenuPublik`),
       slider, dan widget teks sudah dibaca dari DB; teks berjalan & sosmed
       belum dibuat.
-- [ ] Manifest PWA per desa (`manifest.ts`) dan gambar OG
-      (`opengraph-image.tsx`) sebagai metadata route, lalu daftarkan kembali di
-      `PUBLIC_FILES` proxy agar perayap tidak dialihkan ke halaman masuk.
+- [x] Manifest PWA per desa (`src/app/manifest.ts`) dan gambar OG
+      (`src/app/opengraph-image.tsx`) sebagai metadata route dinamis yang
+      membaca identitas desa + warna tema dari host; keduanya didaftarkan
+      kembali di `PUBLIC_FILES` dan diperiksa `npm run smoke`. Bukti 25 Okt
+      2026: manifest 200 `application/manifest+json` (nama/deskripsi/theme_color
+      per desa), OG 200 `image/png` 1200x630, dan halaman publik memuat
+      `<link rel="manifest">` serta `og:image`.
 - [ ] Audit tautan mati + uji aksesibilitas.
 - [ ] Test regresi proxy & isolasi tenant.
 

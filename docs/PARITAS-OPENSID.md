@@ -40,12 +40,12 @@ Legenda status proyek kita:
 | Pembangunan | 1 | 0 | 0 | 1 |
 | Layanan mandiri & warga | 10 | 6 | 1 | 3 |
 | Analisis & statistik | 3 | 0 | 3 | 0 |
-| Web publik | 21 | 9 | 5 | 7 |
+| Web publik | 21 | 10 | 4 | 7 |
 | Sistem & operasional | 9 | 2 | 1 | 6 |
-| **Total** | **92** | **37** | **20** | **35** |
+| **Total** | **92** | **38** | **19** | **35** |
 
-**Paritas kasar saat ini: ±51%** (hitung ✅ penuh + setengah 🟡 — 37 + 10 = 47
-dari 92). Angka ini dihitung ulang 25 Oktober 2026 langsung dari baris
+**Paritas kasar saat ini: ±52%** (hitung ✅ penuh + setengah 🟡 — 38 + 9,5 =
+47,5 dari 92). Angka ini dihitung ulang 25 Oktober 2026 langsung dari baris
 matriks; jumlah ✅ + 🟡 + 🔴 per kategori harus sama dengan kolom total.
 Untuk "tidak kalah" pada operasi harian desa, target realistis adalah menutup
 seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
@@ -56,7 +56,8 @@ seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
 > kontak, verifikasi-surat, kelompok, inventaris, pengaduan) dan seluruhnya
 > memakai use case + slot tema. Yang masih 🔴 adalah halaman yang belum punya
 > data/backend (pembangunan, peta, suplemen, lapak, dpt, komentar/pengunjung)
-> serta fitur lanjutan. SEO sitemap & robots sudah ada; gambar OG belum (🟡).
+> serta fitur lanjutan. SEO lengkap: sitemap, robots, manifest PWA, dan
+> gambar OG per desa (dibuat 25 Okt 2026).
 > Rute `/desa/idm`, `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, dan
 > `/desa/lapak` **belum dibuat** (404), bukan placeholder.
 >
@@ -261,7 +262,7 @@ seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
 | Komentar & pengunjung | `controllers/{Komentar,Pengunjung}.php` | 🔴 | P2 |
 | Menu, widget, slider, teks berjalan, sosmed | `controllers/{Menu,Web_widget,Slider,Teks_berjalan,Sosmed}.php` | 🟡 | **P0** |
 | **Tema/template** (ganti tema + opsi) | `controllers/{Theme,Pindai_tema}.php`, `themes/esensi` | ✅ | - |
-| SEO: sitemap, robots, OG image | `controllers/{Sitemap,OgImage}.php` | 🟡 | P1 |
+| SEO: sitemap, robots, manifest, OG image | `controllers/{Sitemap,OgImage}.php` | ✅ | — (sitemap & robots sadar host; manifest + OG per desa sejak 25 Okt 2026) |
 | Multi-desa & domain per desa | tidak ada di OpenSID (fitur baru) | 🔴 | **P1** (setelah P0) |
 
 ## K. Sistem & Operasional
