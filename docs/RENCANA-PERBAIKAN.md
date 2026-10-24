@@ -86,8 +86,8 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 > lewat use case `features/publik/application/konten-publik.ts`,
 > `bantuan/application/publik-use-cases.ts`, dan `pertanahan-publik.ts`
 > (tidak ada lagi query `db` mentah di halaman publik). Placeholder
-> (pembangunan, pengaduan, peta) tetap menunggu backend. Test integrasi HTTP
-> juga belum ada.
+> (pembangunan, peta) tetap menunggu backend; `/desa/pengaduan` sudah memakai
+> data 3D. Test integrasi HTTP juga belum ada.
 
 ### 1A. Fondasi publik
 
@@ -243,10 +243,11 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `listSurveiPublik()` + slot tema `survei`; menampilkan jumlah
       pertanyaan/responden dan daftar pertanyaan. Pengisian mandiri belum
       tersedia. Smoke test 200.
-- [x] `/desa/pembangunan`, `/desa/pengaduan`, `/desa/peta`, `/desa/idm`,
+- [x] `/desa/pembangunan`, `/desa/peta`, `/desa/idm`,
       `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak` — **hanya
       placeholder kosong** dengan komentar TODO. Tidak ada backend
-      (`src/features/pembangunan/` tidak ada). Data menyusul Fase 3B/3C/3D.
+      (`src/features/pembangunan/` tidak ada). Data menyusul Fase 3B/3C.
+      (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
 
 ### 1F. CMS konten
 
@@ -506,13 +507,16 @@ ketergantungan halaman publik.
       (tanggapan/status), publikasi ke web (`setPublikPengaduan`), dan hapus.
       *(Bukti: `src/app/(admin)/pengaduan/page.tsx`,
       `presentation/components/pengaduan-{detail-dialog,row-actions}.tsx`.
-      **Dua celah saat audit 24 Okt:** (1) modul `pengaduan` belum masuk seed
-      `modules.ts`/`roles.ts`, sehingga menu admin & grant operator belum ada —
-      hanya super admin yang bisa membukanya; (2) tautan lampiran di dialog
-      menunjuk `/api/pengaduan/lampiran/*` yang **belum ada** (selalu 404).
-      Uji alur di browser masih menunggu.)*
-- [ ] Halaman publik pengaduan (`/desa/pengaduan`) + form kirim warga
-      (`publik-actions.ts` sudah disiapkan, belum di-wire ke halaman).
+      Modul & ikon menu kini di-seed (`modules.ts` + grant: operator
+      `manage`, sekdes/kades `read`) dan lampiran disajikan lewat route
+      ber-otentikasi `src/app/api/pengaduan/lampiran/[...path]/route.ts`
+      (izin `read` pengaduan, tenant dari sesi). Uji alur di browser masih
+      menunggu.)*
+- [x] Halaman publik pengaduan `/desa/pengaduan`: form kirim tanpa login
+      (`publik-actions.ts` wired via `presentation/components/
+      pengaduan-form-publik.tsx`) + daftar pengaduan yang dipublikasikan
+      (identitas disamarkan). Pelacakan status mandiri lewat tiket dan
+      notifikasi belum tersedia.
 
 ### 3E. Dokumen, produk hukum, surat dinas (2 minggu)
 
@@ -551,7 +555,8 @@ terdokumentasi, dengan test.
 ## Fase 4 — Menyambungkan Web Publik ke Modul Baru (2–3 minggu)
 
 - [ ] `/desa/pembangunan` memakai data Fase 3C.
-- [ ] `/desa/pengaduan` memakai data Fase 3D (termasuk form kirim).
+- [x] `/desa/pengaduan` memakai data Fase 3D (termasuk form kirim) — selesai
+      di Fase 3D lebih awal (lihat §3D).
 - [ ] `/desa/peta` memakai data Fase 3B.
 - [ ] `/desa/dokumen` + produk hukum memakai Fase 3E.
 - [ ] `/desa/statistik` + `/desa/apbdes` final.
@@ -689,10 +694,10 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
-| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, **survei**, dan **UI admin pengaduan** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
-| 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 2 dari ~30 item dicentang (backend + UI admin pengaduan); sisanya belum |
-| 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Placeholder pembangunan/pengaduan/peta menunggu backend; aksi publik pengaduan sudah disiapkan |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; halaman publik Pembangunan & Peta masih placeholder (Pengaduan sudah nyata di Fase 3D) |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, **survei**, dan **pengaduan (admin + publik)** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
+| 3 — Paritas OpenSID T1+T2 | 🟡 **2D & 3D pengaduan berjalan** | 3 item pengaduan (backend, UI admin, publik) dicentang; ±27 item lain belum |
+| 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Pengaduan sudah ter-wire (dikerjakan dulu di 3D); pembangunan/peta & sisanya menunggu backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Halaman `/super-admin` masih mockup statis (sudah ter-commit, tanpa backend dan tanpa RBAC nyata) |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
 

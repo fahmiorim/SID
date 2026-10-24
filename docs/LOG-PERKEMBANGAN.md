@@ -6,6 +6,32 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 3D diperlengkapi: seed modul, route lampiran, dan web publik pengaduan
+
+Tiga celah hasil audit kode-vs-dokumen hari ini ditutup:
+
+- **Modul `pengaduan` + `pembangunan` masuk seed RBAC**
+  (`src/db/seed/data/modules.ts`). Pengaduan aktif (URL `/pengaduan`, ikon
+  `message-square-warning` di `src/components/layout/menu-icon.tsx`) dengan
+  grant: operator `manage`, sekretaris-desa & kepala-desa `read`
+  (`src/db/seed/data/roles.ts`). Pembangunan ditanam non-aktif agar
+  `RESOURCES.pembangunan` punya baris katalog.
+- **Route lampiran pengaduan**
+  `src/app/api/pengaduan/lampiran/[...path]/route.ts`: wajib login + izin
+  `read` `pengaduan`, tenant dari sesi (bukan klien), hanya kategori
+  `pengaduan`, tolak traversal, `private, no-store` + `nosniff`. Tautan
+  "Buka lampiran" di dialog admin kini fungsional.
+- **Web publik `/desa/pengaduan`**: form kirim tanpa login
+  (`src/features/pengaduan/presentation/components/
+  pengaduan-form-publik.tsx` memakai `kirimPengaduanAction`) menampilkan
+  nomor tiket hasil kirim, plus daftar pengaduan yang dipublikasikan lewat
+  `listPengaduanPublikData` (identitas disamarkan di domain).
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §1E/§3D/§Fase-4 dan baris Status Akhir,
+`PARITAS-OPENSID.md` (row "Pengaduan publik" 🟡→✅, total 92 = 33/23/36).
+
+---
+
 ## 2026-10-24 — Refactor use-case publik + backend pengaduan (3D) + skema pembangunan
 
 Tercatat pada commit `9509c76` (use case publik), `52fe71b` (pengaduan),

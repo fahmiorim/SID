@@ -291,6 +291,26 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     isActive: true,
   },
+  {
+    slug: "pengaduan",
+    name: "Pengaduan Warga",
+    url: "/pengaduan",
+    icon: "message-square-warning",
+    sortOrder: 47,
+    isGroup: false,
+    isActive: true,
+  },
+  {
+    slug: "pembangunan",
+    name: "Pembangunan",
+    url: "/pembangunan",
+    icon: "building-2",
+    sortOrder: 48,
+    isGroup: false,
+    // Proyek pembangunan (Fase 3C) belum dibangun; modul ditanam agar slug
+    // resource `RESOURCES.pembangunan` punya baris katalog.
+    isActive: false,
+  },
 
   {
     slug: "konten",

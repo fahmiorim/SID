@@ -38,11 +38,11 @@ Legenda status proyek kita:
 | Keuangan | 6 | 4 | 1 | 1 |
 | Bumindes | 11 | 2 | 5 | 4 |
 | Pembangunan | 1 | 0 | 0 | 1 |
-| Layanan mandiri & warga | 10 | 4 | 4 | 2 |
+| Layanan mandiri & warga | 10 | 5 | 3 | 2 |
 | Analisis & statistik | 3 | 0 | 3 | 0 |
-| Web publik | 21 | 8 | 6 | 7 |
+| Web publik | 21 | 9 | 5 | 7 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **32** | **24** | **36** |
+| **Total** | **92** | **33** | **23** | **36** |
 
 **Paritas kasar saat ini: ±48%** (hitung ✅ penuh + setengah 🟡). Angka ini
 dihitung ulang 24 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
@@ -88,8 +88,12 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > Perbaikan 24 Okt 2026 (sore): halaman publik sisa (beranda, berita, galeri,
 > profil, pemerintahan, bantuan, halaman statis, pertanahan) kini lewat use
 > case — tidak ada lagi query `db` mentah. Backend pengaduan (3D) siap: skema
-> `pengaduan`, domain, kirim warga, media `pengaduan`; UI menyusul. Skema
-> pembangunan (3C) dibuat di migrasi `0024`; backend belum.
+> `pengaduan`, domain, kirim warga, media `pengaduan`. Skema pembangunan (3C)
+> dibuat di migrasi `0024`; backend belum.**Sore lanjut:** UI admin
+> `/pengaduan` selesai, lalu modul `pengaduan` di-seed ke menu/grant
+> (operator `manage`, sekdes/kades `read`) dan halaman publik
+> `/desa/pengaduan` + form kirim warga di-wire — pengaduan naik ke
+> sebagian besar paritas (pelacakan tiket mandiri masih kosong).
 >
 > Perbaikan 2G 24 Okt 2026: **survei warga bisa dipakai** — `/analisis-survei`
 > punya CRUD survei, builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
@@ -214,7 +218,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Pengajuan surat warga | `fmandiri/Surat.php` | ✅ | — |
 | Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
 | Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
-| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend + UI admin selesai di `/pengaduan`; modul belum di-seed ke menu/grant, route lampiran belum ada, halaman publik menyusul) |
+| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend + UI admin + halaman publik & form warga selesai; modul & route lampiran sudah di-seed/nyata. Sisa: pelacakan status mandiri lewat tiket) |
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |
@@ -240,7 +244,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Statistik publik | `fweb/Statistik` | 🟡 | P1 |
 | Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
 | Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 (halaman masih placeholder; skema proyek sudah ada di migrasi `0024`) |
-| Pengaduan publik | `fweb/Pengaduan` | 🟡 | P1 (backend pengaduan siap; halaman masih placeholder) |
+| Pengaduan publik | `fweb/Pengaduan` | ✅ | Dikerjakan di 3D: `/desa/pengaduan` (form anonim + daftar pengaduan yang dipublikasikan, identitas disamarkan) |
 | Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🟡 | P1 (halaman publik ada; anggota lembaga menyusul) |
 | Inventaris publik | `fweb/Inventaris` | ✅ | — |
 | APBDes publik | tema `partials/apbdesa` | ✅ | — |
