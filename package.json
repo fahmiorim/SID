@@ -17,6 +17,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "smoke": "tsx --env-file-if-exists=.env scripts/smoke.mts",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
     "db:create": "tsx scripts/db-create.mts",
     "db:generate": "drizzle-kit generate",

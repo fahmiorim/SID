@@ -77,6 +77,7 @@ Buka `http://localhost:3000` → dialihkan ke `/masuk`.
 | `npm run format:check` | Prettier (memeriksa saja)                                  |
 | `npm run test`         | Jalankan pengujian unit (Vitest, sekali jalan)             |
 | `npm run test:watch`   | Pengujian unit mode pantau                                 |
+| `npm run smoke`        | Smoke test HTTP halaman publik (server harus berjalan)       |
 | `npm run db:create`    | Buat database dari `DATABASE_URL`                          |
 | `npm run db:generate`  | Hasilkan berkas migrasi dari perubahan skema               |
 | `npm run db:migrate`   | Terapkan migrasi                                           |
