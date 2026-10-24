@@ -17,14 +17,13 @@ const PUBLIC_PATHS = ["/desa", "/masuk"] as const;
 /**
  * Berkas metadata yang harus selalu dapat diambil mesin pencari tanpa sesi.
  * Tidak boleh dialihkan ke halaman masuk.
+ *
+ * Hanya berisi berkas yang benar-benar ada. Manifest PWA dan gambar OG belum
+ * dibuat; bila nanti ditambahkan sebagai metadata route
+ * (`src/app/manifest.ts` / `src/app/opengraph-image.tsx`), daftarkan ulang di
+ * sini agar perayap tidak dialihkan ke halaman masuk.
  */
-const PUBLIC_FILES = [
-  "/sitemap.xml",
-  "/robots.txt",
-  "/manifest.webmanifest",
-  "/icon.svg",
-  "/opengraph-image",
-] as const;
+const PUBLIC_FILES = ["/sitemap.xml", "/robots.txt", "/icon.svg"] as const;
 
 function isPublicPath(pathname: string): boolean {
   // Beranda publik.
