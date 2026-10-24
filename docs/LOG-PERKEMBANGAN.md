@@ -8,7 +8,8 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ## 2026-10-24 — Refactor use-case publik + backend pengaduan (3D) + skema pembangunan
 
-Masih di working tree (belum di-commit):
+Tercatat pada commit `9509c76` (use case publik), `52fe71b` (pengaduan),
+`5e93972` (skema 0023–0024), `af846f2` (sesi warga per halaman):
 
 - **Refactor use case publik**: halaman publik tidak lagi mengimpor repository
   langsung. Baru: `features/publik/application/konten-publik.ts` (beranda,
@@ -39,7 +40,7 @@ Masih di working tree (belum di-commit):
 
 ## 2026-10-24 — 2G: analisis & survei
 
-Masih di working tree (belum di-commit).
+Tercatat pada commit `1470775` (+ skema di `5e93972`).
 
 - **Lapisan**: `features/survey/{domain,application,infrastructure,presentation}`.
   Domain memuat tipe soal (`text`/`number`/`choice`), skema zod, parsing opsi,
@@ -63,7 +64,7 @@ Masih di working tree (belum di-commit).
 
 ## 2026-10-24 — 2D: buku administrasi desa (Bumindes)
 
-Masih di working tree (belum di-commit).
+Tercatat pada commit `013e22a`.
 
 - **Lapisan**: `domain/bumindes.ts` (katalog buku inti, skema zod item, helper
   nomor urut), `application/use-cases.ts` (izin `read/update/delete` + tenant),
@@ -91,8 +92,8 @@ Masih di working tree (belum di-commit).
 
 ## 2026-10-24 — 2C: akun warga (NIK + PIN) & layanan mandiri
 
-Masih di working tree (belum di-commit); status dokumen otoritatif sudah
-diperbarui agar tidak mendahului kode.
+Tercatat pada commit `91cbf4b` (+ gerbang halaman di `af846f2`); status dokumen
+otoritatif sudah diperbarui agar tidak mendahului kode.
 
 - **Akun warga**: operator membuat akun dari baris tabel penduduk
   (`penduduk-row-actions.tsx` → `KredensialWargaDialog`). PIN 6 digit dibuat

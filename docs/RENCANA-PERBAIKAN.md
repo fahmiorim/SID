@@ -683,7 +683,7 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, dan **survei** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
 | 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
-| 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |
+| 5 — Multi-desa | 🔴 **Belum dimulai** | Halaman `/super-admin` masih mockup statis (sudah ter-commit, tanpa backend dan tanpa RBAC nyata) |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
 
 **Keseluruhan: ±25%** (Fase 0, sebagian besar Fase 1, dan sebagian besar Fase 2).
