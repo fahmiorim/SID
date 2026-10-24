@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
 
-import { ensureBumindesBuku } from "@/features/bumindes/infrastructure/bumindes-repository";
-import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { RESOURCES } from "@/features/rbac/domain/resources";
-import { requirePermission } from "@/lib/dal";
+import { getDaftarBukuData } from "@/features/bumindes/application/use-cases";
 
+/**
+ * `/bumindes` hanya pintu masuk: pastikan katalog buku desa sudah disiapkan
+ * lewat use case (sekaligus menegakkan izin baca), lalu arahkan ke buku
+ * administrasi umum.
+ */
 export default async function BumindesRedirect() {
-  const user = await requirePermission(RESOURCES.bumindes, "read");
-  const villageId = await resolveVillageId(user);
-  await ensureBumindesBuku(villageId);
-
+  await getDaftarBukuData();
   redirect("/bumindes/buku-administrasi");
 }
