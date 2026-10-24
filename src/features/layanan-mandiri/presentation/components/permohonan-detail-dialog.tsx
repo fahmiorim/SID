@@ -57,12 +57,14 @@ function tanggal(value: Date | null): string {
 
 interface DetailProps {
   permohonan: PermohonanAdminRow;
+  /** Hanya peran dengan izin `update` yang melihat tombol aksi. */
+  canManage: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 /** Dialog periksa permohonan + aksi proses operator. */
-export function PermohonanDetailDialog({ permohonan, open, onOpenChange }: DetailProps) {
+export function PermohonanDetailDialog({ permohonan, canManage, open, onOpenChange }: DetailProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<"kembalikan" | "batalkan" | null>(null);
@@ -230,7 +232,7 @@ export function PermohonanDetailDialog({ permohonan, open, onOpenChange }: Detai
             )}
           </section>
 
-          {mode ? (
+          {canManage && mode ? (
             <section className="space-y-2 rounded-lg border p-3">
               <Label htmlFor={`alasan-${permohonan.id}`}>
                 {mode === "kembalikan" ? "Alasan pengembalian" : "Alasan pembatalan"}
@@ -271,21 +273,21 @@ export function PermohonanDetailDialog({ permohonan, open, onOpenChange }: Detai
         </div>
 
         <DialogFooter className="flex-wrap gap-2">
-          {permohonan.status === 1 ? (
+          {canManage && permohonan.status === 1 ? (
             <Button type="button" disabled={isPending} onClick={buatKonsep}>
               {isPending ? <Loader2 className="animate-spin" /> : <FileText />}
               Buat konsep & ajukan verifikasi
             </Button>
           ) : null}
 
-          {permohonan.status === 0 ? (
+          {canManage && permohonan.status === 0 ? (
             <Button type="button" disabled={isPending} onClick={() => jalankanProses(1)}>
               <RotateCcw />
               Periksa kembali
             </Button>
           ) : null}
 
-          {permohonan.status === 3 ? (
+          {canManage && permohonan.status === 3 ? (
             <Button type="button" disabled={isPending} onClick={() => jalankanProses(4)}>
               <CheckCircle2 />
               Tandai sudah diambil
@@ -303,7 +305,7 @@ export function PermohonanDetailDialog({ permohonan, open, onOpenChange }: Detai
             </Button>
           ) : null}
 
-          {permohonan.status === 1 || permohonan.status === 2 ? (
+          {canManage && (permohonan.status === 1 || permohonan.status === 2) ? (
             <Button
               type="button"
               variant="outline"
@@ -315,7 +317,7 @@ export function PermohonanDetailDialog({ permohonan, open, onOpenChange }: Detai
             </Button>
           ) : null}
 
-          {permohonan.status !== 4 && permohonan.status !== 5 ? (
+          {canManage && permohonan.status !== 4 && permohonan.status !== 5 ? (
             <Button
               type="button"
               variant="destructive"

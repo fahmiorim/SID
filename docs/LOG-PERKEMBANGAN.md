@@ -24,6 +24,12 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 - **Docs sinkron**: `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md`
   (tabel perintah); `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run
   build` hijau (540 test / 53 file).
+- **Permohonan Surat (RBAC UI)**: `getPermohonanAdminData` kini mengembalikan
+  `canManage` (`hasPermission(..., "update")`); halaman meneruskannya ke
+  `PermohonanDetailButton` → `PermohonanDetailDialog`, sehingga tombol
+  proses/kembalikan/batalkan hanya tampil bagi peran yang berhak. Sekdes dan
+  kades (akses `read`) tetap dapat membuka detail. Otorisasi server tidak
+  berubah.
 
 ---
 

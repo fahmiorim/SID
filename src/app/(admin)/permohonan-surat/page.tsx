@@ -42,7 +42,7 @@ export default async function PermohonanSuratPage({
 }: PageProps<"/permohonan-surat">) {
   const params = await searchParams;
   const status = toStatus(typeof params.status === "string" ? params.status : undefined);
-  const { permohonan } = await getLayananMandiriData();
+  const { permohonan, canManage } = await getLayananMandiriData();
 
   const filtered = status
     ? permohonan.filter((item) => String(item.status) === status)
@@ -140,7 +140,7 @@ export default async function PermohonanSuratPage({
                           : "—"}
                       </TableCell>
                       <TableCell className="text-right">
-                        <PermohonanDetailButton permohonan={item} />
+                        <PermohonanDetailButton permohonan={item} canManage={canManage} />
                       </TableCell>
                     </TableRow>
                   ))

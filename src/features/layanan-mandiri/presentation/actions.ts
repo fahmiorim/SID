@@ -12,10 +12,9 @@ import { errorState, successState, toErrorState, type ActionState } from "@/lib/
 
 const PATH = "/permohonan-surat";
 
-/** Data halaman operator permohonan surat. */
+/** Data halaman operator permohonan surat (termasuk izin ubah untuk UI). */
 export async function getLayananMandiriData() {
-  const permohonan = await getPermohonanAdminData();
-  return { permohonan };
+  return getPermohonanAdminData();
 }
 
 export async function buatKonsepSuratPermohonanAction(

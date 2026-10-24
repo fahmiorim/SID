@@ -12,6 +12,7 @@ import {
   prosesPermohonan,
   tautkanSuratPermohonan,
 } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
+import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import {
   ajukanVerifikasiSuratData,
@@ -21,11 +22,22 @@ import { parseNilaiIsian } from "@/features/surat/domain/isian";
 import { requirePermission } from "@/lib/dal";
 import { conflict, notFound, validationError } from "@/lib/errors";
 
-/** Daftar permohonan untuk operator (sudah tersaring desa sesi). */
+/**
+ * Daftar permohonan untuk operator (sudah tersaring desa sesi).
+ *
+ * `canManage` dipakai UI untuk menyembunyikan tombol proses bagi peran yang
+ * hanya punya akses `read` (mis. sekdes/kades). Otorisasi sebenarnya tetap
+ * ditegakkan di use case mutasi (`requirePermission(..., "update")`).
+ */
 export async function getPermohonanAdminData() {
   const user = await requirePermission(RESOURCES.permohonanSurat, "read");
   const villageId = await resolveVillageId(user);
-  return listPermohonan(villageId);
+  const permohonan = await listPermohonan(villageId);
+
+  return {
+    permohonan,
+    canManage: hasPermission(user.permissions, RESOURCES.permohonanSurat, "update"),
+  };
 }
 
 /** Berkas syarat milik permohonan, untuk route unduhan operator. */

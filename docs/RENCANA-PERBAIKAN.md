@@ -409,8 +409,9 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 - [x] UI admin: detail permohonan, proses status, kembalikan dengan alasan,
       batalkan, dan riwayat (`PermohonanDetailDialog`, `/permohonan-surat`).
       Modul `permohonan-surat` aktif di menu sejak 25 Okt 2026 dengan operator
-      `manage` serta sekretaris desa & kepala desa `read` (hanya melihat; aksi
-      proses butuh `update` dan ditolak server untuk peran read).
+      `manage` serta sekretaris desa & kepala desa `read`. Peran read hanya
+      melihat detail: tombol proses/kembalikan/batalkan disembunyikan
+      (`canManage`), dan server tetap menolak aksi tanpa izin `update`.
 - [x] Terbitkan surat dari permohonan: `buatKonsepSuratPermohonanData` memakai
       use case persuratan (bukan duplikasi penomoran), menyimpan `letter_id`,
       dan menyinkronkan status saat surat terbit/ditolak.
