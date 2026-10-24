@@ -6,6 +6,30 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — sisa Fase 2 chip C: ekspor & impor respons survei
+
+- **Domain** `features/survey/domain/survey-csv.ts` + 13 test: `csvCell`
+  (kutip + pelindung formula Excel, angka negatif dibiarkan), `toCsv`,
+  `parseCsv` (BOM, kutip ganda, CRLF, baris kosong), `buildSurveyCsv`
+  (header `Nama;NIK;Tanggal;<pertanyaan…>`, NIK berawalan `'` agar Excel
+  tidak mengubahnya jadi notasi ilmiah), `parseSurveyCsv` (posisional,
+  validasi `validasiJawaban` per baris, laporan baris gagal tanpa
+  membatalkan baris lain, batas 2000 baris), dan `surveyCsvFilename`.
+- **Use case** `exportSurveyCsvData` (izin `read`, tenant sesi) dan
+  `importSurveyCsvData` (izin `update`, satu transaksi `insertResponden`
+  per baris valid).
+- **Route** `GET /analisis-survei/[id]/ekspor` (CSV UTF-8 BOM,
+  `no-store`) + Server Action `imporRespondenAction` (maks. 2 MB, hanya
+  `.csv`/`.txt`) + komponen `survey-csv-tools.tsx` di kartu "Ekspor &
+  Impor Respons" halaman detail. Laporan impor menampilkan jumlah
+  diimpor/ditolak dan rincian baris bermasalah.
+- Round-trip diuji: hasil ekspor dapat diimpor kembali tanpa kehilangan
+  data (termasuk tanda kutip, pemisah, dan baris baru dalam jawaban).
+
+Format/lint/typecheck/build/test (533 test, 52 file) hijau sebelum commit.
+
+---
+
 ## 2026-10-24 — sisa Fase 2 chip B: pelacakan tiket pengaduan mandiri
 
 - **Domain** `pengaduan.ts` (+11 test di `pengaduan.test.ts`):

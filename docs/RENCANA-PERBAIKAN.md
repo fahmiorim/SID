@@ -506,8 +506,12 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       persentase, rata-rata/min/maks, contoh jawaban teks). Jawaban wajib
       lengkap; pilihan divalidasi terhadap opsi yang tersimpan pada soal.
       Migrasi `0023` menambah `survey_soal.pilihan`.
-      *Belum: pengisian mandiri oleh warga, kategori/indikator/parameter ala
-      OpenSID (Fase 3F), dan impor/ekspor respons.*
+      **Ekspor/impor respons** (24 Okt 2026): `/analisis-survei/[id]/ekspor`
+      mengunduh CSV (`Nama;NIK;Tanggal;<jawaban per soal>`), dan kartu
+      "Ekspor & Impor Respons" menerima unggahan CSV dengan laporan
+      diimpor/ditolak per baris (`domain/survey-csv.ts` + 13 test).
+      *Belum: pengisian mandiri oleh warga dan kategori/indikator/parameter
+      ala OpenSID (Fase 3F).*
 - [x] Grant & modul seed konsisten: modul `analisis-survei` diaktifkan di menu;
       operator `manage`, sekdes/kades `read` (berlaku setelah `npm run db:seed`).
 
@@ -579,7 +583,9 @@ ketergantungan halaman publik.
 
 - [ ] Kategori, indikator, parameter, periode, respon, laporan, statistik
       jawaban.
-- [ ] Impor/ekspor respon.
+- [x] Impor/ekspor respon — versi survei selesai 24 Okt 2026 (CSV di
+      `/analisis-survei/[id]/ekspor` + impor per baris). Sisa 3F: impor/ekspor
+      format kategori–indikator–parameter OpenSID.
 
 ### 3G. Bumindes lengkap (1 minggu)
 

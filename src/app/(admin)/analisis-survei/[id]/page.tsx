@@ -16,6 +16,7 @@ import { RespondenCreateButton } from "@/features/survey/presentation/components
 import { RespondenRowActions } from "@/features/survey/presentation/components/responden-row-actions";
 import { SoalCreateButton } from "@/features/survey/presentation/components/soal-create-button";
 import { SoalRowActions } from "@/features/survey/presentation/components/soal-row-actions";
+import { SurveyCsvTools } from "@/features/survey/presentation/components/survey-csv-tools";
 import { SurveyEditButton } from "@/features/survey/presentation/components/survey-edit-button";
 import { verifySession } from "@/lib/dal";
 
@@ -235,6 +236,22 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ekspor & Impor Respons</CardTitle>
+          <CardDescription>
+            Cadangkan jawaban ke CSV atau impor massal dari berkas milik operator.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <SurveyCsvTools
+            surveyId={survei.id}
+            canImport={canWrite}
+            jumlahResponden={responden.length}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

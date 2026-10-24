@@ -13,6 +13,12 @@ import {
   type SurveyInput,
 } from "@/features/survey/domain/survey";
 import {
+  buildSurveyCsv,
+  parseSurveyCsv,
+  surveyCsvFilename,
+  type KesalahanImporSurvei,
+} from "@/features/survey/domain/survey-csv";
+import {
   deleteResponden,
   deleteSoal,
   deleteSurvey,
@@ -226,6 +232,88 @@ export async function hapusRespondenData(
   await pastikanSurvei(villageId, surveyId);
   await deleteResponden(surveyId, respondenId);
   return { surveyId };
+}
+
+/** Hasil impor CSV respons survei. */
+export interface HasilImporSurvei {
+  surveyId: number;
+  diimpor: number;
+  ditolak: number;
+  /** Rincian baris yang gagal (maks. 50 ditampilkan di UI). */
+  kesalahan: KesalahanImporSurvei[];
+}
+
+/**
+ * Ekspor seluruh responden + jawaban satu survei sebagai CSV.
+ *
+ * Izin `read` cukup karena hanya membaca data yang sudah boleh dilihat di
+ * halaman detail; berkas tidak memuat data penduduk di luar isian responden.
+ */
+export async function exportSurveyCsvData(
+  surveyId: number,
+): Promise<{ filename: string; csv: string }> {
+  const user = await requirePermission(RESOURCES.analisisSurvei, "read");
+  const villageId = await resolveVillageId(user);
+  const survei = await pastikanSurvei(villageId, surveyId);
+
+  const [soal, responden, jawaban] = await Promise.all([
+    listSoal(surveyId),
+    listResponden(surveyId),
+    listJawaban(surveyId),
+  ]);
+
+  return {
+    filename: surveyCsvFilename(survei.judul, survei.id),
+    csv: buildSurveyCsv({ soal, responden, jawaban }),
+  };
+}
+
+/**
+ * Impor CSV respons survei (kolom mengikuti urutan soal saat ini).
+ *
+ * Baris valid disimpan satu per satu; baris tidak valid dilaporkan tanpa
+ * membatalkan baris lain sehingga operator dapat memperbaiki lalu mengulang.
+ * Tanggal pada berkas diabaikan — waktu dibuat server.
+ */
+export async function importSurveyCsvData(
+  surveyId: number,
+  csv: string,
+): Promise<HasilImporSurvei> {
+  const user = await requirePermission(RESOURCES.analisisSurvei, "update");
+  const villageId = await resolveVillageId(user);
+
+  await pastikanSurvei(villageId, surveyId);
+
+  const soal = await listSoal(surveyId);
+  if (soal.length === 0) {
+    throw validationError("Tambahkan pertanyaan sebelum mengimpor respons.");
+  }
+
+  const hasil = parseSurveyCsv(csv, soal);
+  if (hasil.baris.length === 0 && hasil.kesalahan.length === 0) {
+    throw validationError("Berkas tidak memuat baris data.");
+  }
+
+  const kesalahan = [...hasil.kesalahan];
+  let diimpor = 0;
+
+  for (const baris of hasil.baris) {
+    try {
+      await insertResponden(
+        surveyId,
+        { nama: baris.nama, nik: baris.nik },
+        soal.map((item) => ({
+          soalId: item.id,
+          jawaban: baris.jawaban[String(item.id)] ?? "",
+        })),
+      );
+      diimpor += 1;
+    } catch {
+      kesalahan.push({ baris: baris.baris, pesan: "Gagal menyimpan baris ini." });
+    }
+  }
+
+  return { surveyId, diimpor, ditolak: kesalahan.length, kesalahan };
 }
 
 /** Rincian jawaban satu responden untuk dialog. */

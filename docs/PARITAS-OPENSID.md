@@ -101,8 +101,10 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > punya CRUD survei, builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
 > pencatatan responden dengan jawaban dinamis, dan rekap per soal (distribusi
 > persentase, rata-rata/min/maks, contoh jawaban teks). Modul diaktifkan di menu
-> dan migrasi `0023` menambah `survey_soal.pilihan`. Belum: pengisian mandiri
-> warga, kategori/indikator/parameter OpenSID, impor/ekspor respons.
+> dan migrasi `0023` menambah `survey_soal.pilihan`. Ekspor/impor respons CSV
+> selesai 24 Okt 2026 (unduh per survei + impor massal dengan laporan baris
+> ditolak). Belum: pengisian mandiri warga, kategori/indikator/parameter
+> OpenSID.
 >
 > Perbaikan 2D 24 Okt 2026: **buku administrasi desa bisa dipakai** — katalog
 > buku inti (A1–A8 administrasi umum, B1–B5 penduduk, E1 tanah desa) disiapkan
@@ -230,7 +232,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Analisis (kategori, indikator, parameter, respon, laporan) | `Modules/Analisis` (19 file + 47 view) | 🟡 | P1 (survei sederhana: builder soal, responden, rekap; kategori/indikator belum) |
+| Analisis (kategori, indikator, parameter, respon, laporan) | `Modules/Analisis` (19 file + 47 view) | 🟡 | P1 (survei sederhana: builder soal, responden, rekap, ekspor/impor CSV; kategori/indikator belum) |
 | Statistik penduduk & bantuan | `controllers/Statistik.php`, `Statistik_bantuan.php` | 🟡 | P1 |
 | IDM & SDGs | `controllers/Status_desa.php`, `fweb/{Idm,Sdgs}` | 🟡 | P2 |
 

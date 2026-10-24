@@ -7,15 +7,18 @@ import {
   hapusRespondenData,
   hapusSoalData,
   hapusSurveyData,
+  importSurveyCsvData,
   simpanRespondenData,
   simpanSoalData,
   simpanSurveyData,
+  type HasilImporSurvei,
 } from "@/features/survey/application/use-cases";
 import {
   respondenFormSchema,
   soalFormSchema,
   surveyFormSchema,
 } from "@/features/survey/domain/survey";
+import { MAKS_UKURAN_CSV } from "@/features/survey/domain/survey-csv";
 import {
   errorState,
   successState,
@@ -166,6 +169,50 @@ export async function hapusRespondenAction(
     revalidatePath(`${PATH}/${surveyId}`);
     revalidatePath(PATH);
     return successState("Responden dihapus.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/**
+ * Impor respons survei dari berkas CSV.
+ *
+ * Berkas dibaca di server lalu divalidasi per baris; tanggapan berisi jumlah
+ * yang diimpor dan rincian baris yang ditolak agar operator bisa memperbaiki.
+ */
+export async function imporRespondenAction(
+  _previousState: ActionState<HasilImporSurvei | null>,
+  formData: FormData,
+): Promise<ActionState<HasilImporSurvei | null>> {
+  const surveyId = parseId(formData.get("surveyId"));
+  if (surveyId === null) return errorState("Survei tidak valid.");
+
+  const berkas = formData.get("berkas");
+  if (!(berkas instanceof File) || berkas.size === 0) {
+    return errorState("Pilih berkas CSV yang akan diimpor.");
+  }
+  if (berkas.size > MAKS_UKURAN_CSV) {
+    return errorState("Berkas terlalu besar (maksimal 2 MB).");
+  }
+
+  const nama = berkas.name.toLowerCase();
+  if (!nama.endsWith(".csv") && !nama.endsWith(".txt")) {
+    return errorState("Berkas harus berformat .csv.");
+  }
+
+  try {
+    const hasil = await importSurveyCsvData(surveyId, await berkas.text());
+    revalidatePath(`${PATH}/${surveyId}`);
+    revalidatePath(PATH);
+
+    if (hasil.diimpor === 0) {
+      return successState(`Tidak ada baris yang diimpor; ${hasil.ditolak} baris ditolak.`, hasil);
+    }
+
+    const pesan = `${hasil.diimpor} responden diimpor${
+      hasil.ditolak > 0 ? `, ${hasil.ditolak} baris ditolak` : ""
+    }.`;
+    return successState(pesan, hasil);
   } catch (error) {
     return toErrorState(error);
   }
