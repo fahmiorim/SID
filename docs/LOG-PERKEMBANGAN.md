@@ -56,9 +56,10 @@ Tercatat pada commit `1470775` (+ skema di `5e93972`).
 - **Seed**: modul `analisis-survei` diaktifkan di menu; operator `manage`,
   sekdes/kades `read`. Jalankan `npm run db:seed`.
 - **Bukti**: `npm run check` hijau (469 test / 42 file, termasuk 20 test baru
-  `domain/survey.test.ts`) dan `npm run build` hijau. **Belum diuji ke DB**
-  karena MySQL dev tidak aktif; jalankan `npm run db:migrate` + `npm run db:seed`
-  lalu uji alur survei di browser.
+  `domain/survey.test.ts`) dan `npm run build` hijau. **Verifikasi 24 Okt 2026:
+  `npm run db:migrate` dua kali idempoten dan `npm run db:seed` sukses** di DB
+  dev (`desa_dev`); kolom `survey_soal.pilihan` dikonfirmasi ada. Uji alur
+  survei di browser masih menunggu.
 - **Batasan**: pengisian mandiri oleh warga, kategori/indikator/parameter ala
   OpenSID, serta impor/ekspor respons belum tersedia.
 
@@ -86,9 +87,9 @@ Tercatat pada commit `013e22a`.
   menghapus item (sebelumnya `write` sehingga hapus hanya bisa super admin).
   Jalankan `npm run db:seed` agar grant ini berlaku.
 - **Bukti**: `npm run check` hijau (449 test / 41 file, termasuk 13 test baru
-  `domain/bumindes.test.ts`) dan `npm run build` hijau. **Belum diverifikasi
-  ke DB** karena MySQL dev tidak aktif saat pengerjaan; uji reconcile seed pada
-  desa yang sudah punya buku lama masih perlu dilakukan setelah DB hidup.
+  `domain/bumindes.test.ts`) dan `npm run build` hijau. **Verifikasi 24 Okt 2026:
+  seed idempoten dijalankan di DB dev yang sudah berisi buku lama tanpa galat**
+  (jalur reconcile katalog dikerjakan); pengujian UI buku manual masih menunggu.
 
 ## 2026-10-24 — 2C: akun warga (NIK + PIN) & layanan mandiri
 
