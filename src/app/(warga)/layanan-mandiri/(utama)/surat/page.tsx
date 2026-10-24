@@ -15,6 +15,7 @@ import {
   parseBerkasSyarat,
 } from "@/features/layanan-mandiri/domain/layanan-mandiri";
 import { FormAjukanSurat } from "@/features/layanan-mandiri/presentation/components/form-ajukan-surat";
+import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Ajukan Surat" };
 
@@ -28,6 +29,7 @@ function badgeVariant(status: number): "default" | "secondary" | "outline" | "de
 export default async function SuratWargaPage({
   searchParams,
 }: PageProps<"/layanan-mandiri/surat">) {
+  await verifyWargaPage();
   const params = await searchParams;
   const jenisId = Number(typeof params.jenis === "string" ? params.jenis : "");
 

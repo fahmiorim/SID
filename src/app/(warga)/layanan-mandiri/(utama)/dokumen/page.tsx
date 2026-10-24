@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listPermohonanWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
 import { labelPermohonanStatus } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Dokumen Saya" };
 
 export default async function DokumenWargaPage() {
+  await verifyWargaPage();
   const permohonan = await listPermohonanWargaData();
   const surat = permohonan.filter((item) => item.letterId !== null);
 

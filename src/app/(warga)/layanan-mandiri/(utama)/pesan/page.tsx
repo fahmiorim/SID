@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { listPermohonanWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
 import { labelPermohonanStatus } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Pesan" };
 
@@ -16,6 +17,7 @@ function badgeVariant(status: number): "default" | "secondary" | "outline" | "de
 }
 
 export default async function PesanWargaPage() {
+  await verifyWargaPage();
   const permohonan = await listPermohonanWargaData();
 
   return (

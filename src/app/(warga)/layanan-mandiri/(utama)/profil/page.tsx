@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GENDER_LABELS } from "@/features/penduduk/domain/penduduk";
 import { getProfilWargaData } from "@/features/warga/application/warga-use-cases";
-import { verifyWargaSession } from "@/lib/dal";
+import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Profil Warga" };
 
@@ -21,7 +21,8 @@ function tanggal(value: string | null): string {
 }
 
 export default async function ProfilWargaPage() {
-  const [profile, user] = await Promise.all([getProfilWargaData(), verifyWargaSession()]);
+  const user = await verifyWargaPage();
+  const profile = await getProfilWargaData();
 
   const baris = [
     ["Nama lengkap", profile.name],

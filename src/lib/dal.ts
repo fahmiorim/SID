@@ -137,6 +137,23 @@ export async function verifyWargaSession(): Promise<WargaUser> {
 }
 
 /**
+ * Gerbang halaman area warga.
+ *
+ * Layout dan page dapat dirender paralel, jadi setiap page wajib memeriksa
+ * sesi sendiri sebelum memanggil use case yang melempar `forbidden` untuk
+ * akun staf. Warga dengan PIN sementara diarahkan ke form ubah PIN.
+ */
+export async function verifyWargaPage(): Promise<WargaUser> {
+  const user = await verifyWargaSession();
+
+  if (user.mustChangePin) {
+    redirect("/layanan-mandiri/ubah-pin");
+  }
+
+  return user;
+}
+
+/**
  * Versi `verifyWargaSession` untuk Server Action/Route Handler: tidak mengalihkan,
  * tetapi melempar kesalahan yang aman.
  */

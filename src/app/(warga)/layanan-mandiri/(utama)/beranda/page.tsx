@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { listPermohonanWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
 import { labelPermohonanStatus } from "@/features/layanan-mandiri/domain/layanan-mandiri";
 import { getProfilWargaData } from "@/features/warga/application/warga-use-cases";
+import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Beranda Layanan Warga" };
 
@@ -19,6 +20,7 @@ function badgeVariant(status: number): "default" | "secondary" | "outline" | "de
 }
 
 export default async function BerandaWargaPage() {
+  await verifyWargaPage();
   const [profil, permohonan] = await Promise.all([getProfilWargaData(), listPermohonanWargaData()]);
 
   const terbaru = permohonan.slice(0, 3);
