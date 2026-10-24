@@ -6,6 +6,29 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2E chip 5: surat dinas + arsip
+
+- **Skema**: tabel `letter_dinas` (migration `0026_cute_thaddeus_ross.sql`,
+  sudah `db:migrate`) — nomor, tanggal, penerima + alamat, perihal, isi,
+  klasifikasi, arsip berkas (jalur media) + lokasi arsip fisik.
+- **RBAC**: resource `suratDinas` (`RESOURCES`), seed modul `surat-dinas`
+  (URL `/persuratan/surat-dinas`, ikon `scroll-text`, urutan 4; jenis/
+  klasifikasi/syarat digeser menjadi 5/6/7) + grants operator `manage`,
+  sekdes-desa & kepala-desa `read`. Seed dijalankan; verifikasi DB lulus
+  (modul + 3 grants + kolom/tabel baru).
+- **Fitur**: `surat-dinas-repository.ts`, `surat-dinas-use-cases.ts`
+  (unggah lampiran via `simpanUnggahanMedia` kategori `umum`, hapus berkas
+  lama dari storage saat diganti/dihapus), `surat-dinas-actions.ts`,
+  komponen form/dialog/row-actions, dan halaman `/persuratan/surat-dinas`
+  (pencarian, daftar 7 kolom, tautan buka arsip).
+- **Test**: `surat-dinas.test.ts` (2 case skema: lengkap + validasi wajib).
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2E surat dinas ✅;
+`PARITAS-OPENSID.md` baris "Surat dinas + arsip" 🔴→✅, total 92 = 34/23/35
+(±49%).
+
+---
+
 ## 2026-10-24 — 2E chip 4: logo, tanda tangan, dan stempel pada surat cetak/PDF
 
 - **Skema**: kolom `villages.signature` & `villages.stamp`

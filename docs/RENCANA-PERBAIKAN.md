@@ -459,7 +459,13 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       penduduk (`listPendudukSuratByIds`). UI: dialog surat diberi checkbox
       pengikut (maks 10) + baris dinami penduduk luar (maks 10) melalui
       `surat-form-dialog.tsx`; bantuan placeholder di form jenis surat.
-- [ ] Surat dinas + arsip.
+- [x] Surat dinas + arsip. Modul `surat-dinas` (resource RBAC + seed 3 role:
+      operator `manage`, sekdes/kades `read`; ikon `scroll-text`) dengan
+      migration `0026` tabel `letter_dinas` (nomor/tanggal/penerima/perihal/
+      isi/klasifikasi/arsip berkas + lokasi arsip fisik). Fitur
+      `features/surat/{application,infrastructure,presentation}` +
+      halaman `/persuratan/surat-dinas` (cari, CRUD, unggah/buka/hapus
+      lampiran media kategori `umum`, hapus berkas ikut membersihkan storage).
 - [ ] TTE/BSRE: adapter mode nonaktif (jangan blokir fase lain).
 
 ### 2F. Keuangan (3 hari)

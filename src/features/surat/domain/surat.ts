@@ -11,6 +11,7 @@ export const KLASIFIKASI_SURAT_RESOURCE = RESOURCES.klasifikasiSurat;
 export const SYARAT_SURAT_RESOURCE = RESOURCES.syaratSurat;
 export const SURAT_MASUK_RESOURCE = RESOURCES.suratMasuk;
 export const SURAT_KELUAR_RESOURCE = RESOURCES.suratKeluar;
+export const SURAT_DINAS_RESOURCE = RESOURCES.suratDinas;
 
 // --- Status surat ----------------------------------------------------------
 
@@ -437,6 +438,32 @@ export const suratKeluarFormSchema = z.object({
 });
 export type SuratKeluarInput = z.infer<typeof suratKeluarFormSchema>;
 
+// --- Surat dinas (Fase 2E) --------------------------------------------------
+
+export const suratDinasFormSchema = z.object({
+  letterNumber: z
+    .string()
+    .trim()
+    .min(1, "Nomor surat wajib diisi.")
+    .max(100, "Maksimal 100 karakter."),
+  letterDate: z.iso.date("Tanggal surat tidak valid."),
+  recipient: optionalText(150),
+  recipientAddress: optionalText(255),
+  subject: z
+    .string()
+    .trim()
+    .min(1, "Perihal surat wajib diisi.")
+    .max(200, "Maksimal 200 karakter."),
+  content: optionalText(4000),
+  classificationId: optionalSelectId,
+  /** Jalur media lampiran arsip (isi otomatis saat unggah). */
+  archiveFile: optionalText(255),
+  /** `true` → pengguna meminta lampiran arsip dihapus. */
+  hapusArsip: z.boolean().optional().default(false),
+  archiveLocation: optionalText(150),
+});
+export type SuratDinasInput = z.infer<typeof suratDinasFormSchema>;
+
 // --- DTO -------------------------------------------------------------------
 
 export interface KlasifikasiSuratDTO {
@@ -522,6 +549,22 @@ export interface SuratKeluarDTO {
   classificationName: string | null;
   summary: string | null;
   sentDate: string | null;
+  archiveLocation: string | null;
+}
+
+/** Baris surat dinas (Fase 2E). */
+export interface SuratDinasDTO {
+  id: number;
+  letterNumber: string;
+  letterDate: string;
+  recipient: string | null;
+  recipientAddress: string | null;
+  subject: string;
+  content: string | null;
+  classificationId: number | null;
+  classificationName: string | null;
+  /** Jalur media lampiran arsip (bila ada). */
+  archiveFile: string | null;
   archiveLocation: string | null;
 }
 

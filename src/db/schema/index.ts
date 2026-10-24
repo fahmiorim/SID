@@ -17,6 +17,7 @@ export * from "./inventaris";
 export * from "./keuangan";
 export * from "./kelompok";
 export * from "./letter-classifications";
+export * from "./letter-dinas";
 export * from "./letter-requirements";
 export * from "./letter-types";
 export * from "./letters";

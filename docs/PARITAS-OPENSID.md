@@ -34,7 +34,7 @@ Legenda status proyek kita:
 | Kependudukan & sosial | 12 | 4 | 0 | 8 |
 | Wilayah & pertanahan | 4 | 2 | 0 | 2 |
 | Pemerintahan | 8 | 3 | 2 | 3 |
-| Persuratan | 7 | 3 | 2 | 2 |
+| Persuratan | 7 | 4 | 2 | 1 |
 | Keuangan | 6 | 4 | 1 | 1 |
 | Bumindes | 11 | 2 | 5 | 4 |
 | Pembangunan | 1 | 0 | 0 | 1 |
@@ -42,9 +42,9 @@ Legenda status proyek kita:
 | Analisis & statistik | 3 | 0 | 3 | 0 |
 | Web publik | 21 | 9 | 5 | 7 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **33** | **23** | **36** |
+| **Total** | **92** | **34** | **23** | **35** |
 
-**Paritas kasar saat ini: ±48%** (hitung ✅ penuh + setengah 🟡). Angka ini
+**Paritas kasar saat ini: ±49%** (hitung ✅ penuh + setengah 🟡). Angka ini
 dihitung ulang 24 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
 per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
 harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
@@ -171,7 +171,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Surat warga (jenis, isian, nomor, verifikasi berjenjang) | `controllers/Surat.php`, `Surat_master.php` | ✅ | — |
 | Surat masuk & surat keluar | `controllers/{Surat_masuk,Surat_keluar}.php` | ✅ | — |
 | Klasifikasi & syarat surat | `controllers/{Klasifikasi,Syaratan_surat}.php` | ✅ | — |
-| Surat dinas + arsip | `controllers/{Surat_dinas,Surat_dinas_arsip}.php` | 🔴 | P1 |
+| Surat dinas + arsip | `controllers/{Surat_dinas,Surat_dinas_arsip}.php` | ✅ | — |
 | Template surat, QR, verifikasi publik | `controllers/Qr_code.php`, `fweb/Verifikasi_surat` | 🟡 | **P0** |
 | Permohonan surat admin | `controllers/Permohonan_surat_admin.php` | 🟡 | **P0** |
 | Buku agenda / arsip surat | `controllers/Bumindes_arsip.php` | 🔴 | P2 |

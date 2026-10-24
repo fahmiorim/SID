@@ -16,6 +16,7 @@ import {
   Mail,
   Map,
   MessageSquareWarning,
+  ScrollText,
   Send,
   Settings,
   ShieldCheck,
@@ -60,6 +61,7 @@ const ICONS: Record<string, LucideIcon> = {
   "users-round": UsersRound,
   "hand-heart": HandHeart,
   "message-square-warning": MessageSquareWarning,
+  "scroll-text": ScrollText,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {

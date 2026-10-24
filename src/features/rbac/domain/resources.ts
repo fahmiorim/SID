@@ -21,6 +21,8 @@ export const RESOURCES = {
   syaratSurat: "syarat-surat",
   suratMasuk: "surat-masuk",
   suratKeluar: "surat-keluar",
+  /** Surat dinas antar instansi + arsipnya (Fase 2E). */
+  suratDinas: "surat-dinas",
   pengaturan: "pengaturan",
   identitasDesa: "identitas-desa",
   pengguna: "pengguna",
