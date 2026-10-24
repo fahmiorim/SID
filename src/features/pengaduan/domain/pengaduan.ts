@@ -238,3 +238,79 @@ export function hitungStatistikPengaduan(
 
   return hasil;
 }
+
+// ── Pelacakan tiket mandiri ───────────────────────────────────────────────
+
+/** Formulir lacak tiket: nomor tiket + salah satu identitas pelapor. */
+export const lacakPengaduanSchema = z.object({
+  nomorTiket: z
+    .string()
+    .trim()
+    .min(8, "Nomor tiket wajib diisi (contoh: PGD-20261024-0001).")
+    .max(40, "Nomor tiket terlalu panjang."),
+  identitas: z
+    .string()
+    .trim()
+    .min(3, "Masukkan NIK, nomor telepon, atau email yang dipakai saat mengirim.")
+    .max(EMAIL_MAX, "Identitas terlalu panjang."),
+});
+
+export type LacakPengaduanInput = z.infer<typeof lacakPengaduanSchema>;
+
+/** Samakan nomor tiket: buang spasi tepi dan jadikan huruf besar. */
+export function normalisasiNomorTiket(value: string): string {
+  return value.trim().toUpperCase();
+}
+
+/**
+ * Nomor telepon → digit saja dengan awalan `62` diseragamkan menjadi `0`,
+ * sehingga `+62 812-3456` dan `08123456` dianggap sama.
+ */
+export function normalisasiTelepon(value: string): string {
+  const digit = value.replace(/\D/g, "");
+  return digit.startsWith("62") ? `0${digit.slice(2)}` : digit;
+}
+
+/**
+ * Cocokkan identitas yang diketik dengan data pelapor.
+ *
+ * NIK dibandingkan sebagai digit utuh (tidak dinormalisasi awalan agar NIK
+ * yang kebetulan berawalan `62` tetap benar), telepon dibandingkan setelah
+ * normalisasi, dan email tanpa membedakan huruf besar/kecil.
+ */
+export function identitasCocok(
+  row: { nik: string | null; telepon: string | null; email: string | null },
+  identitas: string,
+): boolean {
+  const input = identitas.trim();
+  if (input === "") return false;
+
+  const hanyaDigit = /^[0-9+\-\s()]+$/.test(input);
+  if (hanyaDigit) {
+    const digit = input.replace(/\D/g, "");
+    const nik = (row.nik ?? "").replace(/\D/g, "");
+    if (nik !== "" && nik === digit) return true;
+
+    const telepon = row.telepon ? normalisasiTelepon(row.telepon) : "";
+    return telepon !== "" && telepon === normalisasiTelepon(input);
+  }
+
+  const email = (row.email ?? "").trim().toLowerCase();
+  return email !== "" && email === input.toLowerCase();
+}
+
+/**
+ * Hasil pelacakan yang aman ditampilkan ke pelapor.
+ *
+ * Tidak memuat NIK/telepon/email/lampiran — data tersebut hanya untuk petugas.
+ */
+export interface PengaduanLacak {
+  nomorTiket: string;
+  kategori: KategoriPengaduan;
+  judul: string;
+  isi: string;
+  status: StatusPengaduan;
+  tanggapan: string | null;
+  ditanggapiPada: Date | null;
+  createdAt: Date | null;
+}

@@ -1,7 +1,9 @@
-import { ClipboardList, MessageSquareText } from "lucide-react";
+import { ClipboardList, MessageSquareText, Search } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { listPengaduanPublikData } from "@/features/pengaduan/application/use-cases";
 import { labelKategori, type StatusPengaduan } from "@/features/pengaduan/domain/pengaduan";
 import { PengaduanFormPublik } from "@/features/pengaduan/presentation/components/pengaduan-form-publik";
@@ -49,6 +51,14 @@ export default async function PengaduanPage() {
         <p className="text-sm text-muted-foreground">
           Saluran resmi saran dan pengaduan warga {desa.namaDesa ?? "desa"}.
         </p>
+        <div className="mt-4 flex justify-center">
+          <Button variant="outline" asChild>
+            <Link href="/desa/pengaduan/lacak">
+              <Search className="size-4" />
+              Lacak status pengaduan
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <PengaduanFormPublik />
@@ -112,8 +122,9 @@ export default async function PengaduanPage() {
       <p className="flex items-start justify-center gap-2 text-xs text-muted-foreground">
         <ClipboardList className="mt-0.5 size-4 shrink-0" />
         <span>
-          Simpan nomor tiket hasil pengiriman Anda untuk melacak status melalui petugas desa.
-          Pengaduan berisi SARA, provokasi, atau data pihak lain tanpa izin dapat ditolak.
+          Simpan nomor tiket hasil pengiriman Anda untuk melacak status secara mandiri di halaman
+          Lacak Pengaduan (butuh nomor tiket + NIK/telepon/email yang Anda isi). Pengaduan berisi
+          SARA, provokasi, atau data pihak lain tanpa izin dapat ditolak.
         </span>
       </p>
     </div>

@@ -94,7 +94,8 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > `/pengaduan` selesai, lalu modul `pengaduan` di-seed ke menu/grant
 > (operator `manage`, sekdes/kades `read`) dan halaman publik
 > `/desa/pengaduan` + form kirim warga di-wire — pengaduan naik ke
-> sebagian besar paritas (pelacakan tiket mandiri masih kosong).
+> sebagian besar paritas. Pelacakan tiket mandiri (`/desa/pengaduan/lacak`,
+> tiket + NIK/telepon/email lewat Server Action) selesai 24 Okt 2026.
 >
 > Perbaikan 2G 24 Okt 2026: **survei warga bisa dipakai** — `/analisis-survei`
 > punya CRUD survei, builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
@@ -219,11 +220,11 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Pengajuan surat warga | `fmandiri/Surat.php` | ✅ | — |
 | Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
 | Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
-| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend + UI admin + halaman publik & form warga selesai; modul & route lampiran sudah di-seed/nyata. Sisa: pelacakan status mandiri lewat tiket) |
+| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | ✅ | P1 (backend + UI admin + halaman publik, form warga, dan pelacakan tiket mandiri selesai; sisa notifikasi status) |
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |
-| Verifikasi surat publik (QR/token) | `fweb/Verifikasi_surat`, `fmandiri/Verifikasi.php` | 🟡 | **P0** (token selesai; gambar QR menyusul) |
+| Verifikasi surat publik (QR/token) | `fweb/Verifikasi_surat`, `fmandiri/Verifikasi.php` | ✅ | **P0** (token + QR gambar di cetak & PDF selesai 24 Okt 2026) |
 
 ## I. Analisis & Statistik
 
@@ -245,7 +246,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Statistik publik | `fweb/Statistik` | 🟡 | P1 |
 | Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
 | Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 (halaman masih placeholder; skema proyek sudah ada di migrasi `0024`) |
-| Pengaduan publik | `fweb/Pengaduan` | ✅ | Dikerjakan di 3D: `/desa/pengaduan` (form anonim + daftar pengaduan yang dipublikasikan, identitas disamarkan) |
+| Pengaduan publik | `fweb/Pengaduan` | ✅ | Dikerjakan di 3D: `/desa/pengaduan` (form anonim + daftar terpublikasi, identitas disamarkan) + `/desa/pengaduan/lacak` (tiket + identitas) |
 | Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🟡 | P1 (halaman publik ada; anggota lembaga menyusul) |
 | Inventaris publik | `fweb/Inventaris` | ✅ | — |
 | APBDes publik | tema `partials/apbdesa` | ✅ | — |

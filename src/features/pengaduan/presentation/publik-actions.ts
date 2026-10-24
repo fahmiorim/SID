@@ -7,7 +7,12 @@ import {
   kirimPengaduanData,
   simpanLampiranPengaduan,
 } from "@/features/pengaduan/application/kirim-pengaduan";
-import { pengaduanFormSchema } from "@/features/pengaduan/domain/pengaduan";
+import { lacakPengaduanData } from "@/features/pengaduan/application/lacak-pengaduan";
+import {
+  lacakPengaduanSchema,
+  pengaduanFormSchema,
+  type PengaduanLacak,
+} from "@/features/pengaduan/domain/pengaduan";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import {
   errorState,
@@ -73,6 +78,42 @@ export async function kirimPengaduanAction(
       `Pengaduan terkirim dengan nomor tiket ${hasil.nomorTiket}. Simpan nomor ini untuk melacak status.`,
       hasil.nomorTiket,
     );
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/**
+ * Lacak status pengaduan dari halaman publik.
+ *
+ * Nomor tiket + salah satu identitas pelapor wajib cocok. Pesan gagal dibuat
+ * sama untuk tiket tak ada maupun identitas salah agar keberadaan tiket tidak
+ * bocor.
+ */
+export async function lacakPengaduanAction(
+  _previousState: ActionState<PengaduanLacak | null>,
+  formData: FormData,
+): Promise<ActionState<PengaduanLacak | null>> {
+  const parsed = lacakPengaduanSchema.safeParse({
+    nomorTiket: text(formData, "nomorTiket"),
+    identitas: text(formData, "identitas"),
+  });
+
+  if (!parsed.success) {
+    return errorState("Periksa kembali isian pelacakan.", zodToFieldErrors(parsed.error));
+  }
+
+  try {
+    const desa = await getIdentitasFromRequest();
+    const hasil = await lacakPengaduanData(desa.id, parsed.data);
+
+    if (!hasil) {
+      return errorState(
+        "Tiket tidak ditemukan atau data verifikasi tidak cocok. Periksa kembali NIK/telepon/email yang Anda isi saat mengirim.",
+      );
+    }
+
+    return successState(`Status pengaduan ${hasil.nomorTiket}.`, hasil);
   } catch (error) {
     return toErrorState(error);
   }

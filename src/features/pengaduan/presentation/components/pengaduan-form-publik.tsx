@@ -55,8 +55,8 @@ export function PengaduanFormPublik() {
             <AlertDescription>
               <strong>{state.message}</strong>
               <span className="mt-1 block text-xs text-muted-foreground">
-                Anda bisa menyerahkan nomor tiket ini ke petugas desa untuk menanyakan status
-                penanganannya.
+                Lacak statusnya kapan saja di halaman <strong>Lacak Pengaduan</strong> dengan nomor
+                tiket dan NIK/telepon/email yang Anda isi.
               </span>
             </AlertDescription>
           </Alert>

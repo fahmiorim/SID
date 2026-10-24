@@ -116,6 +116,26 @@ export async function getPengaduan(villageId: number, id: number): Promise<Penga
   return row ? mapRow(row) : null;
 }
 
+/**
+ * Cari pengaduan berdasarkan nomor tiket, ter-scope desa.
+ *
+ * Pemanggil wajib memverifikasi identitas pelapor sebelum menampilkan isinya
+ * (lihat `lacakPengaduanData`). Nomor tiket saja mudah ditebak (urut harian).
+ */
+export async function getPengaduanByTiket(
+  villageId: number,
+  nomorTiket: string,
+): Promise<PengaduanRow | null> {
+  const [row] = await db
+    .select(kolomPengaduan)
+    .from(pengaduan)
+    .leftJoin(users, eq(pengaduan.petugasId, users.id))
+    .where(and(eq(pengaduan.villageId, villageId), eq(pengaduan.nomorTiket, nomorTiket)))
+    .limit(1);
+
+  return row ? mapRow(row) : null;
+}
+
 export interface NilaiPengaduanBaru {
   nomorTiket: string;
   kategori: string;

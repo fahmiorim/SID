@@ -563,8 +563,11 @@ ketergantungan halaman publik.
 - [x] Halaman publik pengaduan `/desa/pengaduan`: form kirim tanpa login
       (`publik-actions.ts` wired via `presentation/components/
       pengaduan-form-publik.tsx`) + daftar pengaduan yang dipublikasikan
-      (identitas disamarkan). Pelacakan status mandiri lewat tiket dan
-      notifikasi belum tersedia.
+      (identitas disamarkan). **Pelacakan mandiri** `/desa/pengaduan/lacak`:
+      nomor tiket + salah satu identitas (NIK/telepon/email) diverifikasi di
+      server (`application/lacak-pengaduan.ts`, `domain/identitasCocok`);
+      identitas dikirim lewat Server Action, bukan URL. Sisa: notifikasi
+      (email/WA) saat status berubah.
 
 ### 3E. Dokumen, produk hukum, surat dinas (2 minggu)
 

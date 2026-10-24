@@ -6,6 +6,29 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — sisa Fase 2 chip B: pelacakan tiket pengaduan mandiri
+
+- **Domain** `pengaduan.ts` (+11 test di `pengaduan.test.ts`):
+  `normalisasiNomorTiket`, `normalisasiTelepon` (awalan `62` → `0`),
+  `identitasCocok` (NIK digit utuh, telepon ternormalisasi, email
+  case-insensitive), skema `lacakPengaduanSchema`, DTO `PengaduanLacak`.
+  Tiket saja tidak cukup — mudah ditebak karena urut harian — sehingga
+  identitas pelapor wajib dicocokkan; hasil `null` seragam agar keberadaan
+  tiket tidak bocor.
+- **Repo/use case**: `getPengaduanByTiket` (ter-scope desa) +
+  `application/lacak-pengaduan.ts` mengembalikan DTO aman tanpa
+  NIK/telepon/email/lampiran.
+- **UI** `/desa/pengaduan/lacak`: form Server Action (identitas tidak masuk
+  URL/log/Referer) via `pengaduan-lacak-form.tsx`; menampilkan status,
+  kategori, isi, tanggal, dan tanggapan. Halaman `/desa/pengaduan` diberi
+  tombol "Lacak status pengaduan"; pesan sukses form kirim menunjuk halaman
+  lacak. Sisa: notifikasi otomatis saat status berubah.
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §3D, `PARITAS-OPENSID.md` (pengaduan ✅,
+QR verifikasi ✅). Format/lint/typecheck/build/test (520 test, 51 file) hijau.
+
+---
+
 ## 2026-10-24 — sisa Fase 2 chip A: QR verifikasi surat
 
 - **Pustaka**: `qrcode` (MIT, pure JS) + `@types/qrcode` — gambar dibuat lokal,
