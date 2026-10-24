@@ -6,6 +6,89 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — Refactor use-case publik + backend pengaduan (3D) + skema pembangunan
+
+Masih di working tree (belum di-commit):
+
+- **Refactor use case publik**: halaman publik tidak lagi mengimpor repository
+  langsung. Baru: `features/publik/application/konten-publik.ts` (beranda,
+  berita, galeri, profil, pemerintahan, halaman statis),
+  `bantuan/application/publik-use-cases.ts` (halaman bantuan), dan
+  `pertanahan-publik.ts` (pengganti query `db` mentah di `/desa/pertanahan`;
+  data sementara dari inventaris hingga modul pertanahan ada). Halaman yang
+  dirombak: `page.tsx` publik yang tercantum di `git status` (beranda, berita,
+  galeri, pemerintahan, profil, bantuan, halaman, pertanahan).
+- **3D Pengaduan — backend saja** (belum ada UI): domain murni
+  `features/pengaduan/domain/pengaduan.ts` (kategori, status, format nomor
+  tiket, `samarkanNama`), use case `application/use-cases.ts`,
+  `application/kirim-pengaduan.ts` (unggah lampiran ke media kategori
+  `pengaduan`), repository, dan Server Actions. Skema `pengaduan` dibuat di
+  migrasi `0024` (unik `(village_id, nomor_tiket)`, index publik & status).
+  Slug RBAC `pengaduan` ditambahkan ke `resources.ts`; modul belum diaktifkan
+  di menu.
+- **Skema pembangunan (3C)**: `pembangunan_proyek` + `pembangunan_dokumentasi`
+  di migrasi `0024` + `schema/pembangunan.ts`; slug RBAC `pembangunan`.
+  Backend & UI belum ada.
+- **Area warga**: `verifyWargaPage()` baru di `src/lib/dal.ts` untuk gerbang
+  halaman paralel; halaman `(warga)` memakainya.
+- **Bukti**: `npm run check` hijau (469 test / 42 file) dan `npm run build`
+  hijau. Test domain pengaduan/pembangunan belum dibuat; halaman publik
+  pengaduan & pembangunan masih placeholder.
+
+---
+
+## 2026-10-24 — 2G: analisis & survei
+
+Masih di working tree (belum di-commit).
+
+- **Lapisan**: `features/survey/{domain,application,infrastructure,presentation}`.
+  Domain memuat tipe soal (`text`/`number`/`choice`), skema zod, parsing opsi,
+  validasi jawaban, dan rekap murni; use case menegakkan izin serta memastikan
+  survei induk milik desa sesi (tabel anak tidak menyimpan `village_id`).
+- **UI admin**: `/analisis-survei` (ringkasan + daftar + CRUD survei) dan
+  `/analisis-survei/[id]` (builder pertanyaan dengan opsi 2–10, responden dengan
+  field jawaban dinamis, rekap per soal). Jawaban wajib lengkap; pilihan
+  divalidasi terhadap opsi yang tersimpan, bukan nilai kiriman klien.
+- **Rekap**: distribusi + persentase untuk pilihan ganda, rata-rata/min/maks
+  untuk angka, dan contoh jawaban untuk isian.
+- **Skema**: migrasi `0023` menambah `survey_soal.pilihan` (JSON array).
+- **Seed**: modul `analisis-survei` diaktifkan di menu; operator `manage`,
+  sekdes/kades `read`. Jalankan `npm run db:seed`.
+- **Bukti**: `npm run check` hijau (469 test / 42 file, termasuk 20 test baru
+  `domain/survey.test.ts`) dan `npm run build` hijau. **Belum diuji ke DB**
+  karena MySQL dev tidak aktif; jalankan `npm run db:migrate` + `npm run db:seed`
+  lalu uji alur survei di browser.
+- **Batasan**: pengisian mandiri oleh warga, kategori/indikator/parameter ala
+  OpenSID, serta impor/ekspor respons belum tersedia.
+
+## 2026-10-24 — 2D: buku administrasi desa (Bumindes)
+
+Masih di working tree (belum di-commit).
+
+- **Lapisan**: `domain/bumindes.ts` (katalog buku inti, skema zod item, helper
+  nomor urut), `application/use-cases.ts` (izin `read/update/delete` + tenant),
+  `presentation/actions.ts` kini hanya memanggil use case. `/bumindes`,
+  `/bumindes/buku-administrasi`, dan halaman detail tidak lagi mengimpor
+  repository/db.
+- **Katalog buku inti**: A1–A8 (administrasi umum), B1–B5 (penduduk induk,
+  KTP/KK, mutasi, rekapitulasi, sementara), E1 (tanah di desa). Seed
+  idempoten: kode bawaan lama ditata ulang lebih dulu (`B1` Tanah Kas Desa →
+  `A5`, `C1` Agenda → `A6`, `C2` Ekspedisi → `A7`, `D1` Tanda Tangan → `A8`,
+  `B2` Tanah di Desa → `E1`) tanpa melepas item, lalu buku yang belum ada
+  ditambahkan. Desa baru langsung mendapat seluruh katalog.
+- **CRUD item**: dialog tambah/ubah (nomor urut, tanggal, uraian, keterangan),
+  hapus berkonfirmasi, nomor urut berikutnya disarankan otomatis. Keunikan
+  nomor urut diperiksa server per (desa, buku) dan ditolak sebagai konflik;
+  indeks unik DB belum dipasang karena data lama mungkin sudah berisi nomor
+  ganda.
+- **Hak akses**: operator mendapat `manage` untuk modul `bumindes` agar dapat
+  menghapus item (sebelumnya `write` sehingga hapus hanya bisa super admin).
+  Jalankan `npm run db:seed` agar grant ini berlaku.
+- **Bukti**: `npm run check` hijau (449 test / 41 file, termasuk 13 test baru
+  `domain/bumindes.test.ts`) dan `npm run build` hijau. **Belum diverifikasi
+  ke DB** karena MySQL dev tidak aktif saat pengerjaan; uji reconcile seed pada
+  desa yang sudah punya buku lama masih perlu dilakukan setelah DB hidup.
+
 ## 2026-10-24 — 2C: akun warga (NIK + PIN) & layanan mandiri
 
 Masih di working tree (belum di-commit); status dokumen otoritatif sudah

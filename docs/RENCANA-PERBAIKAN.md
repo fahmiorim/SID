@@ -76,14 +76,18 @@ Status: **SELESAI** — check + build hijau, tree bersih (commit `07268d1`..`98f
 Tujuan: wajah aplikasi selesai lebih dulu. Semua halaman publik dibangun
 strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 
-> **Catatan P1.3 (23 Okt 2026):** halaman publik gelombang 1 memakai slot tema;
-> `/desa/apbdes`, `/desa/statistik`, `/desa/dokumen`, `/desa/status-des`,
-> `/desa/surat`, `/desa/analisis-survei`, dan `/desa/idm-sdgs` sudah lewat use
-> case. `/desa/kelompok` dan `/desa/inventaris` ditambahkan; widget teks tampil
-> di beranda; 404/error publik tersedia. **Sisa:** beranda, berita, galeri,
-> profil, pemerintahan, dan bantuan masih mengimpor repository langsung, dan
-> `/desa/pertanahan` masih query `db` mentah — perlu dirapikan ke use case.
-> Test integrasi HTTP juga belum ada.
+> **Catatan P1.3 (diperbarui 24 Okt 2026):** halaman publik gelombang 1 memakai
+> slot tema; `/desa/apbdes`, `/desa/statistik`, `/desa/dokumen`,
+> `/desa/status-des`, `/desa/surat`, `/desa/analisis-survei`, `/desa/idm-sdgs`,
+> `/desa/kelompok`, dan `/desa/inventaris` sudah lewat use case. Widget teks
+> tampil di beranda; 404/error publik tersedia. **Perbarui 24 Okt:** sisa
+> halaman yang masih mengimpor repository langsung telah dirapikan — beranda,
+> berita, galeri, profil, pemerintahan, bantuan, dan halaman statis membaca
+> lewat use case `features/publik/application/konten-publik.ts`,
+> `bantuan/application/publik-use-cases.ts`, dan `pertanahan-publik.ts`
+> (tidak ada lagi query `db` mentah di halaman publik). Placeholder
+> (pembangunan, pengaduan, peta) tetap menunggu backend. Test integrasi HTTP
+> juga belum ada.
 
 ### 1A. Fondasi publik
 
@@ -405,11 +409,23 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
 ### 2D. Bumindes (4 hari)
 
-- [ ] Layer `domain` + `application`; presentation tidak impor `infrastructure`.
-- [ ] CRUD item buku; validasi nomor urut unik.
-- [ ] Lengkapi buku inti: administrasi umum, penduduk induk, KTP/KK, mutasi,
-      rekapitulasi, tanah desa, inventaris kekayaan.
-- [ ] Test.
+- [x] Layer `domain` + `application`; presentation tidak impor `infrastructure`.
+      `features/bumindes/domain/bumindes.ts` (katalog + skema zod + helper),
+      `application/use-cases.ts` (izin + tenant scope), repository hanya di
+      `infrastructure/`. `/bumindes` dan halaman detail memanggil use case.
+- [x] CRUD item buku; validasi nomor urut unik. Tambah/ubah lewat
+      `BukuItemFormDialog`, hapus berkonfirmasi lewat `BukuItemRowActions`.
+      Keunikan diperiksa server per (desa, buku) — `nomorUrutTerpakai` — dan
+      dilaporkan sebagai konflik. Indeks unik DB belum dipasang karena data
+      lama mungkin sudah berisi nomor ganda.
+- [x] Lengkapi buku inti: administrasi umum (A1–A8), penduduk induk, KTP/KK,
+      mutasi, rekapitulasi, penduduk sementara (B1–B5), tanah desa (E1).
+      Katalog di `BUKU_INTI`; seed menata ulang kode bawaan lama (mis. `C1`
+      Agenda → `A6`) tanpa melepas item yang sudah tercatat, lalu menambah buku
+      yang belum ada secara idempoten. **Isi buku masih manual** — sinkronisasi
+      otomatis dari data penduduk belum dibuat.
+- [x] Test: `domain/bumindes.test.ts` (13 test — katalog, skema item, nomor
+      urut berikutnya).
 
 ### 2E. Persuratan: sisa gap (8 hari)
 
@@ -433,8 +449,18 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
 ### 2G. Analisis/survei (5 hari)
 
-- [ ] Modul `survey` penuh: builder soal, responden, jawaban, rekap.
-- [x] Grant & modul seed konsisten.
+- [x] Modul `survey` penuh: builder soal, responden, jawaban, rekap.
+      `features/survey/{domain,application,infrastructure,presentation}`.
+      `/analisis-survei` berisi daftar + CRUD survei; `/analisis-survei/[id]`
+      berisi builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
+      responden dengan jawaban dinamis, dan rekap per soal (distribusi +
+      persentase, rata-rata/min/maks, contoh jawaban teks). Jawaban wajib
+      lengkap; pilihan divalidasi terhadap opsi yang tersimpan pada soal.
+      Migrasi `0023` menambah `survey_soal.pilihan`.
+      *Belum: pengisian mandiri oleh warga, kategori/indikator/parameter ala
+      OpenSID (Fase 3F), dan impor/ekspor respons.*
+- [x] Grant & modul seed konsisten: modul `analisis-survei` diaktifkan di menu;
+      operator `manage`, sekdes/kades `read` (berlaku setelah `npm run db:seed`).
 
 **Selesai bila:** setiap menu admin membuka fitur yang benar-benar bisa dipakai
 end-to-end; tidak ada action tanpa UI; `npm run check` hijau.
@@ -464,13 +490,19 @@ ketergantungan halaman publik.
 ### 3C. Pembangunan (2 minggu)
 
 - [ ] Proyek pembangunan: rencana, realisasi, dokumentasi foto, hasil.
+      *(Skema `pembangunan_proyek` + `pembangunan_dokumentasi` sudah dibuat di
+      migrasi `0024`; backend & UI belum.)*
 - [ ] Integrasi ke buku pembangunan & halaman publik.
 
 ### 3D. Pengaduan warga (1 minggu)
 
-- [ ] Warga kirim pengaduan (dari layanan mandiri), admin tanggapi,
-      status, kategori, lampiran.
-- [ ] Halaman publik pengaduan.
+- [x] Backend pengaduan: skema `pengaduan` (migrasi `0024`), domain
+      (`features/pengaduan/domain/pengaduan.ts`), use case + kirim warga
+      (`application/use-cases.ts`, `kirim-pengaduan.ts`), media kategori
+      `pengaduan`, dan Server Actions. *(Belum ada UI — klaim "berfungsi"
+      menunggu halaman + test; fitur belum diaktifkan di menu.)*
+- [ ] UI admin pengaduan (daftar, tanggapan, status, publikasi).
+- [ ] Halaman publik pengaduan (`/desa/pengaduan`) + form kirim warga.
 
 ### 3E. Dokumen, produk hukum, surat dinas (2 minggu)
 
@@ -648,20 +680,21 @@ web publik → admin berfungsi → paritas OpenSID → multi-desa.
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Selesai** | Build hijau, tree bersih, migrasi ter-commit |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan CRUD CMS (menu/widget/slider/dokumen) selesai; 3 halaman publik (Pembangunan, Pengaduan, Peta) masih placeholder |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris (CRUD + mutasi berjenjang), perangkat, surat, keuangan, CRUD CMS, dan **layanan mandiri warga (NIK+PIN)** selesai; bumindes, analisis, dan sisa persuratan belum |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Inventaris, perangkat, surat, keuangan, CRUD CMS, **layanan mandiri warga (NIK+PIN)**, **bumindes**, dan **survei** selesai; sisa 2E persuratan (template, TTE) dan cetak 2F |
 | 3 — Paritas OpenSID T1+T2 | 🔴 **Belum dimulai** | 0 dari ~30 item dicentang |
 | 4 — Sambungkan web publik ke modul | 🔴 **Belum dimulai** | Hanya placeholder, tidak ada backend |
 | 5 — Multi-desa | 🔴 **Belum dimulai** | Super-admin page = mockup HTML statis, untracked, tanpa backend |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum dimulai** | Tidak ada bukti audit keamanan |
 
-**Keseluruhan: ±20%** (Fase 0, sebagian besar Fase 1, dan separuh Fase 2).
+**Keseluruhan: ±25%** (Fase 0, sebagian besar Fase 1, dan sebagian besar Fase 2).
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
 1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar belum dibuat (baru tautan teks).
-2. Sebagian halaman publik masih mengimpor repository langsung (beranda,
-   berita, galeri, profil, pemerintahan, bantuan) dan `/desa/pertanahan` masih
-   query `db` mentah — melanggar konvensi use case.
-3. RBAC: seed modul CMS dan role `super-admin` sudah ditambahkan; halaman
+2. ~~Sebagian halaman publik masih mengimpor repository langsung~~ —
+   **selesai**: beranda, berita, galeri, profil, pemerintahan, bantuan,
+   halaman statis, dan pertanahan kini lewat use case publik; tidak ada lagi
+   query `db` mentah di halaman publik.
+3. RBAC: slug resource `pengaduan` + `pembangunan` sudah ditambahkan; halaman
    super-admin masih mockup dan belum menjadi fitur.
 4. Route typo `pertanaha` → `pertanahan` (sudah diperbaiki).
 5. ~~Halaman statistik publik hardcoded `"0"`~~ — **selesai**: memakai

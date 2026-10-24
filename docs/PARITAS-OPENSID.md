@@ -36,15 +36,15 @@ Legenda status proyek kita:
 | Pemerintahan | 8 | 3 | 2 | 3 |
 | Persuratan | 7 | 3 | 2 | 2 |
 | Keuangan | 6 | 4 | 1 | 1 |
-| Bumindes | 11 | 0 | 1 | 10 |
+| Bumindes | 11 | 2 | 5 | 4 |
 | Pembangunan | 1 | 0 | 0 | 1 |
-| Layanan mandiri & warga | 10 | 4 | 3 | 3 |
-| Analisis & statistik | 3 | 0 | 2 | 1 |
-| Web publik | 21 | 8 | 5 | 8 |
+| Layanan mandiri & warga | 10 | 4 | 4 | 2 |
+| Analisis & statistik | 3 | 0 | 3 | 0 |
+| Web publik | 21 | 8 | 6 | 7 |
 | Sistem & operasional | 9 | 2 | 2 | 5 |
-| **Total** | **92** | **30** | **18** | **44** |
+| **Total** | **92** | **32** | **24** | **36** |
 
-**Paritas kasar saat ini: ±42%** (hitung ✅ penuh + setengah 🟡). Angka ini
+**Paritas kasar saat ini: ±48%** (hitung ✅ penuh + setengah 🟡). Angka ini
 dihitung ulang 24 Oktober 2026 langsung dari baris matriks; jumlah ✅ + 🟡 + 🔴
 per kategori harus sama dengan kolom total. Untuk "tidak kalah" pada operasi
 harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
@@ -84,6 +84,25 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 > disanitasi saat simpan + render. 404/error publik memakai konvensi Next 16.
 > Smoke test produksi: seluruh halaman publik utama 200, tautan internal tanpa
 > 404.
+>
+> Perbaikan 24 Okt 2026 (sore): halaman publik sisa (beranda, berita, galeri,
+> profil, pemerintahan, bantuan, halaman statis, pertanahan) kini lewat use
+> case — tidak ada lagi query `db` mentah. Backend pengaduan (3D) siap: skema
+> `pengaduan`, domain, kirim warga, media `pengaduan`; UI menyusul. Skema
+> pembangunan (3C) dibuat di migrasi `0024`; backend belum.
+>
+> Perbaikan 2G 24 Okt 2026: **survei warga bisa dipakai** — `/analisis-survei`
+> punya CRUD survei, builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
+> pencatatan responden dengan jawaban dinamis, dan rekap per soal (distribusi
+> persentase, rata-rata/min/maks, contoh jawaban teks). Modul diaktifkan di menu
+> dan migrasi `0023` menambah `survey_soal.pilihan`. Belum: pengisian mandiri
+> warga, kategori/indikator/parameter OpenSID, impor/ekspor respons.
+>
+> Perbaikan 2D 24 Okt 2026: **buku administrasi desa bisa dipakai** — katalog
+> buku inti (A1–A8 administrasi umum, B1–B5 penduduk, E1 tanah desa) disiapkan
+> idempoten dan kode bawaan lama ditata ulang tanpa melepas item; item buku
+> punya CRUD dengan nomor urut unik per buku. Isi buku penduduk masih manual
+> (sinkronisasi dari data penduduk belum ada).
 >
 > Perbaikan 2C 24 Okt 2026: **layanan mandiri warga berjalan end-to-end** — akun
 > NIK + PIN dibuat/direset operator (PIN tampil sekali, wajib diganti), login
@@ -168,14 +187,14 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Buku administrasi umum | `controllers/Bumindes_*.php` | 🟡 | **P0** |
-| Buku penduduk induk | `Bumindes_penduduk_induk` | 🔴 | P1 |
-| Buku penduduk KTP/KK | `Bumindes_penduduk_ktpkk` | 🔴 | P1 |
-| Buku mutasi penduduk | `Bumindes_penduduk_mutasi` | 🔴 | P1 |
-| Buku rekapitulasi penduduk | `Bumindes_penduduk_rekapitulasi` | 🔴 | P1 |
-| Buku penduduk sementara | `Bumindes_penduduk_sementara` | 🔴 | P1 |
+| Buku administrasi umum | `controllers/Bumindes_*.php` | ✅ | — |
+| Buku penduduk induk | `Bumindes_penduduk_induk` | 🟡 | P1 (buku & CRUD ada; isi manual) |
+| Buku penduduk KTP/KK | `Bumindes_penduduk_ktpkk` | 🟡 | P1 (buku & CRUD ada; isi manual) |
+| Buku mutasi penduduk | `Bumindes_penduduk_mutasi` | 🟡 | P1 (buku & CRUD ada; isi manual) |
+| Buku rekapitulasi penduduk | `Bumindes_penduduk_rekapitulasi` | 🟡 | P1 (buku & CRUD ada; isi manual) |
+| Buku penduduk sementara | `Bumindes_penduduk_sementara` | 🟡 | P1 (buku & CRUD ada; isi manual) |
 | Buku rencana & kegiatan pembangunan | `Bumindes_rencana_pembangunan`, `Bumindes_kegiatan_pembangunan` | 🔴 | P1 |
-| Buku tanah desa & tanah kas | `Bumindes_tanah_desa`, `Bumindes_tanah_kas_desa` | 🔴 | P1 |
+| Buku tanah desa & tanah kas | `Bumindes_tanah_desa`, `Bumindes_tanah_kas_desa` | ✅ | — |
 | Buku kader | `Bumindes_kader` | 🔴 | P2 |
 | Buku arsip | `Bumindes_arsip` | 🔴 | P2 |
 | Buku hasil pembangunan | `Bumindes_hasil_pembangunan` | 🔴 | P2 |
@@ -195,7 +214,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Pengajuan surat warga | `fmandiri/Surat.php` | ✅ | — |
 | Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
 | Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
-| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🔴 | P1 |
+| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend siap: skema, domain, kirim warga, media; UI admin/publik menyusul) |
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |
@@ -205,7 +224,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
-| Analisis (kategori, indikator, parameter, respon, laporan) | `Modules/Analisis` (19 file + 47 view) | 🔴 | P1 |
+| Analisis (kategori, indikator, parameter, respon, laporan) | `Modules/Analisis` (19 file + 47 view) | 🟡 | P1 (survei sederhana: builder soal, responden, rekap; kategori/indikator belum) |
 | Statistik penduduk & bantuan | `controllers/Statistik.php`, `Statistik_bantuan.php` | 🟡 | P1 |
 | IDM & SDGs | `controllers/Status_desa.php`, `fweb/{Idm,Sdgs}` | 🟡 | P2 |
 
@@ -220,8 +239,8 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Dokumen & produk hukum/peraturan | `fweb/{InformasiPublik,Embed}` | 🟡 | P1 |
 | Statistik publik | `fweb/Statistik` | 🟡 | P1 |
 | Peta & wilayah administratif | `fweb/{Peta,WilayahAdministratif}` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
-| Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
-| Pengaduan publik | `fweb/Pengaduan` | 🔴 | P1 (halaman masih placeholder, tanpa backend) |
+| Pembangunan publik | `fweb/Pembangunan` | 🔴 | P1 (halaman masih placeholder; skema proyek sudah ada di migrasi `0024`) |
+| Pengaduan publik | `fweb/Pengaduan` | 🟡 | P1 (backend pengaduan siap; halaman masih placeholder) |
 | Kelompok & lembaga | `fweb/{Kelompok,Lembaga}` | 🟡 | P1 (halaman publik ada; anggota lembaga menyusul) |
 | Inventaris publik | `fweb/Inventaris` | ✅ | — |
 | APBDes publik | tema `partials/apbdesa` | ✅ | — |

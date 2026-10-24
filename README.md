@@ -115,7 +115,8 @@ src/
 ├─ features/                 # kode per-domain (lihat ARCHITECTURE.md)
 │  ├─ auth/  bantuan/  bumindes/  desa/  inventaris/  keluarga/  kelompok/
 │  ├─ keuangan/  konten/  layanan-mandiri/  modul/  navigation/  penduduk/
-│  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  warga/  wilayah/
+│  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  survey/  warga/
+│  ├─ wilayah/
 ├─ themes/                   # (target) tema web publik yang dipasang saat build
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
@@ -209,8 +210,10 @@ Status lengkap dan urutan fase ada di
 8. **Layanan Mandiri** ✅ — akun warga NIK + PIN dibuat/direset operator,
    dasbor warga, pengajuan surat dengan isian dinamis + unggah syarat, riwayat
    status, dan unduh PDF surat.
-9. **BUMDes** 🟡 — unit & item ada; action belum terhubung ke UI.
-10. **Analisis & Survei** 🟡 — kerangka skema ada; UI masih placeholder.
+9. **Buku Administrasi Desa** ✅ — katalog buku inti (umum, penduduk, tanah) +
+   CRUD item dengan nomor urut unik per buku.
+10. **Analisis & Survei** ✅ — CRUD survei, builder pertanyaan (isian, angka,
+    pilihan ganda), responden dengan jawaban dinamis, dan rekap per soal.
 11. **Konten Situs Publik** 🟡 — CRUD admin menu/widget/slider/dokumen selesai;
     sebagian halaman publik masih placeholder atau query langsung.
 

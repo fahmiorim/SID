@@ -71,7 +71,8 @@ Fitur yang sudah dibangun saat ini:
 | `kelompok`       | Kelompok masyarakat & lembaga desa (single-table inheritance), kategori, keanggotaan berjabatan. |
 | `bantuan`        | Program bantuan, peserta penduduk/KK/RTM, snapshot kartu, sebaran wilayah. |
 | `inventaris`     | Aset desa, kategori, mutasi/penghapusan, persetujuan berjenjang.       |
-| `bumindes`       | BUMDes: unit usaha (buku) dan item/katalog.                            |
+| `bumindes`       | Buku administrasi desa: katalog buku inti, item buku (CRUD), nomor urut unik per buku. |
+| `survey`         | Survei warga: builder pertanyaan (isian/angka/pilihan), responden, jawaban, dan rekap. |
 | `layanan-mandiri`| Permohonan surat: pengajuan warga (isian dinamis + unggah syarat), riwayat, dan pengelolaan operator. Halaman admin di `/permohonan-surat`; area warga di `/layanan-mandiri/*`. |
 | `warga`          | Akun warga (NIK + PIN): pembuatan/reset oleh operator, kredensial sekali tampil, ubah PIN, profil warga. |
 | `publik`         | Situs publik: konten (berita, galeri, profil, perangkat, dokumen, menu, slider, widget, halaman), media sadar-tenant, sanitasi HTML, dan mesin tema per desa. |
