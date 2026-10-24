@@ -28,6 +28,12 @@ export const villages = mysqlTable("villages", {
 
   logo: varchar("logo", { length: 255 }),
 
+  /** Gambar tanda tangan Kepala Desa (jalur media publik relatif). */
+  signature: varchar("signature", { length: 255 }),
+
+  /** Gambar stempel desa (jalur media publik relatif). */
+  stamp: varchar("stamp", { length: 255 }),
+
   /**
    * Domain publik desa (mis. `desa-sukamaju.id`). Unik agar satu host hanya
    * menunjuk satu desa. `NULL` = belum dipetakan (mode pengembangan).

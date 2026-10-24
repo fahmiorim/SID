@@ -6,6 +6,30 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
 
 ---
 
+## 2026-10-24 — 2E chip 4: logo, tanda tangan, dan stempel pada surat cetak/PDF
+
+- **Skema**: kolom `villages.signature` & `villages.stamp`
+  (migration `0025_cheerful_purple_man.sql`, sudah `db:migrate`; snapshot
+  drizzle ikut diperbarui). Domain/kernel desa: `IdentitasDesa.tandaTangan`
+  & `.stempel` (domain) dipetakan ke kolom DB `signature`/`stamp`.
+- **Unggahan**: Pengaturan > Desa (`desa-form.tsx`) kini punya unggah File
+  logo/tanda tangan/stempel (kategori media `umum`, PNG/JPG/WebP) di samping
+  isian jalur manual. `updateIdentitas(input, unggahan)` menyimpan berkas lewat
+  `simpanBerkasMedia` dan mengganti kolom terkait; `desa/presentation/actions.ts`
+  membaca File dari FormData (`logoBerkas`, `tandaTanganBerkas`, `stempelBerkas`).
+- **Render cetak (HTML)**: kop surat menampilkan logo (kiri, absolute), blok
+  tanda tangan menampilkan gambar ttd di atas baris nama dan stempel menimpa
+  sisi kirinya (`/[id]/cetak/page.tsx`, URL memakai `urlMedia`).
+- **Render PDF** (`surat-pdf.ts`): loader `muatBytesGambar` (media relatif dari
+  `bacaMedia`, atau fetch bila berupa URL http) + `tanamGambar` (hanya PNG/JPG,
+  lain dilewatkan dengan aman); logo digambar kiri kop, ttd di atas nama,
+  stempel menimpa area ttd.
+
+Docs sinkron: `RENCANA-PERBAIKAN.md` §2E item template/placeholder gambar ✅.
+Lint (3 warning `<img>` sesuai pola themes, 0 error)/test/typecheck/build hijau.
+
+---
+
 ## 2026-10-24 — 2E chip 3: pengikut surat & penduduk luar desa
 
 - **Domain** `features/surat/domain/pengikut.ts` (+ test `pengikut.test.ts`,

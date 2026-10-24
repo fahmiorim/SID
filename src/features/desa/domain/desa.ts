@@ -25,7 +25,11 @@ export const desaFormSchema = z.object({
   ),
   telepon: optionalText(30),
   website: optionalText(150),
-  logo: optionalText(150),
+  logo: optionalText(255),
+  /** Jalur media gambar tanda tangan Kepala Desa (kategori umum). */
+  tandaTangan: optionalText(255),
+  /** Jalur media gambar stempel desa (kategori umum). */
+  stempel: optionalText(255),
   /** 1–4; lihat `PENOMORAN_SURAT_MODES` di domain surat. */
   penomoranSurat: z.coerce.number().int().min(1).max(4).default(2),
 });
@@ -55,6 +59,10 @@ export interface IdentitasDesaDTO {
   telepon: string | null;
   website: string | null;
   logo: string | null;
+  /** Jalur media gambar tanda tangan Kepala Desa. */
+  tandaTangan: string | null;
+  /** Jalur media gambar stempel desa. */
+  stempel: string | null;
   penomoranSurat: number;
 }
 

@@ -221,9 +221,64 @@ export function DesaForm({ desa, canManage }: DesaFormProps) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="logo">Logo (URL)</Label>
-              <Input id="logo" name="logo" defaultValue={desa?.logo ?? ""} maxLength={150} />
+              <Label htmlFor="logo">Logo (URL media)</Label>
+              <Input id="logo" name="logo" defaultValue={desa?.logo ?? ""} maxLength={255} />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="tandaTangan">Tanda Tangan Kepala Desa (URL media)</Label>
+              <Input
+                id="tandaTangan"
+                name="tandaTangan"
+                defaultValue={desa?.tandaTangan ?? ""}
+                maxLength={255}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="stempel">Stempel Desa (URL media)</Label>
+              <Input
+                id="stempel"
+                name="stempel"
+                defaultValue={desa?.stempel ?? ""}
+                maxLength={255}
+              />
+            </div>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              {
+                field: "logoBerkas",
+                label: "Unggah Logo",
+                hint: "PNG/JPG/WebP, tampil di kop surat.",
+              },
+              {
+                field: "tandaTanganBerkas",
+                label: "Unggah Tanda Tangan",
+                hint: "PNG transparan, muncul di blok ttd surat.",
+              },
+              {
+                field: "stempelBerkas",
+                label: "Unggah Stempel",
+                hint: "PNG transparan, menimpa area ttd surat.",
+              },
+            ].map((item) => (
+              <div key={item.field} className="space-y-2">
+                <Label htmlFor={item.field}>{item.label}</Label>
+                <Input
+                  id={item.field}
+                  name={item.field}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                />
+                <p className="text-xs text-muted-foreground">
+                  {item.hint} Unggahan mengganti kolom URL terkait.
+                </p>
+              </div>
+            ))}
+            <p className="text-xs text-muted-foreground md:col-span-3">
+              Jalur media berbentuk <code>&lt;idDesa&gt;/umum/&lt;berkas&gt;</code> (hasil unggahan
+              kategori umum); disajikan lewat <code>/api/publik/media/</code> dan dipakai kop surat
+              cetak/PDF, tanda tangan, dan stempel.
+            </p>
           </div>
         </CardContent>
       </Card>

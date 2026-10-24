@@ -1,5 +1,13 @@
-import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from "pdf-lib";
+import {
+  PDFDocument,
+  rgb,
+  StandardFonts,
+  type PDFFont,
+  type PDFImage,
+  type PDFPage,
+} from "pdf-lib";
 
+import { bacaMedia } from "@/features/publik/infrastructure/media-storage";
 import { formatTanggalIndonesia } from "@/features/surat/domain/surat";
 
 export interface SuratPdfIdentity {
@@ -13,6 +21,12 @@ export interface SuratPdfIdentity {
   emailDesa: string | null;
   namaKepalaDesa: string | null;
   nipKepalaDesa: string | null;
+  /** Jalur media gambar logo desa (opsional; dipakai di kop). */
+  logo?: string | null;
+  /** Jalur media gambar tanda tangan Kepala Desa (opsional). */
+  tandaTangan?: string | null;
+  /** Jalur media gambar stempel desa (opsional; menimpa area ttd). */
+  stempel?: string | null;
 }
 
 export interface SuratPdfInput {
@@ -72,10 +86,68 @@ function centered(page: PDFPage, text: string, y: number, font: PDFFont, size: n
   page.drawText(text, { x: (PAGE_WIDTH - width) / 2, y, size, font, color: rgb(0, 0, 0) });
 }
 
+// ── Muat gambar desa (logo / ttd / stempel) ────────────────────────────────
+
+/**
+ * Baca bytes gambar dari jalur berbentuk:
+ * - `<villageId>/<kategori>/<berkas>` → langsung dari penyimpanan media;
+ * - URL http(s) → diambil lewat fetch (fallback jalur media lama yang
+ *   berupa tautan lengkap).
+ *
+ * Mengembalikan null bila gagal/kosong — gambar tidak wajib dan PDF tetap
+ * dibuat tanpa itu.
+ */
+async function muatBytesGambar(jalur: string | null | undefined): Promise<Buffer | null> {
+  if (!jalur || jalur.trim() === "") return null;
+
+  try {
+    if (/^https?:\/\//i.test(jalur)) {
+      const respons = await fetch(jalur);
+      if (!respons.ok) return null;
+      return Buffer.from(await respons.arrayBuffer());
+    }
+
+    const bersih = jalur.replace(/^\/+/, "");
+    return await bacaMedia(bersih);
+  } catch {
+    return null;
+  }
+}
+
+/** Tanam gambar PNG/JPG (?webp/gif tidak didukung pdf-lib → dilewat). */
+async function tanamGambar(pdf: PDFDocument, bytes: Buffer | null): Promise<PDFImage | null> {
+  if (!bytes || bytes.length === 0) return null;
+
+  const GUN = 0x89; // PNG signature: 89 50 4E 47
+  const adalahPng =
+    bytes.length > 4 &&
+    bytes[0] === GUN &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47;
+  const adalahJpg = bytes.length > 2 && bytes[0] === 0xff && bytes[1] === 0xd8;
+
+  try {
+    if (adalahPng) return await pdf.embedPng(bytes);
+    if (adalahJpg) return await pdf.embedJpg(bytes);
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.TimesRoman);
   const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+
+  // Muat gambar desa (dapat null → dicetak tanpa gambar terkait).
+  const [logo, ttd, stamp] = await Promise.all([
+    tanamGambar(pdf, await muatBytesGambar(input.desa.logo)),
+    tanamGambar(pdf, await muatBytesGambar(input.desa.tandaTangan)),
+    tanamGambar(pdf, await muatBytesGambar(input.desa.stempel)),
+  ]);
 
   let page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - MARGIN;
@@ -114,6 +186,18 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
     color: rgb(0, 0, 0),
   });
   y -= 30;
+
+  // Logo desa di kiri kop (jika tersedia).
+  if (logo) {
+    const tinggi = 48;
+    const lebar = Math.min((logo.width / logo.height) * tinggi, 60);
+    page.drawImage(logo, {
+      x: MARGIN,
+      y: PAGE_HEIGHT - MARGIN - 58,
+      width: lebar,
+      height: tinggi,
+    });
+  }
 
   centered(page, clean(input.jenisNama.toUpperCase()), y, bold, 12);
   y -= 16;
@@ -163,6 +247,34 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
 
   const headName = clean(desa.namaKepalaDesa ?? "..............................");
   const headWidth = bold.widthOfTextAtSize(headName, 11);
+
+  // Gambar tanda tangan (di atas baris nama) & stempel (menimpa area ttd).
+  const kolomTtdAwal = PAGE_WIDTH - MARGIN - Math.max(headWidth, 120);
+  const gambarTtdX = kolomTtdAwal + 40;
+  const gambarTtdTinggi = 40;
+
+  if (ttd) {
+    const lebar = Math.min((ttd.width / ttd.height) * gambarTtdTinggi, 140);
+    page.drawImage(ttd, {
+      x: gambarTtdX - lebar / 2,
+      y: y - 46,
+      width: lebar,
+      height: gambarTtdTinggi,
+    });
+  }
+
+  if (stamp) {
+    const tinggiStamp = 70;
+    const lebar = Math.min((stamp.width / stamp.height) * tinggiStamp, 90);
+    page.drawImage(stamp, {
+      x: gambarTtdX - lebar - 10,
+      y: y - 68,
+      width: lebar,
+      height: tinggiStamp,
+      opacity: 0.9,
+    });
+  }
+
   page.drawText(headName, { x: PAGE_WIDTH - MARGIN - headWidth, y, size: 11, font: bold });
   page.drawLine({
     start: { x: PAGE_WIDTH - MARGIN - Math.max(headWidth, 120), y: y - 3 },

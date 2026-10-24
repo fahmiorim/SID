@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { urlMedia } from "@/features/publik/domain/format";
 import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
 import { formatTanggalIndonesia, LETTER_STATUS_LABELS } from "@/features/surat/domain/surat";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
@@ -36,6 +37,10 @@ export default async function CetakSuratPage({
     desa.namaDesa ? `DESA ${desa.namaDesa.toUpperCase()}` : "PEMERINTAH DESA",
   ].filter((line): line is string => line !== null);
 
+  const logoUrl = urlMedia(desa.logo);
+  const ttdUrl = urlMedia(desa.tandaTangan);
+  const stempelUrl = urlMedia(desa.stempel);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
@@ -64,8 +69,16 @@ export default async function CetakSuratPage({
         </div>
       </div>
 
-      <article className="mx-auto max-w-[210mm] rounded-lg border bg-white p-10 text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:shadow-none">
-        <header className="border-b-4 border-double border-black pb-3 text-center">
+      <article className="mx-auto max-w-[210mm] rounded-lg border bg-white p-10 text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:text-black print:shadow-none">
+        <header className="relative border-b-4 border-double border-black pb-3 text-center">
+          {logoUrl ? (
+            // Logo desa di kiri kop surat (jika sudah diunggah).
+            <img
+              src={logoUrl}
+              alt={`Logo ${desa.namaDesa ?? "desa"}`}
+              className="absolute top-0 left-0 h-16 w-16 object-contain"
+            />
+          ) : null}
           {headerLines.map((line, index) => (
             <p
               key={line}
@@ -97,7 +110,24 @@ export default async function CetakSuratPage({
             Desa {desa.namaDesa ?? "..."}, {formatTanggalIndonesia(surat.letterDate)}
           </p>
           <p className="mt-1">Kepala Desa</p>
-          <div className="h-20" />
+          <div className="relative h-24">
+            {/* Tanda tangan terupload menimpa ruang kosong; stempel menimpa
+                di sisi kirinya (kosmetik: opacity agar tulisan terbaca). */}
+            {stempelUrl ? (
+              <img
+                src={stempelUrl}
+                alt="Stempel desa"
+                className="absolute bottom-0 -left-16 h-20 opacity-80"
+              />
+            ) : null}
+            {ttdUrl ? (
+              <img
+                src={ttdUrl}
+                alt={`Tanda tangan ${desa.namaKepalaDesa ?? "Kepala Desa"}`}
+                className="absolute bottom-2 left-1/2 h-14 -translate-x-1/2 object-contain"
+              />
+            ) : null}
+          </div>
           <p className="border-b border-black font-semibold">
             {desa.namaKepalaDesa ?? ".............................."}
           </p>

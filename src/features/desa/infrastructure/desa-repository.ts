@@ -27,6 +27,8 @@ export async function updateIdentitasDesa(id: number, input: DesaFormInput): Pro
       phone: blankToNull(input.telepon),
       website: blankToNull(input.website),
       logo: blankToNull(input.logo),
+      signature: blankToNull(input.tandaTangan),
+      stamp: blankToNull(input.stempel),
       penomoranSurat: input.penomoranSurat,
     })
     .where(eq(villages.id, id));
@@ -60,6 +62,10 @@ export interface IdentitasDesa {
   telepon: string | null;
   website: string | null;
   logo: string | null;
+  /** Jalur media gambar tanda tangan Kepala Desa. */
+  tandaTangan: string | null;
+  /** Jalur media gambar stempel desa. */
+  stempel: string | null;
   /** Domain publik desa (host tanpa protokol), bila sudah dipetakan. */
   domain: string | null;
   /** Mode penomoran surat layanan (1–4). */
@@ -84,6 +90,8 @@ const identitasColumns = {
   telepon: villages.phone,
   website: villages.website,
   logo: villages.logo,
+  tandaTangan: villages.signature,
+  stempel: villages.stamp,
   domain: villages.domain,
   penomoranSurat: villages.penomoranSurat,
 };

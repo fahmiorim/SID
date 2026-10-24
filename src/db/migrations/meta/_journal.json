@@ -176,6 +176,13 @@
       "when": 1792848852818,
       "tag": "0024_old_bulldozer",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1792853419328,
+      "tag": "0025_cheerful_purple_man",
+      "breakpoints": true
     }
   ]
 }
