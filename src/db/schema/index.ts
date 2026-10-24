@@ -21,6 +21,8 @@ export * from "./letter-requirements";
 export * from "./letter-types";
 export * from "./letters";
 export * from "./outgoing-letters";
+export * from "./pembangunan";
+export * from "./pengaduan";
 export * from "./permohonan-surat";
 export * from "./rbac";
 export * from "./reference";

@@ -19,7 +19,10 @@ export const surveySoal = mysqlTable("survey_soal", {
     .notNull()
     .references(() => survey.id, { onDelete: "cascade" }),
   pertanyaan: text("pertanyaan").notNull(),
+  /** `text` (isian), `number` (angka), atau `choice` (pilihan ganda). */
   tipe: varchar("tipe", { length: 20 }).default("text"),
+  /** Daftar pilihan (JSON array string) untuk soal bertipe `choice`. */
+  pilihan: text("pilihan"),
   urutan: int("urutan").default(0),
 });
 

@@ -1,0 +1,1 @@
+ALTER TABLE `survey_soal` ADD `pilihan` text;
