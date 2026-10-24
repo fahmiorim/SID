@@ -214,7 +214,7 @@ harian desa, target realistis adalah menutup seluruh 🔴 prioritas **P0** dan
 | Pengajuan surat warga | `fmandiri/Surat.php` | ✅ | — |
 | Dokumen warga | `fmandiri/Dokumen.php` | ✅ | — |
 | Pesan warga ↔ desa | `fmandiri/Pesan.php` | 🟡 | P2 (halaman menampilkan catatan operator; belum dua arah) |
-| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend + UI admin selesai di `/pengaduan`; halaman publik & form warga menyusul) |
+| Pengaduan warga | `controllers/Pengaduan_admin.php`, `fweb/Pengaduan` | 🟡 | P1 (backend + UI admin selesai di `/pengaduan`; modul belum di-seed ke menu/grant, route lampiran belum ada, halaman publik menyusul) |
 | Bantuan untuk warga | `fmandiri/Bantuan.php` | 🟡 | P2 |
 | Lapak / produk warga | `Modules/Lapak`, `fmandiri/{Lapak,Produk}.php` | 🔴 | P3 |
 | Kehadiran perangkat | `Modules/Kehadiran`, `fmandiri/Kehadiran_perangkat.php` | 🔴 | P3 |

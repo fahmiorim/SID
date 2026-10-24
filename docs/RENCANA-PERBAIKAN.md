@@ -506,6 +506,10 @@ ketergantungan halaman publik.
       (tanggapan/status), publikasi ke web (`setPublikPengaduan`), dan hapus.
       *(Bukti: `src/app/(admin)/pengaduan/page.tsx`,
       `presentation/components/pengaduan-{detail-dialog,row-actions}.tsx`.
+      **Dua celah saat audit 24 Okt:** (1) modul `pengaduan` belum masuk seed
+      `modules.ts`/`roles.ts`, sehingga menu admin & grant operator belum ada —
+      hanya super admin yang bisa membukanya; (2) tautan lampiran di dialog
+      menunjuk `/api/pengaduan/lampiran/*` yang **belum ada** (selalu 404).
       Uji alur di browser masih menunggu.)*
 - [ ] Halaman publik pengaduan (`/desa/pengaduan`) + form kirim warga
       (`publik-actions.ts` sudah disiapkan, belum di-wire ke halaman).
