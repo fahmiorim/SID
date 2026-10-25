@@ -51,6 +51,8 @@ export const RESOURCES = {
   database: "database",
   dsar: "dsar",
   pendapat: "pendapat",
+  daftarKontak: "daftar-kontak",
+  grupKontak: "grup-kontak",
   rtm: "rtm",
 } as const;
 

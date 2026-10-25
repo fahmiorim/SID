@@ -1,5 +1,6 @@
 export * from "./kesehatan";
 export * from "./pendapat";
+export * from "./kontak";
 /**
  * Titik kumpul definisi skema Drizzle.
  *
