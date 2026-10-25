@@ -1,4 +1,9 @@
 # Log Perkembangan
+ ## 2026-10-25 - Scope update OS-POP-009
+ 
+ - **Tidak dibutuhkan**: Modul vaksin/Covid (`OS-POP-009`) dikeluarkan dari scope karena tidak relevan saat ini. Diperbarui di `PARITAS-OPENSID.md` dan `RENCANA-PERBAIKAN.md`.
+ 
+ ---
 
 Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"

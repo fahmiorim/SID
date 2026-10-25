@@ -82,7 +82,7 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
  | OS-POP-006 | Sebagian | Modul DTKS tersedia di `/penduduk/dtks` dengan CRUD (dari RTM), status draf/terverifikasi, agregasi anggota, dan pencatatan petugas/responden. Gap: detail formulir (tanggapan/ekspor), lampiran, pengaturan program, laporan, dan E2E belum ada. |
  | OS-POP-007 | 🟡 Sebagian | Modul Suplemen tersedia di `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Gap: detail/form terdata, impor/ekspor, laporan, cetak, dan E2E belum ada. |
 | OS-POP-008 | 🔴 Belum ada | Tidak ditemukan modul KIA, ibu hamil, pemantauan anak, skor stunting, rekap, atau cetak. |
-| OS-POP-009 | 🔴 Belum ada | Tidak ditemukan modul vaksin/Covid, pendataan, status, rekap, atau publikasi khusus. |
+| OS-POP-009 | ⚪ Tidak dibutuhkan | Modul vaksin/Covid tidak diimplementasikan karena sudah tidak relevan saat ini (keluar dari scope). |
 | OS-POP-010 | 🟡 Sebagian | Halaman admin `/statistik/penduduk` memuat statistik gender, kelompok umur, agama, pendidikan, pekerjaan, status kawin, dan dusun dengan tabel L/P/total/% dan ringkasan total. Gap: cetak, ekspor CSV/Excel, dan E2E belum ada. |
 | OS-POP-011 | 🟡 Sebagian | Program bantuan memiliki CRUD, slug, sasaran, periode/status, asal dana, RBAC, UI, dan test domain; laporan keluaran serta E2E belum ditemukan. |
 | OS-POP-012 | 🟡 Sebagian | Peserta dapat ditambah/dihapus dengan kandidat sasaran tenant-aware dan snapshot kartu; impor/ekspor/cetak kartu serta E2E belum ditemukan. |
