@@ -4,6 +4,33 @@ Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
 
+## 2026-10-25 — quality gate dipulihkan
+
+- **Status dokumentasi**: `src/lib/docs-status.ts` menjadi model typed untuk
+  katalog 113 ID dan baseline kasar 92 modul; API `/api/docs-status` memakai
+  Route Handler Next.js yang valid; halaman admin menampilkan status tanpa
+  `any` atau scaffold kosong.
+- **TypeScript**: akses `Map.get()` dan item Bumindes yang sebelumnya
+  `undefined` sudah dijaga; `npm run typecheck` lulus.
+- **E2E**: dependensi `e2e` + `@e2e-dev/web`, script `npm run test:e2e`, config
+  yang menyalakan server lokal, dan smoke test API katalog tersedia. Bukti:
+  `npm run test:e2e -- tests/example.e2e.ts` lulus.
+- **Quality gate**: `npm run check` lulus (53 file, 540 test), `npm run build`
+  lulus, dan `npm run smoke` lulus pada build produksi (35 URL diperiksa:
+  26 wajib 200, 3 wajib 404, tautan internal tidak mati). Lint masih
+  melaporkan 5 warning non-blocking pada gambar cetak surat dan logger
+  notifikasi.
+
+- **Register paritas**: `PARITAS-OPENSID.md` memuat seluruh 113 ID katalog
+  tepat sekali dan tidak lagi memiliki ID `⚪`. Audit awal menghasilkan:
+  OS-POP 7 🟡/8 🔴, OS-WIL 1 🟡/7 🔴, OS-GOV 6 🟡/4 🔴, OS-SUR 13 🟡/1 🔴,
+  OS-FIN 12 🟡/1 🔴, OS-WEB 17 🟡/2 🔴, OS-WGA 7 🟡/4 🔴, OS-ANA 4 🟡/2 🔴,
+  OS-MOD 0 🟡/5 🔴, dan OS-OPS 7 🟡/5 🔴. Total: 74 🟡, 39 🔴, 0 ✅.
+- **Riset sistem/operasional**: RBAC, menu, media, API internal terbatas, dan
+  autentikasi dasar tersedia. Notifikasi terpusat, audit trail umum, backup,
+  plugin, sinkronisasi OpenDK, API komprehensif, dan provider eksternal belum
+  tersedia.
+
 ---
 
 ## 2026-10-25 — smoke test HTTP publik + daftar putih proxy dirapikan
@@ -15,22 +42,22 @@ untuk fitur yang hanya berupa placeholder tanpa backend.
   `/desa/berita/tidak-ada`), lalu menelusuri tautan internal dari setiap
   halaman HTML (maks. 200 URL) dan menggagalkan proses bila ada 404/5xx.
   `SMOKE_BASE_URL` dan `SMOKE_VERBOSE=1` opsional; keluar status 1 saat gagal.
-- **Hasil** build produksi `next start` (25 Okt 2026): **33 URL** diperiksa —
-  termasuk detail berita dan empat filter kategori — semua halaman 200, tiga
-  kasus 404 sesuai, tidak ada tautan mati.
-- **Proxy** `src/proxy.ts`: `/manifest.webmanifest` dan `/opengraph-image`
-  dikeluarkan dari `PUBLIC_FILES` karena berkasnya belum ada (sebelumnya
-  daftar putih menunjuk URL mati). Rencana pembuatan manifest/OG sebagai
-  metadata route dicatat di `RENCANA-PERBAIKAN.md` Fase 4.
-- **Docs sinkron**: `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md`
-  (tabel perintah); `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run
-  build` hijau (540 test / 53 file).
+- **Hasil verifikasi final** build produksi `next start` (25 Okt 2026):
+  **35 URL** diperiksa — 26 URL wajib (24 halaman publik + 2 metadata),
+  termasuk detail berita dan empat filter kategori; semua halaman 200, tiga
+  kasus 404 sesuai, dan tidak ada tautan mati.
+- **Proxy** `src/proxy.ts` pada keadaan final memasukkan
+  `/manifest.webmanifest` dan `/opengraph-image` ke `PUBLIC_FILES`, karena
+  keduanya sudah tersedia sebagai metadata route dinamis.
+- **Docs sinkron** pada commit saat entri ini dibuat:
+  `RENCANA-PERBAIKAN.md` §1A.1, §1G, Fase 4; `README.md` (tabel perintah);
+  dan `ARCHITECTURE.md` §11 (QA). `npm run check` + `npm run build` hijau
+  dengan 540 test / 53 file pada saat verifikasi tersebut.
 - **Manifest & OG per desa**: `src/app/manifest.ts` dan
-  `src/app/opengraph-image.tsx` — metadata route dinamis yang memakai
-  `getIdentitasFromRequest()` + `getTemaAktif()` (nama, keterangan, warna tema
-  mengikuti desa pemilik host; fallback umum bila host tak dikenal). Keduanya
-  dikembalikan ke `PUBLIC_FILES` di `src/proxy.ts`. Bukti 25 Okt 2026: manifest
-  200 `application/manifest+json` (Desa Contoh, `theme_color` `#1a7f4b`), OG 200
+  `src/app/opengraph-image.tsx` memakai `getIdentitasFromRequest()` +
+  `getTemaAktif()` (nama, keterangan, warna tema mengikuti desa pemilik host;
+  fallback umum bila host tak dikenal). Bukti 25 Okt 2026: manifest 200
+  `application/manifest+json` (Desa Contoh, `theme_color` `#1a7f4b`), OG 200
   `image/png` 1200x630 (37 KB), halaman publik memuat `<link rel="manifest">`
   dan `og:image`; `npm run smoke` lulus (26 URL wajib 200, 35 diperiksa).
 - **CI**: job `smoke` di `.github/workflows/ci.yml` — MySQL `mariadb:11`,

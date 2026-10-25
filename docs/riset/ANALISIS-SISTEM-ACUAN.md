@@ -1,4 +1,9 @@
-# Analisis Sistem Acuan & Rencana Rebuild ke Next.js 15+
+# Analisis Sistem Acuan OpenSID (Referensi Historis)
+
+> Dokumen ini bukan spesifikasi stack aktif. Rekomendasi Next.js 15, migrasi
+> `config_id`, OpenAPI, dan kompatibilitas data di dalamnya adalah keputusan
+> historis; gunakan `docs/ARCHITECTURE.md`, katalog, roadmap, dan matriks paritas
+> untuk keputusan proyek saat ini.
 
 > Objek analisis: sebuah aplikasi SID berbasis PHP (repositori sumber tempat kerja).
 > Tujuan dokumen: requirements + arsitektur target (Next.js App Router), bukan salinan kode PHP.

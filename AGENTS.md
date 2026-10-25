@@ -13,19 +13,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 Sebelum mengerjakan fitur, baca [`docs/README.md`](docs/README.md). Urutan acuan:
 
 1. [`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md) — fase, prioritas, status milestone.
-2. [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md) — status paritas fitur vs OpenSID.
-3. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — konvensi lapisan, skema, RBAC.
+2. [`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md) — seluruh ID scope dan keluaran yang wajib dipetakan.
+3. [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md) — status paritas per ID vs OpenSID.
+4. [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — konvensi lapisan, skema, RBAC, dan quality gate.
 
 Aturan:
 
 - **Jangan** memakai dokumen di `docs/arsip/` atau klaim "selesai" di komentar lama
   untuk menentukan status fitur. Dokumen arsip hanya jejak historis.
-- Klaim fitur "selesai" harus punya bukti: halaman/action yang terpakai + test.
-  Domain/action tanpa UI belum dianggap selesai.
-- Setelah mengubah perilaku fitur, perbarui `RENCANA-PERBAIKAN.md` dan/atau
+- Klaim fitur "selesai" harus punya bukti: halaman/action yang terpakai + test
+  dan ID katalog `OS-*`. Domain/action tanpa UI belum dianggap selesai.
+- Setiap perubahan fitur wajib memetakan ID katalog yang terdampak. Setelah
+  mengubah perilaku fitur, perbarui `RENCANA-PERBAIKAN.md` dan/atau
   `PARITAS-OPENSID.md` pada PR yang sama.
-- OpenSID (`D:\laragon\www\opensid`) adalah **acuan perilaku**, bukan sumber kode.
-  Lisensinya GPL v3 — jangan menyalin kode/aset; implementasi harus orisinal.
+- OpenSID (`/home/super/Projects/opensid`) adalah **acuan perilaku**, bukan
+  sumber kode. Lisensinya GPL v3 — jangan menyalin kode/aset; implementasi
+  harus orisinal.
 - `villageId` halaman publik berasal dari **host**, halaman admin dari **sesi**.
   Jangan menerima `villageId` dari input klien.
 - Sebelum commit: `npm run lint`, `npm run format:check`, `npm run test`,

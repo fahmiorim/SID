@@ -20,11 +20,17 @@ kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
    otomatis terlindungi. Pemeriksaan izin di halaman hanya untuk UX.
 3. **Satu sumber kebenaran.** Environment divalidasi sekali (`src/lib/env.ts`),
    slug modul dipusatkan (`src/features/rbac/domain/resources.ts`), nama
-   aplikasi di `src/lib/app-config.ts`.
+   aplikasi di `src/lib/app-config.ts`, dan scope fitur di
+   `docs/KATALOG-FITUR-OPENSID.md`.
 4. **Skema dirancang sendiri.** Tidak ada ketergantungan pada skema atau data
    sistem lain; nama tabel/kolom ditentukan demi kejelasan, bukan demi
    kompatibilitas (lihat §3).
-5. **Dokumen riset hanya di `docs/`.** Akar repositori dijaga tetap rapi.
+5. **Paritas perilaku, bukan penyalinan implementasi.** Setiap ID katalog
+   diimplementasikan ulang secara idiomatik. Source OpenSID dipakai untuk
+   alur, validasi, keluaran, dan batasan; kode/aset GPL tidak disalin.
+6. **Tidak ada fitur setengah tersambung.** Route, action, menu, permission,
+   UI, migrasi, test, dan dokumentasi harus bergerak sebagai satu perubahan.
+7. **Dokumen riset hanya di `docs/`.** Akar repositori dijaga tetap rapi.
 
 ---
 
@@ -87,8 +93,9 @@ Fitur yang sudah dibangun saat ini:
 | `navigation`     | Menu sidebar dari modul + izin efektif.                               |
 | `auth`           | Login/logout staf (username) + pelacakan login terakhir.               |
 
-> Cakupan & batasan tiap modul dirinci di README. Status paritas dan prioritas
-> ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) dan
+> Cakupan & batasan tiap modul ada di
+> [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md). Status paritas dan
+> prioritas ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) dan
 > [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md); dokumen di `docs/riset/`
 > hanya **referensi historis**.
 
@@ -428,26 +435,35 @@ src/themes/<slug>/
 Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 
 - `npm run build` berhasil.
-- `npm run smoke` (server `npm run start` harus berjalan) memeriksa 24 halaman
-  publik + 2 berkas metadata (26 URL) wajib 200, tiga kasus 404, dan tautan
-  internal tanpa 404.
+- `npm run smoke` (server `npm run start` harus berjalan) memeriksa halaman
+  publik, metadata, kasus 404, dan tautan internal tanpa 404.
+- Setiap ID katalog yang diubah memiliki verifikasi UI yang relevan: E2E
+  publik, admin, warga, atau HTTP smoke sesuai permukaan fitur.
 - Perubahan otorisasi diuji untuk **dua peran**: super admin dan peran terbatas
   (menu yang tampil serta akses langsung ke URL modul yang tidak diizinkan).
+- Perubahan tenant diuji dengan dua host/desa dan akses silang yang ditolak.
 - Perubahan skema disertai berkas migrasi yang ikut di-commit.
 
 ### Pengujian
 
-- Perkakas: **Vitest** (`vitest.config.mts`), berkas uji bernama `*.test.ts`
-  bersebelahan dengan sumbernya.
-- Cakupan sasaran: **logika murni** — aturan domain, utilitas, dan validasi.
-  Jangan menguji lapisan `infrastructure`/`presentation` yang butuh database,
-  sesi, atau `next/headers`; itu diuji lewat smoke test HTTP.
-- Karena `src/lib/env.ts` memvalidasi environment saat impor, variabel wajib
-  disuplai lewat `test.env` di konfigurasi Vitest.
-- CI (`.github/workflows/ci.yml`) menjalankan tiga job pada setiap push/PR:
-  `migrate` (migrasi + seed dari DB kosong, idempoten), `verify`
-  (`npm run check` + `npm run build`), dan `smoke` (MySQL + migrate + seed +
-  build produksi + `npm run start` + `npm run smoke`).
+- Perkakas unit: **Vitest** (`vitest.config.mts`), berkas uji bernama
+  `*.test.ts` bersebelahan dengan sumbernya.
+- Cakupan unit: aturan domain, utilitas, validasi, transisi status, format,
+  parser, dan perhitungan.
+- Cakupan integrasi: repository/use case, migrasi DB kosong, seed idempoten,
+  otorisasi, isolasi tenant, media, dan siklus akun warga.
+- Cakupan E2E: alur publik, admin, warga, pengajuan surat, persetujuan,
+  cetak/PDF, unggah/unduh, impor/ekspor, serta error/permission.
+- Test integrasi DB boleh skip hanya saat lingkungan lokal memang tidak memiliki
+  MySQL; CI wajib menyediakan MariaDB dan tidak boleh menganggap skip sebagai
+  bukti selesai.
+- Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
+  fixture, dan command harus ada di repository serta dapat dijalankan CI.
 
-Perkakas browser otomatis (`chrome-devtools` MCP) tidak selalu tersedia; skrip
-smoke test berbasis HTTP di direktori sementara dapat dipakai sebagai gantinya.
+CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
+`npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh
+milestone aktif.
+
+Perkakas browser otomatis tidak selalu tersedia; smoke HTTP boleh menjadi bukti
+untuk route publik sederhana, tetapi **tidak menggantikan E2E** untuk alur
+interaktif, otorisasi, warga, admin, unggah, dan transaksi.

@@ -1,19 +1,15 @@
 # Sistem Informasi Desa (SID)
 
 Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
-bersih, bertipe kuat, dan mudah dirawat. Repositori ini berisi **fondasi** —
-autentikasi, RBAC, kerangka admin, lapisan data — beserta irisan vertikal lengkap
-untuk **Wilayah Administratif**, **Kependudukan**, **Kartu Keluarga**,
-**Rumah Tangga (RTM)**, **Kelompok & Lembaga**, **Bantuan Sosial** (program &
-peserta), **Persuratan**
-(layanan surat, master surat, agenda masuk/keluar, cetak & PDF), dan
-**Keuangan** (APBDes: pohon rekening, pagu
-anggaran, realisasi, laporan RP APBDes & per bidang, ekspor CSV/Excel, serta
-arsip dokumen laporan per semester), **Inventaris** (barang, kategori, mutasi
-berjenjang), dan **Konten Situs Publik** (profil, perangkat, berita, galeri,
-menu, widget, slider, dokumen, serta tema).
+bersih, bertipe kuat, dan mudah dirawat. Repositori ini adalah rebuild orisinal
+dengan target **cakupan fitur OpenSID lengkap**, bukan salinan kode OpenSID.
+Sumber kebutuhan lengkap ada di
+[`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md); status
+implementasi ada di [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md).
 
-> Status: modul dibangun bertahap. Lihat [Peta Jalan](#peta-jalan).
+Saat ini proyek masih bertahap: fondasi dan banyak fitur inti sudah tersedia,
+tetapi sejumlah modul OpenSID, quality gate, dan verifikasi E2E masih belum
+selesai. Jangan membaca daftar modul yang sudah ada sebagai klaim paritas penuh.
 
 ## Tumpukan Teknologi
 
@@ -55,7 +51,8 @@ npm run db:seed                  # identitas desa, role, modul, referensi, admin
 npm run dev                      # http://localhost:3000
 ```
 
-Buka `http://localhost:3000` → dialihkan ke `/masuk`.
+Buka `http://localhost:3000` → beranda publik desa. Area admin ada di
+`/beranda`; bila belum login, rute terproteksi mengarahkan ke `/masuk`.
 
 **Kredensial bawaan seed:** `admin` / `Admin#12345`
 (ganti segera, atau set `SEED_ADMIN_PASSWORD` sebelum menjalankan seeder).
@@ -118,7 +115,7 @@ src/
 │  ├─ keuangan/  konten/  layanan-mandiri/  modul/  navigation/  penduduk/
 │  ├─ pengguna/  publik/  rbac/  rumah-tangga/  surat/  survey/  warga/
 │  ├─ wilayah/
-├─ themes/                   # (target) tema web publik yang dipasang saat build
+├─ themes/                   # tema publik terkompilasi (registry statis)
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
 
@@ -161,16 +158,18 @@ Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
 
 ## Pengujian
 
-Pengujian unit memakai **Vitest** dan hanya mencakup **logika murni** (tanpa
-database/`next/headers`): model izin RBAC, pembentukan menu, validasi penduduk,
-keluarga, wilayah, pengguna, kelompok (slug, jabatan, keanggotaan), bantuan
-(status masa aktif, slug, validasi peserta),
-persuratan (nomor, template, tanggal), inventaris (transisi mutasi,
-perhitungan perubahan aset), akun warga (PIN, ubah PIN), permohonan surat
-(transisi status, berkas syarat), pemetaan kesalahan, serta validasi
-environment. CI menjalankan typecheck + lint + format + test + build, lalu
-smoke test HTTP pada build produksi (MySQL + migrate + seed), pada setiap
-push/PR.
+Pengujian memakai **Vitest**. Mayoritas test adalah unit test logika murni
+(tanpa database/`next/headers`): model izin RBAC, pembentukan menu, validasi
+penduduk, keluarga, wilayah, pengguna, kelompok (slug, jabatan, keanggotaan),
+bantuan (status masa aktif, slug, validasi peserta), persuratan (nomor, template,
+tanggal), inventaris (transisi mutasi, perhitungan perubahan aset), akun warga
+(PIN, ubah PIN), permohonan surat (transisi status, berkas syarat), pemetaan
+kesalahan, serta validasi environment. Suite juga memiliki test integrasi DB
+untuk isolasi tenant dan siklus akun warga; test ini otomatis di-skip bila MySQL
+tidak tersedia.
+
+CI menjalankan typecheck + lint + format + test + build, lalu smoke test HTTP
+pada build produksi (MySQL + migrate + seed), pada setiap push/PR.
 
 ```bash
 npm run test        # sekali jalan
@@ -182,10 +181,10 @@ npm run test:watch  # mode pantau
 Mulai dari **[`docs/README.md`](docs/README.md)** — peta dokumentasi dan aturan
 sumber kebenaran.
 
-- [`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md) — **otoritatif** untuk
-  prioritas, fase, dan status milestone.
+- [`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md) — baseline
+  cakupan **seluruh** fitur OpenSID yang wajib dipetakan.
 - [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md) — **otoritatif** untuk
-  status paritas fitur terhadap OpenSID (T1/T2/T3).
+  status paritas implementasi terhadap katalog OpenSID.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — **otoritatif** untuk
   arsitektur, lapisan, skema, RBAC, dan konvensi kode.
 - [`docs/LOG-PERKEMBANGAN.md`](docs/LOG-PERKEMBANGAN.md) — kronologi pekerjaan
@@ -200,143 +199,14 @@ sumber kebenaran.
 Status lengkap dan urutan fase ada di
 [`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md). Ringkasnya:
 
-1. **Fondasi** ✅ — auth staf, RBAC, kerangka admin, lapisan data, Wilayah.
-2. **Kependudukan** ✅ — penduduk, Kartu Keluarga (termasuk PDF), Rumah Tangga.
-3. **Kelompok & Lembaga** ✅ — kelompok/lembaga, kategori, keanggotaan berjabatan.
-4. **Bantuan Sosial** ✅ — program, peserta, snapshot kartu, sebaran wilayah.
-5. **Persuratan** ✅ — layanan surat, syarat dinamis, penomoran, agenda masuk/keluar,
-   verifikasi berjenjang, cetak HTML/PDF.
-6. **Keuangan** ✅ — APBDes, realisasi, laporan & dokumen, triwulan.
-7. **Inventaris** ✅ — CRUD barang & kategori, mutasi berjenjang
-   operator → sekdes → kades, perubahan aset diterapkan atomik di tahap akhir.
-8. **Layanan Mandiri** ✅ — akun warga NIK + PIN dibuat/direset operator,
-   dasbor warga, pengajuan surat dengan isian dinamis + unggah syarat, riwayat
-   status, dan unduh PDF surat.
-9. **Buku Administrasi Desa** ✅ — katalog buku inti (umum, penduduk, tanah) +
-   CRUD item dengan nomor urut unik per buku.
-10. **Analisis & Survei** ✅ — CRUD survei, builder pertanyaan (isian, angka,
-    pilihan ganda), responden dengan jawaban dinamis, dan rekap per soal.
-11. **Konten Situs Publik** 🟡 — CRUD admin menu/widget/slider/dokumen selesai;
-    sebagian halaman publik masih placeholder atau query langsung.
+1. **Fondasi** ✅ — auth staf, RBAC, kerangka admin, lapisan data, dan wilayah.
+2. **Fitur inti** 🟡 — kependudukan, keluarga, RTM, kelompok, bantuan,
+   persuratan, keuangan dasar, inventaris, Bumindes inti, layanan mandiri,
+   pengaduan, survei dasar, dan CMS publik sudah memiliki irisan implementasi.
+3. **Paritas OpenSID lengkap** 🔴 — seluruh ID di
+   [`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md) belum selesai.
+4. **Multi-desa dan hardening** 🟡/🔴 — seam tenant publik sudah dibuat, tetapi
+   provisioning, super-admin, audit, backup, dan uji keamanan menyeluruh belum.
 
-Berikutnya (lihat rencana untuk detail):
-
-- **Fase 1** — menuntaskan 3 halaman publik yang masih placeholder
-  (pembangunan, pengaduan, peta) dan merapikan halaman publik yang masih
-  mengimpor repository langsung ke use case.
-- **Fase 2** — bumindes, analisis/survei, dan sisa persuratan (template, TTE).
-- **Fase 3** — paritas OpenSID T1 + T2.
-- **Fase 4** — multi-desa & multi-domain.
-
-### Cakupan Kelompok & Lembaga
-
-Kelompok dan lembaga memakai **single-table inheritance** (`kelompok.type`),
-bukan tabel terpisah. Berbeda dari sistem rujukan yang menyimpan `id_ketua` di
-tabel kelompok (berisiko tidak sinkron, dengan penanda sentinel `-9999`), di sini
-**ketua diturunkan** dari anggota berjabatan Ketua — satu sumber kebenaran.
-Keanggotaan bersifat banyak-ke-banyak (satu penduduk boleh di banyak kelompok).
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Kelompok masyarakat (nama, kode, SK, keterangan) | ✅ |
-| Lembaga desa sebagai tipe kelompok | ✅ |
-| Master kategori (per tipe) | ✅ |
-| Anggota + jabatan (Ketua, Wakil, Sekretaris, Bendahara, Anggota) | ✅ |
-| Ketua turunan dari keanggotaan | ✅ |
-| Data suplemen (mis. penyandang disabilitas) | belum (modul terpisah) |
-| Buku administrasi / laporan kelompok | belum |
-
-### Cakupan Bantuan Sosial
-
-Modul Bantuan Sosial dibangun sebagai dua entitas bersih: `bantuan_program`
-(definisi program + sasaran + masa aktif) dan `bantuan_peserta` (keanggotaan
-sasaran). Status masa aktif **dihitung** dari rentang tanggal, bukan disimpan.
-Penautan peserta memakai **FK eksplisit** (`resident_id`/`family_id`/`rtm_id`)
-alih-alih kunci teks seperti sistem rujukan
-([`docs/riset/LAMPIRAN-12-BANTUAN-DTKS.md`](docs/riset/LAMPIRAN-12-BANTUAN-DTKS.md)).
-Yang belum termasuk:
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Program bantuan (nama, sasaran, masa aktif, asal dana) | ✅ |
-| Sasaran penduduk / keluarga / rumah tangga | ✅ |
-| Peserta + snapshot kartu (no. kartu, NIK, nama, tempat/tanggal lahir, alamat) | ✅ |
-| Dedupe peserta per program + blokir hapus program berpeserta | ✅ |
-| Sebaran peserta per wilayah | ✅ |
-| Sasaran **kelompok** (modul Kelompok kini tersedia; penautan peserta menyusul) | belum |
-| Unggah berkas kartu peserta (jpg/png) | belum |
-| Ekspor/impor peserta (Excel), cetak daftar & kartu peserta | belum |
-| Statistik bantuan per wilayah lintas program | belum |
-| Sinkronisasi DTKS (Satu Data) & impor Regsosek | belum |
-
-### Cakupan Keuangan
-
-Irisan Keuangan mengikuti **Lapis A (modern/konsolidasi)** dan **Lapis D (arsip
-dokumen)** dari sistem rujukan
-([`docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](docs/riset/LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md)):
-dua tabel inti `keuangan_template` (pohon rekening) + `keuangan` (nilai per
-tahun), dengan laporan RP APBDes & realisasi per bidang diturunkan dari pohon
-tersebut, ditambah `keuangan_triwulan` (realisasi per bidang per TW I–IV) dan
-`keuangan_laporan` sebagai arsip dokumen laporan per semester. Yang belum
-termasuk:
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Lapis B legacy manual (`keuangan_manual_*`, impor dari Siskeudes) | belum |
-| Lapis C (`ref_bidang`, `ref_kegiatan`, `ref_rek*` + sub-tabel rincian) | belum |
-| Laporan triwulan (`Tw1Rinci`…`Tw4Rinci`) | ✅ (per bidang `5.x`, input manual) |
-| Ekspor laporan (Excel/CSV) | ✅ |
-| Sisa lebih (SiLPA) otomatis antartahun | belum |
-| Catatan/lampiran berkas per rekening | belum |
-
-### Cakupan Kependudukan
-
-Laporan kependudukan **diturunkan** dari tabel `residents` (tanpa tabel baru);
-hanya penduduk berstatus hidup yang dihitung. Yang belum termasuk:
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Rekap menurut umur, jenis kelamin, agama, pendidikan, pekerjaan, status kawin, wilayah, kelompok umur | ✅ |
-| Ekspor CSV (pemisah `;`, BOM UTF-8) | ✅ |
-| Cetak Kartu Keluarga (PDF, lanskap, dua tabel) | ✅ |
-| Laporan bulanan desa (LAMPIRAN A-9, kelahiran/kematian/pindah) | belum |
-| Laporan kelompok rentan & statistik lintas-desa | belum |
-| Impor data penduduk dari berkas Excel/CSV | belum |
-| Cetak biodata penduduk per orang (PDF) | belum |
-
-### Cakupan Rumah Tangga
-
-Modul Rumah Tangga (RTM) dibangun sebagai entitas **mandiri** (kolom penanda
-DTKS/BDT disiapkan, tetapi sinkronisasi ke DTKS menyusul saat modul Bantuan
-dibangun). Keanggotaan RTM **eksklusif**: satu penduduk hanya berada di satu RTM,
-ditautkan lewat `residents.rtm_id` + `residents.rtm_level`.
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Daftar RTM dengan paginasi & pencarian | ✅ |
-| Nomor RTM otomatis (kode desa + nomor urut) | ✅ |
-| Kelas sosial & nomor BDT | ✅ |
-| Rincian anggota dengan tingkat (kepala/anggota) | ✅ |
-| Penautan & pengeluaran penduduk dari RTM | ✅ |
-| RTM sebagai data rumah tangga (Rumah Tangga, bukan KK) | ✅ |
-| Sinkronisasi otomatis RTM ↔ DTKS | belum (menunggu modul Bantuan/DTKS) |
-| Ekspor & cetak data RTM | belum |
-
-### Cakupan Persuratan
-
-Irisan Persuratan yang sudah dibangun sengaja dibatasi pada **siklus surat
-dasar**. Fitur lanjutan dari sistem rujukan
-([`docs/riset/LAMPIRAN-01-PERSURATAN.md`](docs/riset/LAMPIRAN-01-PERSURATAN.md))
-belum termasuk dan menjadi pekerjaan berikutnya:
-
-| Fitur rujukan | Status |
-| ------------- | ------ |
-| Layanan Mandiri (warga mengajukan surat sendiri) | ✅ |
-| Verifikasi berjenjang (operator → sekdes → kades) | ✅ |
-| Tanda Tangan Elektronik (TTE/BSRE) | belum |
-| QR verifikasi publik & tabel `urls` | 🟡 (token & tautan verifikasi ada; gambar QR belum) |
-| Form isian dinamis per surat (`form_isian` JSON) | ✅ |
-| Kode isian kustom & mesin placeholder lengkap (aritmatika, terbilang, `klgx_`) | sebagian |
-| Master syarat surat (`ref_syarat_surat`) | ✅ |
-| Impor katalog 43 surat sistem | belum (seed memuat katalog contoh) |
-| Empat mode penomoran surat | ✅ |
+Status fitur di atas bukan klaim bahwa seluruh kemampuan OpenSID pada domain
+tersebut sudah tersedia. Status per ID ada di `PARITAS-OPENSID.md`.

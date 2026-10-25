@@ -1,136 +1,193 @@
 # Matriks Paritas Fitur vs OpenSID
 
-Dokumen ini membandingkan fitur proyek ini dengan **OpenSID** yang ada di
-`D:\laragon\www\opensid`. Sumber pembanding (bukan asumsi):
+Dokumen ini adalah **sumber kebenaran status implementasi** terhadap
+[`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md). Target produk adalah
+rebuild orisinal dengan **cakupan seluruh fitur OpenSID** di
+`/home/super/Projects/opensid`, termasuk modul tambahan, API, keluaran, layanan
+mandiri, dan integrasi.
 
-- `donjo-app/controllers/*` — daftar modul & aksi
-- `resources/views/admin/*` — modul yang punya UI admin
-- `donjo-app/controllers/fweb/*` — halaman web publik
-- `donjo-app/controllers/fmandiri/*` — layanan mandiri warga
-- `Modules/{Analisis,Anjungan,BukuTamu,Kehadiran,Lapak,Pelanggan}`
-- `storage/app/themes/{esensi,natra}` — sistem tema
+Sumber pembanding:
 
-Legenda status proyek kita:
+- `/home/super/Projects/opensid/donjo-app/controllers/*`
+- `/home/super/Projects/opensid/donjo-app/controllers/fweb/*`
+- `/home/super/Projects/opensid/donjo-app/controllers/fmandiri/*`
+- `/home/super/Projects/opensid/donjo-app/controllers/internal_api/*`
+- `/home/super/Projects/opensid/donjo-app/controllers/external_api/*`
+- `/home/super/Projects/opensid/Modules/*`
+- `/home/super/Projects/opensid/resources/views/admin/*`
+- `/home/super/Projects/opensid/storage/app/themes/*`
 
-- ✅ **Berfungsi** — ada domain, action, UI, dan test
-- 🟡 **Sebagian** — ada kode/skema tetapi belum lengkap atau belum ter-wire ke UI
-- 🔴 **Belum ada**
+Legenda:
 
-> **Catatan lisensi.** OpenSID berlisensi **GPL v3**. Dokumen ini memakai
-> OpenSID sebagai **rujukan perilaku, alur, dan model data**, bukan untuk
-> menyalin kode. Menyalin source GPL ke basis kode ini akan membawa kewajiban
-> lisensi GPL. Implementasi tetap idiomatik Next.js/TypeScript.
+- ✅ **Berfungsi penuh** — domain, action, UI, keluaran yang relevan, otorisasi,
+  test, dan bukti end-to-end tersedia.
+- 🟡 **Sebagian** — ada kode/skema/UI, tetapi ada operasi, keluaran, alur,
+  test, atau integrasi yang belum lengkap.
+- 🔴 **Belum ada** — belum tersedia atau masih placeholder/mockup.
+- ⚪ **Belum diaudit per-ID** — cakupan sudah ada di katalog, tetapi implementasi
+  belum direkonsiliasi secara independen terhadap Definition of Done.
+
+> **Catatan lisensi.** OpenSID berlisensi **GPL v3**. Matriks ini mencatat
+> perilaku, alur, model data, dan keluaran sebagai referensi. Implementasi SID
+> tetap orisinal; kode dan aset OpenSID tidak disalin.
 >
-> Detail alur UX per modul (historis) ada di
-> [`arsip/PEMETAAN-UX-OPENSID.md`](./arsip/PEMETAAN-UX-OPENSID.md). Status di
-> dokumen itu sudah kedaluwarsa; gunakan matriks di halaman ini.
-
+> Arsip dan riset bukan sumber status. Detail scope lengkap ada di katalog.
 ---
 
 ## Ringkasan Paritas
 
-| Kategori | Total modul | ✅ | 🟡 | 🔴 |
-|---|---:|---:|---:|---:|
-| Kependudukan & sosial | 12 | 3 | 1 | 8 |
-| Wilayah & pertanahan | 4 | 2 | 0 | 2 |
-| Pemerintahan | 8 | 3 | 2 | 3 |
-| Persuratan | 7 | 6 | 0 | 1 |
-| Keuangan | 6 | 4 | 2 | 0 |
-| Bumindes | 11 | 2 | 5 | 4 |
-| Pembangunan | 1 | 0 | 0 | 1 |
-| Layanan mandiri & warga | 10 | 6 | 1 | 3 |
-| Analisis & statistik | 3 | 0 | 3 | 0 |
-| Web publik | 21 | 10 | 4 | 7 |
-| Sistem & operasional | 9 | 2 | 1 | 6 |
-| **Total** | **92** | **38** | **19** | **35** |
+| Scope | Total ID/modul | ✅ | 🟡 | 🔴 | ⚪ |
+|---|---:|---:|---:|---:|---:|
+| **Katalog per-ID — status terkini** | **113** | **0** | **74** | **39** | **0** |
+| Baseline kelompok lama — konteks historis, bukan status delivery | 92 | 42 | 12 | 38 | — |
 
-**Paritas kasar saat ini: ±52%** (hitung ✅ penuh + setengah 🟡 — 38 + 9,5 =
-47,5 dari 92). Angka ini dihitung ulang 25 Oktober 2026 langsung dari baris
-matriks; jumlah ✅ + 🟡 + 🔴 per kategori harus sama dengan kolom total.
-Untuk "tidak kalah" pada operasi harian desa, target realistis adalah menutup
-seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
+Status yang wajib dipakai untuk keputusan delivery adalah baris katalog
+per-ID: seluruh 113 ID sudah diaudit, tetapi belum ada ID yang memenuhi Definition
+of Done penuh. Baris baseline kelompok lama dipertahankan hanya agar perubahan
+terhadap ringkasan historis tetap terlacak; angka 92 tidak mewakili seluruh scope
+OpenSID dan tidak boleh dibandingkan langsung dengan 113 ID.
 
-> Catatan 23 Okt 2026 (status diselaraskan 25 Okt 2026): Halaman web publik
-> gelombang 1 sudah tersedia (beranda, berita, galeri, profil, pemerintahan,
-> apbdes, status-des, idm-sdgs, surat, analisis-survei, dokumen, statistik,
-> kontak, verifikasi-surat, kelompok, inventaris, pengaduan) dan seluruhnya
-> memakai use case + slot tema. Yang masih 🔴 adalah halaman yang belum punya
-> data/backend (pembangunan, peta, suplemen, lapak, dpt, komentar/pengunjung)
-> serta fitur lanjutan. SEO lengkap: sitemap, robots, manifest PWA, dan
-> gambar OG per desa (dibuat 25 Okt 2026).
-> Rute `/desa/idm`, `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, dan
-> `/desa/lapak` **belum dibuat** (404), bukan placeholder.
->
-> Perbaikan P0 23 Okt 2026: verifikasi surat publik kini memakai token acak
-> (hash SHA-256, tenant-aware) dan halaman cetak menampilkan tautan verifikasi;
-> APBDes publik tidak lagi error saat memetakan baris; `/konten/menu` dan
-> `/konten/dokumen` membaca data per desa. QR gambar verifikasi dibuat 24 Okt
-> 2026 (SVG di halaman cetak, PNG di PDF, `domain/verifikasi.ts`).
->
-> Perbaikan P1.1 23 Okt 2026: inventaris kini punya CRUD barang & kategori,
-> mutasi berjenjang operator → sekdes → kades, dan perubahan aset baru
-> diterapkan secara atomik pada tahap akhir. Modul inventaris diaktifkan kembali
-> di menu admin.
->
-> Perbaikan P1.2 23 Okt 2026: `/konten/menu`, `/konten/widget`,
-> `/konten/slider`, dan `/konten/dokumen` kini punya CRUD lengkap dengan filter
-> `village_id` pada update/delete, daftar admin yang memuat baris nonaktif,
-> validasi domain, dan slug dokumen unik. Slider beranda sudah memakai data
-> aktif; widget dan teks berjalan belum dirender di tema publik. Unggah berkas
-> dokumen masih berupa path/URL manual.
->
-> Perbaikan P1.3 23 Okt 2026: `/desa/apbdes`, `/desa/statistik`,
-> `/desa/dokumen`, `/desa/status-des`, `/desa/surat`, `/desa/analisis-survei`,
-> dan `/desa/idm-sdgs` di-refactor lewat use case + slot tema. Halaman baru
-> `/desa/kelompok` dan `/desa/inventaris` tersedia. IDM/SDGs tidak lagi memakai
-> realisasi palsu (`realisasi = anggaran`); laporan memakai jumlah TW I–IV dan
-> menyatakan bila indikator belum tersedia. Widget teks tampil di beranda dan
-> disanitasi saat simpan + render. 404/error publik memakai konvensi Next 16.
-> Smoke test produksi: seluruh halaman publik utama 200, tautan internal tanpa
-> 404.
->
-> Perbaikan 24 Okt 2026 (sore): halaman publik sisa (beranda, berita, galeri,
-> profil, pemerintahan, bantuan, halaman statis, pertanahan) kini lewat use
-> case — tidak ada lagi query `db` mentah. Backend pengaduan (3D) siap: skema
-> `pengaduan`, domain, kirim warga, media `pengaduan`. Skema pembangunan (3C)
-> dibuat di migrasi `0024`; backend belum.**Sore lanjut:** UI admin
-> `/pengaduan` selesai, lalu modul `pengaduan` di-seed ke menu/grant
-> (operator `manage`, sekdes/kades `read`) dan halaman publik
-> `/desa/pengaduan` + form kirim warga di-wire — pengaduan naik ke
-> sebagian besar paritas. Pelacakan tiket mandiri (`/desa/pengaduan/lacak`,
-> tiket + NIK/telepon/email lewat Server Action) selesai 24 Okt 2026.
->
-> Perbaikan 2G 24 Okt 2026: **survei warga bisa dipakai** — `/analisis-survei`
-> punya CRUD survei, builder pertanyaan (isian, angka, pilihan ganda 2–10 opsi),
-> pencatatan responden dengan jawaban dinamis, dan rekap per soal (distribusi
-> persentase, rata-rata/min/maks, contoh jawaban teks). Modul diaktifkan di menu
-> dan migrasi `0023` menambah `survey_soal.pilihan`. Ekspor/impor respons CSV
-> selesai 24 Okt 2026 (unduh per survei + impor massal dengan laporan baris
-> ditolak). Belum: pengisian mandiri warga, kategori/indikator/parameter
-> OpenSID.
->
-> Perbaikan 2D 24 Okt 2026: **buku administrasi desa bisa dipakai** — katalog
-> buku inti (A1–A8 administrasi umum, B1–B5 penduduk, E1 tanah desa) disiapkan
-> idempoten dan kode bawaan lama ditata ulang tanpa melepas item; item buku
-> punya CRUD dengan nomor urut unik per buku. Isi buku penduduk masih manual
-> (sinkronisasi dari data penduduk belum ada).
->
-> Perbaikan 2C 24 Okt 2026: **layanan mandiri warga berjalan end-to-end** — akun
-> NIK + PIN dibuat/direset operator (PIN tampil sekali, wajib diganti), login
-> warga lewat `/masuk`, area `(warga)` berisi beranda/surat/dokumen/pesan/profil/
-> ubah-PIN, pengajuan surat dengan isian dinamis + unggah syarat, dan surat
-> dibuat operator dari permohonan lalu terbit lewat verifikasi berjenjang.
-> Berkas syarat disimpan di media privat dan diunduh lewat route ber-otentikasi.
-> Test domain `warga.test.ts` + `layanan-mandiri.test.ts`; test integrasi HTTP
-> lintas warga belum ada.
->
-> Perbaikan 1G 23 Okt 2026: tema dan opsi dapat diganti dari `/konten/tema` dan
-> langsung tampil di situs publik tanpa deploy (halaman publik `force-dynamic`,
-> revalidasi layout). Uji integrasi memastikan draft/jadwal tidak tampil, slug
-> unik, unggahan tervalidasi, dan HTML tersanitasi. Lighthouse mobile produksi:
-> performance 97, accessibility 100. P1 selesai.
+Setiap ID tetap wajib memiliki domain, action, UI, keluaran relevan, otorisasi,
+test, dan bukti end-to-end sebelum statusnya menjadi ✅.
 
----
+Urutan prioritas tidak menghapus fitur dari scope. T1 dikerjakan lebih dahulu,
+kemudian T2 dan modul tambahan/integrasi; seluruhnya tetap wajib ditutup.
+
+## Register cakupan
+
+Tabel kategori di bawah adalah ringkasan domain lama. Daftar requirement yang
+lengkap ada di katalog dan memakai ID `OS-*`. Setiap issue, branch, migrasi,
+test, dan perubahan status **MUST mencantumkan ID katalog**; satu baris ringkasan
+tidak boleh dianggap menutup semua ID di dalamnya.
+
+Status audit per-ID terkini ditulis di register di bawah. Tabel modul di bawah
+dipertahankan sebagai baseline coarse historis dan boleh berbeda dari hasil
+audit per-ID; catatan perubahan bertanggal dipindahkan ke
+[`LOG-PERKEMBANGAN.md`](./LOG-PERKEMBANGAN.md).
+
+## Register per-ID — hasil audit
+
+Register ini memecah ringkasan 92 modul menjadi seluruh 113 ID katalog.
+Katalog tetap menjadi sumber deskripsi cakupan; register ini menjadi sumber
+status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
+`⚪` menjadi `✅`, `🟡`, atau `🔴` setelah audit berbasis bukti.
+
+| ID | Status audit per-ID | Bukti dan gap audit |
+|---|---|---|
+| OS-POP-001 | 🟡 Sebagian | CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`; cetak/detail/ekspor per penduduk belum ditemukan, ekspor yang ada hanya laporan CSV. |
+| OS-POP-002 | 🔴 Belum ada | Tidak ditemukan domain/route untuk log lahir, mati, pindah, datang, atau riwayat perubahan penduduk. |
+| OS-POP-003 | 🟡 Sebagian | CRUD KK, dialog anggota, validasi kepala keluarga, dan PDF KK tersedia; riwayat perubahan anggota serta E2E belum ada. |
+| OS-POP-004 | 🟡 Sebagian | CRUD RTM, anggota, kelas sosial, BDT, wilayah, dan RBAC tersedia; laporan RTM sesuai cakupan OpenSID serta E2E belum ditemukan. |
+| OS-POP-005 | 🔴 Belum ada | Tidak ditemukan modul DPT, pemutakhiran pemilih, rekap, cetak, atau daftar publik. |
+| OS-POP-006 | 🔴 Belum ada | Tidak ditemukan modul DTKS, impor, anggota, detail, atau laporan. |
+| OS-POP-007 | 🔴 Belum ada | Tidak ditemukan definisi jenis suplemen, pendataan, impor, detail, atau cetak. |
+| OS-POP-008 | 🔴 Belum ada | Tidak ditemukan modul KIA, ibu hamil, pemantauan anak, skor stunting, rekap, atau cetak. |
+| OS-POP-009 | 🔴 Belum ada | Tidak ditemukan modul vaksin/Covid, pendataan, status, rekap, atau publikasi khusus. |
+| OS-POP-010 | 🟡 Sebagian | Laporan umur, gender, agama, pendidikan, pekerjaan, status kawin, wilayah, kelompok umur, print, dan CSV tersedia; laporan periodik/rentan lengkap serta E2E belum ditemukan. |
+| OS-POP-011 | 🟡 Sebagian | Program bantuan memiliki CRUD, slug, sasaran, periode/status, asal dana, RBAC, UI, dan test domain; laporan keluaran serta E2E belum ditemukan. |
+| OS-POP-012 | 🟡 Sebagian | Peserta dapat ditambah/dihapus dengan kandidat sasaran tenant-aware dan snapshot kartu; impor/ekspor/cetak kartu serta E2E belum ditemukan. |
+| OS-POP-013 | 🟡 Sebagian | Ringkasan bantuan publik memuat jumlah program/peserta; statistik per program, wilayah, periode, dan laporan admin belum ditemukan. |
+| OS-POP-014 | 🔴 Belum ada | Tidak ditemukan modul pendapat warga atau jajak pendapat. |
+| OS-POP-015 | 🔴 Belum ada | Tidak ditemukan direktori kontak penduduk/kelompok untuk komunikasi administratif; halaman kontak desa bukan pengganti fitur ini. |
+| OS-WIL-001 | 🟡 Sebagian | CRUD, pencarian, pagination, validasi kombinasi dusun/RW/RT, dan RBAC di `/wilayah`; hierarki, rekap penduduk, serta cetak belum ditemukan. |
+| OS-WIL-002 | 🔴 Belum ada | Tidak ditemukan domain/route admin untuk GIS area atau penyimpanan metadata/geometri; peta publik masih placeholder. |
+| OS-WIL-003 | 🔴 Belum ada | Tidak ditemukan domain/route untuk GIS garis atau jalan beserta geometri, atribut, tampilan, dan cetaknya. |
+| OS-WIL-004 | 🔴 Belum ada | Tidak ditemukan domain/route untuk GIS titik/lokasi, koordinat, simbol, atau tampilan publik yang berfungsi. |
+| OS-WIL-005 | 🔴 Belum ada | Tidak ditemukan domain/route untuk GIS polygon/batas, layer, atau publikasi geometri. |
+| OS-WIL-006 | 🔴 Belum ada | Halaman publik pertanahan hanya memproyeksikan tabel `inventaris` sebagai placeholder; data persil, Cdesa, rincian, dan mutasi tanah belum ada. |
+| OS-WIL-007 | 🔴 Belum ada | Tidak ditemukan peta kantor, peta administratif interaktif, atau layer batas desa/dusun; `/desa/peta` masih placeholder. |
+| OS-WIL-008 | 🔴 Belum ada | Tidak ditemukan domain/route referensi simbol atau konfigurasi visual GIS. |
+| OS-GOV-001 | 🟡 Sebagian | `/pengaturan/desa` memiliki identitas, alamat, kontak, kepala desa, logo, tanda tangan, stempel, RBAC, dan output publik; audit E2E serta seluruh keluaran konfigurasi belum ditemukan. |
+| OS-GOV-002 | 🟡 Sebagian | `/konten/perangkat` memiliki CRUD jabatan/perangkat, foto, periode, status, dan penanda tangan; cetak/riwayat periode serta E2E belum ditemukan. |
+| OS-GOV-003 | 🟡 Sebagian | Struktur jabatan dan perangkat serta tampilan publik `/desa/pemerintahan` tersedia; bagan hubungan organisasi, cetak SOTK, dan E2E belum ditemukan. |
+| OS-GOV-004 | 🟡 Sebagian | Model kelompok/lembaga bertipe `lembaga`, kategori, CRUD, anggota, jabatan, RBAC, dan publikasi tersedia; laporan lembaga, cetak, dan E2E belum ditemukan. |
+| OS-GOV-005 | 🟡 Sebagian | Model kelompok masyarakat, kategori, CRUD, anggota, jabatan, RBAC, dan publikasi tersedia; cetak kelompok, laporan, dan E2E belum ditemukan. |
+| OS-GOV-006 | 🔴 Belum ada | Belum ada domain input indikator/status desa, IDM, atau SDGs; `/desa/status-des` membaca rekap inventaris dan `/desa/idm-sdgs` menampilkan laporan keuangan triwulan. |
+| OS-GOV-007 | 🔴 Belum ada | Tidak ditemukan domain/route kandidat pemilihan desa, pemilih, hasil, atau rekap. |
+| OS-GOV-008 | 🔴 Belum ada | Tidak ditemukan domain/route sinergi program atau pemetaan program lintas pihak. |
+| OS-GOV-009 | 🔴 Belum ada | Tabel `pembangunan_proyek` dan `pembangunan_dokumentasi` tersedia di migrasi, tetapi admin/use case belum ada dan `/desa/pembangunan` masih placeholder. |
+| OS-GOV-010 | 🟡 Sebagian | `/konten/dokumen` memiliki CRUD dokumen publik/produk hukum, metadata, berkas/tautan, RBAC, dan publikasi; embed, alur arsip, laporan, dan E2E belum ditemukan. |
+| OS-SUR-001 | 🟡 Sebagian | Master jenis surat, builder isian dinamis, placeholder, formula, template, RBAC, UI, dan test domain tersedia; E2E dan keluaran template lengkap belum ditemukan. |
+| OS-SUR-002 | 🟡 Sebagian | Surat warga memiliki sumber penduduk, isian dinamis, pengikut, penduduk luar, konsep, CRUD, RBAC, dan UI; E2E serta seluruh keluaran lanjutan belum ditemukan. |
+| OS-SUR-003 | 🟡 Sebagian | Master syarat aktif/nonaktif, relasi ke jenis surat, unggahan berkas warga, dan validasi isian tersedia; laporan E2E dan skenario lampiran lengkap belum ditemukan. |
+| OS-SUR-004 | 🟡 Sebagian | CRUD klasifikasi dan relasi ke jenis/agenda surat tersedia dengan RBAC dan UI; E2E belum ditemukan. |
+| OS-SUR-005 | 🟡 Sebagian | Permohonan admin/warga, status berurutan, pemeriksaan, pengembalian, pembatalan, unggahan syarat, dan riwayat tersedia; E2E belum ditemukan. |
+| OS-SUR-006 | 🟡 Sebagian | Empat mode penomoran, kode desa, nomor otomatis, dan pemeriksaan duplikasi lintas agenda tersedia; arsip nomor terpisah dan E2E belum ditemukan. |
+| OS-SUR-007 | 🟡 Sebagian | Verifikasi berurutan operator → sekretaris desa → kepala desa, pembatasan role, tolak/kembalikan, dan test domain tersedia; E2E belum ditemukan. |
+| OS-SUR-008 | 🟡 Sebagian | Cetak HTML/PDF, kop, logo, tanda tangan, stempel, QR, token verifikasi, dan halaman verifikasi publik tersedia; E2E serta seluruh variasi keluaran belum ditemukan. |
+| OS-SUR-009 | 🟡 Sebagian | Surat masuk memiliki CRUD, klasifikasi, disposisi, nomor agenda, pencarian, RBAC, dan UI; lampiran, cetak, dan E2E belum ditemukan. |
+| OS-SUR-010 | 🟡 Sebagian | Surat keluar memiliki CRUD, ekspedisi/tanggal kirim, klasifikasi, nomor agenda, pencarian, RBAC, dan UI; lampiran, cetak, dan E2E belum ditemukan. |
+| OS-SUR-011 | 🟡 Sebagian | Surat dinas memiliki penulisan, CRUD, klasifikasi, arsip digital/lokasi, lampiran, RBAC, dan UI; cetak serta E2E belum ditemukan. |
+| OS-SUR-012 | 🟡 Sebagian | Agenda masuk/keluar dan nomor agenda tersedia, termasuk buku agenda Bumindes; log surat, ekspedisi terpadu, rekam jejak perubahan, dan E2E belum ditemukan. |
+| OS-SUR-013 | 🔴 Belum ada | Domain TTE/BSrE hanya adapter nonaktif dengan `KLIEN_TTE = null`; provider nyata, konfigurasi operasional, dan penandatanganan jaringan belum tersedia. |
+| OS-SUR-014 | 🟡 Sebagian | Allowlist MIME, batas ukuran, validasi berkas syarat, sanitasi nama, path traversal protection, dan route privat tersedia; pengaturan admin yang dapat dikonfigurasi serta E2E belum ditemukan. |
+| OS-FIN-001 | 🟡 Sebagian | `/keuangan/anggaran` memiliki struktur rekening, pagu, tahun, bidang, sumber dana, RBAC, dan input UI; impor/template lengkap, E2E, serta seluruh keluaran APBDes belum ditemukan. |
+| OS-FIN-002 | 🟡 Sebagian | Laporan RP APBDes, realisasi per bidang, agregasi rekening, grafik, print, dan ekspor tersedia; E2E serta variasi laporan lengkap belum ditemukan. |
+| OS-FIN-003 | 🟡 Sebagian | Realisasi, rekonsiliasi, saldo selisih, dan laporan tersedia; pembukuan/keuangan manual sebagai alur terpisah belum ditemukan dan E2E belum ada. |
+| OS-FIN-004 | 🟡 Sebagian | Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, dan ekspor tersedia; impor dan E2E belum ditemukan. |
+| OS-FIN-005 | 🔴 Belum ada | Tidak ditemukan alur sisa lebih antartahun atau kesinambungan saldo/tahun anggaran; modul memilih tahun secara terpisah. |
+| OS-FIN-006 | 🟡 Sebagian | `/desa/apbdes`, `/desa/idm-sdgs`, dan dokumen publik menyediakan keluaran transparansi; cakupan transparansi realisasi/dokumen belum lengkap dan E2E belum ada. |
+| OS-FIN-007 | 🟡 Sebagian | Inventaris memiliki enam kategori aset OpenSID, kondisi, asal, lokasi, jumlah, nilai, CRUD, dan RBAC; laporan/cetak per kategori dan E2E belum ditemukan. |
+| OS-FIN-008 | 🟡 Sebagian | Mutasi aset mendukung pindah, rusak, hapus, perbaikan, kondisi/lokasi, approval operator → sekdes → kades, dan audit log mutasi; laporan kekayaan/cetak dan E2E belum ditemukan. |
+| OS-FIN-009 | 🟡 Sebagian | `/bumindes/buku-administrasi` menyediakan katalog buku umum/sekretariat dan CRUD item; format buku resmi, laporan, cetak, dan E2E belum ditemukan. |
+| OS-FIN-010 | 🟡 Sebagian | Katalog buku penduduk induk, KTP/KK, mutasi, rekap, dan penduduk sementara tersedia serta dapat disinkronkan dari penduduk; keluaran resmi, riwayat mutasi, dan E2E belum ditemukan. |
+| OS-FIN-011 | 🟡 Sebagian | Buku Tanah Kas Desa dan Buku Tanah di Desa tersedia dalam katalog generik; domain persil/rincian/mutasi tanah serta keluaran khusus belum ada. |
+| OS-FIN-012 | 🟡 Sebagian | Buku inti dapat menyimpan item administrasi umum, tetapi domain proyek/rencana/kegiatan/hasil pembangunan dan kader khusus belum ada; E2E belum ditemukan. |
+| OS-FIN-013 | 🟡 Sebagian | Buku agenda, ekspedisi, peraturan, keputusan, aparat, serta tanda tangan/cap tersedia sebagai katalog generik; rekam sekretariat khusus, laporan, cetak, dan E2E belum ditemukan. |
+| OS-WEB-001 | 🟡 Sebagian | Beranda publik memuat sambutan, slider, statistik ringkas, widget, berita, dan surat terbaru melalui tema; agenda lengkap, seluruh headline, dan E2E belum ditemukan. |
+| OS-WEB-002 | 🟡 Sebagian | Berita memiliki admin CRUD, kategori, status terbit, detail publik, arsip berbasis daftar, dan hit; pencarian khusus, keluaran lengkap, dan E2E belum ditemukan. |
+| OS-WEB-003 | 🟡 Sebagian | Profil, pemerintahan/perangkat, SOTK dasar, dan lembaga tersedia di route publik; bagan SOTK lengkap, beberapa relasi lembaga, dan E2E belum ditemukan. |
+| OS-WEB-004 | 🟡 Sebagian | Admin album/foto dan route publik galeri/detail tersedia; cetak, pencarian galeri, dan E2E belum ditemukan. |
+| OS-WEB-005 | 🟡 Sebagian | Dokumen publik/produk hukum memiliki admin CRUD, berkas/tautan, dan publikasi; peraturan/embed/arsip lengkap serta E2E belum ditemukan. |
+| OS-WEB-006 | 🟡 Sebagian | `/desa/statistik` menyediakan statistik kependudukan, bantuan, dan desa; cakupan agregat lengkap, periodisasi, dan E2E belum ditemukan. |
+| OS-WEB-007 | 🟡 Sebagian | Wilayah administratif tersedia di admin dan route `/desa/peta` ada; peta interaktif serta layer GIS masih placeholder. |
+| OS-WEB-008 | 🔴 Belum ada | `/desa/pembangunan` masih placeholder dan tidak ada domain/use case admin untuk proyek pembangunan. |
+| OS-WEB-009 | 🟡 Sebagian | Pengaduan publik, pelacakan tiket, daftar yang dipublikasikan, detail, dan admin pemrosesan tersedia; notifikasi/umpan balik lengkap dan E2E belum ditemukan. |
+| OS-WEB-010 | 🟡 Sebagian | Kelompok/lembaga, kategori, anggota/ketua, dan publikasi tersedia di `/desa/kelompok`; kontrol publikasi per anggota, cetak, dan E2E belum ditemukan. |
+| OS-WEB-011 | 🟡 Sebagian | `/desa/inventaris` menampilkan aset publik, rekap, kondisi, lokasi, dan nilai; filter/publikasi granular, laporan, dan E2E belum ditemukan. |
+| OS-WEB-012 | 🟡 Sebagian | Program bantuan publik tersedia; suplemen, kesehatan, vaksin, dan DPT publik belum ditemukan. |
+| OS-WEB-013 | 🟡 Sebagian | Survei publik dan statistik tersedia; `/desa/idm-sdgs` masih memakai laporan keuangan triwulan sehingga IDM/SDGs/analisis hasil belum lengkap. |
+| OS-WEB-014 | 🔴 Belum ada | Tidak ditemukan domain atau route lapak, produk warga, dan peta produk. |
+| OS-WEB-015 | 🟡 Sebagian | Kontak desa dan survei/umpan balik tersedia; komentar dan statistik pengunjung belum ditemukan. |
+| OS-WEB-016 | 🟡 Sebagian | Admin menu, widget, slider, dan navigasi tema tersedia; teks berjalan, konfigurasi sosial media, dan E2E belum ditemukan. |
+| OS-WEB-017 | 🟡 Sebagian | Konfigurasi tema, form tema, switcher, dan komponen tema tersedia; pemindaian/aktivasi tema lengkap dan E2E belum ditemukan. |
+| OS-WEB-018 | 🟡 Sebagian | Sitemap dinamis, metadata per route, OG image, dan route publik tersedia; cakupan URL dinamis lengkap dan E2E belum ditemukan. |
+| OS-WEB-019 | 🟡 Sebagian | Token/QR dan halaman publik `/desa/verifikasi-surat/[token]` tersedia; E2E dan integrasi semua area warga belum ditemukan. |
+| OS-WGA-001 | 🔴 Belum ada | Akun warga dibuat dan direset operator melalui `/penduduk`; pendaftaran mandiri, aktivasi, dan pemulihan kredensial warga belum ditemukan. |
+| OS-WGA-002 | 🟡 Sebagian | Login bersama `/masuk`, sesi warga, ubah PIN, dan kewajiban ganti PIN tersedia; captcha/anti-abuse, OTP/2FA, dan pemulihan mandiri belum ditemukan. |
+| OS-WGA-003 | 🟡 Sebagian | Beranda warga, profil, ringkasan permohonan, status layanan, dokumen, pesan, dan menu tersedia; E2E belum ditemukan. |
+| OS-WGA-004 | 🟡 Sebagian | Pengajuan surat, isian dinamis, syarat, unggah berkas privat, status, pembatalan, dan riwayat tersedia; E2E belum ditemukan. |
+| OS-WGA-005 | 🟡 Sebagian | Dokumen warga dan route unduhan surat/berkas syarat membatasi akun pemilik; E2E dan keluaran dokumen lengkap belum ditemukan. |
+| OS-WGA-006 | 🟡 Sebagian | Halaman pesan menampilkan catatan operator dan perkembangan permohonan; percakapan dua arah serta E2E belum tersedia. |
+| OS-WGA-007 | 🟡 Sebagian | Verifikasi surat publik melalui token/QR tersedia dan dapat dibuka dari dokumen; area warga khusus untuk verifikasi dan E2E belum ditemukan. |
+| OS-WGA-008 | 🔴 Belum ada | Tidak ditemukan program bantuan yang dipersonalisasi untuk akun warga atau halaman bantuan warga. |
+| OS-WGA-009 | 🟡 Sebagian | Pengaduan publik, tiket, identitas pelapor tersamarkan, tanggapan, status, dan publikasi tersedia; alur tiket terautentikasi/notifikasi dan E2E belum lengkap. |
+| OS-WGA-010 | 🔴 Belum ada | Tidak ditemukan lapak atau produk warga pada area publik maupun warga. |
+| OS-WGA-011 | 🔴 Belum ada | Tidak ditemukan kehadiran perangkat, jam kerja, pengajuan izin, atau rekap kehadiran. |
+| OS-ANA-001 | 🔴 Belum ada | Tidak ditemukan master kategori analisis atau domain khusus untuk modul analisis pendataan. |
+| OS-ANA-002 | 🔴 Belum ada | Tidak ditemukan domain indikator, parameter, atau konfigurasi analisis. |
+| OS-ANA-003 | 🟡 Sebagian | Survei memiliki periode aktif/nonaktif, pertanyaan, responden, jawaban, dan UI admin; sasaran/parameter analisis dan E2E belum ditemukan. |
+| OS-ANA-004 | 🟡 Sebagian | Rekap pilihan, rata-rata, minimum, maksimum, jawaban teks, dan grafik ringkas tersedia; skoring, klasifikasi analisis, laporan formal, dan E2E belum ditemukan. |
+| OS-ANA-005 | 🟡 Sebagian | Impor/ekspor respons CSV tersedia dengan validasi dan proteksi formula; integrasi formulir eksternal serta E2E belum ditemukan. |
+| OS-ANA-006 | 🟡 Sebagian | Survei aktif dan daftar pertanyaan dipublikasikan di `/desa/analisis-survei`; pengisian mandiri publik secara eksplisit belum tersedia dan E2E belum ditemukan. |
+| OS-MOD-001 | 🔴 Belum ada | Tidak ditemukan route/domain konfigurasi anjungan mandiri atau kiosk. |
+| OS-MOD-002 | 🔴 Belum ada | Tidak ditemukan buku tamu, registrasi kunjungan, pertanyaan kepuasan, atau cetak. |
+| OS-MOD-003 | 🔴 Belum ada | Tidak ditemukan modul kehadiran perangkat, jam kerja, hari libur, izin, atau rekap. |
+| OS-MOD-004 | 🔴 Belum ada | Tidak ditemukan domain lapak, pelapak, produk warga, peta produk, atau publikasi lapak. |
+| OS-MOD-005 | 🔴 Belum ada | Tidak ditemukan pelanggan, layanan berlangganan, atau pendaftaran kerja sama. |
+| OS-OPS-001 | 🟡 Sebagian | Pengguna, grup/role, modul, resource izin, menu efektif, dan pewarisan parent module tersedia; uji perilaku `applyParentInheritance` dan `buildMenu` ditambah; verifikasi E2E login admin, buka `/pengaturan/grup`, ubah izin role Operator (cabut read `analisis-survei`) dan simpan; enforcement menu/route berbasis izin terverifikasi lewat mekanisme RBAC. Perilaku akses lanjutan masih perlu pengujian lebih luas. |
+| OS-OPS-002 | 🟡 Sebagian | Dashboard `/beranda`, menu berbasis izin, AppShell, dan navigasi admin tersedia; shortcut dan konfigurasi navigasi personal belum ditemukan. |
+| OS-OPS-003 | 🟡 Sebagian | Pengaturan identitas desa, mode surat, tema, konten, dan media tersedia di beberapa route; pengaturan aplikasi/warga/lampiran terpusat belum ditemukan. |
+| OS-OPS-004 | 🟡 Sebagian | Login, sesi, perubahan PIN, hash kredensial, pemulihan PIN oleh operator, lupa sandi mandiri (email + token), rate limit login dan reset sandi, audit login/reset tersedia; OTP/2FA/captcha belum tersedia. |
+| OS-OPS-005 | 🔴 Belum ada | Tidak ditemukan layanan notifikasi umum, mailbox, SMS outbox, atau broadcast terpusat. |
+| OS-OPS-006 | 🟡 Sebagian | Log verifikasi surat dan log mutasi aset tersedia; log aktivitas umum, log login berhasil/gagal, halaman `/pengaturan/log-aktivitas` dengan filter dan RBAC `audit-log`, skema `audit_logs` + migrasi `0027`; audit trail lintas modul lain masih terbatas. |
+| OS-OPS-007 | 🟡 Sebagian | Backup database (mysqldump) via route aman + halaman `/pengaturan/database`, restore SQL/SQL.GZ dengan izin `delete` dan konfirmasi, audit trail, RBAC `database`; optimasi gambar/backup folder/inkremental dan mode multi-desa belum ter-cover. |
+| OS-OPS-008 | 🔴 Belum ada | Tidak ditemukan pengelolaan plugin atau pemasangan modul runtime. |
+| OS-OPS-009 | 🔴 Belum ada | Tidak ditemukan sinkronisasi desa atau integrasi pesan OpenDK. |
+| OS-OPS-010 | 🟡 Sebagian | Penyimpanan media, allowlist MIME, batas ukuran, sanitasi nama, path traversal protection, route publik/private, dan RBAC tersedia; konfigurasi/monitoring file serving lengkap belum ditemukan. |
+| OS-OPS-011 | 🟡 Sebagian | Route API auth, media, pengaduan, docs-status, dan beberapa ekspor internal tersedia; API informasi publik/inventaris/surat yang komprehensif dan E2E belum ditemukan. |
+| OS-OPS-012 | 🔴 Belum ada | Tidak ditemukan adapter eksternal surat/TTE yang aktif; adapter BSrE masih `null` dan integrasi provider pihak ketiga belum tersedia. |
+
 
 ## A. Kependudukan & Sosial
 
@@ -199,11 +256,11 @@ seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
 | Modul | Bukti OpenSID | Status kita | Prioritas |
 |---|---|---|---|
 | Buku administrasi umum | `controllers/Bumindes_*.php` | ✅ | — |
-| Buku penduduk induk | `Bumindes_penduduk_induk` | 🟡 | P1 (buku & CRUD ada; isi manual) |
-| Buku penduduk KTP/KK | `Bumindes_penduduk_ktpkk` | 🟡 | P1 (buku & CRUD ada; isi manual) |
-| Buku mutasi penduduk | `Bumindes_penduduk_mutasi` | 🟡 | P1 (buku & CRUD ada; isi manual) |
-| Buku rekapitulasi penduduk | `Bumindes_penduduk_rekapitulasi` | 🟡 | P1 (buku & CRUD ada; isi manual) |
-| Buku penduduk sementara | `Bumindes_penduduk_sementara` | 🟡 | P1 (buku & CRUD ada; isi manual) |
+| Buku penduduk induk | `Bumindes_penduduk_induk` | ✅ | — |
+| Buku penduduk KTP/KK | `Bumindes_penduduk_ktpkk` | ✅ | — |
+| Buku mutasi penduduk | `Bumindes_penduduk_mutasi` | ✅ | — |
+| Buku rekapitulasi penduduk | `Bumindes_penduduk_rekapitulasi` | ✅ | — |
+| Buku penduduk sementara | `Bumindes_penduduk_sementara` | ✅ | — |
 | Buku rencana & kegiatan pembangunan | `Bumindes_rencana_pembangunan`, `Bumindes_kegiatan_pembangunan` | 🔴 | P1 |
 | Buku tanah desa & tanah kas | `Bumindes_tanah_desa`, `Bumindes_tanah_kas_desa` | ✅ | — |
 | Buku kader | `Bumindes_kader` | 🔴 | P2 |
@@ -276,43 +333,48 @@ seluruh 🔴 prioritas **P0** dan **P1** — bukan seluruh 92 modul.
 | Database: backup/restore/optimasi | `controllers/{Database,Koneksi_database,Optimasi_gambar}.php` | 🔴 | P1 |
 | Sinkronisasi & OpenDK | `controllers/{Sinkronisasi,Opendk_pesan}.php`, `fweb` | 🔴 | P3 |
 | Plugin & pemasangan modul | `controllers/{Plugin,Install_modul}.php` | 🔴 | P3 |
-| Log aktivitas / audit trail | `controllers/Info_sistem.php` | 🔴 | P1 |
+| Log aktivitas / audit trail | `controllers/Info_sistem.php` | 🟡 | P1 |
 | Token/OTP & keamanan login | `controllers/{Token,Otp,Securimage}.php` | 🟡 | P1 |
 
 ---
 
-## Peta Prioritas (untuk "Tidak Kalah")
+## Peta Prioritas Implementasi
 
-### T1 — Operasi harian desa (wajib)
+Prioritas hanya menentukan urutan kerja, bukan scope produk.
+
+### Gelombang 1 — Operasi harian
 
 Penduduk + log, KK, RTM, surat lengkap + verifikasi publik, keuangan +
-transparansi, inventaris + mutasi berjenjang, bumindes inti, bantuan, layanan
-mandiri warga (NIK+PIN), web publik lengkap + tema, pengaturan, kelompok &
-lembaga, perangkat desa.
+transparansi, inventaris + mutasi berjenjang, Bumindes inti, bantuan, layanan
+mandiri warga, web publik + tema, pengaturan, kelompok/lembaga, dan perangkat.
 
-### T2 — Transparansi & pembangunan (target "setara")
+### Gelombang 2 — Transparansi dan domain desa
 
 Pembangunan + dokumentasi, pengaduan, pertanahan/persil, DPT/DTKS/suplemen,
-statistik, peta/GIS, produk hukum, IDM/SDGs, APBDes publik, analisis/survei,
-surat dinas, backup database, audit log.
+statistik, peta/GIS, produk hukum, IDM/SDGs, analisis penuh, surat dinas,
+backup database, audit log, dan keluaran lanjutan.
 
-### T3 — Ekosistem (opsional, bisa menyusul)
+### Gelombang 3 — Ekosistem dan integrasi
 
-Lapak, anjungan, buku tamu, kehadiran, SMS/mailbox/notifikasi, plugin,
-sinkronisasi/OpenDK, optimasi gambar, pemilihan, sinergi program, vaksin/Covid.
+Lapak, anjungan, buku tamu, kehadiran, Pelanggan, SMS/mailbox/notifikasi,
+plugin, sinkronisasi/OpenDK, optimasi gambar, pemilihan, sinergi program,
+vaksin/Covid, API internal/eksternal, TTE/BSrE, dan adapter pihak ketiga.
 
-**Target realistis:** T1 + T2 = "tidak kalah" untuk kebutuhan mayoritas desa.
-T3 tidak perlu dikejar sekarang.
+Semua gelombang wajib selesai untuk mencapai target produk. Status ✅ baru boleh
+diberikan setelah Definition of Done di katalog terpenuhi.
 
 ---
 
 ## Kesimpulan
 
-1. Proyek ini sudah kuat di **inti administrasi** (penduduk, KK, RTM, surat,
-   keuangan, bantuan, kelompok) dan **layanan mandiri warga** sudah berjalan
-   end-to-end; yang masih tertinggal adalah **web publik bagian lanjutan**
-   (pembangunan, peta, suplemen/DPT) dan **modul transparansi/analisis**.
-2. Prioritas yang Anda tetapkan sudah tepat: **web publik dulu**, karena itu
-   bagian yang paling dilihat warga.
-3. "Tidak kalah dengan OpenSID" bukan satu fase, melainkan **T1 + T2** yang
-   masing-masing butuh berminggu-minggu. Dokumen rencana memecahnya per fase.
+1. Proyek masih berada di fase pembangunan; target akhirnya adalah seluruh ID
+   `OS-*`, bukan hanya T1/T2.
+2. Banyak fondasi dan fitur inti sudah berjalan, tetapi fitur OpenSID lanjutan,
+   modul tambahan, API, keluaran, dan integrasi masih menjadi pekerjaan.
+3. Web publik tetap diprioritaskan karena merupakan permukaan yang langsung
+   digunakan warga, tetapi setiap permukaan admin/warga/API juga wajib memiliki
+   bukti.
+4. Ringkasan 92 kelompok hanya baseline kasar dan sekarang dihitung sekitar
+   52,2%; angka tersebut tidak mencakup seluruh detail katalog.
+5. Status milestone harus mengikuti quality gate, test, UI, dan bukti end-to-end;
+   klaim historis di arsip/ristek tidak mengubah status.
