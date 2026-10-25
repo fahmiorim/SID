@@ -31,6 +31,7 @@ export * from "./reference";
 export * from "./region";
 export * from "./resident";
 export * from "./resident-mutation";
+export * from "./election";
 export * from "./rumah-tangga";
 export * from "./survey";
 export * from "./theme";
