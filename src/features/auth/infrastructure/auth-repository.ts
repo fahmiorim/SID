@@ -20,12 +20,14 @@ export async function getAccountLoginContext(userId: string): Promise<{
   active: boolean;
   residentId: number | null;
   mustChangePin: boolean;
+  villageId: number | null;
 } | null> {
   const [row] = await db
     .select({
       active: users.active,
       residentId: users.residentId,
       mustChangePin: users.mustChangePin,
+      villageId: users.villageId,
     })
     .from(users)
     .where(eq(users.id, userId))
