@@ -20,7 +20,7 @@ export default async function PendapatPage() {
   }
   const villageId = await resolveVillageId(user);
   const [rekap, list] = await Promise.all([rekapPendapat(villageId), listPendapat(villageId, 100)]);
-  const labelMap = new Map(JAWABAN_KEPUASAN.map((j) => [j.value, j.label]));
+  const labelMap = new Map<number, string>(JAWABAN_KEPUASAN.map((j) => [j.value, j.label]));
 
   return (
     <div className="space-y-6 p-6">

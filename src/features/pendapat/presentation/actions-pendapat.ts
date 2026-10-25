@@ -15,7 +15,7 @@ import {
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
-export async function submitPendapatPublikAction(formData: FormData) {
+export async function submitPendapatPublikAction(formData: FormData): Promise<void> {
   const desa = await getIdentitasFromRequest();
   const villageId = desa.id;
   const h = await headers();
@@ -31,7 +31,7 @@ export async function submitPendapatPublikAction(formData: FormData) {
 
   const parsed = pendapatSchema.safeParse(raw);
   if (!parsed.success) {
-    return { ok: false, message: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+    return;
   }
 
   try {
@@ -42,14 +42,12 @@ export async function submitPendapatPublikAction(formData: FormData) {
       pilihan: parsed.data.pilihan,
       ipAddress: parsed.data.ipAddress || null,
     });
-    revalidatePath("/pendapat");
+    revalidatePath("/jajak-pendapat");
     revalidatePath("/beranda");
-    return { ok: true };
-  } catch (e) {
-    return { ok: false, message: e instanceof Error ? e.message : "Gagal mengirim pendapat." };
+  } catch {
+    // ignore
   }
 }
-
 export async function deletePendapatAction(id: number) {
   const user = await verifySession();
   if (!hasPermission(user.permissions, PENDAPAT_RESOURCE, "delete")) {
