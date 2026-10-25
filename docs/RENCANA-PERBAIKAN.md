@@ -560,9 +560,9 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3A. Kependudukan lanjutan (2 minggu)
 
-- [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang) —
-      `/penduduk/riwayat`, migrasi `0028`, test domain. Sisa: jenis `change`,
-      cetak/ekspor, E2E.
+ - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
+       status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
+       catat perubahan, dan ekspor CSV `/penduduk/riwayat/ekspor`. Sisa: E2E.
 - [ ] `OS-POP-005`: DPT.
 - [ ] `OS-POP-006`: DTKS.
 - [ ] `OS-POP-007`: data suplemen.

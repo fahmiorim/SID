@@ -4,6 +4,25 @@ Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
 
+ ## 2026-10-25 — riwayat penduduk: catat perubahan status + ekspor CSV
+ 
+ - **Jenis `change` (`OS-POP-002`)**: dialog "Catat Perubahan Status" di
+   `/penduduk/riwayat` mengubah status kependudukan penduduk terpilih dan
+   mencatat mutasi `change` ( tanggal, no. surat, alasan, keterangan). Izin
+   `update` ditegakkan di use case, bukan di UI; status `deceased`/`moved`
+   sengaja dikeluarkan dari pilihan karena sudah punya menu khusus.
+ - **Ekspor CSV**: rute `GET /penduduk/riwayat/ekspor` menghimpun seluruh baris
+   yang cocok filter (tanpa pagination), BOM UTF-8 + pemisah `;`, nama berkas
+   mengikuti desa. Sesi + izin `read` `penduduk`; `tenant` dari sesi.
+ - **Refactor repository**: `whereRiwayat()` dan `riwayatColumns` dipakai bersama
+   oleh daftar, ekspor, dan rincian per penduduk — tidak ada lagi duplikasi
+   klausa filter.
+ - **Verifikasi**: `npm run test` lulus (57 file, 557 test); `npm run check` dan
+   `npm run build` lulus bersama commit dokumen ini.
+ 
+ ---
+
+ 
 ## 2026-10-25 — riwayat penduduk + pemulihan sandi mandiri
 
 - **Riwayat penduduk (`OS-POP-002`)**: `/penduduk/riwayat` mencatat kelahiran,

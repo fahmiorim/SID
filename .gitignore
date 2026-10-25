@@ -44,4 +44,7 @@ next-env.d.ts
 
 # local runtime storage (uploads, generated files)
 /storage
+# local agent/tool artifacts
+.claude/
+.playwright-mcp/
 /uploads
