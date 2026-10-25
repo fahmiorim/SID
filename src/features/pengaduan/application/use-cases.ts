@@ -21,6 +21,8 @@ import { RESOURCES } from "@/features/rbac/domain/resources";
 import { requirePermission } from "@/lib/dal";
 import { notFound } from "@/lib/errors";
 
+import { notifikasiStatusPengaduan } from "./notification";
+
 /**
  * Use case pengaduan untuk panel admin.
  *
@@ -67,6 +69,22 @@ export async function tanggapiPengaduanData(
     ditanggapiPada: new Date(),
   });
 
+  // Kirim notifikasi ke pelapor setelah status berubah
+  const statusBaru = input.status;
+  const statusLama = pengaduan.status;
+  const emailPelapor = pengaduan.email;
+  const namaPelapor = pengaduan.namaPelapor;
+  const nomorTiket = pengaduan.nomorTiket;
+
+  await notifikasiStatusPengaduan({
+    id,
+    nomorTiket,
+    statusLama,
+    statusBaru,
+    emailPelapor,
+    namaPelapor,
+  });
+
   return { id };
 }
 
@@ -77,6 +95,21 @@ export async function setPublikPengaduanData(id: number, publik: boolean): Promi
 
   const updated = await setPublikPengaduan(villageId, id, publik);
   if (!updated) throw notFound("Pengaduan tidak ditemukan.");
+
+  // Kirim notifikasi jika pengaduan dipublikasikan ke halaman publik
+  if (publik) {
+    const pengaduan = await getPengaduan(villageId, id);
+    if (pengaduan && pengaduan.email) {
+      await notifikasiStatusPengaduan({
+        id: pengaduan.id,
+        nomorTiket: pengaduan.nomorTiket,
+        statusLama: pengaduan.status,
+        statusBaru: pengaduan.status,
+        emailPelapor: pengaduan.email,
+        namaPelapor: pengaduan.namaPelapor,
+      });
+    }
+  }
 
   return { id };
 }
