@@ -78,7 +78,7 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
  | OS-POP-002 | 🟡 Sebagian | Riwayat lahir, mati, pindah masuk, pindah keluar, dan perubahan status dasar tersedia di `/penduduk/riwayat` (filter jenis/tanggal/pencarian, pagination, RBAC, dialog catat perubahan) dengan tabel `resident_mutations`, test domain, serta ekspor CSV `/penduduk/riwayat/ekspor`. Gap: E2E belum ada. |
 | OS-POP-003 | 🟡 Sebagian | CRUD KK, dialog anggota, validasi kepala keluarga, dan PDF KK tersedia; riwayat perubahan anggota serta E2E belum ada. |
 | OS-POP-004 | 🟡 Sebagian | CRUD RTM, anggota, kelas sosial, BDT, wilayah, dan RBAC tersedia; laporan RTM sesuai cakupan OpenSID serta E2E belum ditemukan. |
-| OS-POP-005 | 🔴 Belum ada | Tidak ditemukan modul DPT, pemutakhiran pemilih, rekap, cetak, atau daftar publik. |
+ | OS-POP-005 | 🟡 Sebagian | Modul DPT tersedia di `/penduduk/dpt` dengan CRUD pemilihan (draf/aktif/selesai), filter nama/NIK, dusun/RW/RT, agama, pendidikan, pekerjaan, status kawin, umur min/max, pagination, RBAC `penduduk`, ekspor CSV `/penduduk/dpt/ekspor`, dan logika umur ≥17 tahun atau sudah kawin pada tanggal pemilihan aktif. Gap: cetak DPT dan E2E belum ada. |
 | OS-POP-006 | 🔴 Belum ada | Tidak ditemukan modul DTKS, impor, anggota, detail, atau laporan. |
 | OS-POP-007 | 🔴 Belum ada | Tidak ditemukan definisi jenis suplemen, pendataan, impor, detail, atau cetak. |
 | OS-POP-008 | 🔴 Belum ada | Tidak ditemukan modul KIA, ibu hamil, pemantauan anak, skor stunting, rekap, atau cetak. |

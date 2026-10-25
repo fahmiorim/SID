@@ -4,6 +4,18 @@ Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
 
+ ## 2026-10-25 — modul DPT (Daftar Pemilih Tetap) OS-POP-005
+ 
+ - **Migrasi `elections` (`0029`)**: tabel `elections` (judul, status draf/aktif/selesai, tanggal, keterangan, unique index per desa untuk pemilihan aktif).
+ - **Domain & repository**: `features/penduduk/domain/dpt.ts` (skema zod, tipe DptRow, ListDptParams, CSV builder), `infrastructure/dpt-repository.ts` (query tenant-aware, filter lengkap, logika umur ≥17 tahun atau sudah kawin pada tanggal pemilihan aktif).
+ - **Use case**: `application/dpt-use-cases.ts` (listElections, saveElection, deleteElection, getDpt, exportDpt, validasi satu aktif per desa).
+ - **Server Actions**: `presentation/actions-dpt.ts` (saveElectionAction, deleteElectionAction, getDptAction, exportDptAction).
+ - **Halaman admin**: `/penduduk/dpt` dengan PageHeader, ElectionDialog (CRUD pemilihan), DptFilter (filter nama/NIK, dusun/RW/RT, agama, pendidikan, pekerjaan, status kawin, umur min/max), DptTable, ekspor CSV.
+ - **Ekspor CSV**: rute `GET /penduduk/dpt/ekspor` dengan filter yang sama tanpa pagination, BOM UTF-8 + pemisah `;`.
+ - **Verifikasi**: `npm run check` lulus (typecheck, lint, format, test 57 file 557 test), `npm run build` lulus.
+ 
+ ---
+
  ## 2026-10-25 — riwayat penduduk: catat perubahan status + ekspor CSV
  
  - **Jenis `change` (`OS-POP-002`)**: dialog "Catat Perubahan Status" di
