@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -6,10 +6,15 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { listRiwayat } from "@/features/penduduk/application/riwayat-penduduk-use-cases";
 import { listPenduduk } from "@/features/penduduk/application/use-cases";
 import { PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
-import { MUTATION_TYPES, type MutationType } from "@/features/penduduk/domain/riwayat-penduduk";
+import {
+  normalisasiMutationType,
+  normalisasiTanggal,
+} from "@/features/penduduk/domain/riwayat-penduduk";
+import { LaporanPrintButton } from "@/features/penduduk/presentation/components/laporan-print-button";
 import { RiwayatActions } from "@/features/penduduk/presentation/components/riwayat/riwayat-actions";
 import { RiwayatFilter } from "@/features/penduduk/presentation/components/riwayat/riwayat-filter";
 import { RiwayatTable } from "@/features/penduduk/presentation/components/riwayat/riwayat-table";
@@ -22,10 +27,6 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 20;
 
-function toMutationType(value: string): MutationType | "all" {
-  return (MUTATION_TYPES as readonly string[]).includes(value) ? (value as MutationType) : "all";
-}
-
 export default async function RiwayatPendudukPage({
   searchParams,
 }: PageProps<"/penduduk/riwayat">) {
@@ -36,14 +37,17 @@ export default async function RiwayatPendudukPage({
   }
 
   const params = await searchParams;
-  const type = toMutationType(typeof params.type === "string" ? params.type : "all");
+  const type = normalisasiMutationType(typeof params.type === "string" ? params.type : undefined);
   const q = typeof params.q === "string" ? params.q.trim() : "";
-  const from = typeof params.from === "string" ? params.from : "";
-  const to = typeof params.to === "string" ? params.to : "";
+  const from = normalisasiTanggal(typeof params.from === "string" ? params.from : undefined);
+  const to = normalisasiTanggal(typeof params.to === "string" ? params.to : undefined);
   const rawPage = Number(typeof params.page === "string" ? params.page : "1");
   const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
 
-  const result = await listRiwayat({ page, perPage: PAGE_SIZE, type, q, from, to });
+  const [result, desa] = await Promise.all([
+    listRiwayat({ page, perPage: PAGE_SIZE, type, q, from, to }),
+    getIdentitas(),
+  ]);
   const canManage = hasPermission(user.permissions, PENDUDUK_RESOURCE, "update");
   const pendudukOptions = canManage
     ? (
@@ -69,31 +73,61 @@ export default async function RiwayatPendudukPage({
 
   const pageCount = Math.max(1, Math.ceil(result.total / result.perPage));
 
+  const exportQuery = new URLSearchParams();
+  if (type !== "all") exportQuery.set("type", type);
+  if (q) exportQuery.set("q", q);
+  if (from) exportQuery.set("from", from);
+  if (to) exportQuery.set("to", to);
+  const exportQs = exportQuery.toString();
+  const exportHref = exportQs ? `/penduduk/riwayat/ekspor?${exportQs}` : "/penduduk/riwayat/ekspor";
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Riwayat Penduduk"
-        description="Catatan kelahiran, kematian, pindah masuk, dan pindah keluar."
+        description="Catatan kelahiran, kematian, pindah masuk, pindah keluar, dan perubahan status."
         actions={
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
             <Button variant="outline" asChild>
               <Link href="/penduduk">
                 <ArrowLeft className="size-4" />
                 Data Penduduk
               </Link>
             </Button>
+            <Button variant="outline" asChild>
+              <a href={exportHref}>
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
+            <LaporanPrintButton />
             {canManage ? <RiwayatActions pendudukOptions={pendudukOptions} /> : null}
           </div>
         }
       />
 
+      <div className="hidden text-center print:block">
+        <p className="text-lg font-bold uppercase">Riwayat Penduduk</p>
+        <p className="text-sm">
+          {desa?.namaDesa ? `Desa ${desa.namaDesa}` : "Desa"}
+          {desa?.namaKecamatan ? `, Kecamatan ${desa.namaKecamatan}` : ""}
+        </p>
+        {from || to ? (
+          <p className="text-sm">
+            Periode: {from || "awal"} s.d. {to || "akhir"}
+          </p>
+        ) : null}
+      </div>
+
       <Card>
         <CardContent className="space-y-4">
-          <RiwayatFilter />
+          <div className="print:hidden">
+            <RiwayatFilter />
+          </div>
           <RiwayatTable rows={result.rows} total={result.total} page={result.page} />
 
           {pageCount > 1 ? (
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex items-center justify-end gap-2 print:hidden">
               <Button variant="outline" size="sm" asChild disabled={result.page <= 1}>
                 <Link
                   href={pageHref(Math.max(1, result.page - 1))}

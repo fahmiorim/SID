@@ -6,12 +6,14 @@ import {
   catatDatang,
   catatKelahiran,
   catatKematian,
+  catatPerubahan,
   catatPindahKeluar,
 } from "@/features/penduduk/application/riwayat-penduduk-use-cases";
 import {
   catatDatangSchema,
   catatKelahiranSchema,
   catatKematianSchema,
+  catatPerubahanSchema,
   catatPindahKeluarSchema,
 } from "@/features/penduduk/domain/riwayat-penduduk";
 import {
@@ -113,6 +115,31 @@ export async function catatPindahKeluarAction(
     revalidatePath(PENDUDUK_PATH);
     revalidatePath(RIWAYAT_PATH);
     return successState("Pindah keluar berhasil dicatat.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function catatPerubahanAction(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    const parsed = catatPerubahanSchema.safeParse({
+      residentId: num(formData, "residentId"),
+      eventDate: text(formData, "eventDate"),
+      lifeStatus: text(formData, "lifeStatus"),
+      referenceNo: text(formData, "referenceNo"),
+      reason: text(formData, "reason"),
+      notes: text(formData, "notes"),
+    });
+    if (!parsed.success) {
+      return errorState("Periksa kembali isian Anda.", zodToFieldErrors(parsed.error));
+    }
+    await catatPerubahan(parsed.data);
+    revalidatePath(PENDUDUK_PATH);
+    revalidatePath(RIWAYAT_PATH);
+    return successState("Perubahan status berhasil dicatat.");
   } catch (error) {
     return toErrorState(error);
   }

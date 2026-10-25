@@ -7,12 +7,25 @@ import {
 } from "@/db/schema/resident-mutation";
 import { optionalDigits, optionalIsoDate, optionalSelectId, optionalText } from "@/lib/forms";
 
+import { toCsv } from "./laporan-penduduk";
+import { LIFE_STATUSES } from "./penduduk";
+
 export const MUTATION_TYPES = RESIDENT_MUTATION_TYPES;
 export type MutationType = ResidentMutationType;
 
 export const MUTATION_TYPE_LABELS = RESIDENT_MUTATION_TYPE_LABELS;
 
 export const mutationTypeSchema = z.enum(MUTATION_TYPES);
+
+export function normalisasiMutationType(value: string | null | undefined): MutationType | "all" {
+  return (MUTATION_TYPES as readonly string[]).includes(value ?? "")
+    ? (value as MutationType)
+    : "all";
+}
+
+export function normalisasiTanggal(value: string | null | undefined): string {
+  return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+}
 
 export const catatKelahiranSchema = z.object({
   eventDate: z.iso.date("Tanggal lahir tidak valid."),
@@ -71,6 +84,17 @@ export const catatDatangSchema = z.object({
 
 export type CatatDatangInput = z.infer<typeof catatDatangSchema>;
 
+export const catatPerubahanSchema = z.object({
+  residentId: z.coerce.number().int().positive("Pilih penduduk."),
+  eventDate: z.iso.date("Tanggal perubahan tidak valid."),
+  lifeStatus: z.enum(LIFE_STATUSES, { error: "Status kependudukan tidak valid." }),
+  reason: optionalText(255),
+  notes: optionalText(1000),
+  referenceNo: optionalText(100),
+});
+
+export type CatatPerubahanInput = z.infer<typeof catatPerubahanSchema>;
+
 export interface RiwayatPendudukRow {
   id: number;
   villageId: number;
@@ -106,4 +130,37 @@ export interface ListRiwayatResult {
   total: number;
   page: number;
   perPage: number;
+}
+
+/** Teks CSV riwayat penduduk, memakai pemisah dan BOM yang sama dengan laporan. */
+export function buildRiwayatPendudukCsv(input: {
+  namaDesa: string | null;
+  rows: RiwayatPendudukRow[];
+}): string {
+  const rows: string[][] = [
+    ["Riwayat Penduduk"],
+    ["Desa", input.namaDesa ?? "-"],
+    [],
+    ["Tanggal", "Jenis", "Nama", "NIK", "No. Surat", "Alasan", "Keterangan"],
+    ...input.rows.map((row) => [
+      row.eventDate,
+      MUTATION_TYPE_LABELS[row.type] ?? row.type,
+      row.residentName ?? "-",
+      row.residentNationalId ?? "-",
+      row.referenceNo ?? "-",
+      row.reason ?? "-",
+      row.notes ?? "-",
+    ]),
+  ];
+
+  return `\uFEFF${toCsv(rows)}`;
+}
+
+export function riwayatPendudukFilename(namaDesa: string | null): string {
+  const slug =
+    (namaDesa ?? "desa")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "desa";
+  return `riwayat-penduduk-${slug}.csv`;
 }

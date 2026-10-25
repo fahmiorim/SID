@@ -11,10 +11,12 @@ import {
   catatDatangSchema,
   catatKelahiranSchema,
   catatKematianSchema,
+  catatPerubahanSchema,
   catatPindahKeluarSchema,
   type CatatDatangInput,
   type CatatKelahiranInput,
   type CatatKematianInput,
+  type CatatPerubahanInput,
   type CatatPindahKeluarInput,
   type ListRiwayatParams,
   type ListRiwayatResult,
@@ -26,6 +28,7 @@ import {
 import {
   getRiwayatByResident,
   listRiwayatPenduduk,
+  listRiwayatPendudukExport,
 } from "@/features/penduduk/infrastructure/riwayat-penduduk-repository";
 import { requirePermission } from "@/lib/dal";
 import { conflict, notFound } from "@/lib/errors";
@@ -34,6 +37,12 @@ export async function listRiwayat(params: ListRiwayatParams): Promise<ListRiwaya
   const user = await requirePermission(PENDUDUK_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
   return listRiwayatPenduduk(villageId, params);
+}
+
+export async function listRiwayatExport(params: ListRiwayatParams) {
+  const user = await requirePermission(PENDUDUK_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  return listRiwayatPendudukExport(villageId, params);
 }
 
 export async function getRiwayatByPendudukId(residentId: number) {
@@ -177,6 +186,42 @@ export async function catatPindahKeluar(input: CatatPindahKeluarInput, actorId?:
       referenceNo: parsed.referenceNo || null,
       toAddress: parsed.toAddress || null,
       meta,
+    });
+  });
+}
+
+export async function catatPerubahan(input: CatatPerubahanInput, actorId?: string | null) {
+  const user = await requirePermission(PENDUDUK_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+  const parsed = catatPerubahanSchema.parse(input);
+
+  if (parsed.lifeStatus === "deceased" || parsed.lifeStatus === "moved") {
+    throw conflict("Gunakan pencatatan kematian atau pindah keluar untuk status tersebut.");
+  }
+
+  const penduduk = await findPendudukById(villageId, parsed.residentId);
+  if (!penduduk) throw notFound("Data penduduk tidak ditemukan.");
+  if (penduduk.lifeStatus === parsed.lifeStatus) {
+    throw conflict("Status kependudukan tidak berubah.");
+  }
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(residents)
+      .set({ lifeStatus: parsed.lifeStatus, updatedAt: new Date() })
+      .where(and(eq(residents.id, parsed.residentId), eq(residents.villageId, villageId)));
+
+    await tx.insert(residentMutations).values({
+      villageId,
+      residentId: parsed.residentId,
+      type: "change",
+      eventDate: parsed.eventDate,
+      reportedAt: new Date(),
+      actorId: actorId ?? user.id,
+      reason: parsed.reason || null,
+      notes: parsed.notes || null,
+      referenceNo: parsed.referenceNo || null,
+      meta: { fromLifeStatus: penduduk.lifeStatus, toLifeStatus: parsed.lifeStatus },
     });
   });
 }

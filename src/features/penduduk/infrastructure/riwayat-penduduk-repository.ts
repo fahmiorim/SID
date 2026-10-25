@@ -16,6 +16,27 @@ import type {
 const DEFAULT_PAGE = 1;
 const DEFAULT_PER_PAGE = 20;
 
+const riwayatColumns = {
+  id: residentMutations.id,
+  villageId: residentMutations.villageId,
+  residentId: residentMutations.residentId,
+  type: residentMutations.type,
+  eventDate: residentMutations.eventDate,
+  reportedAt: residentMutations.reportedAt,
+  actorId: residentMutations.actorId,
+  reason: residentMutations.reason,
+  notes: residentMutations.notes,
+  referenceNo: residentMutations.referenceNo,
+  fromRegionId: residentMutations.fromRegionId,
+  toRegionId: residentMutations.toRegionId,
+  fromAddress: residentMutations.fromAddress,
+  toAddress: residentMutations.toAddress,
+  meta: residentMutations.meta,
+  residentName: residents.name,
+  residentNationalId: residents.nationalId,
+  actorName: users.name,
+};
+
 function toDateString(value: unknown): string {
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
@@ -26,14 +47,7 @@ function toDateString(value: unknown): string {
   return String(value ?? "");
 }
 
-export async function listRiwayatPenduduk(
-  villageId: number,
-  params: ListRiwayatParams,
-): Promise<ListRiwayatResult> {
-  const page = Math.max(1, params.page ?? DEFAULT_PAGE);
-  const perPage = Math.min(100, Math.max(1, params.perPage ?? DEFAULT_PER_PAGE));
-  const offset = (page - 1) * perPage;
-
+function whereRiwayat(villageId: number, params: ListRiwayatParams) {
   const conditions = [eq(residentMutations.villageId, villageId)];
 
   if (params.type && params.type !== "all") {
@@ -56,34 +70,23 @@ export async function listRiwayatPenduduk(
     );
   }
 
-  const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
+  return and(...conditions);
+}
 
-  const baseQuery = db
-    .select({
-      id: residentMutations.id,
-      villageId: residentMutations.villageId,
-      residentId: residentMutations.residentId,
-      type: residentMutations.type,
-      eventDate: residentMutations.eventDate,
-      reportedAt: residentMutations.reportedAt,
-      actorId: residentMutations.actorId,
-      reason: residentMutations.reason,
-      notes: residentMutations.notes,
-      referenceNo: residentMutations.referenceNo,
-      fromRegionId: residentMutations.fromRegionId,
-      toRegionId: residentMutations.toRegionId,
-      fromAddress: residentMutations.fromAddress,
-      toAddress: residentMutations.toAddress,
-      meta: residentMutations.meta,
-      residentName: residents.name,
-      residentNationalId: residents.nationalId,
-      actorName: users.name,
-    })
+export async function listRiwayatPenduduk(
+  villageId: number,
+  params: ListRiwayatParams,
+): Promise<ListRiwayatResult> {
+  const page = Math.max(1, params.page ?? DEFAULT_PAGE);
+  const perPage = Math.min(100, Math.max(1, params.perPage ?? DEFAULT_PER_PAGE));
+  const offset = (page - 1) * perPage;
+  const whereClause = whereRiwayat(villageId, params);
+
+  const rows = await db
+    .select(riwayatColumns)
     .from(residentMutations)
     .leftJoin(residents, eq(residents.id, residentMutations.residentId))
-    .leftJoin(users, eq(users.id, residentMutations.actorId));
-
-  const rows = await baseQuery
+    .leftJoin(users, eq(users.id, residentMutations.actorId))
     .where(whereClause)
     .orderBy(desc(residentMutations.eventDate), desc(residentMutations.id))
     .limit(perPage)
@@ -95,18 +98,36 @@ export async function listRiwayatPenduduk(
     .leftJoin(residents, eq(residents.id, residentMutations.residentId))
     .where(whereClause);
 
-  const mapped: RiwayatPendudukRow[] = rows.map((row) => ({
-    ...row,
-    eventDate: toDateString(row.eventDate),
-    meta: row.meta ?? null,
-  }));
-
   return {
-    rows: mapped,
+    rows: rows.map((row) => ({
+      ...row,
+      eventDate: toDateString(row.eventDate),
+      meta: row.meta ?? null,
+    })),
     total: Number(totalRow?.count ?? 0),
     page,
     perPage,
   };
+}
+
+/** Semua baris yang cocok filter, tanpa pagination — untuk ekspor CSV. */
+export async function listRiwayatPendudukExport(
+  villageId: number,
+  params: ListRiwayatParams,
+): Promise<RiwayatPendudukRow[]> {
+  const rows = await db
+    .select(riwayatColumns)
+    .from(residentMutations)
+    .leftJoin(residents, eq(residents.id, residentMutations.residentId))
+    .leftJoin(users, eq(users.id, residentMutations.actorId))
+    .where(whereRiwayat(villageId, params))
+    .orderBy(desc(residentMutations.eventDate), desc(residentMutations.id));
+
+  return rows.map((row) => ({
+    ...row,
+    eventDate: toDateString(row.eventDate),
+    meta: row.meta ?? null,
+  }));
 }
 
 export async function getRiwayatByResident(
@@ -115,26 +136,7 @@ export async function getRiwayatByResident(
   limit = 10,
 ): Promise<RiwayatPendudukRow[]> {
   const rows = await db
-    .select({
-      id: residentMutations.id,
-      villageId: residentMutations.villageId,
-      residentId: residentMutations.residentId,
-      type: residentMutations.type,
-      eventDate: residentMutations.eventDate,
-      reportedAt: residentMutations.reportedAt,
-      actorId: residentMutations.actorId,
-      reason: residentMutations.reason,
-      notes: residentMutations.notes,
-      referenceNo: residentMutations.referenceNo,
-      fromRegionId: residentMutations.fromRegionId,
-      toRegionId: residentMutations.toRegionId,
-      fromAddress: residentMutations.fromAddress,
-      toAddress: residentMutations.toAddress,
-      meta: residentMutations.meta,
-      residentName: residents.name,
-      residentNationalId: residents.nationalId,
-      actorName: users.name,
-    })
+    .select(riwayatColumns)
     .from(residentMutations)
     .leftJoin(residents, eq(residents.id, residentMutations.residentId))
     .leftJoin(users, eq(users.id, residentMutations.actorId))
