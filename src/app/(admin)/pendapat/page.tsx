@@ -66,7 +66,7 @@ export default async function PendapatPage() {
                     {r.createdAt ? new Date(r.createdAt as string).toLocaleString("id-ID") : "-"}
                   </td>
                   <td className="p-2">{r.pengguna ?? "-"}</td>
-                  <td className="p-2">{labelMap.get(r.pilihan) ?? r.pilihan}</td>
+                  <td className="p-2">{labelMap.get(Number(r.pilihan)) ?? r.pilihan}</td>
                 </tr>
               ))}
               {list.length === 0 && (
