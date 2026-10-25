@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Card, CardContent } from "@/components/ui/card";
 import { getBumindesData } from "@/features/bumindes/presentation/actions";
+import { SinkronisasiButton } from "@/features/bumindes/presentation/components/sinkronisasi-button";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { verifySession } from "@/lib/dal";
@@ -27,6 +28,10 @@ export default async function BukuAdministrasiPage() {
         title="Buku Administrasi Desa"
         description="Buku-buku administrasi umum, penduduk, dan tanah desa."
       />
+
+      <div className="flex gap-2">
+        <SinkronisasiButton />
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {buku.length === 0 ? (

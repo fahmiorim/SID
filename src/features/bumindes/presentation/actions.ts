@@ -7,6 +7,7 @@ import {
   getDaftarBukuData,
   hapusItemBukuData,
   simpanItemBukuData,
+  sinkronisasiBumindesDariPenduduk,
 } from "@/features/bumindes/application/use-cases";
 import { itemBukuFormSchema } from "@/features/bumindes/domain/bumindes";
 import {
@@ -83,6 +84,17 @@ export async function hapusItemBukuAction(
     revalidatePath(PATH);
     revalidatePath(`${PATH}/${hasil.bukuId}`);
     return successState("Item dihapus.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/** Sinkronisasi ringkasan buku dari data penduduk. */
+export async function sinkronisasiBumindesAction(): Promise<ActionState> {
+  try {
+    const hasil = await sinkronisasiBumindesDariPenduduk();
+    revalidatePath(PATH);
+    return successState(hasil.pesan);
   } catch (error) {
     return toErrorState(error);
   }
