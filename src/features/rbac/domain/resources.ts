@@ -66,6 +66,9 @@ export const RESOURCES = {
   widget: "widget",
   slider: "slider",
   dokumenPublik: "dokumen-publik",
+  auditLog: "audit-log",
+  database: "database",
 } as const;
+/** Role khusus untuk super-admin yang mengelola banyak desa. */
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

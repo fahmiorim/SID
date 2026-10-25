@@ -471,4 +471,23 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "pengaturan",
   },
+  {
+    slug: "audit-log",
+    name: "Log Aktivitas Keamanan",
+    url: "/pengaturan/log-aktivitas",
+    icon: "shield-check",
+    sortOrder: 5,
+    isGroup: false,
+    isHidden: true,
+    parentSlug: "pengaturan",
+  },
+  {
+    slug: "database",
+    name: "Pengaturan Database",
+    url: "/pengaturan/database",
+    icon: "database",
+    sortOrder: 6,
+    isGroup: false,
+    parentSlug: "pengaturan",
+  },
 ] as const;
