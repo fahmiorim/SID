@@ -20,6 +20,14 @@
  
  --- 
  
+ ## 2026-10-25 - Modul Direktori Kontak OS-POP-015 (sebagian)
+ 
+ - **Migrasi `0034`**: `kontak`, `kontak_grup`, `anggota_grup_kontak` (tenant-aware `village_id`).
+ - **Schema/Domain/Repo/Actions**: `db/schema/kontak.ts`, `features/kontak/*`, RBAC resource `daftar-kontak`/`grup-kontak`.
+ - **Halaman Admin**: `/hubung-warga/daftar-kontak`, `/hubung-warga/grup-kontak`.
+ - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
+ 
+ --- 
  ## 2026-10-25 - modul Data Suplemen OS-POP-007
  
  - **Migrasi `suplemen` & `suplemen_terdata` (`0031`)**: tabel master suplemen (nama, slug, sasaran 1/2, keterangan) dan relasi terdata (penduduk/keluarga, form isian JSON).
