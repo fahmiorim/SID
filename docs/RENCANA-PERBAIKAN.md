@@ -564,8 +564,8 @@ tidak ada kategori yang dikeluarkan dari target akhir.
        status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
        catat perubahan, dan ekspor CSV `/penduduk/riwayat/ekspor`. Sisa: E2E.
  - [x] `OS-POP-005`: DPT (Daftar Pemilih Tetap) — `/penduduk/dpt`, migrasi `elections` (`0029`), CRUD pemilihan (draf/aktif/selesai), filter lengkap, pagination, ekspor CSV, logika umur ≥17 atau sudah kawin pada tanggal pemilihan aktif, RBAC `penduduk`. Gap: cetak DPT, E2E.
-- [ ] `OS-POP-006`: DTKS.
-- [ ] `OS-POP-007`: data suplemen.
+ - [x] `OS-POP-006`: DTKS. `/penduduk/dtks` dengan CRUD (dari RTM), status draf/terverifikasi, agregasi anggota, dan pencatatan petugas/responden. Gap: detail formulir (tanggapan/ekspor), lampiran, pengaturan program, laporan, dan E2E belum ada.
+ - [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Gap: detail/form terdata, impor/ekspor, laporan, cetak, dan E2E belum ada.
 - [ ] `OS-POP-010`, `OS-POP-013`: statistik penduduk & bantuan.
 - [ ] `OS-POP-008`, `OS-POP-009`, `OS-POP-014`: stunting, vaksin/Covid,
       dan pendapat warga.

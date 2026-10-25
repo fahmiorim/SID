@@ -4,6 +4,15 @@ Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
 
+ ## 2026-10-25 - modul Data Suplemen OS-POP-007
+ 
+ - **Migrasi `suplemen` & `suplemen_terdata` (`0031`)**: tabel master suplemen (nama, slug, sasaran 1/2, keterangan) dan relasi terdata (penduduk/keluarga, form isian JSON).
+ - **Domain, Repository, Use Case & Actions**: CRUD lengkap untuk suplemen, aman dengan tenant isolation (`villageId`) dan RBAC `penduduk` (`update`/`delete`).
+ - **Halaman Admin**: `/penduduk/suplemen` lengkap dengan dialog tambah suplemen, tabel daftar suplemen, badge sasaran, dan hitung jumlah terdata.
+ - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
+ 
+ ---
+ 
  ## 2026-10-25 — modul DPT (Daftar Pemilih Tetap) OS-POP-005
  
  - **Migrasi `elections` (`0029`)**: tabel `elections` (judul, status draf/aktif/selesai, tanggal, keterangan, unique index per desa untuk pemilihan aktif).

@@ -79,8 +79,8 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
 | OS-POP-003 | 🟡 Sebagian | CRUD KK, dialog anggota, validasi kepala keluarga, dan PDF KK tersedia; riwayat perubahan anggota serta E2E belum ada. |
 | OS-POP-004 | 🟡 Sebagian | CRUD RTM, anggota, kelas sosial, BDT, wilayah, dan RBAC tersedia; laporan RTM sesuai cakupan OpenSID serta E2E belum ditemukan. |
  | OS-POP-005 | 🟡 Sebagian | Modul DPT tersedia di `/penduduk/dpt` dengan CRUD pemilihan (draf/aktif/selesai), filter nama/NIK, dusun/RW/RT, agama, pendidikan, pekerjaan, status kawin, umur min/max, pagination, RBAC `penduduk`, ekspor CSV `/penduduk/dpt/ekspor`, dan logika umur ≥17 tahun atau sudah kawin pada tanggal pemilihan aktif. Gap: cetak DPT dan E2E belum ada. |
-| OS-POP-006 | 🔴 Belum ada | Tidak ditemukan modul DTKS, impor, anggota, detail, atau laporan. |
-| OS-POP-007 | 🔴 Belum ada | Tidak ditemukan definisi jenis suplemen, pendataan, impor, detail, atau cetak. |
+ | OS-POP-006 | Sebagian | Modul DTKS tersedia di `/penduduk/dtks` dengan CRUD (dari RTM), status draf/terverifikasi, agregasi anggota, dan pencatatan petugas/responden. Gap: detail formulir (tanggapan/ekspor), lampiran, pengaturan program, laporan, dan E2E belum ada. |
+ | OS-POP-007 | 🟡 Sebagian | Modul Suplemen tersedia di `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Gap: detail/form terdata, impor/ekspor, laporan, cetak, dan E2E belum ada. |
 | OS-POP-008 | 🔴 Belum ada | Tidak ditemukan modul KIA, ibu hamil, pemantauan anak, skor stunting, rekap, atau cetak. |
 | OS-POP-009 | 🔴 Belum ada | Tidak ditemukan modul vaksin/Covid, pendataan, status, rekap, atau publikasi khusus. |
 | OS-POP-010 | 🟡 Sebagian | Laporan umur, gender, agama, pendidikan, pekerjaan, status kawin, wilayah, kelompok umur, print, dan CSV tersedia; laporan periodik/rentan lengkap serta E2E belum ditemukan. |
