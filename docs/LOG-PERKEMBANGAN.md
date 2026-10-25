@@ -4,6 +4,23 @@ Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
 
+## 2026-10-25 — riwayat penduduk + pemulihan sandi mandiri
+
+- **Riwayat penduduk (`OS-POP-002`)**: `/penduduk/riwayat` mencatat kelahiran,
+  kematian, pindah masuk, dan pindah keluar; filter jenis/tanggal/pencarian,
+  pagination, RBAC `penduduk`, serta tautan dari `/penduduk`. Skema
+  `resident_mutations` + migrasi `0028`. Gap: jenis `change`, cetak/ekspor,
+  dan E2E.
+- **Pemulihan sandi (`OS-OPS-004`)**: halaman `/lupa-sandi` dan `/reset-sandi`;
+  tautan email lewat Resend (fallback console hanya di development), rate limit
+  endpoint reset, dan audit `auth.password.reset.request`/`success`.
+- **Verifikasi**: `npm run check` lulus (57 file, 550 test), `npm run build`
+  lulus; empat alur mutasi diuji lewat UI dan pemulihan sandi diuji lewat HTTP
+  (request token → reset → sign-in) termasuk audit. Migrasi `0028` diterapkan
+  ke DB pengembangan; data uji dibersihkan.
+
+---
+
 ## 2026-10-25 — quality gate dipulihkan
 
 - **Status dokumentasi**: `src/lib/docs-status.ts` menjadi model typed untuk

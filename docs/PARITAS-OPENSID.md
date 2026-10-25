@@ -75,7 +75,7 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
 | ID | Status audit per-ID | Bukti dan gap audit |
 |---|---|---|
 | OS-POP-001 | 🟡 Sebagian | CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`; cetak/detail/ekspor per penduduk belum ditemukan, ekspor yang ada hanya laporan CSV. |
-| OS-POP-002 | 🔴 Belum ada | Tidak ditemukan domain/route untuk log lahir, mati, pindah, datang, atau riwayat perubahan penduduk. |
+| OS-POP-002 | 🟡 Sebagian | Riwayat lahir, mati, pindah masuk, dan pindah keluar tersedia di `/penduduk/riwayat` (filter jenis/tanggal/pencarian, pagination, RBAC) dengan tabel `resident_mutations` dan test domain. Gap: jenis `change` (perubahan status dasar), cetak/ekspor riwayat, serta E2E belum ada. |
 | OS-POP-003 | 🟡 Sebagian | CRUD KK, dialog anggota, validasi kepala keluarga, dan PDF KK tersedia; riwayat perubahan anggota serta E2E belum ada. |
 | OS-POP-004 | 🟡 Sebagian | CRUD RTM, anggota, kelas sosial, BDT, wilayah, dan RBAC tersedia; laporan RTM sesuai cakupan OpenSID serta E2E belum ditemukan. |
 | OS-POP-005 | 🔴 Belum ada | Tidak ditemukan modul DPT, pemutakhiran pemilih, rekap, cetak, atau daftar publik. |
@@ -178,7 +178,7 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
 | OS-OPS-001 | 🟡 Sebagian | Pengguna, grup/role, modul, resource izin, menu efektif, dan pewarisan parent module tersedia; uji perilaku `applyParentInheritance` dan `buildMenu` ditambah; verifikasi E2E login admin, buka `/pengaturan/grup`, ubah izin role Operator (cabut read `analisis-survei`) dan simpan; enforcement menu/route berbasis izin terverifikasi lewat mekanisme RBAC. Perilaku akses lanjutan masih perlu pengujian lebih luas. |
 | OS-OPS-002 | 🟡 Sebagian | Dashboard `/beranda`, menu berbasis izin, AppShell, dan navigasi admin tersedia; shortcut dan konfigurasi navigasi personal belum ditemukan. |
 | OS-OPS-003 | 🟡 Sebagian | Pengaturan identitas desa, mode surat, tema, konten, dan media tersedia di beberapa route; pengaturan aplikasi/warga/lampiran terpusat belum ditemukan. |
-| OS-OPS-004 | 🟡 Sebagian | Login, sesi, perubahan PIN, hash kredensial, pemulihan PIN oleh operator, lupa sandi mandiri (email + token), rate limit login dan reset sandi, audit login/reset tersedia; OTP/2FA/captcha belum tersedia. |
+| OS-OPS-004 | 🟡 Sebagian | Login, sesi, perubahan PIN, hash kredensial, pemulihan PIN oleh operator, lupa sandi mandiri (`/lupa-sandi`, `/reset-sandi`, email Resend + token), rate limit login/reset, serta audit permintaan/keberhasilan reset tersedia. Bukti: `src/lib/auth.ts`, `src/features/auth/presentation/components/*sandi-form.tsx`. OTP/2FA/captcha belum tersedia. |
 | OS-OPS-005 | 🔴 Belum ada | Tidak ditemukan layanan notifikasi umum, mailbox, SMS outbox, atau broadcast terpusat. |
 | OS-OPS-006 | 🟡 Sebagian | Log verifikasi surat dan log mutasi aset tersedia; log aktivitas umum, log login berhasil/gagal, halaman `/pengaturan/log-aktivitas` dengan filter dan RBAC `audit-log`, skema `audit_logs` + migrasi `0027`; audit trail lintas modul lain masih terbatas. |
 | OS-OPS-007 | 🟡 Sebagian | Backup database (mysqldump) via route aman + halaman `/pengaturan/database`, restore SQL/SQL.GZ dengan izin `delete` dan konfirmasi, audit trail, RBAC `database`; optimasi gambar/backup folder/inkremental dan mode multi-desa belum ter-cover. |

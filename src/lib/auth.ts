@@ -2,10 +2,37 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { username } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
+import { users } from "@/db/schema/auth";
+import { AUDIT_EVENTS, type AuditEventInput } from "@/features/audit/domain/audit";
+import { appendAuditLog } from "@/features/audit/infrastructure/audit-repository";
 import { APP_NAME } from "@/lib/app-config";
 import { env } from "@/lib/env";
+
+/** Audit reset sandi tidak boleh menggagalkan alur pemulihan akun. */
+async function auditReset(input: AuditEventInput, request?: Request) {
+  const forwarded = request?.headers.get("x-forwarded-for");
+  try {
+    await appendAuditLog({
+      ...input,
+      ipAddress: forwarded?.split(",")[0]?.trim() ?? null,
+      userAgent: request?.headers.get("user-agent") ?? null,
+    });
+  } catch (error) {
+    console.error("[auth] gagal mencatat audit reset sandi:", error);
+  }
+}
+
+async function villageIdForUser(userId: string) {
+  const [row] = await db
+    .select({ villageId: users.villageId })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return row?.villageId ?? null;
+}
 
 /**
  * Instans better-auth (server-only).
@@ -36,6 +63,51 @@ export const auth = betterAuth({
     minPasswordLength: 6,
     maxPasswordLength: 72,
     requireEmailVerification: false,
+    sendResetPassword: async ({ user, token }, request) => {
+      await auditReset(
+        {
+          villageId: await villageIdForUser(user.id),
+          actorId: user.id,
+          event: AUDIT_EVENTS.passwordResetRequest,
+          resource: "auth",
+          resourceId: user.id,
+        },
+        request,
+      );
+
+      const resetUrl = `${env.BETTER_AUTH_URL}/reset-sandi?token=${token}`;
+      const apiKey = process.env.RESEND_API_KEY;
+      if (!apiKey) {
+        // shortcut: tanpa Resend, tautan reset hanya tersedia di console dev.
+        if (env.NODE_ENV === "development") {
+          console.warn(`[auth] tautan reset sandi ${user.email}: ${resetUrl}`);
+        } else {
+          console.error("[auth] RESEND_API_KEY tidak dikonfigurasi; email reset tidak dikirim.");
+        }
+        return;
+      }
+
+      const { Resend } = await import("resend");
+      const { error } = await new Resend(apiKey).emails.send({
+        from: "SID Desa <notifikasi@sid-desa.id>",
+        to: user.email,
+        subject: `[${APP_NAME}] Atur ulang sandi`,
+        text: `Halo ${user.name},\n\nBuka tautan berikut untuk mengatur ulang sandi Anda:\n${resetUrl}\n\nAbaikan email ini bila Anda tidak memintanya.`,
+      });
+      if (error) console.error("[auth] gagal mengirim email reset:", error);
+    },
+    onPasswordReset: async ({ user }, request) => {
+      await auditReset(
+        {
+          villageId: await villageIdForUser(user.id),
+          actorId: user.id,
+          event: AUDIT_EVENTS.passwordResetSuccess,
+          resource: "auth",
+          resourceId: user.id,
+        },
+        request,
+      );
+    },
   },
 
   session: {
@@ -58,6 +130,8 @@ export const auth = betterAuth({
     max: 30,
     customRules: {
       "/sign-in/username": { window: 60, max: 5 },
+      "/request-password-reset": { window: 300, max: 3 },
+      "/reset-password": { window: 300, max: 5 },
     },
   },
 

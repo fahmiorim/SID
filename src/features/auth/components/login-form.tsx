@@ -55,7 +55,12 @@ export function LoginForm({ next }: { next: string }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Kata sandi / PIN</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Kata sandi / PIN</Label>
+          <a className="text-xs text-primary underline-offset-4 hover:underline" href="/lupa-sandi">
+            Lupa sandi?
+          </a>
+        </div>
         <Input
           id="password"
           name="password"
@@ -70,7 +75,6 @@ export function LoginForm({ next }: { next: string }) {
           </p>
         ))}
       </div>
-
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="animate-spin" /> : null}
         {isPending ? "Memproses…" : "Masuk"}

@@ -1,4 +1,4 @@
-import { BarChart3, Search, Users } from "lucide-react";
+import { BarChart3, History, Search, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -97,6 +97,12 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
         description="Buku kependudukan desa beserta data sosial dan domisili warga."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/penduduk/riwayat">
+                <History className="size-4" />
+                Riwayat
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href="/penduduk/laporan">
                 <BarChart3 className="size-4" />
