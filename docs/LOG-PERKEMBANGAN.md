@@ -3,21 +3,14 @@
  
  - **Tidak dibutuhkan**: Modul vaksin/Covid (`OS-POP-009`) dikeluarkan dari scope karena tidak relevan saat ini. Diperbarui di `PARITAS-OPENSID.md` dan `RENCANA-PERBAIKAN.md`.
  
- ---
-
-Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
-Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
-untuk fitur yang hanya berupa placeholder tanpa backend.
- ## 2026-10-25 - Statistik Penduduk & Bantuan OS-POP-010/013
+ ## 2026-10-25 - Modul KIA/Stunting OS-POP-008 (sebagian)
  
- - **Domain & tipe**: `features/statistik/domain/statistik.ts` (kinds gender/age_group/religion/education/occupation/marital_status/dusun; program/sasaran bantuan, skema zod).
- - **Repository**: `features/statistik/infrastructure/statistik-repository.ts` (agregasi per kategori dengan COUNT L/P, tenant-aware `villageId`, age group komputasi sisi server).
- - **Use Case**: `features/statistik/application/statistik-use-cases.ts`.
- - **Komponen**: `features/statistik/presentation/components/statistik/statistik-table.tsx` (tabel L/P/total/% + ringkasan).
- - **Halaman Admin**: `/statistik/penduduk` (resource `laporan-penduduk`) dan `/statistik/bantuan` (resource `bantuan`) dengan RBAC, `PageHeader`, tabel statistik.
- - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
+ - **Migrasi `0032`**: `posyandu`, `kia`, `ibu_hamil`, `bulanan_anak` (tenant-aware `village_id`, relasi ke residents/kia/posyandu).
+ - **Schema/Domain/Repo/Actions**: `db/schema/kesehatan.ts`, `features/kesehatan/*`, RBAC resource `kesehatan`.
+ - **Halaman Admin**: `/kesehatan/posyandu`, `/kesehatan/kia`, `/kesehatan/pemantauan-ibu-hamil`, `/kesehatan/pemantauan-anak`.
+ - **Verifikasi**: `npm run lint`, `npm run format:check` lulus (typecheck/check masih ada error lintas modul).
  
- ---
+ --- 
  
  ## 2026-10-25 - modul Data Suplemen OS-POP-007
  
