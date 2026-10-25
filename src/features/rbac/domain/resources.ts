@@ -50,6 +50,7 @@ export const RESOURCES = {
   auditLog: "audit-log",
   database: "database",
   dsar: "dsar",
+  pendapat: "pendapat",
   rtm: "rtm",
 } as const;
 
