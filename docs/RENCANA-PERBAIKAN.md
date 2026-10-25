@@ -567,9 +567,8 @@ tidak ada kategori yang dikeluarkan dari target akhir.
  - [x] `OS-POP-006`: DTKS. `/penduduk/dtks` dengan CRUD (dari RTM), status draf/terverifikasi, agregasi anggota, dan pencatatan petugas/responden. Gap: detail formulir (tanggapan/ekspor), lampiran, pengaturan program, laporan, dan E2E belum ada.
  - [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Gap: detail/form terdata, impor/ekspor, laporan, cetak, dan E2E belum ada.
 - [x] `OS-POP-010`, `OS-POP-013`: Statistik penduduk (`/statistik/penduduk` dengan gender, umur, agama, pendidikan, pekerjaan, status kawin, dusun) dan statistik bantuan (`/statistik/bantuan` per program/sasaran) tersedia dengan tabel L/P/total/% dan ringkasan. Gap: cetak, ekspor CSV/Excel, dan E2E belum ada. 
-- [x] `OS-POP-008`: Modul KIA/Stunting dasar (posyandu, KIA, pemantauan ibu hamil, pemantauan anak/bulanan) dengan migrasi `0032`, schema/domain/repo/actions, RBAC, halaman `/kesehatan/*`. Gap: formulir CRUD lengkap, rekapitulasi skorcard konvergensi, ekspor, dan E2E.  
-  [ ] `OS-POP-014`: Pendapat warga/jajak pendapat. (*OS-POP-009* dikeluarkan dari scope karena tidak relevan.) 
-
+- [x] `OS-POP-008`: Modul KIA/Stunting dasar (posyandu, KIA, pemantauan ibu hamil, pemantauan anak/bulanan) dengan migrasi `0032`, schema/domain/repo/actions, RBAC, halaman `/kesehatan/*`. Gap: formulir CRUD lengkap, rekapitulasi skorcard konvergensi, ekspor, dan E2E.
+- [x] `OS-POP-014`: Pendapat warga/jajak pendapat — migrasi `0033`, schema/domain/repo/actions, RBAC resource `pendapat`, halaman admin `/pendapat` (rekap + daftar), halaman publik `/pendapat`. Gap: ekspor, pembatasan suara, dan E2E. (*OS-POP-009* dikeluarkan dari scope karena tidak relevan.) 
 ---
 
 

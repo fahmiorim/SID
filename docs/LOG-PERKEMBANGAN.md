@@ -11,6 +11,14 @@
  - **Verifikasi**: `npm run lint`, `npm run format:check` lulus (typecheck/check masih ada error lintas modul).
  
  --- 
+ ## 2026-10-25 - Modul Pendapat Warga/Jajak Pendapat OS-POP-014 (sebagian)
+ 
+ - **Migrasi `0033`**: tabel `pendapat` tenant-aware (`village_id`, `resident_id`, `pilihan`, `pengguna`, `ip_address`).
+ - **Schema/Domain/Repo/Actions**: `db/schema/pendapat.ts`, `features/pendapat/*`, RBAC resource `pendapat`.
+ - **Halaman**: admin `/pendapat` (rekap per pilihan + daftar), publik `/pendapat`.
+ - **Verifikasi**: `npm run lint`, `npm run format:check` lulus.
+ 
+ --- 
  
  ## 2026-10-25 - modul Data Suplemen OS-POP-007
  

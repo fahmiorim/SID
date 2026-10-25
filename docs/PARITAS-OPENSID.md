@@ -87,7 +87,7 @@ status terkini dan bukti gap per ID. Semua ID sudah diganti dari status
 | OS-POP-011 | 🟡 Sebagian | Program bantuan memiliki CRUD, slug, sasaran, periode/status, asal dana, RBAC, UI, dan test domain; laporan keluaran serta E2E belum ditemukan. |
 | OS-POP-012 | 🟡 Sebagian | Peserta dapat ditambah/dihapus dengan kandidat sasaran tenant-aware dan snapshot kartu; impor/ekspor/cetak kartu serta E2E belum ditemukan. |
 | OS-POP-013 | 🟡 Sebagian | Halaman admin `/statistik/bantuan` memuat statistik peserta bantuan per program dan per sasaran (penduduk/keluarga) dengan tabel L/P/total/% dan ringkasan total. Gap: cetak, ekspor CSV, dan E2E belum ada. |
-| OS-POP-014 | 🔴 Belum ada | Tidak ditemukan modul pendapat warga atau jajak pendapat. |
+| OS-POP-014 | 🟡 Sebagian | Modul pendapat warga tersedia: migrasi `pendapat` (`0033`) tenant-aware, schema/domain/repo/actions, RBAC resource `pendapat`, halaman admin `/pendapat` (rekap per pilihan + daftar), halaman publik `/pendapat`. Gap: ekspor, pembatasan suara per warga/session, dan E2E belum ada. |
 | OS-POP-015 | 🔴 Belum ada | Tidak ditemukan direktori kontak penduduk/kelompok untuk komunikasi administratif; halaman kontak desa bukan pengganti fitur ini. |
 | OS-WIL-001 | 🟡 Sebagian | CRUD, pencarian, pagination, validasi kombinasi dusun/RW/RT, dan RBAC di `/wilayah`; hierarki, rekap penduduk, serta cetak belum ditemukan. |
 | OS-WIL-002 | 🔴 Belum ada | Tidak ditemukan domain/route admin untuk GIS area atau penyimpanan metadata/geometri; peta publik masih placeholder. |
