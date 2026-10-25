@@ -1,74 +1,33 @@
-/**
- * Slug resource RBAC.
- *
- * Nilai-nilai ini **wajib** sama dengan `modules.slug` karena matriks akses
- * (`role_permissions`) bertumpu pada `module_id`, dan menu dibangun dari slug
- * yang sama. Menaruhnya di satu tempat mencegah salah tulis yang berujung pada
- * lolosnya otorisasi atau hilangnya menu.
- */
 export const RESOURCES = {
-  beranda: "beranda",
-  penduduk: "penduduk",
+  users: "users",
+  villages: "villages",
+  residents: "residents",
   keluarga: "keluarga",
   rumahTangga: "rumah-tangga",
-  kelompok: "kelompok",
-  kategoriKelompok: "kategori-kelompok",
   wilayah: "wilayah",
-  persuratan: "persuratan",
-  surat: "surat",
-  jenisSurat: "jenis-surat",
-  klasifikasiSurat: "klasifikasi-surat",
-  syaratSurat: "syarat-surat",
-  suratMasuk: "surat-masuk",
-  suratKeluar: "surat-keluar",
-  /** Surat dinas antar instansi + arsipnya (Fase 2E). */
-  suratDinas: "surat-dinas",
-  pengaturan: "pengaturan",
-  identitasDesa: "identitas-desa",
-  pengguna: "pengguna",
-  grupAkses: "grup-akses",
-  modul: "modul",
-  keuangan: "keuangan",
-  laporanKeuangan: "laporan-keuangan",
-  dokumenLaporan: "dokumen-laporan",
-  laporanPenduduk: "laporan-penduduk",
-  bantuan: "bantuan",
-  programBantuan: "program-bantuan",
-  pesertaBantuan: "peserta-bantuan",
-  // Modul yang sudah memiliki halaman/API tetapi belum selesai dibangun tetap
-  // punya slug resource agar otorisasi tidak memakai string bebas (`as any`).
   inventaris: "inventaris",
-  mutasiInventaris: "mutasi-inventaris",
-  bumindes: "bumindes",
-  /**
-   * Pengajuan surat oleh warga (dulu bernama "layanan-mandiri").
-   *
-   * Slug resource diganti menjadi `permohonan-surat` pada Fase 1A agar rute
-   * publik `/layanan-mandiri` (milik warga) tidak bentrok dengan admin.
-   */
+  bantuan: "bantuan",
+  surat: "surat",
+  suratKeluar: "surat-keluar",
+  suratMasuk: "surat-masuk",
+  suratDinas: "surat-dinas",
+  klasifikasiSurat: "klasifikasi-surat",
   permohonanSurat: "permohonan-surat",
-  analisisSurvei: "analisis-survei",
-  /** Pengaduan/saran warga (Fase 3D). */
   pengaduan: "pengaduan",
-  /** Proyek pembangunan desa (Fase 3C). */
+  agenda: "agenda",
   pembangunan: "pembangunan",
-  /** Tema situs publik (Fase 1D). */
+  bumindes: "bumindes",
+  apbdes: "apbdes",
+  keuangan: "keuangan",
+  persuratan: "persuratan",
+  pengaturan: "pengaturan",
   tema: "tema",
-  /** Role khusus untuk super-admin yang mengelola banyak desa. */
-  superAdmin: "super-admin",
-  /** Konten situs publik (Fase 1F). */
-  berita: "berita",
-  beritaKategori: "berita-kategori",
-  galeri: "galeri",
-  profilDesa: "profil-desa",
-  perangkatDesa: "perangkat-desa",
-  menuPublik: "menu-publik",
-  widget: "widget",
-  slider: "slider",
-  dokumenPublik: "dokumen-publik",
-  auditLog: "audit-log",
-  database: "database",
+  kelompok: "kelompok",
+  suplemen: "suplemen",
+  laporanPenduduk: "laporan-penduduk",
+  kesehatan: "kesehatan",
+  dsar: "dsar",
+  rtm: "rtm",
 } as const;
-/** Role khusus untuk super-admin yang mengelola banyak desa. */
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

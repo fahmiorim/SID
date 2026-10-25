@@ -1,3 +1,4 @@
+export * from "./kesehatan";
 /**
  * Titik kumpul definisi skema Drizzle.
  *
