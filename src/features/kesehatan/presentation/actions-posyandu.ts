@@ -37,17 +37,17 @@ export async function savePosyanduAction(formData: FormData) {
     if (parsed.data.id) {
       await updatePosyandu(parsed.data.id, villageId, {
         nama: parsed.data.nama,
-        alamat: parsed.data.alamat || null,
-        namaKetua: parsed.data.namaKetua || null,
-        namaBidan: parsed.data.namaBidan || null,
+        alamat: parsed.data.alamat || undefined,
+        namaKetua: parsed.data.namaKetua || undefined,
+        namaBidan: parsed.data.namaBidan || undefined,
       });
     } else {
       await createPosyandu({
         villageId,
         nama: parsed.data.nama,
-        alamat: parsed.data.alamat || null,
-        namaKetua: parsed.data.namaKetua || null,
-        namaBidan: parsed.data.namaBidan || null,
+        alamat: parsed.data.alamat || undefined,
+        namaKetua: parsed.data.namaKetua || undefined,
+        namaBidan: parsed.data.namaBidan || undefined,
       });
     }
     revalidatePath("/kesehatan/posyandu");
