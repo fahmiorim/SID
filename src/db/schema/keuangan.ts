@@ -2,6 +2,7 @@ import {
   decimal,
   index,
   int,
+  mysqlEnum,
   mysqlTable,
   timestamp,
   uniqueIndex,
@@ -131,6 +132,44 @@ export const keuanganTriwulan = mysqlTable(
 
 export type KeuanganTriwulan = typeof keuanganTriwulan.$inferSelect;
 export type NewKeuanganTriwulan = typeof keuanganTriwulan.$inferInsert;
+
+/**
+ * `keuangan_transaksi` — catatan transaksi manual keuangan.
+ *
+ * Transaksi yang tidak termasuk rencana anggaran (APBDes) maupun realisasi triwulan.
+ * Contoh: pengadaan darurat, tunjangan ekstrakurikuler, bantuan sosial luar program,
+ * atau catatan keuangan umum. Setiap transaksi memiliki tanggal, Uraian, dan jumlah.
+ * Angka total ini ikut dihitung di ringkasan laporan tapi tidak mengubah pagu anggaran.
+ */
+export const keuanganTransaksi = mysqlTable(
+  "keuangan_transaksi",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id")
+      .notNull()
+      .references(() => villages.id, { onDelete: "cascade" }),
+    templateUuid: varchar("template_uuid", { length: 20 }).references(() => keuanganTemplate.uuid, {
+      onDelete: "set null",
+    }),
+    // Null = transaksi bebas (bukan dari template); berisi uuid jika terkait template
+    keterangan: varchar("keterangan", { length: 255 }).notNull(),
+    jumlah: decimal("jumlah", { precision: 65, scale: 2 }).notNull().default("0.00"),
+    jenis: mysqlEnum("jenis", ["pendapatan", "belanja"]).notNull(),
+    tanggal: timestamp("tanggal").notNull().defaultNow(),
+    createdBy: varchar("created_by", { length: 36 }).references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    index("keuangan_transaksi_village_idx").on(table.villageId),
+    index("keuangan_transaksi_jenis_idx").on(table.jenis),
+  ],
+);
 
 /**
  * `keuangan_laporan` — arsip dokumen laporan APBDes per semester (Lapis D).
