@@ -3,7 +3,17 @@
 Catatan pekerjaan yang sudah selesai, diverifikasi, dan ter-commit.
 Aturan: satu klaim = satu bukti (path file + test). Jangan klaim "selesai"
 untuk fitur yang hanya berupa placeholder tanpa backend.
-
+ ## 2026-10-25 - Statistik Penduduk & Bantuan OS-POP-010/013
+ 
+ - **Domain & tipe**: `features/statistik/domain/statistik.ts` (kinds gender/age_group/religion/education/occupation/marital_status/dusun; program/sasaran bantuan, skema zod).
+ - **Repository**: `features/statistik/infrastructure/statistik-repository.ts` (agregasi per kategori dengan COUNT L/P, tenant-aware `villageId`, age group komputasi sisi server).
+ - **Use Case**: `features/statistik/application/statistik-use-cases.ts`.
+ - **Komponen**: `features/statistik/presentation/components/statistik/statistik-table.tsx` (tabel L/P/total/% + ringkasan).
+ - **Halaman Admin**: `/statistik/penduduk` (resource `laporan-penduduk`) dan `/statistik/bantuan` (resource `bantuan`) dengan RBAC, `PageHeader`, tabel statistik.
+ - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
+ 
+ ---
+ 
  ## 2026-10-25 - modul Data Suplemen OS-POP-007
  
  - **Migrasi `suplemen` & `suplemen_terdata` (`0031`)**: tabel master suplemen (nama, slug, sasaran 1/2, keterangan) dan relasi terdata (penduduk/keluarga, form isian JSON).

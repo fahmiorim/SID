@@ -1,0 +1,474 @@
+import "server-only";
+
+import { and, count, eq, inArray, sql } from "drizzle-orm";
+
+import { db } from "@/db";
+import {
+  educations,
+  maritalStatuses,
+  occupations,
+  regions,
+  religions,
+  residents,
+} from "@/db/schema";
+import { bantuanPeserta, bantuanProgram } from "@/db/schema/bantuan";
+import {
+  type StatistikBantuanParams,
+  type StatistikBantuanResult,
+  type StatistikBantuanRow,
+  type StatistikBantuanSummary,
+  type StatistikPendudukParams,
+  type StatistikPendudukResult,
+  type StatistikPendudukRow,
+  type StatistikPendudukSummary,
+} from "@/features/statistik/domain/statistik";
+
+const MAX_PAGE = 100;
+
+/** Statistik penduduk berdasarkan jenis kategorinya. */
+export async function getStatistikPenduduk(
+  villageId: number,
+  params: StatistikPendudukParams,
+): Promise<StatistikPendudukResult> {
+  const page = Math.max(1, params.page ?? 1);
+  const perPage = Math.min(MAX_PAGE, Math.max(1, params.perPage ?? 10));
+  const offset = (page - 1) * perPage;
+
+  let rows: StatistikPendudukRow[];
+  let totalResidents: StatistikPendudukSummary;
+
+  switch (params.kind) {
+    case "gender": {
+      const grouped = await db
+        .select({
+          gender: residents.gender,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.gender);
+
+      const maleRow = grouped.find((r) => r.gender === "male");
+      const femaleRow = grouped.find((r) => r.gender === "female");
+      const maleTotal = Number(maleRow?.total ?? 0);
+      const femaleTotal = Number(femaleRow?.total ?? 0);
+      const grandTotal = maleTotal + femaleTotal;
+
+      totalResidents = { total: grandTotal, male: maleTotal, female: femaleTotal };
+
+      rows = [
+        {
+          label: "Laki-laki",
+          total: maleTotal,
+          male: maleTotal,
+          female: 0,
+          percentage: grandTotal ? Math.round((maleTotal / grandTotal) * 100) : 0,
+        },
+        {
+          label: "Perempuan",
+          total: femaleTotal,
+          male: 0,
+          female: femaleTotal,
+          percentage: grandTotal ? Math.round((femaleTotal / grandTotal) * 100) : 0,
+        },
+      ];
+      break;
+    }
+
+    case "religion": {
+      const grouped = await db
+        .select({
+          religionId: residents.religionId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.religionId);
+
+      const allReligions = await db
+        .select({ id: religions.id, name: religions.name })
+        .from(religions);
+
+      const map = new Map(allReligions.map((r) => [r.id, r.name]));
+      totalResidents = {
+        total: grouped.reduce((s, r) => s + Number(r.total), 0),
+        male: grouped.reduce((s, r) => s + Number(r.male), 0),
+        female: grouped.reduce((s, r) => s + Number(r.female), 0),
+      };
+
+      rows = grouped
+        .map((r) => {
+          const name = map.get(r.religionId ?? 0) ?? "Tidak diketahui";
+          const grand = totalResidents.total;
+          return {
+            label: name,
+            total: Number(r.total),
+            male: Number(r.male),
+            female: Number(r.female),
+            percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "education": {
+      const grouped = await db
+        .select({
+          educationId: residents.educationId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.educationId);
+
+      const allEducations = await db
+        .select({ id: educations.id, name: educations.name })
+        .from(educations);
+
+      const map = new Map(allEducations.map((r) => [r.id, r.name]));
+      totalResidents = {
+        total: grouped.reduce((s, r) => s + Number(r.total), 0),
+        male: grouped.reduce((s, r) => s + Number(r.male), 0),
+        female: grouped.reduce((s, r) => s + Number(r.female), 0),
+      };
+
+      rows = grouped
+        .map((r) => {
+          const name = map.get(r.educationId ?? 0) ?? "Tidak diketahui";
+          const grand = totalResidents.total;
+          return {
+            label: name,
+            total: Number(r.total),
+            male: Number(r.male),
+            female: Number(r.female),
+            percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "occupation": {
+      const grouped = await db
+        .select({
+          occupationId: residents.occupationId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.occupationId);
+
+      const allOccupations = await db
+        .select({ id: occupations.id, name: occupations.name })
+        .from(occupations);
+
+      const map = new Map(allOccupations.map((r) => [r.id, r.name]));
+      totalResidents = {
+        total: grouped.reduce((s, r) => s + Number(r.total), 0),
+        male: grouped.reduce((s, r) => s + Number(r.male), 0),
+        female: grouped.reduce((s, r) => s + Number(r.female), 0),
+      };
+
+      rows = grouped
+        .map((r) => {
+          const name = map.get(r.occupationId ?? 0) ?? "Tidak diketahui";
+          const grand = totalResidents.total;
+          return {
+            label: name,
+            total: Number(r.total),
+            male: Number(r.male),
+            female: Number(r.female),
+            percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "marital_status": {
+      const grouped = await db
+        .select({
+          maritalStatusId: residents.maritalStatusId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.maritalStatusId);
+
+      const allMarital = await db
+        .select({ id: maritalStatuses.id, name: maritalStatuses.name })
+        .from(maritalStatuses);
+
+      const map = new Map(allMarital.map((r) => [r.id, r.name]));
+      totalResidents = {
+        total: grouped.reduce((s, r) => s + Number(r.total), 0),
+        male: grouped.reduce((s, r) => s + Number(r.male), 0),
+        female: grouped.reduce((s, r) => s + Number(r.female), 0),
+      };
+
+      rows = grouped
+        .map((r) => {
+          const name = map.get(r.maritalStatusId ?? 0) ?? "Tidak diketahui";
+          const grand = totalResidents.total;
+          return {
+            label: name,
+            total: Number(r.total),
+            male: Number(r.male),
+            female: Number(r.female),
+            percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "dusun": {
+      const grouped = await db
+        .select({
+          regionId: residents.regionId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .groupBy(residents.regionId);
+
+      const allRegions = await db
+        .select({ id: regions.id, dusun: regions.dusun, rw: regions.rw, rt: regions.rt })
+        .from(regions)
+        .where(eq(regions.villageId, villageId));
+
+      const map = new Map(
+        allRegions.map((r) => [r.id, `${r.dusun ?? "-"} RW${r.rw ?? "-"}/RT${r.rt ?? "-"}`]),
+      );
+      totalResidents = {
+        total: grouped.reduce((s, r) => s + Number(r.total), 0),
+        male: grouped.reduce((s, r) => s + Number(r.male), 0),
+        female: grouped.reduce((s, r) => s + Number(r.female), 0),
+      };
+
+      rows = grouped
+        .map((r) => {
+          const name = map.get(r.regionId ?? 0) ?? "Tidak diketahui";
+          const grand = totalResidents.total;
+          return {
+            label: name,
+            total: Number(r.total),
+            male: Number(r.male),
+            female: Number(r.female),
+            percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "age_group": {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+
+      const all = await db
+        .select({ birthDate: residents.birthDate, gender: residents.gender })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
+
+      const groups: Record<string, { total: number; male: number; female: number }> = {
+        "0-4 tahun": { total: 0, male: 0, female: 0 },
+        "5-14 tahun": { total: 0, male: 0, female: 0 },
+        "15-64 tahun": { total: 0, male: 0, female: 0 },
+        "65+ tahun": { total: 0, male: 0, female: 0 },
+      };
+
+      for (const r of all) {
+        if (!r.birthDate) continue;
+        const birth = new Date(r.birthDate);
+        let age = currentYear - birth.getFullYear();
+        const m = now.getMonth() - birth.getMonth();
+        if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+        if (age < 0) continue;
+
+        let key: keyof typeof groups;
+        if (age <= 4) key = "0-4 tahun";
+        else if (age <= 14) key = "5-14 tahun";
+        else if (age <= 64) key = "15-64 tahun";
+        else key = "65+ tahun";
+
+        const grp = groups[key]!;
+        grp.total += 1;
+        if (r.gender === "male") grp.male += 1;
+        else if (r.gender === "female") grp.female += 1;
+      }
+
+      totalResidents = {
+        total: Object.values(groups).reduce((s, g) => s + g.total, 0),
+        male: Object.values(groups).reduce((s, g) => s + g.male, 0),
+        female: Object.values(groups).reduce((s, g) => s + g.female, 0),
+      };
+
+      rows = Object.entries(groups)
+        .map(([label, g]) => {
+          const grand = totalResidents.total;
+          return {
+            label,
+            total: g.total,
+            male: g.male,
+            female: g.female,
+            percentage: grand ? Math.round((g.total / grand) * 100) : 0,
+          };
+        })
+        .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    default:
+      rows = [];
+      totalResidents = { total: 0, male: 0, female: 0 };
+  }
+
+  const pageRows = rows.slice(offset, offset + perPage);
+  const pageCount = Math.max(1, Math.ceil(rows.length / perPage));
+
+  return {
+    rows: pageRows,
+    summary: totalResidents,
+    page,
+    perPage,
+    pageCount,
+  };
+}
+
+/** Statistik bantuan sosial per program atau sasaran. */
+export async function getStatistikBantuan(
+  villageId: number,
+  params: StatistikBantuanParams,
+): Promise<StatistikBantuanResult> {
+  const page = Math.max(1, params.page ?? 1);
+  const perPage = Math.min(MAX_PAGE, Math.max(1, params.perPage ?? 10));
+  const offset = (page - 1) * perPage;
+
+  let rows: StatistikBantuanRow[];
+  let summary: StatistikBantuanSummary;
+
+  if (params.kind === "program") {
+    const programs = await db
+      .select({
+        id: bantuanProgram.id,
+        slug: bantuanProgram.slug,
+        name: bantuanProgram.name,
+        sasaran: bantuanProgram.sasaran,
+      })
+      .from(bantuanProgram)
+      .where(eq(bantuanProgram.villageId, villageId));
+
+    const programIds = programs.map((p) => p.id);
+
+    let counts: Array<{
+      programId: number;
+      total: string | number;
+      male: string | number;
+      female: string | number;
+    }> = [];
+    if (programIds.length > 0) {
+      counts = await db
+        .select({
+          programId: bantuanPeserta.programId,
+          total: count(),
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        })
+        .from(bantuanPeserta)
+        .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+        .where(
+          and(inArray(bantuanPeserta.programId, programIds), eq(residents.lifeStatus, "alive")),
+        )
+        .groupBy(bantuanPeserta.programId);
+    }
+
+    const map = new Map(counts.map((c) => [c.programId, c]));
+    let total = 0;
+    let male = 0;
+    let female = 0;
+    for (const c of counts) {
+      total += Number(c.total);
+      male += Number(c.male);
+      female += Number(c.female);
+    }
+    summary = { total, male, female };
+
+    rows = programs
+      .map((p) => {
+        const c = map.get(p.id);
+        const grand = summary.total;
+        return {
+          label: p.name,
+          total: c ? Number(c.total) : 0,
+          male: c ? Number(c.male) : 0,
+          female: c ? Number(c.female) : 0,
+          percentage: grand ? Math.round(((c ? Number(c.total) : 0) / grand) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  } else {
+    // sasaran: aggregate per sasaran value (1=penduduk, 2=keluarga)
+    const sasaranRows = await db
+      .select({
+        sasaran: bantuanProgram.sasaran,
+        total: count(),
+        male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
+        female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+      })
+      .from(bantuanProgram)
+      .leftJoin(bantuanPeserta, eq(bantuanPeserta.programId, bantuanProgram.id))
+      .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+      .where(and(eq(bantuanProgram.villageId, villageId), eq(residents.lifeStatus, "alive")))
+      .groupBy(bantuanProgram.sasaran);
+
+    const labels: Record<number, string> = {
+      1: "Penduduk",
+      2: "Keluarga",
+      3: "Rumah Tangga",
+      4: "Kelompok",
+    };
+    summary = {
+      total: sasaranRows.reduce((s, r) => s + Number(r.total), 0),
+      male: sasaranRows.reduce((s, r) => s + Number(r.male), 0),
+      female: sasaranRows.reduce((s, r) => s + Number(r.female), 0),
+    };
+
+    rows = sasaranRows
+      .map((r) => {
+        const grand = summary.total;
+        return {
+          label: labels[r.sasaran ?? 0] ?? `Sasaran ${r.sasaran ?? 0}`,
+          total: Number(r.total),
+          male: Number(r.male),
+          female: Number(r.female),
+          percentage: grand ? Math.round((Number(r.total) / grand) * 100) : 0,
+        };
+      })
+      .sort((a, b) => b.total - a.total);
+  }
+
+  const pageRows = rows.slice(offset, offset + perPage);
+  const pageCount = Math.max(1, Math.ceil(rows.length / perPage));
+
+  return {
+    rows: pageRows,
+    summary,
+    page,
+    perPage,
+    pageCount,
+  };
+}
