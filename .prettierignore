@@ -6,6 +6,9 @@ coverage
 dist
 docs
 public
+.e2e
+.mcp.json
+.cursor/mcp.json
 package-lock.json
 *.md
 src/db/migrations
