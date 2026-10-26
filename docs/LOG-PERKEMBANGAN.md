@@ -28,6 +28,13 @@
  - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
  
  --- 
+ ## 2026-10-25 - Detail & Cetak Biodata Penduduk OS-POP-001
+ 
+ - **Halaman**: `/penduduk/[id]` (detail biodata) dan `/penduduk/[id]/cetak` (cetak biodata per penduduk).
+ - **Repository**: tambah `getPendudukDetailById` untuk menampilkan data lengkap (KK, wilayah, agama/pendidikan/pekerjaan/status kawin/gol. darah/kewarganegaraan/orang tua).
+ - **Verifikasi**: `npm run check` lulus, `npm run build` lulus.
+ 
+ --- 
  ## 2026-10-25 - modul Data Suplemen OS-POP-007
  
  - **Migrasi `suplemen` & `suplemen_terdata` (`0031`)**: tabel master suplemen (nama, slug, sasaran 1/2, keterangan) dan relasi terdata (penduduk/keluarga, form isian JSON).

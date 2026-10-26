@@ -562,7 +562,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
  - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
        status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
-       catat perubahan, dan ekspor CSV `/penduduk/riwayat/ekspor`. Sisa: E2E.
+- [x] `OS-POP-001`: Data penduduk dasar — CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`, halaman detail biodata `/penduduk/[id]`, cetak biodata per penduduk `/penduduk/[id]/cetak`. Gap: ekspor per penduduk, E2E. 
  - [x] `OS-POP-005`: DPT (Daftar Pemilih Tetap) — `/penduduk/dpt`, migrasi `elections` (`0029`), CRUD pemilihan (draf/aktif/selesai), filter lengkap, pagination, ekspor CSV, logika umur ≥17 atau sudah kawin pada tanggal pemilihan aktif, RBAC `penduduk`. Gap: cetak DPT, E2E.
  - [x] `OS-POP-006`: DTKS. `/penduduk/dtks` dengan CRUD (dari RTM), status draf/terverifikasi, agregasi anggota, dan pencatatan petugas/responden. Gap: detail formulir (tanggapan/ekspor), lampiran, pengaturan program, laporan, dan E2E belum ada.
  - [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Gap: detail/form terdata, impor/ekspor, laporan, cetak, dan E2E belum ada.
