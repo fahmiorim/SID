@@ -34,9 +34,7 @@ export default async function CetakBiodataPendudukPage({
     <div className="mx-auto max-w-3xl space-y-4 p-6 print:p-4">
       <header className="text-center">
         <h1 className="text-lg font-semibold">BIODATA PENDUDUK</h1>
-        <p className="text-sm">
-          {desa.namaDesa}, Kecamatan {desa.kecamatan}, Kabupaten {desa.kabupaten}
-        </p>
+        <p className="text-sm">{desa.namaDesa ?? "-"}</p>
       </header>
       <section className="rounded border">
         <div className="border-b px-3 py-2 font-medium">DATA DIRI</div>
@@ -93,7 +91,7 @@ export default async function CetakBiodataPendudukPage({
           <tbody>
             <tr className="border-b">
               <td className="w-1/3 px-3 py-1">No. KK</td>
-              <td className="px-3 py-1">{detail.family?.no ?? "-"}</td>
+              <td className="px-3 py-1">{detail.family?.number ?? "-"}</td>
             </tr>
             <tr className="border-b">
               <td className="px-3 py-1">Hubungan Keluarga</td>

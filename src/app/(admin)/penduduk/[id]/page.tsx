@@ -76,7 +76,7 @@ export default async function PendudukDetailPage({ params }: { params: Promise<{
           <div className="border-b p-3 font-medium">Keluarga & Alamat</div>
           <dl className="grid grid-cols-2 gap-2 p-3 text-sm">
             <dt className="text-muted-foreground">No. KK</dt>
-            <dd>{detail.family?.no ?? "-"}</dd>
+            <dd>{detail.family?.number ?? "-"}</dd>
             <dt className="text-muted-foreground">Hub. Keluarga</dt>
             <dd>{detail.familyRelation?.name ?? "-"}</dd>
             <dt className="text-muted-foreground">Dusun/RW/RT</dt>
@@ -95,7 +95,6 @@ export default async function PendudukDetailPage({ params }: { params: Promise<{
             <dt className="text-muted-foreground">NIK Ayah</dt>
             <dd>{r.fatherNationalId ?? "-"}</dd>
             <dt className="text-muted-foreground">NIK Ibu</dt>
-            <dd>{r.motherNationalId ?? "-"}</dd>
           </dl>
         </div>
       </div>
