@@ -1,4 +1,39 @@
+- **DPT rekapitulasi + test domain (OS-POP-005)**: rekapitulasi pemilih per wilayah (`hitungRekapDpt` di `dpt.ts`), halaman `/penduduk/dpt/rekap` + route `/penduduk/dpt/rekap/ekspor` (`exportRekapDpt`), dan `dpt.test.ts` 7 case (buildDptCsv, hitungRekapDpt x3, buildDptRekapCsv, nama berkas). Status OS-POP-005: 🟡 Sebagian → ✅ Berfungsi penuh. Gap tersisa: E2E.
+- **Dokumen**: `PARITAS-OPENSID.md` (OS-POP-005 → Berfungsi penuh), `RENCANA-PERBAIKAN.md` (gap rekap/test domain dihilangkan).
+- **Verifikasi**: `npm run check` 67 file / 661 test / 0 error, `npm run build` 95 route.
+
 # Log Perkembangan
+## 2026-10-28 — OS-POP-008 Kesehatan Lengkap
+
+- **Filter posyandu** client-side di ketiga tabel admin (KIA, Ibu Hamil, Bulanan Anak).
+- **Halaman publik** `/desa/kesehatan/{kia,ibu-hamil,pemantauan-anak}` dengan tabel read-only + tombol Ekspor CSV.
+- **Route CSV publik** di `/desa/kesehatan/*/ekspor/route.ts` tanpa autentikasi.
+- **Skorcard konvergensi desa** `buildSkorcardKonvergensi` di domain: Tabel 1 (sasaran 1000 HPK), Tabel 2 (tikar pertumbuhan), Tabel 3 (kele玲apan konvergensi 8+10 indikator), Tabel 4 (tingkat konvergensi).
+- **Test**: domain 31 case, repository 4 case, application 4 case (total 39). E2E 2 test.
+- **Verifikasi**: `typecheck` ✅, `test` 661 passed, `check` 0 error, `build` 98 route (+3 publik).
+
+---
+## 2026-10-28 — Filter Posyandu Kesehatan (OS-POP-008)
+
+- **Filter client-side** di ketiga tabel kesehatan: KIA, Ibu Hamil, Bulanan Anak. Dropdown `Select` dengan opsi posyandu + "Semua Posyandu". Row filtering menggunakan `posyanduId` pada baris data.
+- **Halaman KIA** (`src/app/(admin)/kesehatan/kia/page.tsx`): kini memuat `listPosyandu` dan meneruskannya ke `KiaTable`.
+- **Verifikasi**: `npm run typecheck` lulus, `npm run check` (66 file, 652 test), `npm run build` statis 95 route.
+
+---
+## 2026-10-28 — Test Domain Kesehatan (OS-POP-008)
+
+- **Test domain** `features/kesehatan/domain/kesehatan.test.ts`: 26 case mencakup validasi skema zod (posyandu, KIA, ibu hamil, bulanan anak), fungsi `hitungSkorcardKia` (total/stunting/konversi), `buildKiaCsv` (BOM UTF-8, separator `;`, header, total row), dan `kiaRekapFilename` (slug normalization).
+- **Verifikasi**: `npm run check` lulus (66 file, 652 test), `npm run build` statis 95 route. Status OS-POP-008 tetap 🟡 Sebagian.
+
+---
+## 2026-10-28 — Ekspor CSV Kesehatan (OS-POP-008)
+
+- **Use case** `features/kesehatan/application/export-use-cases.ts`: dua fungsi `exportRekapIbuHamil` dan `exportRekapBulananAnak` — validasi session + RBAC `KIA_RESOURCE read`, tenant-aware lewat `resolveVillageId`, builder CSV sederhana, header sesuai kolom DB (tanpa field fictitious).
+- **Route admin**: `GET /kesehatan/ibu-hamil/ekspor` dan `GET /kesehatan/pemantauan-anak/ekspor` (pola sama route KIA yang sudah ada: 401/403/appError/500, header `text/csv; charset=utf-8`, `Cache-Control: private, no-store`).
+- **UI**: tombol "Ekspor CSV" dengan ikon `Download` (lucide) + `Link` (`asChild`) di posisi kanan atas setiap tabel KIA, Ibu Hamil, dan Bulanan Anak — mengarah ke route masing-masing.
+- **Test**: `export-use-cases.test.ts` — 4 case (session kosong, tanpa izin, Ibu Hamil valid, Anak valid).
+- **Quality gate**: `lint` 0 error, `format:check` hijau, `typecheck` nol diagnostic, `test` 65 file 626 passed, `build` statis 95 route.
+- **Docs**: `PARITAS-OPENSID.md` (OS-POP-008 baris 84) & `RENCANA-PERBAIKAN.md` (OS-POP-008 baris 570) disesuaikan; tetap 🟡 Sebagian karena skorcard, cetak, publikasi, test domain/presentation, dan E2E masih belum ada.
 
 ## 2026-10-27 - Verifikasi ulang gap OS-POP-001 s/d 015
 
