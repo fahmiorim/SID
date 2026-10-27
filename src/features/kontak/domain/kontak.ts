@@ -1,7 +1,9 @@
 import { z } from "zod";
 
-export const KONTAK_RESOURCE = "daftarKontak" as const;
-export const GRUP_KONTAK_RESOURCE = "grupKontak" as const;
+import { RESOURCES } from "@/features/rbac/domain/resources";
+
+export const KONTAK_RESOURCE = RESOURCES.daftarKontak;
+export const GRUP_KONTAK_RESOURCE = RESOURCES.grupKontak;
 
 export const kontakSchema = z.object({
   id: z.number().int().positive().optional(),

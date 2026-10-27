@@ -80,3 +80,19 @@ export async function removeAnggotaGrup(id: number, villageId: number) {
     .delete(anggotaGrupKontak)
     .where(and(eq(anggotaGrupKontak.id, id), eq(anggotaGrupKontak.villageId, villageId)));
 }
+
+export async function listAnggotaGrupDetail(villageId: number, grupId: number) {
+  return db
+    .select({
+      id: anggotaGrupKontak.id,
+      kontakId: kontak.id,
+      nama: kontak.nama,
+      telepon: kontak.telepon,
+      email: kontak.email,
+      telegram: kontak.telegram,
+    })
+    .from(anggotaGrupKontak)
+    .innerJoin(kontak, eq(anggotaGrupKontak.kontakId, kontak.id))
+    .where(and(eq(anggotaGrupKontak.villageId, villageId), eq(anggotaGrupKontak.grupId, grupId)))
+    .orderBy(desc(anggotaGrupKontak.id));
+}
