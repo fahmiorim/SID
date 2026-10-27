@@ -1,11 +1,13 @@
 import "server-only";
 
-import { and, asc, count, eq, inArray, like, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, inArray, like, ne, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import { regions, residents, rumahTangga } from "@/db/schema";
 import {
   RTM_LEVEL_KEPALA,
+  type RtmFilter,
+  type RtmRekapInput,
   type RumahTanggaDTO,
   type RumahTanggaFormInput,
   type RumahTanggaListRow,
@@ -15,7 +17,8 @@ import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
 
 export interface ListRumahTanggaParams {
   villageId: number;
-  search: string;
+  /** Filter lanjutan (pencarian, kelas sosial, wilayah, kepemilikan BDT). */
+  filter: RtmFilter;
   page: number;
   pageSize: number;
 }
@@ -55,12 +58,18 @@ function formatRegionLabel(
   return formatWilayahLabel({ dusun: dusun ?? "", rw: rw ?? "", rt: rt ?? "" });
 }
 
-function buildWhere(villageId: number, search: string): SQL {
+/**
+ * Bangun klausa WHERE daftar RTM.
+ *
+ * Penyaringan wilayah memakai kolom `regions`, jadi pemanggil wajib menyertakan
+ * `leftJoin(regions, ...)` pada query-nya.
+ */
+function buildWhere(villageId: number, filter: RtmFilter): SQL {
   const villageFilter = eq(rumahTangga.villageId, villageId);
   const filters: SQL[] = [villageFilter];
 
-  if (search) {
-    const term = `%${search}%`;
+  if (filter.search) {
+    const term = `%${filter.search}%`;
     const searchFilter = or(
       like(rumahTangga.number, term),
       like(rumahTangga.address, term),
@@ -69,14 +78,25 @@ function buildWhere(villageId: number, search: string): SQL {
     if (searchFilter) filters.push(searchFilter);
   }
 
+  if (filter.kelasSosial !== null) filters.push(eq(rumahTangga.kelasSosial, filter.kelasSosial));
+  if (filter.dusun) filters.push(eq(regions.dusun, filter.dusun));
+  if (filter.rw) filters.push(eq(regions.rw, filter.rw));
+  if (filter.rt) filters.push(eq(regions.rt, filter.rt));
+
+  if (filter.bdt === "ada") {
+    filters.push(sql`(${rumahTangga.bdt} is not null and ${rumahTangga.bdt} <> '')`);
+  } else if (filter.bdt === "tidak") {
+    filters.push(sql`(${rumahTangga.bdt} is null or ${rumahTangga.bdt} = '')`);
+  }
+
   return and(...filters) ?? villageFilter;
 }
 
 export async function listRumahTangga(
   params: ListRumahTanggaParams,
 ): Promise<RumahTanggaListResult> {
-  const { villageId, search, page, pageSize } = params;
-  const where = buildWhere(villageId, search);
+  const { villageId, filter, page, pageSize } = params;
+  const where = buildWhere(villageId, filter);
 
   const [rows, totalRows] = await Promise.all([
     db
@@ -92,7 +112,11 @@ export async function listRumahTangga(
       .orderBy(asc(rumahTangga.number), asc(rumahTangga.id))
       .limit(pageSize)
       .offset((page - 1) * pageSize),
-    db.select({ value: count() }).from(rumahTangga).where(where),
+    db
+      .select({ value: count() })
+      .from(rumahTangga)
+      .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+      .where(where),
   ]);
 
   const total = totalRows[0]?.value ?? 0;
@@ -300,4 +324,66 @@ export async function setAnggotaRumahTangga(
     .update(residents)
     .set({ rtmId, rtmLevel: rtmId === null ? null : level })
     .where(and(eq(residents.villageId, villageId), eq(residents.id, residentId)));
+}
+
+// --- Laporan & filter ------------------------------------------------------
+
+/**
+ * Nilai kelas sosial yang benar-benar dipakai data desa.
+ *
+ * Pilihan filter dibangkitkan dari data agar tidak menawarkan kelas yang tidak
+ * pernah ada di desa tersebut.
+ */
+export async function listKelasSosialOptions(villageId: number): Promise<number[]> {
+  const rows = await db
+    .selectDistinct({ kelasSosial: rumahTangga.kelasSosial })
+    .from(rumahTangga)
+    .where(eq(rumahTangga.villageId, villageId))
+    .orderBy(asc(rumahTangga.kelasSosial));
+
+  return rows
+    .map((row) => row.kelasSosial)
+    .filter((nilai): nilai is number => nilai !== null)
+    .sort((a, b) => a - b);
+}
+
+/**
+ * Baris ringkas seluruh RTM untuk laporan (kelas sosial, dusun, jumlah anggota).
+ *
+ * Jumlah anggota dihitung satu query agregat, bukan per baris, agar laporan
+ * tetap ringan walau RTM-nya banyak.
+ */
+export async function listRtmRingkas(
+  villageId: number,
+  filter: RtmFilter,
+): Promise<RtmRekapInput[]> {
+  const where = buildWhere(villageId, filter);
+
+  const rows = await db
+    .select({
+      id: rumahTangga.id,
+      kelasSosial: rumahTangga.kelasSosial,
+      dusun: regions.dusun,
+    })
+    .from(rumahTangga)
+    .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+    .where(where)
+    .orderBy(asc(rumahTangga.number));
+
+  const jumlahAnggota = await db
+    .select({ rtmId: residents.rtmId, value: count() })
+    .from(residents)
+    .where(eq(residents.villageId, villageId))
+    .groupBy(residents.rtmId);
+
+  const petaAnggota = new Map<number, number>();
+  for (const baris of jumlahAnggota) {
+    if (baris.rtmId !== null) petaAnggota.set(baris.rtmId, Number(baris.value));
+  }
+
+  return rows.map((row) => ({
+    kelasSosial: row.kelasSosial,
+    dusun: row.dusun,
+    anggota: petaAnggota.get(row.id) ?? 0,
+  }));
 }

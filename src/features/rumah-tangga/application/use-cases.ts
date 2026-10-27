@@ -5,7 +5,12 @@ import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { listPendudukOptions } from "@/features/penduduk/infrastructure/penduduk-repository";
 import {
   bangunNomorRtm,
+  buildRtmRekapCsv,
+  hitungRekapRtm,
+  rtmRekapFilename,
   RUMAH_TANGGA_RESOURCE,
+  type RtmFilter,
+  type RtmRekap,
   type RumahTanggaFormInput,
   type RumahTanggaMember,
   type RumahTanggaReferenceData,
@@ -15,6 +20,8 @@ import {
   deleteRumahTangga as deleteRumahTanggaRow,
   findRumahTanggaById,
   insertRumahTangga,
+  listKelasSosialOptions,
+  listRtmRingkas,
   listRumahTanggaMembers as listRumahTanggaMembersRows,
   listRumahTangga as listRumahTanggaRows,
   rumahTanggaNumberExists,
@@ -37,7 +44,8 @@ import { notFound } from "@/lib/errors";
  */
 
 export interface ListRumahTanggaParams {
-  search: string;
+  /** Filter lanjutan daftar RTM (lihat `parseFilterRtm`). */
+  filter: RtmFilter;
   page: number;
   pageSize: number;
 }
@@ -72,6 +80,64 @@ export async function getRumahTanggaReference(): Promise<RumahTanggaReferenceDat
       id: row.id,
       label: row.nationalId ? `${row.name} — ${row.nationalId}` : row.name,
     })),
+  };
+}
+
+/** Anggota sebuah RTM; dipakai dialog rincian pada UI. */
+/**
+ * Data referensi tambahan untuk filter daftar RTM.
+ *
+ * Kelas sosial & daftar wilayah diambil dari data desa yang benar-benar ada,
+ * sehingga pilihan filter selalu relevan.
+ */
+export interface RtmFilterOptions {
+  kelasSosial: number[];
+  dusun: string[];
+  rw: string[];
+  rt: string[];
+}
+
+export async function getRtmFilterOptions(): Promise<RtmFilterOptions> {
+  const user = await requirePermission(RUMAH_TANGGA_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const [kelasSosial, wilayah] = await Promise.all([
+    listKelasSosialOptions(villageId),
+    listWilayahOptions(villageId),
+  ]);
+
+  const unik = (nilai: string[]): string[] =>
+    [...new Set(nilai.filter((item) => item !== ""))].sort((a, b) => a.localeCompare(b, "id"));
+
+  return {
+    kelasSosial,
+    dusun: unik(wilayah.map((row) => row.dusun)),
+    rw: unik(wilayah.map((row) => row.rw)),
+    rt: unik(wilayah.map((row) => row.rt)),
+  };
+}
+
+/** Rekapitulasi RTM (per kelas sosial dan per dusun) mengikuti filter. */
+export async function getLaporanRumahTangga(
+  filter: RtmFilter,
+): Promise<{ rekap: RtmRekap; namaDesa: string | null }> {
+  const user = await requirePermission(RUMAH_TANGGA_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const [rows, desa] = await Promise.all([listRtmRingkas(villageId, filter), getIdentitas()]);
+
+  return { rekap: hitungRekapRtm(rows), namaDesa: desa?.namaDesa ?? null };
+}
+
+/** Ekspor laporan RTM sebagai CSV. */
+export async function exportLaporanRumahTangga(
+  filter: RtmFilter,
+): Promise<{ csv: string; filename: string }> {
+  const { rekap, namaDesa } = await getLaporanRumahTangga(filter);
+
+  return {
+    csv: buildRtmRekapCsv({ namaDesa, rekap }),
+    filename: rtmRekapFilename(namaDesa),
   };
 }
 

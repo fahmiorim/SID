@@ -1,9 +1,10 @@
-import { Home, Search } from "lucide-react";
+import { BarChart3, Home, Search, SlidersHorizontal } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,10 +18,18 @@ import {
 } from "@/components/ui/table";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import {
+  getRtmFilterOptions,
   getRumahTanggaReference,
   listRumahTangga,
 } from "@/features/rumah-tangga/application/use-cases";
-import { RUMAH_TANGGA_RESOURCE } from "@/features/rumah-tangga/domain/rumah-tangga";
+import {
+  filterRtmKeSearchParams,
+  hitungFilterRtm,
+  parseFilterRtm,
+  RTM_BDT_FILTERS,
+  RTM_BDT_LABELS,
+  RUMAH_TANGGA_RESOURCE,
+} from "@/features/rumah-tangga/domain/rumah-tangga";
 import { RumahTanggaCreateButton } from "@/features/rumah-tangga/presentation/components/rumah-tangga-create-button";
 import { RumahTanggaRowActions } from "@/features/rumah-tangga/presentation/components/rumah-tangga-row-actions";
 import { verifySession } from "@/lib/dal";
@@ -39,22 +48,26 @@ export default async function RumahTanggaPage({ searchParams }: PageProps<"/ruma
   }
 
   const params = await searchParams;
-  const search = typeof params.q === "string" ? params.q.trim() : "";
+  const filter = parseFilterRtm(params as Record<string, string | string[] | undefined>);
   const rawPage = Number(typeof params.page === "string" ? params.page : "1");
   const requestedPage = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
 
-  const result = await listRumahTangga({ search, page: requestedPage, pageSize: PAGE_SIZE });
+  const result = await listRumahTangga({ filter, page: requestedPage, pageSize: PAGE_SIZE });
 
   const canManage = hasPermission(user.permissions, RUMAH_TANGGA_RESOURCE, "update");
-  const reference = canManage ? await getRumahTanggaReference() : null;
+  const [reference, filterOptions] = await Promise.all([
+    canManage ? getRumahTanggaReference() : Promise.resolve(null),
+    getRtmFilterOptions(),
+  ]);
+  const filterAktif = hitungFilterRtm(filter);
 
   const from = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
   const to = Math.min(result.page * result.pageSize, result.total);
   const columns = canManage ? 6 : 5;
 
+  const queryDasar = filterRtmKeSearchParams(filter);
   const pageHref = (targetPage: number): string => {
-    const query = new URLSearchParams();
-    if (search) query.set("q", search);
+    const query = new URLSearchParams(queryDasar);
     if (targetPage > 1) query.set("page", String(targetPage));
     const qs = query.toString();
     return qs ? `/rumah-tangga?${qs}` : "/rumah-tangga";
@@ -65,7 +78,17 @@ export default async function RumahTanggaPage({ searchParams }: PageProps<"/ruma
       <PageHeader
         title="Rumah Tangga"
         description="Daftar rumah tangga (RTM) beserta kepala rumah tangga dan jumlah anggotanya."
-        actions={canManage && reference ? <RumahTanggaCreateButton reference={reference} /> : null}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/rumah-tangga/laporan">
+                <BarChart3 className="size-4" />
+                Laporan
+              </Link>
+            </Button>
+            {canManage && reference ? <RumahTanggaCreateButton reference={reference} /> : null}
+          </div>
+        }
       />
 
       <Card>
@@ -75,20 +98,83 @@ export default async function RumahTanggaPage({ searchParams }: PageProps<"/ruma
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 name="q"
-                defaultValue={search}
+                defaultValue={filter.search}
                 placeholder="Cari nomor RTM, alamat, atau BDT…"
                 className="pl-8"
                 aria-label="Cari rumah tangga"
               />
             </div>
 
+            <select
+              name="kelasSosial"
+              defaultValue={filter.kelasSosial ?? ""}
+              aria-label="Saring kelas sosial"
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+            >
+              <option value="">Semua kelas sosial</option>
+              {filterOptions.kelasSosial.map((kelas) => (
+                <option key={kelas} value={kelas}>
+                  Kelas {kelas}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="bdt"
+              defaultValue={filter.bdt ?? ""}
+              aria-label="Saring kepemilikan BDT"
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+            >
+              <option value="">Semua BDT</option>
+              {RTM_BDT_FILTERS.map((nilai) => (
+                <option key={nilai} value={nilai}>
+                  {RTM_BDT_LABELS[nilai]}
+                </option>
+              ))}
+            </select>
+
+            <select
+              name="dusun"
+              defaultValue={filter.dusun}
+              aria-label="Saring dusun"
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
+            >
+              <option value="">Semua dusun</option>
+              {filterOptions.dusun.map((dusun) => (
+                <option key={dusun} value={dusun}>
+                  {dusun}
+                </option>
+              ))}
+            </select>
+
+            <Input
+              name="rw"
+              defaultValue={filter.rw}
+              placeholder="RW"
+              aria-label="Saring RW"
+              className="w-20"
+            />
+            <Input
+              name="rt"
+              defaultValue={filter.rt}
+              placeholder="RT"
+              aria-label="Saring RT"
+              className="w-20"
+            />
+
             <Button type="submit" variant="outline">
               Cari
             </Button>
-            {search ? (
+            {filterAktif > 0 || filter.search ? (
               <Button type="button" variant="ghost" asChild>
                 <Link href="/rumah-tangga">Reset</Link>
               </Button>
+            ) : null}
+            {filterAktif > 0 ? (
+              <Badge variant="secondary" className="gap-1">
+                <SlidersHorizontal className="size-3" />
+                {filterAktif} filter aktif
+              </Badge>
             ) : null}
           </form>
 
@@ -112,8 +198,8 @@ export default async function RumahTanggaPage({ searchParams }: PageProps<"/ruma
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Home className="size-5" />
                         <p className="text-sm">
-                          {search
-                            ? "Tidak ada rumah tangga yang cocok dengan pencarian."
+                          {filterAktif > 0 || filter.search
+                            ? "Tidak ada rumah tangga yang cocok dengan filter."
                             : "Belum ada data rumah tangga."}
                         </p>
                       </div>
