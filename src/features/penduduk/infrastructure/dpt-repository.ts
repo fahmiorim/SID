@@ -16,6 +16,7 @@ import {
   DEFAULT_DPT_PAGE,
   DEFAULT_DPT_PER_PAGE,
   MAX_DPT_PER_PAGE,
+  type DptFilter,
   type DptRow,
   type ElectionDTO,
   type ListDptParams,
@@ -45,7 +46,7 @@ export async function getActiveElection(villageId: number): Promise<ElectionDTO 
 }
 
 /** Bangun klausa WHERE untuk filter DPT. */
-function whereDpt(villageId: number, params: ListDptParams, tanggalPemilihan: string) {
+function whereDpt(villageId: number, params: DptFilter, tanggalPemilihan: string) {
   const conditions = [
     eq(residents.villageId, villageId),
     eq(residents.lifeStatus, "alive"),
@@ -182,6 +183,28 @@ export async function listDpt(villageId: number, params: ListDptParams): Promise
     perPage,
     pageCount: Math.max(1, Math.ceil(Number(totalRow[0]?.count ?? 0) / perPage)),
   };
+}
+
+/**
+ * Baris ringkas seluruh pemilih pada pemilihan aktif (dusun + jenis kelamin).
+ *
+ * Dipakai rekapitulasi agar tidak perlu memuat kolom yang tidak ditampilkan.
+ */
+export async function listDptRingkas(
+  villageId: number,
+  params: DptFilter = {},
+): Promise<{ dusun: string | null; gender: "male" | "female" }[]> {
+  const election = await getActiveElection(villageId);
+  if (!election) return [];
+
+  const whereClause = whereDpt(villageId, params, election.tanggal);
+
+  return db
+    .select({ dusun: regions.dusun, gender: residents.gender })
+    .from(residents)
+    .leftJoin(regions, eq(regions.id, residents.regionId))
+    .where(whereClause)
+    .orderBy(regions.dusun, residents.name);
 }
 
 /** Semua baris DPT (tanpa pagination) untuk ekspor CSV. */

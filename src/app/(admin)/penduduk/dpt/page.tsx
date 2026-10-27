@@ -1,4 +1,4 @@
-import { FileDown } from "lucide-react";
+import { BarChart3, FileDown } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -12,6 +12,7 @@ import { PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
 import { DptFilterWrapper } from "@/features/penduduk/presentation/components/dpt/dpt-filter-wrapper";
 import { DptTable } from "@/features/penduduk/presentation/components/dpt/dpt-table";
 import { ElectionDialog } from "@/features/penduduk/presentation/components/dpt/election-dialog";
+import { PrintButton } from "@/features/penduduk/presentation/components/dpt/print-button";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -116,13 +117,22 @@ export default async function DptPage({ searchParams }: PageProps<"/penduduk/dpt
                 activeElection={activeElection ?? null}
               />
             )}
+            <Button variant="outline" asChild>
+              <Link href="/penduduk/dpt/rekap">
+                <BarChart3 className="size-4" />
+                Rekap
+              </Link>
+            </Button>
             {activeElection && (
-              <Button variant="outline" asChild>
-                <a href={exportHref}>
-                  <FileDown className="size-4" />
-                  Ekspor CSV
-                </a>
-              </Button>
+              <>
+                <PrintButton />
+                <Button variant="outline" asChild>
+                  <a href={exportHref}>
+                    <FileDown className="size-4" />
+                    Ekspor CSV
+                  </a>
+                </Button>
+              </>
             )}
           </div>
         }

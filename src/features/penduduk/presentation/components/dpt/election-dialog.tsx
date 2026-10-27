@@ -13,7 +13,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,12 +82,12 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
 
   return (
     <>
-      <DialogTrigger asChild>
-        <Button variant="outline" onClick={handleOpenCreate}>
-          <Plus className="mr-2 size-4" />
-          Kelola Pemilihan
-        </Button>
-      </DialogTrigger>
+      {/* Dialog dikendalikan state (`isOpen`), jadi tombol pembuka cukup memanggil
+          handler — `DialogTrigger` di luar `Dialog` akan melempar galat. */}
+      <Button variant="outline" onClick={handleOpenCreate}>
+        <Plus className="mr-2 size-4" />
+        Kelola Pemilihan
+      </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-xl">

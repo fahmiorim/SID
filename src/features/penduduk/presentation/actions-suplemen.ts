@@ -4,13 +4,17 @@ import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
+  addSuplemenTerdataUseCase,
   createSuplemenUseCase,
   deleteSuplemenUseCase,
+  getSuplemenTerdataUseCase,
+  removeSuplemenTerdataUseCase,
   updateSuplemenUseCase,
 } from "@/features/penduduk/application/suplemen-use-cases";
 import {
   SUPLEMEN_RESOURCE,
   suplemenCreateSchema,
+  suplemenTerdataSchema,
   suplemenUpdateSchema,
 } from "@/features/penduduk/domain/suplemen";
 import { requirePermission } from "@/lib/dal";
@@ -95,5 +99,50 @@ export async function deleteSuplemenAction(id: number): Promise<DeleteSuplemenAc
   } catch (e) {
     const message = e instanceof Error ? e.message : "Terjadi kesalahan internal.";
     return { error: message };
+  }
+}
+
+export async function listSuplemenTerdataAction(suplemenId: number) {
+  const user = await requirePermission(SUPLEMEN_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  try {
+    return { ok: true as const, rows: await getSuplemenTerdataUseCase(villageId, suplemenId) };
+  } catch (e) {
+    return { ok: false as const, message: e instanceof Error ? e.message : "Gagal memuat data." };
+  }
+}
+
+export async function addSuplemenTerdataAction(formData: FormData) {
+  const user = await requirePermission(SUPLEMEN_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  const parsed = suplemenTerdataSchema.safeParse({
+    suplemenId: formData.get("suplemenId"),
+    pendudukId: formData.get("pendudukId") || null,
+    keluargaId: formData.get("keluargaId") || null,
+  });
+
+  if (!parsed.success) {
+    return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
+  try {
+    await addSuplemenTerdataUseCase(villageId, parsed.data);
+    revalidatePath("/penduduk/suplemen");
+    return { ok: true as const };
+  } catch (e) {
+    return { ok: false as const, message: e instanceof Error ? e.message : "Gagal menyimpan." };
+  }
+}
+
+export async function removeSuplemenTerdataAction(id: number) {
+  const user = await requirePermission(SUPLEMEN_RESOURCE, "delete");
+  const villageId = await resolveVillageId(user);
+  try {
+    await removeSuplemenTerdataUseCase(villageId, id);
+    revalidatePath("/penduduk/suplemen");
+    return { ok: true as const };
+  } catch (e) {
+    return { ok: false as const, message: e instanceof Error ? e.message : "Gagal menghapus." };
   }
 }

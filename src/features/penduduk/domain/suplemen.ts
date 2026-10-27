@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { RESOURCES } from "@/features/rbac/domain/resources";
 
-export const SUPLEMEN_RESOURCE = RESOURCES.penduduk;
+export const SUPLEMEN_RESOURCE = RESOURCES.suplemen;
 
 export const SASARAN_PENDUDUK = 1;
 export const SASARAN_KELUARGA = 2;
@@ -49,4 +49,33 @@ export interface ListSuplemenResult {
   page: number;
   perPage: number;
   pageCount: number;
+}
+
+export const suplemenTerdataSchema = z
+  .object({
+    suplemenId: z.coerce.number().int().positive(),
+    pendudukId: z.coerce.number().int().positive().optional().nullable(),
+    keluargaId: z.coerce.number().int().positive().optional().nullable(),
+    /** Isian dinamis per suplemen (kolom bebas yang dibentuk petugas). */
+    isian: z.record(z.string(), z.string()).optional(),
+  })
+  .refine((value) => Boolean(value.pendudukId) !== Boolean(value.keluargaId), {
+    message: "Pilih salah satu sasaran: penduduk atau keluarga.",
+  });
+
+export type SuplemenTerdataInput = z.infer<typeof suplemenTerdataSchema>;
+
+export interface SuplemenTerdataRow {
+  id: number;
+  pendudukId: number | null;
+  keluargaId: number | null;
+  label: string;
+  /** Kolom isian dinamis terdata (lihat `suplemen-berkas.ts`). */
+  isian: Record<string, string>;
+  createdAt: string;
+}
+
+export interface SuplemenOption {
+  id: number;
+  label: string;
 }

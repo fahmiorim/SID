@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -23,24 +23,34 @@ import {
   SASARAN_KELUARGA,
   SASARAN_LABELS,
   SASARAN_PENDUDUK,
+  type SuplemenListRow,
 } from "@/features/penduduk/domain/suplemen";
-import { createSuplemenAction } from "@/features/penduduk/presentation/actions-suplemen";
+import {
+  createSuplemenAction,
+  updateSuplemenAction,
+} from "@/features/penduduk/presentation/actions-suplemen";
 
-export function SuplemenDialog() {
+export function SuplemenDialog({
+  suplemen,
+  trigger,
+}: {
+  suplemen?: SuplemenListRow;
+  trigger?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Tambah Suplemen Baru</Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger ?? <Button>Tambah Suplemen Baru</Button>}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Tambah Data Suplemen</DialogTitle>
+          <DialogTitle>{suplemen ? "Ubah Data Suplemen" : "Tambah Data Suplemen"}</DialogTitle>
         </DialogHeader>
         <form
           action={async (formData) => {
-            const res = await createSuplemenAction(formData);
+            const res = suplemen
+              ? await updateSuplemenAction(formData)
+              : await createSuplemenAction(formData);
             if ("success" in res && res.success) {
               setOpen(false);
             } else if ("error" in res) {
@@ -48,20 +58,26 @@ export function SuplemenDialog() {
               const errorMessage =
                 typeof error === "string"
                   ? error
-                  : error._form?.[0] || error.nama?.[0] || "Gagal menyimpan suplemen"; // Added nama field error
+                  : error._form?.[0] || error.nama?.[0] || "Gagal menyimpan suplemen";
               alert(errorMessage);
             }
           }}
           className="space-y-4"
         >
+          {suplemen && <input type="hidden" name="id" value={suplemen.id} />}
           <div className="space-y-2">
             <label className="text-sm font-medium">Nama Suplemen</label>
-            <Input name="nama" required placeholder="Contoh: Bantuan Subsidi" />
+            <Input
+              name="nama"
+              required
+              defaultValue={suplemen?.nama ?? ""}
+              placeholder="Contoh: Bantuan Subsidi"
+            />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Sasaran</label>
-            <Select name="sasaran" defaultValue={String(SASARAN_PENDUDUK)}>
+            <Select name="sasaran" defaultValue={String(suplemen?.sasaran ?? SASARAN_PENDUDUK)}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih sasaran" />
               </SelectTrigger>
@@ -78,7 +94,11 @@ export function SuplemenDialog() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Keterangan</label>
-            <Textarea name="keterangan" placeholder="Keterangan singkat..." />
+            <Textarea
+              name="keterangan"
+              defaultValue={suplemen?.keterangan ?? ""}
+              placeholder="Keterangan singkat..."
+            />
           </div>
 
           <Button type="submit">Simpan</Button>

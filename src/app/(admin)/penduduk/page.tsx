@@ -1,4 +1,4 @@
-import { BarChart3, History, Search, Users } from "lucide-react";
+import { BarChart3, FileDown, History, Search, SlidersHorizontal, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -19,9 +19,13 @@ import {
 import { getPendudukReference, listPenduduk } from "@/features/penduduk/application/use-cases";
 import {
   calculateAge,
+  filterKeSearchParams,
   GENDER_LABELS,
+  GENDERS,
+  hitungFilterPenduduk,
   LIFE_STATUS_LABELS,
   LIFE_STATUSES,
+  parseFilterPenduduk,
   PENDUDUK_RESOURCE,
   type LifeStatus,
 } from "@/features/penduduk/domain/penduduk";
@@ -37,9 +41,9 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 10;
 
-function toLifeStatus(value: string): LifeStatus | null {
-  return (LIFE_STATUSES as readonly string[]).includes(value) ? (value as LifeStatus) : null;
-}
+/** Kelas bersama untuk seluruh select filter agar tampil seragam. */
+const SELECT_CLASS =
+  "h-8 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm";
 
 /** Warna lencana status kependudukan agar mudah dipindai. */
 function lifeStatusVariant(status: LifeStatus): "secondary" | "outline" | "destructive" {
@@ -56,20 +60,18 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
   }
 
   const params = await searchParams;
-  const search = typeof params.q === "string" ? params.q.trim() : "";
-  const lifeStatus = toLifeStatus(typeof params.status === "string" ? params.status : "");
+  const filter = parseFilterPenduduk(params as Record<string, string | string[] | undefined>);
   const rawPage = Number(typeof params.page === "string" ? params.page : "1");
   const requestedPage = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
 
+  const reference = await getPendudukReference();
   const result = await listPenduduk({
-    search,
-    lifeStatus,
+    filter,
     page: requestedPage,
     pageSize: PAGE_SIZE,
   });
 
   const canManage = hasPermission(user.permissions, PENDUDUK_RESOURCE, "update");
-  const reference = canManage ? await getPendudukReference() : null;
   const akunWarga = canManage
     ? await listWargaAccountsForResidents(result.rows.map((row) => row.id))
     : new Map();
@@ -78,17 +80,17 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
   const from = result.total === 0 ? 0 : (result.page - 1) * result.pageSize + 1;
   const to = Math.min(result.page * result.pageSize, result.total);
   const columns = canManage ? 8 : 7;
+  const filterAktif = hitungFilterPenduduk(filter);
 
+  const queryDasar = filterKeSearchParams(filter);
   const pageHref = (targetPage: number): string => {
-    const query = new URLSearchParams();
-    if (search) query.set("q", search);
-    if (lifeStatus) query.set("status", lifeStatus);
+    const query = new URLSearchParams(queryDasar);
     if (targetPage > 1) query.set("page", String(targetPage));
     const qs = query.toString();
     return qs ? `/penduduk?${qs}` : "/penduduk";
   };
 
-  const resetHref = "/penduduk";
+  const eksporHref = `/penduduk/ekspor?${queryDasar.toString()}`;
 
   return (
     <div className="space-y-6">
@@ -109,47 +111,191 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                 Laporan
               </Link>
             </Button>
-            {canManage && reference ? <PendudukCreateButton reference={reference} /> : null}
+            <Button variant="outline" asChild>
+              <a href={eksporHref}>
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
+            {canManage ? <PendudukCreateButton reference={reference} /> : null}
           </div>
         }
       />
 
       <Card>
         <CardContent className="space-y-4">
-          <form method="get" className="flex flex-wrap items-center gap-2">
-            <div className="relative flex-1 sm:max-w-xs">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                name="q"
-                defaultValue={search}
-                placeholder="Cari nama, NIK, atau No. KK…"
-                className="pl-8"
-                aria-label="Cari penduduk"
-              />
+          <form method="get" className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative min-w-56 flex-1">
+                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  name="q"
+                  defaultValue={filter.search}
+                  placeholder="Cari nama, NIK, atau No. KK…"
+                  className="pl-8"
+                  aria-label="Cari penduduk"
+                />
+              </div>
+              <Button type="submit" variant="outline">
+                Cari
+              </Button>
+              {filterAktif > 0 || filter.search ? (
+                <Button type="button" variant="ghost" asChild>
+                  <Link href="/penduduk">Reset</Link>
+                </Button>
+              ) : null}
+              {filterAktif > 0 ? (
+                <Badge variant="secondary" className="gap-1">
+                  <SlidersHorizontal className="size-3" />
+                  {filterAktif} filter aktif
+                </Badge>
+              ) : null}
             </div>
 
-            <select
-              name="status"
-              defaultValue={lifeStatus ?? ""}
-              aria-label="Saring status kependudukan"
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm"
-            >
-              <option value="">Semua status</option>
-              {LIFE_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {LIFE_STATUS_LABELS[status]}
-                </option>
-              ))}
-            </select>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              <select
+                name="status"
+                defaultValue={filter.lifeStatus ?? ""}
+                aria-label="Saring status kependudukan"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua status</option>
+                {LIFE_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {LIFE_STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </select>
 
-            <Button type="submit" variant="outline">
-              Cari
-            </Button>
-            {search || lifeStatus ? (
-              <Button type="button" variant="ghost" asChild>
-                <Link href={resetHref}>Reset</Link>
-              </Button>
-            ) : null}
+              <select
+                name="gender"
+                defaultValue={filter.gender ?? ""}
+                aria-label="Saring jenis kelamin"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua jenis kelamin</option>
+                {GENDERS.map((gender) => (
+                  <option key={gender} value={gender}>
+                    {GENDER_LABELS[gender]}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="religionId"
+                defaultValue={filter.religionId ?? ""}
+                aria-label="Saring agama"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua agama</option>
+                {reference.religions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="educationId"
+                defaultValue={filter.educationId ?? ""}
+                aria-label="Saring pendidikan"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua pendidikan</option>
+                {reference.educations.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="occupationId"
+                defaultValue={filter.occupationId ?? ""}
+                aria-label="Saring pekerjaan"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua pekerjaan</option>
+                {reference.occupations.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="maritalStatusId"
+                defaultValue={filter.maritalStatusId ?? ""}
+                aria-label="Saring status kawin"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua status kawin</option>
+                {reference.maritalStatuses.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="dusun"
+                defaultValue={filter.dusun}
+                aria-label="Saring dusun"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua dusun</option>
+                {reference.dusun.map((dusun) => (
+                  <option key={dusun} value={dusun}>
+                    {dusun}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="rw"
+                defaultValue={filter.rw}
+                aria-label="Saring RW"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua RW</option>
+                {reference.rw.map((rw) => (
+                  <option key={rw} value={rw}>
+                    RW {rw}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                name="rt"
+                defaultValue={filter.rt}
+                aria-label="Saring RT"
+                className={SELECT_CLASS}
+              >
+                <option value="">Semua RT</option>
+                {reference.rt.map((rt) => (
+                  <option key={rt} value={rt}>
+                    RT {rt}
+                  </option>
+                ))}
+              </select>
+
+              <Input
+                name="umurMin"
+                type="number"
+                min={0}
+                defaultValue={filter.umurMin ?? ""}
+                placeholder="Umur minimal"
+                aria-label="Umur minimal"
+              />
+              <Input
+                name="umurMax"
+                type="number"
+                min={0}
+                defaultValue={filter.umurMax ?? ""}
+                placeholder="Umur maksimal"
+                aria-label="Umur maksimal"
+              />
+            </div>
           </form>
 
           <div className="overflow-x-auto rounded-lg border">
@@ -174,8 +320,8 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
                         <Users className="size-5" />
                         <p className="text-sm">
-                          {search || lifeStatus
-                            ? "Tidak ada penduduk yang cocok dengan pencarian."
+                          {filterAktif > 0 || filter.search
+                            ? "Tidak ada penduduk yang cocok dengan filter."
                             : "Belum ada data penduduk."}
                         </p>
                       </div>
@@ -206,7 +352,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                             {LIFE_STATUS_LABELS[row.lifeStatus]}
                           </Badge>
                         </TableCell>
-                        {canManage && reference ? (
+                        {canManage ? (
                           <TableCell className="text-right">
                             <PendudukRowActions
                               penduduk={row}

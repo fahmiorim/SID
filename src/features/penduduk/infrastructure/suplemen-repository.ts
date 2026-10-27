@@ -1,15 +1,19 @@
 import "server-only";
 
-import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { suplemen } from "@/db/schema";
+import { families, residents, suplemen, suplemenTerdata } from "@/db/schema";
 import {
   type ListSuplemenParams,
   type ListSuplemenResult,
   type SuplemenCreateInput,
+  type SuplemenOption,
+  type SuplemenTerdataInput,
+  type SuplemenTerdataRow,
   type SuplemenUpdateInput,
 } from "@/features/penduduk/domain/suplemen";
+import { bacaIsian } from "@/features/penduduk/domain/suplemen-berkas";
 import { slugify } from "@/lib/utils";
 
 export async function listSuplemen(
@@ -93,4 +97,225 @@ export async function updateSuplemen(villageId: number, input: SuplemenUpdateInp
 
 export async function deleteSuplemen(villageId: number, id: number): Promise<void> {
   await db.delete(suplemen).where(and(eq(suplemen.id, id), eq(suplemen.villageId, villageId)));
+}
+
+export async function getSuplemenById(villageId: number, id: number) {
+  const [row] = await db
+    .select()
+    .from(suplemen)
+    .where(and(eq(suplemen.id, id), eq(suplemen.villageId, villageId)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function listSuplemenTerdata(
+  villageId: number,
+  suplemenId: number,
+): Promise<SuplemenTerdataRow[]> {
+  const rows = await db
+    .select({
+      id: suplemenTerdata.id,
+      pendudukId: suplemenTerdata.pendudukId,
+      keluargaId: suplemenTerdata.keluargaId,
+      pendudukName: residents.name,
+      pendudukNik: residents.nationalId,
+      keluargaNumber: families.number,
+      isian: suplemenTerdata.dataFormIsian,
+      createdAt: suplemenTerdata.createdAt,
+    })
+    .from(suplemenTerdata)
+    .leftJoin(residents, eq(suplemenTerdata.pendudukId, residents.id))
+    .leftJoin(families, eq(suplemenTerdata.keluargaId, families.id))
+    .where(
+      and(eq(suplemenTerdata.villageId, villageId), eq(suplemenTerdata.suplemenId, suplemenId)),
+    )
+    .orderBy(desc(suplemenTerdata.id));
+
+  return rows.map((row) => ({
+    id: row.id,
+    pendudukId: row.pendudukId,
+    keluargaId: row.keluargaId,
+    label: row.pendudukId
+      ? `${row.pendudukName ?? "Penduduk"}${row.pendudukNik ? ` — ${row.pendudukNik}` : ""}`
+      : `KK ${row.keluargaNumber ?? row.keluargaId}`,
+    isian: bacaIsian(row.isian),
+    createdAt: row.createdAt.toISOString(),
+  }));
+}
+
+/** Id penduduk untuk sekumpulan NIK pada desa ini (dipakai impor). */
+export async function findPendudukIdsByNik(
+  villageId: number,
+  nik: readonly string[],
+): Promise<Map<string, number>> {
+  if (nik.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: residents.id, nationalId: residents.nationalId })
+    .from(residents)
+    .where(and(eq(residents.villageId, villageId), inArray(residents.nationalId, [...nik])));
+
+  return new Map(rows.map((row) => [row.nationalId ?? "", row.id]));
+}
+
+/** Id keluarga untuk sekumpulan nomor KK pada desa ini (dipakai impor). */
+export async function findKeluargaIdsByNumber(
+  villageId: number,
+  numbers: readonly string[],
+): Promise<Map<string, number>> {
+  if (numbers.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: families.id, number: families.number })
+    .from(families)
+    .where(and(eq(families.villageId, villageId), inArray(families.number, [...numbers])));
+
+  return new Map(rows.map((row) => [row.number, row.id]));
+}
+
+/**
+ * Tambahkan terdata dari impor dengan data isian dinamis.
+ *
+ * Idempoten: sasaran yang sudah terdata pada suplemen ini dianggap dilewati.
+ */
+export async function addSuplemenTerdataImpor(
+  villageId: number,
+  suplemenId: number,
+  sasaranId: { pendudukId: number | null; keluargaId: number | null },
+  isian: Record<string, string>,
+): Promise<boolean> {
+  const kolomCek = sasaranId.pendudukId
+    ? eq(suplemenTerdata.pendudukId, sasaranId.pendudukId)
+    : eq(suplemenTerdata.keluargaId, sasaranId.keluargaId!);
+
+  const ada = await db
+    .select({ id: suplemenTerdata.id })
+    .from(suplemenTerdata)
+    .where(
+      and(
+        eq(suplemenTerdata.villageId, villageId),
+        eq(suplemenTerdata.suplemenId, suplemenId),
+        kolomCek,
+      ),
+    )
+    .limit(1);
+
+  if (ada[0]) return false;
+
+  await db.insert(suplemenTerdata).values({
+    villageId,
+    suplemenId,
+    pendudukId: sasaranId.pendudukId,
+    keluargaId: sasaranId.keluargaId,
+    dataFormIsian: isian,
+  });
+
+  return true;
+}
+
+/** Jumlah terdata per suplemen untuk seluruh suplemen desa (dipakai laporan). */
+export async function listSuplemenRekap(villageId: number) {
+  const rows = await db
+    .select({
+      id: suplemen.id,
+      nama: suplemen.nama,
+      sasaran: suplemen.sasaran,
+      jumlahTerdata: sql<number>`(
+        select count(*) from ${suplemenTerdata} where ${suplemenTerdata.suplemenId} = ${suplemen.id}
+      )`,
+    })
+    .from(suplemen)
+    .where(eq(suplemen.villageId, villageId))
+    .orderBy(asc(suplemen.nama));
+
+  return rows.map((row) => ({ ...row, jumlahTerdata: Number(row.jumlahTerdata ?? 0) }));
+}
+
+export async function addSuplemenTerdata(
+  villageId: number,
+  input: SuplemenTerdataInput,
+): Promise<void> {
+  const suplemenRow = await getSuplemenById(villageId, input.suplemenId);
+  if (!suplemenRow) throw new Error("Suplemen tidak ditemukan.");
+
+  if (suplemenRow.sasaran === 1 && !input.pendudukId) {
+    throw new Error("Suplemen ini bersasaran penduduk.");
+  }
+  if (suplemenRow.sasaran === 2 && !input.keluargaId) {
+    throw new Error("Suplemen ini bersasaran keluarga.");
+  }
+
+  if (input.pendudukId) {
+    const [resident] = await db
+      .select({ id: residents.id })
+      .from(residents)
+      .where(and(eq(residents.id, input.pendudukId), eq(residents.villageId, villageId)))
+      .limit(1);
+    if (!resident) throw new Error("Penduduk tidak ditemukan.");
+  }
+
+  if (input.keluargaId) {
+    const [family] = await db
+      .select({ id: families.id })
+      .from(families)
+      .where(and(eq(families.id, input.keluargaId), eq(families.villageId, villageId)))
+      .limit(1);
+    if (!family) throw new Error("Keluarga tidak ditemukan.");
+  }
+
+  const duplicate = await db
+    .select({ id: suplemenTerdata.id })
+    .from(suplemenTerdata)
+    .where(
+      and(
+        eq(suplemenTerdata.villageId, villageId),
+        eq(suplemenTerdata.suplemenId, input.suplemenId),
+        input.pendudukId
+          ? eq(suplemenTerdata.pendudukId, input.pendudukId)
+          : eq(suplemenTerdata.keluargaId, input.keluargaId!),
+      ),
+    )
+    .limit(1);
+
+  if (duplicate[0]) throw new Error("Sasaran tersebut sudah terdata pada suplemen ini.");
+
+  await db.insert(suplemenTerdata).values({
+    villageId,
+    suplemenId: input.suplemenId,
+    pendudukId: input.pendudukId ?? null,
+    keluargaId: input.keluargaId ?? null,
+    dataFormIsian: input.isian ?? null,
+  });
+}
+
+export async function removeSuplemenTerdata(villageId: number, id: number): Promise<void> {
+  await db
+    .delete(suplemenTerdata)
+    .where(and(eq(suplemenTerdata.id, id), eq(suplemenTerdata.villageId, villageId)));
+}
+
+export async function listSuplemenPendudukOptions(villageId: number): Promise<SuplemenOption[]> {
+  const rows = await db
+    .select({ id: residents.id, name: residents.name, nationalId: residents.nationalId })
+    .from(residents)
+    .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+    .orderBy(asc(residents.name), asc(residents.id));
+
+  return rows.map((row) => ({
+    id: row.id,
+    label: row.nationalId ? `${row.name} — ${row.nationalId}` : row.name,
+  }));
+}
+
+export async function listSuplemenKeluargaOptions(villageId: number): Promise<SuplemenOption[]> {
+  const rows = await db
+    .select({ id: families.id, number: families.number, address: families.address })
+    .from(families)
+    .where(eq(families.villageId, villageId))
+    .orderBy(asc(families.number));
+
+  return rows.map((row) => ({
+    id: row.id,
+    label: row.address ? `KK ${row.number} — ${row.address}` : `KK ${row.number}`,
+  }));
 }

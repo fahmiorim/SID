@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, eq, like, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, count, eq, like, ne, or, sql, type SQL } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 
 import { db } from "@/db";
@@ -18,8 +18,8 @@ import {
 } from "@/db/schema";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
-  type LifeStatus,
   type PendudukDTO,
+  type PendudukFilter,
   type PendudukFormInput,
   type PendudukListRow,
 } from "@/features/penduduk/domain/penduduk";
@@ -27,8 +27,8 @@ import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
 
 export interface ListPendudukParams {
   villageId: number;
-  search: string;
-  lifeStatus: LifeStatus | null;
+  /** Filter lanjutan (pencarian, status, katalog, wilayah, dan rentang umur). */
+  filter: PendudukFilter;
   page: number;
   pageSize: number;
 }
@@ -80,12 +80,18 @@ function formatRegionLabel(
   return formatWilayahLabel({ dusun: dusun ?? "", rw: rw ?? "", rt: rt ?? "" });
 }
 
-function buildWhere(villageId: number, search: string, lifeStatus: LifeStatus | null): SQL {
+/**
+ * Bangun klausa WHERE daftar penduduk.
+ *
+ * Wilayah disaring lewat kolom `regions` (dusun/RW/RT), sehingga pemanggil
+ * wajib ikut menyertakan `leftJoin(regions, ...)` pada query-nya.
+ */
+function buildWhere(villageId: number, filter: PendudukFilter): SQL {
   const villageFilter = eq(residents.villageId, villageId);
   const filters: SQL[] = [villageFilter];
 
-  if (search) {
-    const term = `%${search}%`;
+  if (filter.search) {
+    const term = `%${filter.search}%`;
     const searchFilter = or(
       like(residents.name, term),
       like(residents.nationalId, term),
@@ -94,8 +100,22 @@ function buildWhere(villageId: number, search: string, lifeStatus: LifeStatus | 
     if (searchFilter) filters.push(searchFilter);
   }
 
-  if (lifeStatus) {
-    filters.push(eq(residents.lifeStatus, lifeStatus));
+  if (filter.lifeStatus) filters.push(eq(residents.lifeStatus, filter.lifeStatus));
+  if (filter.gender) filters.push(eq(residents.gender, filter.gender));
+  if (filter.religionId !== null) filters.push(eq(residents.religionId, filter.religionId));
+  if (filter.educationId !== null) filters.push(eq(residents.educationId, filter.educationId));
+  if (filter.occupationId !== null) filters.push(eq(residents.occupationId, filter.occupationId));
+  if (filter.maritalStatusId !== null) {
+    filters.push(eq(residents.maritalStatusId, filter.maritalStatusId));
+  }
+  if (filter.dusun) filters.push(eq(regions.dusun, filter.dusun));
+  if (filter.rw) filters.push(eq(regions.rw, filter.rw));
+  if (filter.rt) filters.push(eq(regions.rt, filter.rt));
+  if (filter.umurMin !== null) {
+    filters.push(sql`TIMESTAMPDIFF(YEAR, ${residents.birthDate}, CURDATE()) >= ${filter.umurMin}`);
+  }
+  if (filter.umurMax !== null) {
+    filters.push(sql`TIMESTAMPDIFF(YEAR, ${residents.birthDate}, CURDATE()) <= ${filter.umurMax}`);
   }
 
   return and(...filters) ?? villageFilter;
@@ -106,8 +126,8 @@ function blankToNull(value: string): string | null {
 }
 
 export async function listPenduduk(params: ListPendudukParams): Promise<PendudukListResult> {
-  const { villageId, search, lifeStatus, page, pageSize } = params;
-  const where = buildWhere(villageId, search, lifeStatus);
+  const { villageId, filter, page, pageSize } = params;
+  const where = buildWhere(villageId, filter);
 
   const [rows, totalRows] = await Promise.all([
     db
@@ -131,6 +151,7 @@ export async function listPenduduk(params: ListPendudukParams): Promise<Penduduk
       .select({ value: count() })
       .from(residents)
       .leftJoin(families, eq(residents.familyId, families.id))
+      .leftJoin(regions, eq(residents.regionId, regions.id))
       .where(where),
   ]);
 

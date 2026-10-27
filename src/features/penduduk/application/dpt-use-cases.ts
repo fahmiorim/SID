@@ -8,7 +8,12 @@ import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   buildDptCsv,
+  buildDptRekapCsv,
   dptFilename,
+  dptRekapFilename,
+  hitungRekapDpt,
+  type DptFilter,
+  type DptRekap,
   type ElectionDTO,
   type ElectionFormInput,
   type ListDptParams,
@@ -19,10 +24,11 @@ import {
   getActiveElection,
   listDpt,
   listDptExport,
+  listDptRingkas,
 } from "@/features/penduduk/infrastructure/dpt-repository";
 import { requirePermission } from "@/lib/dal";
+import { notFound } from "@/lib/errors";
 
-/** Daftar pemilihan (CRUD admin). */
 export async function listElections(): Promise<ElectionDTO[]> {
   const user = await requirePermission(PENDUDUK_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
@@ -156,7 +162,7 @@ export async function exportDpt(params: ListDptParams): Promise<{
   ]);
 
   if (!election) {
-    throw new Error("Tidak ada pemilihan aktif untuk desa ini.");
+    throw notFound("Tidak ada pemilihan aktif untuk desa ini.");
   }
 
   return {
@@ -167,5 +173,52 @@ export async function exportDpt(params: ListDptParams): Promise<{
       rows,
     }),
     filename: dptFilename(desa?.namaDesa ?? null, election.judul),
+  };
+}
+
+/** Identitas pemilihan aktif + rekapitulasi pemilih per wilayah. */
+export interface DptRekapData {
+  rekap: DptRekap;
+  election: ElectionDTO | null;
+  namaDesa: string | null;
+}
+
+/** Rekapitulasi DPT (per dusun) mengikuti filter yang sama dengan daftar. */
+export async function getRekapDpt(params: DptFilter = {}): Promise<DptRekapData> {
+  const user = await requirePermission(PENDUDUK_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const [rows, election, desa] = await Promise.all([
+    listDptRingkas(villageId, params),
+    getActiveElection(villageId),
+    getIdentitas(),
+  ]);
+
+  return {
+    rekap: hitungRekapDpt(rows),
+    election,
+    namaDesa: desa?.namaDesa ?? null,
+  };
+}
+
+/** Ekspor rekapitulasi DPT sebagai CSV. */
+export async function exportRekapDpt(params: DptFilter = {}): Promise<{
+  csv: string;
+  filename: string;
+}> {
+  const data = await getRekapDpt(params);
+
+  if (!data.election) {
+    throw notFound("Tidak ada pemilihan aktif untuk desa ini.");
+  }
+
+  return {
+    csv: buildDptRekapCsv({
+      namaDesa: data.namaDesa,
+      judulPemilihan: data.election.judul,
+      tanggalPemilihan: data.election.tanggal,
+      rekap: data.rekap,
+    }),
+    filename: dptRekapFilename(data.namaDesa, data.election.judul),
   };
 }

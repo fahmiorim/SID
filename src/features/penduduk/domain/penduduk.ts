@@ -158,6 +158,140 @@ export interface PendudukReferenceData {
   /** Kartu Keluarga pada desa ini, untuk menautkan penduduk ke sebuah KK. */
   families: LabelOption[];
   regions: RegionOption[];
+  /** Daftar dusun/RW/RT yang benar-benar dipakai, untuk filter lanjutan. */
+  dusun: string[];
+  rw: string[];
+  rt: string[];
+}
+
+// --- Filter daftar penduduk ------------------------------------------------
+
+/**
+ * Filter lanjutan daftar penduduk.
+ *
+ * Semua nilai kosong diwakili `null` (atau string kosong) agar satu bentuk data
+ * dipakai bersama oleh halaman admin, ekspor CSV, dan use case.
+ */
+export interface PendudukFilter {
+  search: string;
+  lifeStatus: LifeStatus | null;
+  gender: Gender | null;
+  religionId: number | null;
+  educationId: number | null;
+  occupationId: number | null;
+  maritalStatusId: number | null;
+  dusun: string;
+  rw: string;
+  rt: string;
+  umurMin: number | null;
+  umurMax: number | null;
+}
+
+type NilaiParam = string | string[] | undefined;
+
+function ambilTeks(param: NilaiParam): string {
+  if (Array.isArray(param)) return param[0]?.trim() ?? "";
+  return param?.trim() ?? "";
+}
+
+/** Angka pilihan katalog (> 0); nilai tidak valid dianggap kosong. */
+function ambilId(param: NilaiParam): number | null {
+  const teks = ambilTeks(param);
+  if (teks === "") return null;
+  const angka = Number(teks);
+  return Number.isInteger(angka) && angka > 0 ? angka : null;
+}
+
+/** Batas umur (>= 0); nilai tidak valid dianggap kosong. */
+function ambilUmur(param: NilaiParam): number | null {
+  const teks = ambilTeks(param);
+  if (teks === "") return null;
+  const angka = Number(teks);
+  return Number.isInteger(angka) && angka >= 0 ? angka : null;
+}
+
+/** Filter kosong (tanpa batasan apa pun). */
+export function filterPendudukKosong(): PendudukFilter {
+  return {
+    search: "",
+    lifeStatus: null,
+    gender: null,
+    religionId: null,
+    educationId: null,
+    occupationId: null,
+    maritalStatusId: null,
+    dusun: "",
+    rw: "",
+    rt: "",
+    umurMin: null,
+    umurMax: null,
+  };
+}
+
+/**
+ * Ubah query string halaman menjadi filter yang tervalidasi.
+ *
+ * Nilai yang tidak dikenal (status/jenis kelamin salah tulis, id bukan angka)
+ * diabaikan alih-alih menggagalkan halaman, sehingga tautan lama tetap bekerja.
+ */
+export function parseFilterPenduduk(params: Record<string, NilaiParam>): PendudukFilter {
+  const status = ambilTeks(params.status);
+  const gender = ambilTeks(params.gender);
+
+  return {
+    search: ambilTeks(params.q),
+    lifeStatus: (LIFE_STATUSES as readonly string[]).includes(status)
+      ? (status as LifeStatus)
+      : null,
+    gender: (GENDERS as readonly string[]).includes(gender) ? (gender as Gender) : null,
+    religionId: ambilId(params.religionId),
+    educationId: ambilId(params.educationId),
+    occupationId: ambilId(params.occupationId),
+    maritalStatusId: ambilId(params.maritalStatusId),
+    dusun: ambilTeks(params.dusun),
+    rw: ambilTeks(params.rw),
+    rt: ambilTeks(params.rt),
+    umurMin: ambilUmur(params.umurMin),
+    umurMax: ambilUmur(params.umurMax),
+  };
+}
+
+/** Query string dari filter (tanpa parameter halaman). */
+export function filterKeSearchParams(filter: PendudukFilter): URLSearchParams {
+  const query = new URLSearchParams();
+
+  if (filter.search) query.set("q", filter.search);
+  if (filter.lifeStatus) query.set("status", filter.lifeStatus);
+  if (filter.gender) query.set("gender", filter.gender);
+  if (filter.religionId !== null) query.set("religionId", String(filter.religionId));
+  if (filter.educationId !== null) query.set("educationId", String(filter.educationId));
+  if (filter.occupationId !== null) query.set("occupationId", String(filter.occupationId));
+  if (filter.maritalStatusId !== null) query.set("maritalStatusId", String(filter.maritalStatusId));
+  if (filter.dusun) query.set("dusun", filter.dusun);
+  if (filter.rw) query.set("rw", filter.rw);
+  if (filter.rt) query.set("rt", filter.rt);
+  if (filter.umurMin !== null) query.set("umurMin", String(filter.umurMin));
+  if (filter.umurMax !== null) query.set("umurMax", String(filter.umurMax));
+
+  return query;
+}
+
+/** Jumlah filter aktif selain pencarian, untuk lencana di UI. */
+export function hitungFilterPenduduk(filter: PendudukFilter): number {
+  const nilai = [
+    filter.lifeStatus,
+    filter.gender,
+    filter.religionId,
+    filter.educationId,
+    filter.occupationId,
+    filter.maritalStatusId,
+    filter.dusun,
+    filter.rw,
+    filter.rt,
+    filter.umurMin,
+    filter.umurMax,
+  ];
+  return nilai.filter((item) => item !== null && item !== "").length;
 }
 
 // --- Pembantu tampilan -----------------------------------------------------

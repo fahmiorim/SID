@@ -9,14 +9,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SASARAN_LABELS, type SuplemenListRow } from "@/features/penduduk/domain/suplemen";
+import {
+  SASARAN_LABELS,
+  type SuplemenListRow,
+  type SuplemenOption,
+} from "@/features/penduduk/domain/suplemen";
+import { SuplemenActions } from "@/features/penduduk/presentation/components/suplemen/suplemen-actions";
+import { SuplemenTerdataDialog } from "@/features/penduduk/presentation/components/suplemen/suplemen-terdata-dialog";
 
 export function SuplemenTable({
   data,
+  pendudukOptions,
+  keluargaOptions,
+  canManage,
 }: {
   data: SuplemenListRow[];
   page: number;
   pageCount: number;
+  pendudukOptions: SuplemenOption[];
+  keluargaOptions: SuplemenOption[];
+  canManage: boolean;
 }) {
   return (
     <div className="rounded-md border">
@@ -28,6 +40,7 @@ export function SuplemenTable({
             <TableHead>Keterangan</TableHead>
             <TableHead>Jumlah Terdata</TableHead>
             <TableHead>Update</TableHead>
+            <TableHead className="text-right">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -38,13 +51,20 @@ export function SuplemenTable({
                 <Badge variant="secondary">{SASARAN_LABELS[row.sasaran] ?? "Penduduk"}</Badge>
               </TableCell>
               <TableCell>{row.keterangan ?? "-"}</TableCell>
-              <TableCell>{row.terdataCount}</TableCell>
+              <TableCell>
+                <SuplemenTerdataDialog
+                  suplemen={row}
+                  pendudukOptions={pendudukOptions}
+                  keluargaOptions={keluargaOptions}
+                />
+              </TableCell>
               <TableCell>{new Date(row.updatedAt).toLocaleDateString()}</TableCell>
+              <TableCell>{canManage ? <SuplemenActions suplemen={row} /> : "-"}</TableCell>
             </TableRow>
           ))}
           {data.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">
+              <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
                 Belum ada data suplemen.
               </TableCell>
             </TableRow>

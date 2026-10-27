@@ -72,6 +72,12 @@ export async function getPendudukReferenceData(villageId: number): Promise<Pendu
     listWilayahOptions(villageId),
   ]);
 
+  /** Nilai unik & terurut agar pilihan filter tidak menampilkan dusun berulang. */
+  const unik = (nilai: (string | null)[]): string[] =>
+    [...new Set(nilai.filter((item): item is string => item !== null && item !== ""))].sort(
+      (a, b) => a.localeCompare(b, "id"),
+    );
+
   return {
     religions: religionRows,
     educations: educationRows,
@@ -89,5 +95,8 @@ export async function getPendudukReferenceData(villageId: number): Promise<Pendu
         rt: row.rt,
       }),
     })),
+    dusun: unik(regionRows.map((row) => row.dusun)),
+    rw: unik(regionRows.map((row) => row.rw)),
+    rt: unik(regionRows.map((row) => row.rt)),
   };
 }

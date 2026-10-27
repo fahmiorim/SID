@@ -1,10 +1,11 @@
 import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { catatPerubahanAnggotaKk } from "@/features/keluarga/application/catat-anggota-kk";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
   PENDUDUK_RESOURCE,
-  type LifeStatus,
+  type PendudukFilter,
   type PendudukFormInput,
   type PendudukReferenceData,
 } from "@/features/penduduk/domain/penduduk";
@@ -30,8 +31,8 @@ import { conflict, notFound } from "@/lib/errors";
  */
 
 export interface ListPendudukParams {
-  search: string;
-  lifeStatus: LifeStatus | null;
+  /** Filter lanjutan daftar penduduk (lihat `parseFilterPenduduk`). */
+  filter: PendudukFilter;
   page: number;
   pageSize: number;
 }
@@ -75,6 +76,16 @@ export async function createPenduduk(input: PendudukFormInput): Promise<{ id: nu
   await ensureSingleHeadOfFamily(villageId, input, null);
 
   const id = await insertPenduduk(villageId, input);
+
+  await catatPerubahanAnggotaKk({
+    villageId,
+    residentId: id,
+    residentName: input.name,
+    sebelum: null,
+    sesudah: { familyId: input.familyId, familyRelationId: input.familyRelationId },
+    actorId: user.id,
+  });
+
   return { id };
 }
 
@@ -92,6 +103,15 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
   await ensureSingleHeadOfFamily(villageId, input, id);
 
   await updatePendudukRow(id, input);
+
+  await catatPerubahanAnggotaKk({
+    villageId,
+    residentId: id,
+    residentName: input.name,
+    sebelum: { familyId: existing.familyId, familyRelationId: existing.familyRelationId },
+    sesudah: { familyId: input.familyId, familyRelationId: input.familyRelationId },
+    actorId: user.id,
+  });
 }
 
 export async function deletePenduduk(id: number): Promise<void> {
@@ -102,4 +122,13 @@ export async function deletePenduduk(id: number): Promise<void> {
   if (!existing) throw notFound("Data penduduk tidak ditemukan.");
 
   await deletePendudukRow(id);
+
+  await catatPerubahanAnggotaKk({
+    villageId,
+    residentId: null,
+    residentName: existing.name,
+    sebelum: { familyId: existing.familyId, familyRelationId: existing.familyRelationId },
+    sesudah: null,
+    actorId: user.id,
+  });
 }

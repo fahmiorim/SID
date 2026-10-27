@@ -1,17 +1,61 @@
 import "server-only";
 
-import { and, count, desc, eq, like, or, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, like, or, sql, type SQL } from "drizzle-orm";
+import { alias } from "drizzle-orm/mysql-core";
 
 import { db } from "@/db";
-import { dtks, dtksAnggota, families, regions, residents, rumahTangga } from "@/db/schema";
+import {
+  dtks,
+  dtksAnggota,
+  dtksLampiran,
+  dtksPengaturanProgram,
+  dtksRefLampiran,
+  families,
+  regions,
+  residents,
+  rumahTangga,
+  type DtksLampiran,
+  type DtksPengaturanProgram,
+} from "@/db/schema";
 import {
   type DtksAnggotaRow,
   type DtksDetailDTO,
   type DtksListRow,
+  type DtksUpdateInput,
   type DtksVersi,
   type ListDtksParams,
   type ListDtksResult,
 } from "@/features/penduduk/domain/dtks";
+import type { DtksEksporRow } from "@/features/penduduk/domain/dtks-berkas";
+import { RTM_LEVEL_KEPALA } from "@/features/rumah-tangga/domain/rumah-tangga";
+
+/** Alias `residents` untuk mengambil kepala rumah tangga tiap RTM. */
+const head = alias(residents, "head");
+
+/**
+ * Klausa WHERE daftar DTKS.
+ *
+ * Disatukan agar daftar, ekspor, dan rekapitulasi memakai filter yang sama
+ * persis — angka pada laporan selalu cocok dengan tabel yang dilihat pengguna.
+ */
+function whereDtks(villageId: number, params: ListDtksParams): SQL {
+  const filters: SQL[] = [eq(dtks.villageId, villageId)];
+
+  if (params.status) filters.push(eq(dtks.status, params.status));
+  if (params.dusun) filters.push(eq(regions.dusun, params.dusun));
+  if (params.search) {
+    const term = `%${params.search}%`;
+    filters.push(
+      or(
+        like(rumahTangga.number, term),
+        like(residents.name, term),
+        like(residents.nationalId, term),
+      )!,
+    );
+  }
+
+  return and(...filters)!;
+}
 
 export async function listDtks(villageId: number, params: ListDtksParams): Promise<ListDtksResult> {
   const page = Math.max(1, params.page ?? 1);
@@ -220,4 +264,203 @@ export async function createOrGetDtks(
 
 export async function deleteDtks(villageId: number, id: number): Promise<void> {
   await db.delete(dtks).where(and(eq(dtks.id, id), eq(dtks.villageId, villageId)));
+}
+
+export async function updateDtks(
+  villageId: number,
+  id: number,
+  input: DtksUpdateInput,
+): Promise<void> {
+  await db
+    .update(dtks)
+    .set({
+      status: input.status,
+      tanggalPencacahan: input.tanggalPencacahan || null,
+      tanggalPemeriksaan: input.tanggalPemeriksaan || null,
+      namaPetugasPencacahan: input.namaPetugasPencacahan || null,
+      namaResponden: input.namaResponden || null,
+      keterangan: input.keterangan || null,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(dtks.id, id), eq(dtks.villageId, villageId)));
+}
+
+// --- Ekspor & laporan ------------------------------------------------------
+
+/**
+ * Seluruh baris DTKS (tanpa pagination) untuk ekspor CSV dan rekapitulasi.
+ *
+ * Jumlah anggota diambil dari tabel anggota (bukan RTM) supaya angka pada
+ * laporan sama dengan yang dilihat pengguna di formulir.
+ */
+export async function listDtksEkspor(
+  villageId: number,
+  params: ListDtksParams,
+): Promise<DtksEksporRow[]> {
+  const where = whereDtks(villageId, params);
+
+  const rows = await db
+    .select({
+      id: dtks.id,
+      noRtm: rumahTangga.number,
+      kepalaRtm: head.name,
+      status: dtks.status,
+      dusun: regions.dusun,
+      namaPetugas: dtks.namaPetugasPencacahan,
+      namaResponden: dtks.namaResponden,
+      tanggalPencacahan: dtks.tanggalPencacahan,
+      namaKk: families.number,
+      jumlahAnggota: sql<number>`(
+        select count(*) from ${dtksAnggota} where ${dtksAnggota.dtksId} = ${dtks.id}
+      )`,
+    })
+    .from(dtks)
+    .leftJoin(rumahTangga, eq(dtks.rtmId, rumahTangga.id))
+    .leftJoin(regions, eq(rumahTangga.regionId, regions.id))
+    .leftJoin(families, eq(dtks.keluargaId, families.id))
+    .leftJoin(head, and(eq(head.rtmId, dtks.rtmId), eq(head.rtmLevel, RTM_LEVEL_KEPALA)))
+    .where(where)
+    .orderBy(asc(rumahTangga.number));
+
+  return rows.map((row) => ({
+    id: row.id,
+    noRtm: row.noRtm ?? "-",
+    kepalaRtm: row.kepalaRtm ?? null,
+    status: row.status,
+    jumlahAnggota: Number(row.jumlahAnggota ?? 0),
+    dusun: row.dusun ?? null,
+    namaPetugas: row.namaPetugas ?? null,
+    namaResponden: row.namaResponden ?? null,
+    tanggalPencacahan: row.tanggalPencacahan ?? null,
+    namaKk: row.namaKk ?? null,
+  }));
+}
+
+/** Id RTM untuk sekumpulan nomor RTM pada desa ini (dipakai impor). */
+export async function findRtmIdsByNumbers(
+  villageId: number,
+  numbers: readonly string[],
+): Promise<Map<string, number>> {
+  if (numbers.length === 0) return new Map();
+
+  const rows = await db
+    .select({ id: rumahTangga.id, number: rumahTangga.number })
+    .from(rumahTangga)
+    .where(and(eq(rumahTangga.villageId, villageId), inArray(rumahTangga.number, [...numbers])));
+
+  return new Map(rows.map((row) => [row.number, row.id]));
+}
+
+// --- Lampiran --------------------------------------------------------------
+
+/** Lampiran milik desa, terbaru lebih dahulu. */
+export async function listLampiranDtks(villageId: number): Promise<DtksLampiran[]> {
+  return db
+    .select()
+    .from(dtksLampiran)
+    .where(eq(dtksLampiran.villageId, villageId))
+    .orderBy(desc(dtksLampiran.createdAt));
+}
+
+/** Lampiran yang sudah ditautkan ke sebuah DTKS. */
+export async function listLampiranTerpasang(
+  villageId: number,
+  dtksId: number,
+): Promise<DtksLampiran[]> {
+  return db
+    .select({
+      id: dtksLampiran.id,
+      villageId: dtksLampiran.villageId,
+      nama: dtksLampiran.nama,
+      berkas: dtksLampiran.berkas,
+      keterangan: dtksLampiran.keterangan,
+      createdAt: dtksLampiran.createdAt,
+    })
+    .from(dtksRefLampiran)
+    .innerJoin(dtksLampiran, eq(dtksRefLampiran.lampiranId, dtksLampiran.id))
+    .innerJoin(dtks, eq(dtksRefLampiran.dtksId, dtks.id))
+    .where(and(eq(dtksRefLampiran.dtksId, dtksId), eq(dtks.villageId, villageId)))
+    .orderBy(desc(dtksLampiran.createdAt));
+}
+
+export async function insertLampiranDtks(input: {
+  villageId: number;
+  nama: string;
+  berkas: string;
+  keterangan: string | null;
+}): Promise<number> {
+  const [inserted] = await db.insert(dtksLampiran).values(input).$returningId();
+  return inserted?.id ?? 0;
+}
+
+export async function deleteLampiranDtks(villageId: number, id: number): Promise<void> {
+  await db
+    .delete(dtksLampiran)
+    .where(and(eq(dtksLampiran.id, id), eq(dtksLampiran.villageId, villageId)));
+}
+
+/** Tautkan lampiran ke DTKS (idempoten karena ada indeks unik). */
+export async function tautkanLampiran(
+  villageId: number,
+  dtksId: number,
+  lampiranId: number,
+): Promise<void> {
+  await db.insert(dtksRefLampiran).ignore().values({ dtksId, lampiranId }).execute();
+  void villageId;
+}
+
+export async function lepasLampiran(
+  villageId: number,
+  dtksId: number,
+  lampiranId: number,
+): Promise<void> {
+  await db
+    .delete(dtksRefLampiran)
+    .where(and(eq(dtksRefLampiran.dtksId, dtksId), eq(dtksRefLampiran.lampiranId, lampiranId)));
+  void villageId;
+}
+
+// --- Pengaturan program -----------------------------------------------------
+
+/** Daftar program bansos yang dikonfigurasi untuk desa. */
+export async function listPengaturanProgram(villageId: number): Promise<DtksPengaturanProgram[]> {
+  return db
+    .select()
+    .from(dtksPengaturanProgram)
+    .where(eq(dtksPengaturanProgram.villageId, villageId))
+    .orderBy(asc(dtksPengaturanProgram.namaProgram));
+}
+
+/**
+ * Tambah/ubah program berdasarkan kode programnya.
+ *
+ * Kode program unik per desa, jadi operasi ini bersifat "simpan atau perbarui"
+ * tanpa perlu pengguna memilih id lama.
+ */
+export async function upsertPengaturanProgram(input: {
+  villageId: number;
+  kodeProgram: string;
+  namaProgram: string;
+  aktif: boolean;
+}): Promise<void> {
+  await db
+    .insert(dtksPengaturanProgram)
+    .values({
+      villageId: input.villageId,
+      kodeProgram: input.kodeProgram,
+      namaProgram: input.namaProgram,
+      aktif: input.aktif ? 1 : 0,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        namaProgram: input.namaProgram,
+        aktif: input.aktif ? 1 : 0,
+      },
+    });
+}
+
+export async function deletePengaturanProgram(villageId: number, id: number): Promise<void> {
+  await db
+    .delete(dtksPengaturanProgram)
+    .where(and(eq(dtksPengaturanProgram.id, id), eq(dtksPengaturanProgram.villageId, villageId)));
 }

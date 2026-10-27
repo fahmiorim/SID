@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { listRiwayat } from "@/features/penduduk/application/riwayat-penduduk-use-cases";
 import { listPenduduk } from "@/features/penduduk/application/use-cases";
-import { PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
+import { filterPendudukKosong, PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
 import {
   normalisasiMutationType,
   normalisasiTanggal,
@@ -52,8 +52,7 @@ export default async function RiwayatPendudukPage({
   const pendudukOptions = canManage
     ? (
         await listPenduduk({
-          search: "",
-          lifeStatus: null,
+          filter: filterPendudukKosong(),
           page: 1,
           pageSize: 1000,
         })
