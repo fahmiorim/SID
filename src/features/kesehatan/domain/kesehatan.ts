@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { toCsv } from "@/features/penduduk/domain/laporan-penduduk";
+
 export const KIA_RESOURCE = "kesehatan" as const;
 
 export const STATUS_KEHAMILAN = [
@@ -53,6 +55,7 @@ export type KiaRow = {
   hariPerkiraanLahir: string | null;
   ibuName?: string | null;
   anakName?: string | null;
+  posyanduId?: number;
 };
 
 export const ibuHamilSchema = z.object({
@@ -101,3 +104,72 @@ export const bulananAnakSchema = z.object({
 });
 
 export type BulananAnakInput = z.infer<typeof bulananAnakSchema>;
+
+// --- Rekapitulasi skorcard KIA ---
+
+/** Menghitung rekapitulasi skorcard KIA: total, stunting, dan persentase konversi. */
+export function hitungSkorcardKia(
+  rows: readonly { statusGizi: number; statusTikar: number; posyanduId?: number }[],
+): { total: number; stunting: number; konversi: number } {
+  const total = rows.length;
+  const stunting = rows.filter((row) => row.statusGizi === 4 || row.statusTikar === 4).length;
+  const konversi = total === 0 ? 0 : Math.round((stunting / total) * 10000) / 100;
+  return { total, stunting, konversi };
+}
+
+/** CSV KIA: header + baris data + baris jumlah. */
+export function buildKiaCsv(input: {
+  namaDesa: string | null;
+  judulPemilihan: string;
+  tanggalPemilihan: string;
+  rows: readonly {
+    statusGizi: number;
+    statusTikar: number;
+    posyanduId?: number;
+    posyanduName?: string;
+    ibuName: string | null;
+    konversi: string;
+  }[];
+  total: number;
+  stunting: number;
+  konversiPersentase: number;
+}): string {
+  const header = [
+    ["Rekapitulasi KIA"],
+    [input.namaDesa ?? "-"],
+    [input.judulPemilihan],
+    [`Tanggal Pemilihan: ${input.tanggalPemilihan}`],
+    [],
+    ["No", "No KIA", "Ibu", "Status Gizi", "Status Tikar", "Persentase"],
+  ] as const;
+
+  const rowsArray = input.rows.map((r, i) => [
+    String(i + 1),
+    r.posyanduId ? String(r.posyanduId) : "-",
+    r.ibuName ?? "-",
+    STATUS_GIZI_ANAK.find((s) => s.value === r.statusGizi)?.label ?? "-",
+    STATUS_TIKAR_ANAK.find((s) => s.value === r.statusTikar)?.label ?? "-",
+    r.konversi,
+  ]);
+
+  const total = [
+    "",
+    "JUMLAH",
+    "",
+    String(input.total),
+    String(input.stunting),
+    "-",
+    `${input.konversiPersentase}%`,
+  ];
+
+  return `\uFEFF${toCsv([...header, ...rowsArray, total])}`;
+}
+
+export function kiaRekapFilename(namaDesa: string | null): string {
+  const slug =
+    (namaDesa ?? "desa")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "desa";
+  return `rekap-kia-${slug}.csv`;
+}
