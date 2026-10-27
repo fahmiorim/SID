@@ -3,6 +3,8 @@ import { z } from "zod";
 export const STATISTIK_PENDUDUK_KINDS = [
   "gender",
   "age_group",
+  "age_range",
+  "rentan",
   "religion",
   "education",
   "occupation",
@@ -19,6 +21,8 @@ export type StatistikBantuanKind = (typeof STATISTIK_BANTUAN_KINDS)[number];
 export const STATISTIK_LABELS: Record<StatistikPendudukKind, string> = {
   gender: "Jenis Kelamin",
   age_group: "Kelompok Umur",
+  age_range: "Rentang Umur",
+  rentan: "Kelompok Rentan",
   religion: "Agama",
   education: "Pendidikan",
   occupation: "Pekerjaan",

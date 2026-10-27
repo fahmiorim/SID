@@ -12,6 +12,8 @@ import {
   residents,
 } from "@/db/schema";
 import { bantuanPeserta, bantuanProgram } from "@/db/schema/bantuan";
+import { KELOMPOK_UMUR, kelompokUmurUntuk } from "@/features/penduduk/domain/laporan-penduduk";
+import { calculateAge } from "@/features/penduduk/domain/penduduk";
 import {
   type StatistikBantuanParams,
   type StatistikBantuanResult,
@@ -329,6 +331,84 @@ export async function getStatistikPenduduk(
           };
         })
         .sort((a, b) => b.total - a.total);
+      break;
+    }
+
+    case "age_range": {
+      const all = await db
+        .select({ birthDate: residents.birthDate, gender: residents.gender })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
+
+      const groups = new Map(KELOMPOK_UMUR.map((k) => [k.label, { total: 0, male: 0, female: 0 }]));
+      for (const r of all) {
+        const kelompok = kelompokUmurUntuk(calculateAge(r.birthDate));
+        if (!kelompok) continue;
+        const group = groups.get(kelompok.label)!;
+        group.total += 1;
+        if (r.gender === "male") group.male += 1;
+        else if (r.gender === "female") group.female += 1;
+      }
+
+      totalResidents = {
+        total: [...groups.values()].reduce((s, g) => s + g.total, 0),
+        male: [...groups.values()].reduce((s, g) => s + g.male, 0),
+        female: [...groups.values()].reduce((s, g) => s + g.female, 0),
+      };
+
+      rows = [...groups.entries()].map(([label, g]) => ({
+        label,
+        total: g.total,
+        male: g.male,
+        female: g.female,
+        percentage: totalResidents.total ? Math.round((g.total / totalResidents.total) * 100) : 0,
+      }));
+      break;
+    }
+
+    case "rentan": {
+      const all = await db
+        .select({ birthDate: residents.birthDate, gender: residents.gender })
+        .from(residents)
+        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
+
+      const groups: Record<string, { total: number; male: number; female: number }> = {
+        "Balita (0–5 tahun)": { total: 0, male: 0, female: 0 },
+        "Anak (6–12 tahun)": { total: 0, male: 0, female: 0 },
+        "Lansia (60+ tahun)": { total: 0, male: 0, female: 0 },
+      };
+
+      for (const r of all) {
+        const age = calculateAge(r.birthDate);
+        if (age === null) continue;
+        const key =
+          age <= 5
+            ? "Balita (0–5 tahun)"
+            : age <= 12
+              ? "Anak (6–12 tahun)"
+              : age >= 60
+                ? "Lansia (60+ tahun)"
+                : null;
+        if (!key) continue;
+        const group = groups[key]!;
+        group.total += 1;
+        if (r.gender === "male") group.male += 1;
+        else if (r.gender === "female") group.female += 1;
+      }
+
+      totalResidents = {
+        total: Object.values(groups).reduce((s, g) => s + g.total, 0),
+        male: Object.values(groups).reduce((s, g) => s + g.male, 0),
+        female: Object.values(groups).reduce((s, g) => s + g.female, 0),
+      };
+
+      rows = Object.entries(groups).map(([label, g]) => ({
+        label,
+        total: g.total,
+        male: g.male,
+        female: g.female,
+        percentage: totalResidents.total ? Math.round((g.total / totalResidents.total) * 100) : 0,
+      }));
       break;
     }
 
