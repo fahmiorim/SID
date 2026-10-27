@@ -1,4 +1,32 @@
 # Log Perkembangan
+
+## 2026-10-27 - Verifikasi ulang gap OS-POP-001 s/d 015
+
+- Audit ulang gap per ID terhadap kode working tree (bukan klaim dokumen); status tetap 🟡. Perubahan hanya di `PARITAS-OPENSID.md` dan `RENCANA-PERBAIKAN.md`.
+- Klaim usang dikoreksi: grant RBAC seed `kesehatan`/`pendapat`/`daftar-kontak`/`grup-kontak` sekarang **ada**; entri menu `/statistik/bantuan` sudah ada; dialog DTKS (`getDtksDetailAction`) dan suplemen terdata sudah ada; cetak DPT, ekspor CSV penduduk, dan halaman publik `/desa/dpt` sudah ada.
+- Temuan baru: rute publik `/jajak-pendapat` belum diizinkan `PUBLIC_PATHS` di `src/proxy.ts` (pengunjung tanpa sesi dialihkan ke `/masuk`); `PUBLIC_NAV` memuat `/desa/dpt` dua kali dan belum memuat tautan jajak pendapat; `/desa/dpt` belum masuk daftar URL `scripts/smoke.mts`; halaman admin `/pendapat` masih membaca repository langsung.
+- Gap yang masih terbuka: filter lanjutan penduduk, rekap DPT, impor/laporan DTKS, detail+isian dinamis suplemen, rekapitulasi/publikasi kesehatan, filter wilayah & cetak statistik, detail program bantuan, pengiriman pesan/pengiriman kontak, pembatasan suara pendapat, dan test/E2E untuk hampir seluruh OS-POP.
+
+---
+## 2026-10-26 - Lanjutan OS-POP: kontak, kesehatan, statistik, ekspor, DPT publik
+
+- **Menu & RBAC seed**: tambah modul DPT/DTKS/Suplemen, Kesehatan (posyandu/KIA/ibu hamil/anak), Hubung Warga (kontak/grup), Statistik (penduduk/bantuan), dan Pendapat; grant `read` untuk sekretaris/kepala desa serta `write`/`manage` untuk operator.
+- **Kontak**: CRUD kontak dan grup, dialog kelola anggota grup (`listAnggotaGrupDetail`, tambah/hapus anggota), halaman daftar/grup tidak lagi read-only.
+- **Kesehatan**: formulir tambah/ubah/hapus posyandu, KIA, pemantauan ibu hamil, dan pemantauan anak; opsi penduduk/posyandu/KIA dari server.
+- **Penduduk**: ekspor CSV `/penduduk/ekspor` mengikuti pencarian/status.
+- **DPT**: tombol cetak dan halaman publik `/desa/dpt`; menu publik fallback ditambah.
+- **Statistik**: kategori baru `age_range` (Data Pilah) dan `rentan` (balita/anak/lansia), pemilih kategori di UI, ekspor CSV `/statistik/penduduk/ekspor`.
+- **Verifikasi**: `npm run check` (typecheck, lint 0 error, format, 557 test) dan `npm run build` lulus.
+
+---
+## 2026-10-26 - Audit gap OS-POP-001 s/d 015
+
+- Audit ulang berbasis kode dan seed, bukan klaim dokumen. Status tetap 🟡 (tidak ada ID yang naik/turun), tetapi bukti gap diperbarui di `PARITAS-OPENSID.md`.
+- Temuan utama: UI DPT/DTKS/Suplemen/Kesehatan/Pendapat/Kontak/Statistik belum punya entri menu; grant RBAC seed untuk kesehatan/pendapat/kontak belum ada; suplemen belum punya UI kelola terdata; halaman kesehatan dan kontak masih read-only; laporan rentan dan CRUD rentang umur belum ada.
+- Koreksi rute publik pendapat: `/jajak-pendapat` (bukan `/pendapat`).
+- Test domain hanya ada untuk OS-POP-001 s/d 004 dan 011; belum ada E2E untuk OS-POP mana pun.
+
+---
  ## 2026-10-25 - Scope update OS-POP-009
  
  - **Tidak dibutuhkan**: Modul vaksin/Covid (`OS-POP-009`) dikeluarkan dari scope karena tidak relevan saat ini. Diperbarui di `PARITAS-OPENSID.md` dan `RENCANA-PERBAIKAN.md`.

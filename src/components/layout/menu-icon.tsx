@@ -1,13 +1,20 @@
 import {
+  Baby,
   BarChart3,
   Blocks,
   Building2,
   Calculator,
+  ChartColumn,
   Circle,
+  ClipboardList,
+  Contact,
+  ContactRound,
   Files,
   FileSpreadsheet,
   FileText,
   HandHeart,
+  Heart,
+  HeartPulse,
   Home,
   House,
   Inbox,
@@ -25,6 +32,7 @@ import {
   UserRound,
   Users,
   UsersRound,
+  Vote,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -62,6 +70,14 @@ const ICONS: Record<string, LucideIcon> = {
   "hand-heart": HandHeart,
   "message-square-warning": MessageSquareWarning,
   "scroll-text": ScrollText,
+  vote: Vote,
+  "clipboard-list": ClipboardList,
+  "heart-pulse": HeartPulse,
+  baby: Baby,
+  heart: Heart,
+  contact: Contact,
+  "contact-round": ContactRound,
+  "chart-column": ChartColumn,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {
