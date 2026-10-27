@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { HEAD_OF_FAMILY_RELATION_ID, type Gender } from "@/features/penduduk/domain/penduduk";
+import {
+  HEAD_OF_FAMILY_RELATION_ID,
+  type Gender,
+  type LifeStatus,
+} from "@/features/penduduk/domain/penduduk";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { optionalSelectId, optionalText, type LabelOption } from "@/lib/forms";
 
@@ -89,6 +93,99 @@ export interface KeluargaReferenceData {
 /** Label ringkas keluarga, mis. "KK 3201012001120001". */
 export function keluargaLabel(keluarga: Pick<KeluargaDTO, "number">): string {
   return `KK ${keluarga.number}`;
+}
+
+// --- Riwayat perubahan anggota ---------------------------------------------
+
+/** Jenis perubahan keanggotaan yang dicatat. */
+export const AKSI_LOG_ANGGOTA = ["added", "removed", "role_changed"] as const;
+export type AksiLogAnggota = (typeof AKSI_LOG_ANGGOTA)[number];
+
+export const AKSI_LOG_LABELS: Readonly<Record<AksiLogAnggota, string>> = {
+  added: "Ditambahkan",
+  removed: "Dikeluarkan",
+  role_changed: "Hubungan berubah",
+};
+
+/** Keadaan keanggotaan seorang penduduk yang dibutuhkan untuk membandingkan. */
+export interface AnggotaSnapshot {
+  familyId: number | null;
+  familyRelationId: number | null;
+}
+
+/** Satu perubahan yang harus dicatat pada sebuah KK. */
+export interface PerubahanAnggota {
+  familyId: number;
+  aksi: AksiLogAnggota;
+  /** Hubungan keluarga setelah perubahan (null saat dikeluarkan). */
+  relationId: number | null;
+}
+
+/**
+ * Tentukan perubahan keanggotaan KK dari keadaan sebelum → sesudah.
+ *
+ * Aturannya:
+ * - sama-sama tanpa KK → tidak ada perubahan;
+ * - KK sama tetapi hubungan berbeda → `role_changed`;
+ * - pindah KK → `removed` pada KK lama **dan** `added` pada KK baru;
+ * - masuk dari luar KK → `added`; keluar dari KK → `removed`.
+ *
+ * Fungsi murni ini dipakai saat menyimpan/mengubah/menghapus penduduk sehingga
+ * riwayat selalu mencerminkan perubahan nyata, bukan setiap penyimpanan.
+ */
+export function bedakanPerubahanAnggota(
+  sebelum: AnggotaSnapshot | null,
+  sesudah: AnggotaSnapshot | null,
+): PerubahanAnggota[] {
+  const kkSebelum = sebelum?.familyId ?? null;
+  const kkSesudah = sesudah?.familyId ?? null;
+  const relSebelum = sebelum?.familyRelationId ?? null;
+  const relSesudah = sesudah?.familyRelationId ?? null;
+
+  if (kkSebelum === null && kkSesudah === null) return [];
+
+  if (kkSebelum === kkSesudah) {
+    if (relSebelum === relSesudah) return [];
+    return [{ familyId: kkSesudah as number, aksi: "role_changed", relationId: relSesudah }];
+  }
+
+  const hasil: PerubahanAnggota[] = [];
+  if (kkSebelum !== null) hasil.push({ familyId: kkSebelum, aksi: "removed", relationId: null });
+  if (kkSesudah !== null) {
+    hasil.push({ familyId: kkSesudah, aksi: "added", relationId: relSesudah });
+  }
+  return hasil;
+}
+
+/** Satu baris riwayat perubahan anggota untuk ditampilkan. */
+export interface KeluargaAnggotaLog {
+  id: number;
+  createdAt: string;
+  residentName: string;
+  aksi: AksiLogAnggota;
+  relationName: string | null;
+  actorName: string | null;
+}
+
+/** Anggota KK pada halaman rincian (termasuk yang sudah meninggal/pindah). */
+export interface KeluargaAnggotaRow {
+  id: number;
+  name: string;
+  nationalId: string | null;
+  gender: Gender;
+  birthDate: string | null;
+  lifeStatus: LifeStatus;
+  relationId: number | null;
+  relationName: string | null;
+}
+
+/** Data lengkap satu KK untuk halaman rincian. */
+export interface KeluargaDetail {
+  keluarga: KeluargaDTO;
+  regionLabel: string | null;
+  headName: string | null;
+  members: KeluargaAnggotaRow[];
+  logs: KeluargaAnggotaLog[];
 }
 
 // --- Cetak Kartu Keluarga --------------------------------------------------

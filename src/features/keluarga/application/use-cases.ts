@@ -2,7 +2,9 @@ import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
+  HEAD_OF_FAMILY_RELATION_ID,
   KELUARGA_RESOURCE,
+  type KeluargaDetail,
   type KeluargaDTO,
   type KeluargaFormInput,
   type KeluargaMember,
@@ -12,11 +14,14 @@ import {
 import {
   deleteKeluarga as deleteKeluargaRow,
   findKeluargaById,
+  findKeluargaDetail,
   insertKeluarga,
   keluargaNumberExists,
+  listKeluargaAnggotaRows,
   listKeluargaMemberDetails,
   listKeluargaMembers as listKeluargaMembersRows,
   listKeluarga as listKeluargaRows,
+  listLogAnggotaKk,
   updateKeluarga as updateKeluargaRow,
   type KeluargaListResult,
 } from "@/features/keluarga/infrastructure/keluarga-repository";
@@ -110,6 +115,35 @@ export async function getKeluargaPrintData(familyId: number): Promise<KeluargaPr
       rw: wilayah?.rw || null,
       rt: wilayah?.rt || null,
     },
+  };
+}
+
+/**
+ * Data lengkap sebuah KK untuk halaman rincian.
+ *
+ * Memuat identitas KK, kepala keluarga, seluruh anggota (termasuk yang sudah
+ * meninggal/pindah), dan riwayat perubahan anggota.
+ */
+export async function getKeluargaDetail(familyId: number): Promise<KeluargaDetail> {
+  const user = await requirePermission(KELUARGA_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const detail = await findKeluargaDetail(villageId, familyId);
+  if (!detail) throw notFound("Kartu Keluarga tidak ditemukan.");
+
+  const [members, logs] = await Promise.all([
+    listKeluargaAnggotaRows(villageId, familyId),
+    listLogAnggotaKk(villageId, familyId),
+  ]);
+
+  const kepala = members.find((member) => member.relationId === HEAD_OF_FAMILY_RELATION_ID);
+
+  return {
+    keluarga: detail.keluarga,
+    regionLabel: detail.regionLabel,
+    headName: kepala?.name ?? null,
+    members,
+    logs,
   };
 }
 

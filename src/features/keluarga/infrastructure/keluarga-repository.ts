@@ -1,6 +1,19 @@
 import "server-only";
 
-import { aliasedTable, and, asc, count, eq, like, ne, or, sql, type SQL } from "drizzle-orm";
+import {
+  aliasedTable,
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  like,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -8,20 +21,25 @@ import {
   citizenships,
   educations,
   families,
+  familyMemberLogs,
   familyRelations,
   maritalStatuses,
   occupations,
   regions,
   religions,
   residents,
+  users,
 } from "@/db/schema";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
+  type KeluargaAnggotaLog,
+  type KeluargaAnggotaRow,
   type KeluargaDTO,
   type KeluargaFormInput,
   type KeluargaListRow,
   type KeluargaMember,
   type KeluargaMemberDetail,
+  type PerubahanAnggota,
 } from "@/features/keluarga/domain/keluarga";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
 
@@ -300,4 +318,151 @@ export async function updateKeluarga(id: number, input: KeluargaFormInput): Prom
  */
 export async function deleteKeluarga(id: number): Promise<void> {
   await db.delete(families).where(eq(families.id, id));
+}
+
+// --- Riwayat perubahan anggota ---------------------------------------------
+
+/**
+ * Catat perubahan keanggotaan KK.
+ *
+ * Hanya dipanggil saat ada perubahan nyata (lihat `bedakanPerubahanAnggota`),
+ * sehingga riwayat tidak dipenuhi baris kosong. Nama hubungan keluarga disimpan
+ * sebagai snapshot agar riwayat tetap terbaca bila katalog berubah.
+ */
+export async function catatLogAnggotaKk(params: {
+  villageId: number;
+  residentId: number | null;
+  residentName: string;
+  perubahan: readonly PerubahanAnggota[];
+  actorId: string | null;
+}): Promise<void> {
+  if (params.perubahan.length === 0) return;
+
+  const relationIds = [
+    ...new Set(
+      params.perubahan.map((item) => item.relationId).filter((id): id is number => id !== null),
+    ),
+  ];
+
+  const namaHubungan = new Map<number, string>();
+  if (relationIds.length > 0) {
+    const baris = await db
+      .select({ id: familyRelations.id, name: familyRelations.name })
+      .from(familyRelations)
+      .where(inArray(familyRelations.id, relationIds));
+    for (const baris1 of baris) namaHubungan.set(baris1.id, baris1.name);
+  }
+
+  await db.insert(familyMemberLogs).values(
+    params.perubahan.map((item) => ({
+      villageId: params.villageId,
+      familyId: item.familyId,
+      residentId: params.residentId,
+      residentName: params.residentName,
+      aksi: item.aksi,
+      relationId: item.relationId,
+      relationName: item.relationId === null ? null : (namaHubungan.get(item.relationId) ?? null),
+      actorId: params.actorId,
+    })),
+  );
+}
+
+/** Identitas KK beserta label wilayah untuk halaman rincian. */
+export async function findKeluargaDetail(
+  villageId: number,
+  id: number,
+): Promise<{ keluarga: KeluargaDTO; regionLabel: string | null } | null> {
+  const [row] = await db
+    .select({
+      family: families,
+      dusun: regions.dusun,
+      rw: regions.rw,
+      rt: regions.rt,
+    })
+    .from(families)
+    .leftJoin(regions, eq(families.regionId, regions.id))
+    .where(and(eq(families.villageId, villageId), eq(families.id, id)))
+    .limit(1);
+
+  if (!row) return null;
+
+  return {
+    keluarga: toDto(row.family),
+    regionLabel: formatRegionLabel(row.family.regionId, row.dusun, row.rw, row.rt),
+  };
+}
+
+/**
+ * Seluruh anggota sebuah KK (termasuk yang sudah meninggal/pindah).
+ *
+ * Halaman rincian KK perlu menampilkan status kependudukan anggota, sedangkan
+ * cetak KK hanya memuat penduduk hidup.
+ */
+export async function listKeluargaAnggotaRows(
+  villageId: number,
+  familyId: number,
+): Promise<KeluargaAnggotaRow[]> {
+  const rows = await db
+    .select({
+      id: residents.id,
+      name: residents.name,
+      nationalId: residents.nationalId,
+      gender: residents.gender,
+      birthDate: residents.birthDate,
+      lifeStatus: residents.lifeStatus,
+      relationId: residents.familyRelationId,
+      relationName: familyRelations.name,
+    })
+    .from(residents)
+    .leftJoin(familyRelations, eq(residents.familyRelationId, familyRelations.id))
+    .where(and(eq(residents.villageId, villageId), eq(residents.familyId, familyId)))
+    .orderBy(asc(residents.name), asc(residents.id));
+
+  return rows
+    .sort((a, b) => {
+      const aHead = a.relationId === HEAD_OF_FAMILY_RELATION_ID ? 0 : 1;
+      const bHead = b.relationId === HEAD_OF_FAMILY_RELATION_ID ? 0 : 1;
+      return aHead - bHead;
+    })
+    .map((row) => ({
+      id: row.id,
+      name: row.name,
+      nationalId: row.nationalId,
+      gender: row.gender,
+      birthDate: row.birthDate,
+      lifeStatus: row.lifeStatus,
+      relationId: row.relationId,
+      relationName: row.relationName ?? null,
+    }));
+}
+
+/** Riwayat perubahan anggota sebuah KK, terbaru lebih dahulu. */
+export async function listLogAnggotaKk(
+  villageId: number,
+  familyId: number,
+  limit = 100,
+): Promise<KeluargaAnggotaLog[]> {
+  const rows = await db
+    .select({
+      id: familyMemberLogs.id,
+      createdAt: familyMemberLogs.createdAt,
+      residentName: familyMemberLogs.residentName,
+      aksi: familyMemberLogs.aksi,
+      relationName: familyMemberLogs.relationName,
+      actorName: users.name,
+    })
+    .from(familyMemberLogs)
+    .leftJoin(users, eq(familyMemberLogs.actorId, users.id))
+    .where(and(eq(familyMemberLogs.villageId, villageId), eq(familyMemberLogs.familyId, familyId)))
+    .orderBy(desc(familyMemberLogs.createdAt), desc(familyMemberLogs.id))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    id: row.id,
+    createdAt: row.createdAt.toISOString(),
+    residentName: row.residentName,
+    aksi: row.aksi,
+    relationName: row.relationName,
+    actorName: row.actorName ?? null,
+  }));
 }

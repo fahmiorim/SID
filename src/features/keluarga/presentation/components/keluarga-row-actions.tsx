@@ -3,12 +3,14 @@
 import {
   AlertCircle,
   FileText,
+  Info,
   Loader2,
   MoreHorizontal,
   Pencil,
   Trash2,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -88,6 +90,12 @@ export function KeluargaRowActions({ keluarga, reference }: KeluargaRowActionsPr
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`/keluarga/${keluarga.id}`}>
+              <Info className="size-4" />
+              Detail
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <Pencil className="size-4" />
             Ubah
