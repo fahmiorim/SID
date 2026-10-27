@@ -16,6 +16,7 @@ export * from "./bantuan";
 export * from "./bumindes";
 export * from "./content";
 export * from "./family";
+export * from "./family-log";
 export * from "./incoming-letters";
 export * from "./inventaris";
 export * from "./keuangan";
