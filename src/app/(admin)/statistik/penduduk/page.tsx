@@ -25,12 +25,13 @@ export default async function StatistikPendudukPage({
   searchParams,
 }: {
   searchParams: Promise<{
-    kind?: StatistikPendudukKind;
+    kind?: string;
     dusun?: string;
     rw?: string;
     rt?: string;
     umurMin?: string;
     umurMax?: string;
+    page?: string;
   }>;
 }) {
   const user = await verifySession();
@@ -56,9 +57,9 @@ export default async function StatistikPendudukPage({
   const [result, wilayah] = await Promise.all([
     getStatistikPendudukUseCase(villageId, {
       kind,
-      dusun: dusun || undefined,
-      rw: rw || undefined,
-      rt: rt || undefined,
+      dusun,
+      rw,
+      rt,
       umurMin,
       umurMax,
       perPage: PAGE_SIZE,
@@ -82,6 +83,7 @@ export default async function StatistikPendudukPage({
   if (umurMin !== undefined) queryBase.set("umurMin", String(umurMin));
   if (umurMax !== undefined) queryBase.set("umurMax", String(umurMax));
   const exportHref = `/statistik/penduduk/ekspor?${queryBase.toString()}`;
+  const exportPdfHref = `/statistik/penduduk/ekspor/pdf?${queryBase.toString()}`;
 
   return (
     <div className="space-y-6 p-6">
@@ -91,12 +93,26 @@ export default async function StatistikPendudukPage({
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">
             <Button variant="outline" asChild>
+              <a href={exportPdfHref}>
+                <FileDown className="size-4" />
+                Ekspor PDF
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => typeof window !== "undefined" && window.print()}
+            >
+              <Printer className="size-4" />
+              Cetak
+            </Button>
+            <Button variant="outline" asChild>
               <a href={exportHref}>
                 <FileDown className="size-4" />
                 Ekspor CSV
               </a>
             </Button>
-            <Button type="button" variant="outline" onClick={() => window.print()}>
+            <Button type="button" variant="outline" onClick={() => (window as Window).print()}>
               <Printer className="size-4" />
               Cetak
             </Button>
