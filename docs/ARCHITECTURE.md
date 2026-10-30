@@ -92,6 +92,12 @@ Fitur yang sudah dibangun saat ini:
 | `keuangan`       | APBDes: pohon rekening, pagu & realisasi, agregasi induk, laporan RP APBDes, realisasi per bidang, grafik, ekspor CSV/Excel, arsip dokumen, triwulan. |
 | `navigation`     | Menu sidebar dari modul + izin efektif.                               |
 | `auth`           | Login/logout staf (username) + pelacakan login terakhir.               |
+| `audit`          | Log aktivitas terpusat; `recordAuditEvent` dipanggil use case sensitif. |
+| `database`       | Unduh backup SQL (opsional gzip) dan restore dump dengan validasi berkas + batas ukuran; RBAC `database` + audit. |
+| `kesehatan`      | Posyandu, KIA, ibu hamil, pemantauan anak; skorcard konvergensi desa; halaman publik read-only + ekspor CSV. |
+| `kontak`         | Direktori kontak eksternal dan grup kontak beserta anggotanya.         |
+| `pendapat`       | Jajak pendapat warga: pilihan, rekap, dan halaman publik.              |
+| `statistik`      | Agregasi penduduk/bantuan/rentang umur, Data Pilah, dan ekspor CSV.    |
 
 > Cakupan & batasan tiap modul ada di
 > [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md). Status paritas dan
@@ -117,11 +123,16 @@ Fitur yang sudah dibangun saat ini:
 ## 3. Konvensi Lapisan Data
 
 - **ORM:** Drizzle + driver `mysql2`. Skema di `src/db/schema/`, dipisah per
-  domain (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
-  `resident.ts`, `family.ts`, `rumah-tangga.ts`, `kelompok.ts`, `bantuan.ts`,
-  `inventaris.ts`, `bumindes.ts`, `survey.ts`, `pengaduan.ts`,
-  `pembangunan.ts`, `letters*.ts`, `letter-dinas.ts`, `permohonan-surat.ts`,
-  `keuangan.ts`, `content.ts`, `theme.ts`) dan digabung di `index.ts`.
+  domain   (`auth.ts`, `rbac.ts`, `village.ts`, `region.ts`, `reference.ts`,
+  `resident.ts`, `resident-mutation.ts`, `family.ts`, `family-log.ts`,
+  `rumah-tangga.ts`, `kelompok.ts`, `bantuan.ts`, `suplemen.ts`, `dtks.ts`,
+  `election.ts`, `kesehatan.ts`, `rentang-umur.ts`, `inventaris.ts`,
+  `bumindes.ts`, `survey.ts`, `pengaduan.ts`, `pendapat.ts`, `kontak.ts`,
+  `pembangunan.ts`, `letters.ts`, `letter-classifications.ts`,
+  `letter-types.ts`, `letter-requirements.ts`, `letter-dinas.ts`,
+  `incoming-letters.ts`, `outgoing-letters.ts`, `permohonan-surat.ts`,
+  `keuangan.ts`, `content.ts`, `theme.ts`, `audit.ts`) dan digabung di
+  `index.ts`.
 - **Koneksi:** satu pool di `src/db/index.ts`; dipatok ke `globalThis` saat
   non-produksi agar tidak bocor saat HMR.
 - **Impor modul DB wajib lewat `@/db`** — tidak ada `mysql2` mentah di fitur.
@@ -459,6 +470,7 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   bukti selesai.
 - Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
   fixture, dan command harus ada di repository serta dapat dijalankan CI.
+- E2E smoke (±80 test, 12 file `tests/*.e2e.ts`) sudah ada, tetapi sebagian besar hanya memeriksa URL dan `body`/`table` terlihat, bukan status HTTP atau isi halaman. **CI `.github/workflows/ci.yml` masih belum menjalankannya** (hanya migrasi, check+build, smoke HTTP). Masih ada.
 
 CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
 `npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh

@@ -36,7 +36,21 @@ dipersempit menjadi T1/T2 bila target produk adalah seluruh fitur OpenSID.
 | `arsip/` | jejak dokumen yang sudah digantikan | dokumen aktif baru |
 
 
+## Definisi Istilah Status
+
+Agar tidak ada salah tafsir, gunakan definisi berikut saat menilai/melaporkan status fitur:
+
+| Istilah | Arti | Bukti yang dibutuhkan |
+|---|---|---|
+| `belum dibuat` | Tidak ada `page.tsx` / rute sama sekali di `src/app/`. | Verifikasi langsung di `src/app/`. |
+| `ada (minimal/orphan)` | Ada file `page.tsx`/rute, tapi **tidak terdaftar** di modul/menu/RBAC (atau tidak terhubung navigasi). Biasanya hanya card/teks. | Path file + konfirmasi tidak ada entri di `modules.ts`/navigasi. |
+| `halaman statis (placeholder)` | Ada rute, tampilan statis/minimal, belum memakai use-case/application layer atau belum ada CRUD fungsional sesuai perilaku OpenSID. | Path file + cek pemanggilan use-case/action. |
+| `berfungsi` | Ada UI, aksi/use-case, validasi, scoping tenant/RBAC sesuai peran, dan bisa dipakai end-to-end. | Path route + action/use-case + izin + bukti uji bila relevan. |
+| `sebagian` | Ada inti fungsional, tapi ada gap penting (fitur keluaran, PDF/ekspor, UI konfigurasi, dsb). | Sebut gap secara spesifik + path yang ada/tidak ada. |
+| `selesai` | Sesuai kebutuhan katalog/DoD, punya bukti UI+aksi+otorisasi+test yang relevan, tanpa placeholder/mockup/menu mati. | ID katalog (jika relevan) + route/UI + action/use-case + test/cek nyata. | 
+
 ## Aturan Wajib
+
 
 1. **Status fitur hanya boleh diambil dari `RENCANA-PERBAIKAN.md` dan
    `PARITAS-OPENSID.md`.** Cakupan fitur wajib diambil dari katalog. Jangan
