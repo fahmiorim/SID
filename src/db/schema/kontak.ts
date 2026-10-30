@@ -8,6 +8,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
+import { residents } from "./resident";
 import { villages } from "./village";
 
 export const kontak = mysqlTable(
@@ -17,12 +18,14 @@ export const kontak = mysqlTable(
     villageId: int("village_id")
       .notNull()
       .references(() => villages.id, { onDelete: "cascade" }),
+    /** Opsional: tautkan kontak ke penduduk desa (NIK). Bisa null untuk kontak eksternal. */
+    residentId: int("resident_id").references(() => residents.id, { onDelete: "set null" }),
     nama: varchar("nama", { length: 100 }).notNull(),
     telepon: varchar("telepon", { length: 20 }),
     email: varchar("email", { length: 100 }),
     telegram: varchar("telegram", { length: 50 }),
     hubungWarga: varchar("hubung_warga", { length: 50 }).default("Telegram"),
-    keterangan: text("keterangan"),
+    keterangan: text("eterangan"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()
@@ -34,6 +37,7 @@ export const kontak = mysqlTable(
     uniqueIndex("kontak_village_telegram_uq").on(t.villageId, t.telegram),
     uniqueIndex("kontak_village_email_uq").on(t.villageId, t.email),
     index("kontak_village_idx").on(t.villageId),
+    index("kontak_village_resident_idx").on(t.villageId, t.residentId),
   ],
 );
 
@@ -68,6 +72,8 @@ export const anggotaGrupKontak = mysqlTable(
     kontakId: int("kontak_id")
       .notNull()
       .references(() => kontak.id, { onDelete: "cascade" }),
+    /** Peran anggota dalam grup (mis. "Ketua", "Sekretaris"). */
+    peran: varchar("peran", { length: 50 }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [

@@ -239,6 +239,48 @@
       "when": 1793037371734,
       "tag": "0033_overrated_paper_doll",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "5",
+      "when": 1793100000000,
+      "tag": "0034_renable_wisp",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1793137746268,
+      "tag": "0035_faithful_kinsey_walden",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1793140000000,
+      "tag": "0036_add_resident_id_to_kontak",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1793140060000,
+      "tag": "0037_pendapat_session_key",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1793140120000,
+      "tag": "0038_create_gis_pertanahan",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "5",
+      "when": 1793140180000,
+      "tag": "0039_gis_map_and_tenant_hardening",
+      "breakpoints": true
     }
   ]
 }
