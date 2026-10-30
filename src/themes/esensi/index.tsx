@@ -17,6 +17,7 @@ import { EsensiKontak } from "./pages/kontak";
 import { EsensiLayananMandiri } from "./pages/layanan-mandiri";
 import { EsensiPerangkat } from "./pages/perangkat";
 import { EsensiProfil } from "./pages/profil";
+import { EsensiSinergi } from "./pages/sinergi";
 import { EsensiStatistik } from "./pages/statistik";
 import { EsensiStatusDesa } from "./pages/status-desa";
 import { EsensiSurat } from "./pages/surat";
@@ -46,6 +47,7 @@ export const esensi: ThemeComponents = {
   survei: EsensiSurvei,
   triwulan: EsensiTriwulan,
   bantuan: EsensiBantuan,
+  sinergi: EsensiSinergi,
   kontak: EsensiKontak,
   layananMandiri: EsensiLayananMandiri,
   halaman: EsensiHalaman,

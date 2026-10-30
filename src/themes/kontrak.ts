@@ -19,6 +19,7 @@ import type {
   LayoutProps,
   PerangkatProps,
   ProfilProps,
+  SinergiProps,
   StatistikProps,
   StatusDesaProps,
   SuratProps,
@@ -54,6 +55,7 @@ export interface ThemeComponents {
   survei: ComponentType<SurveiProps>;
   triwulan: ComponentType<TriwulanProps>;
   bantuan: ComponentType<BantuanProps>;
+  sinergi: ComponentType<SinergiProps>;
   kontak: ComponentType<KontakProps>;
   layananMandiri: ComponentType<LayananMandiriProps>;
   halaman: ComponentType<HalamanProps>;
@@ -80,6 +82,7 @@ export function slotTerpenuhi(manifest: ThemeManifest): boolean {
     "survei",
     "triwulan",
     "bantuan",
+    "sinergi",
     "kontak",
     "layanan-mandiri",
     "halaman",

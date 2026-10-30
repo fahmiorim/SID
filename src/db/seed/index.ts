@@ -1,7 +1,10 @@
+import { randomUUID } from "node:crypto";
+import { hashPassword } from "better-auth/crypto";
 import { and, eq, sql } from "drizzle-orm";
 
 import { db, pool } from "@/db";
 import {
+  accounts,
   berita,
   beritaKategori,
   bloodTypes,
@@ -27,7 +30,6 @@ import {
   users,
   villages,
 } from "@/db/schema";
-import { auth } from "@/lib/auth";
 import { env } from "@/lib/env";
 import { DEFAULT_THEME_MANIFEST } from "@/themes/manifests";
 
@@ -385,23 +387,35 @@ async function ensureAdminUser(villageId: number, roleId: number): Promise<strin
     return existing.id;
   }
 
-  const { user } = await auth.api.signUpEmail({
-    body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: ADMIN_NAME },
-  });
+  // Dibuat langsung (tanpa `auth.api`) agar skrip seed tidak menarik modul
+  // `server-only` lewat konfigurasi better-auth. Hash memakai helper resmi
+  // better-auth sehingga login PIN/sandi tetap cocok.
+  const userId = randomUUID();
+  const passwordHash = await hashPassword(ADMIN_PASSWORD);
 
-  await db
-    .update(users)
-    .set({
+  await db.transaction(async (tx) => {
+    await tx.insert(users).values({
+      id: userId,
+      name: ADMIN_NAME,
+      email: ADMIN_EMAIL,
+      emailVerified: true,
       username: ADMIN_USERNAME,
       displayUsername: ADMIN_USERNAME,
       roleId,
       villageId,
       active: true,
-      emailVerified: true,
-    })
-    .where(eq(users.id, user.id));
+    });
 
-  return user.id;
+    await tx.insert(accounts).values({
+      id: randomUUID(),
+      accountId: userId,
+      providerId: "credential",
+      userId,
+      password: passwordHash,
+    });
+  });
+
+  return userId;
 }
 
 /**

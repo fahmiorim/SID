@@ -203,6 +203,19 @@ export interface BantuanProps {
   }[];
 }
 
+export interface SinergiProps {
+  ctx: ThemeContext;
+  program: {
+    id: number;
+    nama: string;
+    mitra: string | null;
+    tahun: number | null;
+    tanggalMulai: string | null;
+    tanggalSelesai: string | null;
+    keterangan: string | null;
+  }[];
+}
+
 export interface KontakProps {
   ctx: ThemeContext;
 }

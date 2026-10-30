@@ -31,6 +31,7 @@ export const THEME_SLOTS = [
   "triwulan",
   "bantuan",
   "kontak",
+  "sinergi",
   "layanan-mandiri",
   "halaman",
 ] as const;
@@ -57,6 +58,7 @@ export const THEME_SLOT_LABELS: Record<ThemeSlot, string> = {
   survei: "Analisis & Survei",
   triwulan: "Laporan Triwulan",
   bantuan: "Program Bantuan",
+  sinergi: "Sinergi Program",
   kontak: "Kontak",
   "layanan-mandiri": "Layanan Mandiri",
   halaman: "Halaman Statis",

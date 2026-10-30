@@ -40,10 +40,10 @@ Legenda:
 
 | Scope | Total ID/modul | ✅ | 🟡 | 🔴 | ⚪ |
 |---|---:|---:|---:|---:|---:|
-| **Katalog per-ID — status terkini (audit 29 Okt 2026)** | **113** | **15** | **77** | **20** | **1** |
+| **Katalog per-ID — status terkini (audit 31 Okt 2026)** | **113** | **16** | **76** | **20** | **1** |
 | Baseline kelompok lama (92 modul) — **historis, bukan status delivery** | 92 | 42 | 12 | 38 | — |
 
-Dari 112 ID dalam scope: **15 ✅ (13,4%)**, **77 🟡 (68,8%)**,
+Dari 112 ID dalam scope: **16 ✅ (14,3%)**, **76 🟡 (67,9%)**,
 **20 🔴 (17,9%)**. Satu ID (OS-POP-009) resmi di luar scope. Tidak ada lagi ID
 berstatus ⚪ "belum diaudit": seluruh 113 ID sudah diperiksa terhadap route,
 halaman, feature, test, dan E2E yang benar-benar ada.
@@ -98,7 +98,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-GOV-005 | 🟡 Sebagian | Kelompok masyarakat: kategori, CRUD, anggota, jabatan, publikasi. **Cetak via browser** tersedia di halaman daftar. **Gap: laporan daftar anggota terperinci dan ekspor belum ada.** Test `kelompok.test.ts`; E2E `/kelompok?tipe=kelompok`. |
 | OS-GOV-006 | 🔴 Belum ada | Hanya skema `idm.ts` + domain/repo dasar; **rute `/desa/idm` belum dibuat (404)** dan `/desa/idm-sdgs` hanya teks statis "Data status desa, IDM, dan SDGs akan ditampilkan di sini". Belum ada input indikator, skor IDM/SDGs, atau test. |
 | OS-GOV-007 | 🔴 Belum ada | Hanya skema/domain stub `pemilihan`; **rute `/desa/pemilihan` belum dibuat (404)**. Belum ada kandidat, pemilih, hasil, rekap, atau test. |
-| OS-GOV-008 | 🟡 Sebagian | Sinergi program `/desa/sinergi`: CRUD (tabel, form tambah/ubah, hapus), pencarian, RBAC `sinergi`, migrasi `sinergi_program`, ekspor CSV `/desa/sinergi/ekspor`. Test `sinergi.test.ts`. **Gap: E2E dan publikasi program ke web belum ada.** |
+| OS-GOV-008 | ✅ Berfungsi penuh | Sinergi program `/desa/sinergi`: CRUD (tabel, form tambah/ubah, hapus), pencarian, RBAC `sinergi`, migrasi `sinergi_program`, ekspor CSV `/desa/sinergi/ekspor`. Publikasi tema `/desa/sinergi-program` (slot `sinergi` + menu Informasi Publik). Test `sinergi.test.ts`; E2E `tests/sinergi.e2e.ts` (muat, tambah/hapus, ekspor, publik tanpa sesi). |
 | OS-GOV-009 | 🟡 Sebagian | Pembangunan: CRUD proyek `/pembangunan`, detail + dokumentasi foto, publik `/desa/pembangunan` + detail + cetak, RBAC, test 13 case. **Gap: buku pembangunan/ekspor PDF dan E2E belum ada.** |
 | OS-GOV-010 | ✅ Berfungsi penuh | Dokumen & Arsip: CRUD dokumen dan arsip, integrasi publik, test aplikasi. |
 | OS-SUR-001 | 🟡 Sebagian | Master jenis surat, builder isian dinamis, placeholder/formula, template, RBAC, test `isian.test.ts`. **Gap: E2E dan seluruh variasi keluaran template belum ada.** |
@@ -259,7 +259,7 @@ diberikan setelah Definition of Done di katalog terpenuhi.
 2. Fondasi dan fitur inti (kependudukan, persuratan, keuangan, inventaris,
    Bumindes, CMS, layanan mandiri) sudah berjalan, tetapi keluaran lanjutan dan
    E2E alur belum lengkap.
-3. Dari 112 ID dalam scope, 15 berstatus ✅, 78 🟡, dan 19 🔴. Status ini
+3. Dari 112 ID dalam scope, 16 berstatus ✅, 76 🟡, dan 20 🔴. Status ini
    dihitung dari bukti yang dapat dijalankan, bukan dari catatan log.
 4. Modul yang masih murni placeholder: IDM, pemilihan, SiLPA,
    anjungan, buku tamu, kehadiran, lapak, pelanggan, notifikasi, plugin,

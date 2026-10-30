@@ -175,7 +175,7 @@ export function SinergiFormDialog({ open, onOpenChange, item, tahunAwal }: Siner
             </Button>
             <Button type="submit" disabled={isPending}>
               {isPending ? <Loader2 className="animate-spin" /> : null}
-              {isEdit ? "Simpan perubahan" : "Tambah program"}
+              {isEdit ? "Simpan perubahan" : "Simpan program"}
             </Button>
           </DialogFooter>
         </form>

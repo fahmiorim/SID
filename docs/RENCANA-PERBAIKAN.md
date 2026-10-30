@@ -592,7 +592,10 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 - [x] `OS-GOV-008`: sinergi program `/desa/sinergi` — CRUD (tabel, form,
       hapus), pencarian, RBAC `sinergi`, migrasi `sinergi_program`, ekspor CSV,
-      test `sinergi.test.ts`. E2E dan publikasi web menyusul.
+      test `sinergi.test.ts`. Publikasi web lewat slot tema `sinergi`
+      (`/desa/sinergi-program`, menu Informasi Publik) dan E2E
+      `tests/sinergi.e2e.ts` (muat, tambah/hapus, ekspor CSV, publik tanpa sesi).
+      Gap: —.
 - [x] `OS-GOV-009`: proyek pembangunan: rencana, realisasi, dokumentasi foto,
       hasil, dan halaman publik. Domain/repo/use case/actions + admin
       `/pembangunan` (detail + dokumentasi) + publik `/desa/pembangunan`
@@ -841,10 +844,10 @@ Urutan prioritas: web publik → admin berfungsi → paritas OpenSID → multi-d
 
 | Fase | Status | Catatan |
 |------|--------|---------|
-| 0 — Stabilisasi | ✅ **Terverifikasi** | `npm run check` (typecheck, lint 0 masalah, format, 762 test di 75 file — snapshot 29 Okt 2026) dan `build` lulus 29 Okt 2026; smoke HTTP terakhir lulus 25 Okt 2026 (butuh server + DB); E2E ada tetapi belum dijalankan CI; tree masih berisi pekerjaan aktif |
+| 0 — Stabilisasi | ✅ **Terverifikasi** | `npm run check` (typecheck, lint 0 masalah, format, 822 test di 78 file — snapshot 31 Okt 2026) dan `build` lulus 31 Okt 2026; `db:seed` kini berjalan tanpa menarik modul `server-only`; E2E `tests/sinergi.e2e.ts` lulus di DB bersih (migrasi + seed dari nol) 31 Okt 2026 |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan sudah berdata. Halaman statis placeholder: `/desa/lapak`, `/desa/idm-sdgs`. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; keuangan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. Halaman minimal/orphan tanpa entri modul/menu/RBAC: `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`. |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID sudah diaudit seluruhnya: 15 ID selesai, 78 ID sebagian, 19 ID belum ada, dan 1 ID (`OS-POP-009`) resmi di luar scope. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID sudah diaudit seluruhnya: 16 ID selesai, 76 ID sebagian, 20 ID belum ada, dan 1 ID (`OS-POP-009`) resmi di luar scope. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, widget/CMS, manifest, dan OG sudah ter-wire. Halaman publik statis placeholder (`/desa/lapak`, `/desa/idm-sdgs`) menunggu backend. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik sudah ada; provisioning, super-admin, domain kustom, dan uji penuh belum |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan, backup, dan runbook belum lengkap | 
@@ -878,4 +881,6 @@ Masalah kritis yang perlu diperbaiki sebelum lanjut:
 10. Smoke E2E baseline sudah lulus untuk API katalog; alur browser admin dan
     warga masih perlu ditambahkan. Smoke HTTP publik tidak menggantikan E2E
     untuk alur interaktif, otorisasi, warga, admin, unggah, dan transaksi.
+    Alur admin+publik Sinergi (`tests/sinergi.e2e.ts`) sudah dijalankan dan
+    lulus pada DB bermigrasi + ter-seed dari nol (31 Okt 2026).
 11. Integrasi test isolasi (`tests/isolation.e2e.ts`) untuk verifikasi `villageId` pada fitur SiLPA, Lapak, Kehadiran, BukuTamu.

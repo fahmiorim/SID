@@ -28,6 +28,16 @@ export async function daftarSinergi(villageId: number) {
   return listSinergi(villageId);
 }
 
+/**
+ * Daftar program untuk situs publik.
+ *
+ * Tanpa RBAC karena halaman publik memang tidak punya sesi; `villageId` berasal
+ * dari host (tenant), bukan dari input klien.
+ */
+export async function daftarSinergiPublik(villageId: number) {
+  return listSinergi(villageId);
+}
+
 export async function tambahSinergi(villageId: number, input: unknown) {
   await requirePermission(SINERGI_RESOURCE, "update");
   const parsed = sinergiSchema.parse(input);
