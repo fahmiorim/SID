@@ -10,6 +10,11 @@ import {
   kontakSchema,
 } from "@/features/kontak/domain/kontak";
 import {
+  KOLOM_IMPOR_KONTAK,
+  type BarisImporKontak,
+  type KunciImporKontak,
+} from "@/features/kontak/domain/kontak-berkas";
+import {
   addAnggotaGrup,
   createKontak,
   createKontakGrup,
@@ -23,7 +28,9 @@ import {
   updateKontakGrup,
 } from "@/features/kontak/infrastructure/kontak-repository";
 import { hasPermission } from "@/features/rbac/application/authorization";
+import { errorState, successState, type ActionState } from "@/lib/action-state";
 import { verifySession } from "@/lib/dal";
+import { bacaImporDariFormData } from "@/lib/impor-berkas";
 
 export async function saveKontakAction(formData: FormData) {
   const user = await verifySession();
@@ -41,6 +48,7 @@ export async function saveKontakAction(formData: FormData) {
     telegram: formData.get("telegram") ? String(formData.get("telegram")) : "",
     hubungWarga: formData.get("hubungWarga") ? String(formData.get("hubungWarga")) : "Telegram",
     keterangan: formData.get("keterangan") ? String(formData.get("keterangan")) : "",
+    residentId: formData.get("residentId") ? Number(formData.get("residentId")) : undefined,
   };
 
   const parsed = kontakSchema.safeParse(raw);
@@ -57,6 +65,7 @@ export async function saveKontakAction(formData: FormData) {
         telegram: parsed.data.telegram || null,
         hubungWarga: parsed.data.hubungWarga || "Telegram",
         keterangan: parsed.data.keterangan || null,
+        residentId: parsed.data.residentId,
       });
     } else {
       await createKontak({
@@ -67,6 +76,7 @@ export async function saveKontakAction(formData: FormData) {
         telegram: parsed.data.telegram || null,
         hubungWarga: parsed.data.hubungWarga || "Telegram",
         keterangan: parsed.data.keterangan || null,
+        residentId: parsed.data.residentId,
       });
     }
     revalidatePath("/hubung-warga/daftar-kontak");
@@ -202,4 +212,58 @@ export async function removeAnggotaGrupAction(id: number) {
   } catch (e) {
     return { ok: false, message: e instanceof Error ? e.message : "Gagal menghapus anggota." };
   }
+}
+
+/**
+ * Impor kontak dari berkas CSV/XLSX.
+ *
+ * Kolom: Nama (wajib), Telepon, Email, Telegram, Hubung Warga, Keterangan, NIK / ID Penduduk (opsional).
+ * NIK atau residentId digunakan untuk penautan ke penduduk (fuzzy match jika NIK).
+ */
+export async function imporKontakAction(
+  _prev: ActionState<null>,
+  formData: FormData,
+): Promise<ActionState<null>> {
+  const user = await verifySession();
+  if (!hasPermission(user.permissions, KONTAK_RESOURCE, "update")) {
+    return errorState("Tidak memiliki izin mengimpor kontak.");
+  }
+
+  const berkas = formData.get("berkas");
+  const hasil = await bacaImporDariFormData<KunciImporKontak>(berkas, KOLOM_IMPOR_KONTAK);
+
+  if (!hasil.ok) {
+    return errorState(hasil.pesan);
+  }
+  if (hasil.hasil.baris.length === 0) {
+    const pesan = hasil.hasil.galat[0]?.pesan ?? "Tidak ada baris data pada berkas.";
+    return errorState(pesan);
+  }
+
+  const villageId = await resolveVillageId(user);
+
+  let ditambahkan = 0;
+  let dilewati = 0;
+
+  for (const baris of hasil.hasil.baris) {
+    const { residentId, ...input } = baris.nilai as unknown as BarisImporKontak;
+    try {
+      await createKontak({
+        villageId,
+        nama: input.nama,
+        telepon: input.telepon || null,
+        email: input.email || null,
+        telegram: input.telegram || null,
+        hubungWarga: input.hubungWarga || "Telegram",
+        keterangan: input.keterangan || null,
+      });
+      ditambahkan += 1;
+    } catch {
+      dilewati += 1;
+    }
+  }
+
+  revalidatePath("/hubung-warga/daftar-kontak");
+  const bagian = [`${ditambahkan} ditambahkan`, `${dilewati} dilewati`];
+  return successState(`Impor selesai: ${bagian.join("; ")}.`);
 }
