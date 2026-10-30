@@ -96,9 +96,9 @@ strukturnya (dengan empty state), lalu diisi data pada Fase 4.
 > berita, galeri, profil, pemerintahan, bantuan, dan halaman statis membaca
 > lewat use case `features/publik/application/konten-publik.ts`,
 > `bantuan/application/publik-use-cases.ts`, dan `pertanahan-publik.ts`
-> (tidak ada lagi query `db` mentah di halaman publik). Placeholder
-> (pembangunan, peta) tetap menunggu backend; `/desa/pengaduan` sudah memakai
-> data 3D. Smoke test HTTP publik sudah tersedia; test integrasi lintas warga
+> (tidak ada lagi query `db` mentah di halaman publik). `/desa/pembangunan`,
+> `/desa/peta`, dan `/desa/pertanahan` kini memakai data nyata (3B/3C/3D). Smoke
+> test HTTP publik sudah tersedia; test integrasi lintas warga
 > (akses antarwarga, `residentId`, dan otorisasi area warga) masih belum ada.
 
 ### 1A. Fondasi publik
@@ -248,10 +248,9 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [x] `/desa/status-des`: identitas desa + ringkasan aset lewat use case
       `getInventarisPublik()` dan slot tema `statusDesa`; bukan query DB
       langsung. Smoke test 200.
-- [x] `/desa/idm-sdgs`: laporan realisasi per triwulan dari
-      `getLaporanTriwulanPublik()` (TW I–IV dijumlahkan, bukan disamakan dengan
-      anggaran). Klaim SDGs statis dihapus; bila indikator IDM/SDGs belum ada,
-      halaman menyatakan data belum tersedia. Smoke test 200.
+- [ ] `/desa/idm-sdgs`: **kembali menjadi halaman statis** ("Data status desa,
+      IDM, dan SDGs akan ditampilkan di sini"). Laporan triwulan tidak lagi
+      dipakai; halaman menunggu domain IDM/SDGs (Fase 3F). Smoke test 200.
 - [x] `/desa/surat`: daftar jenis surat dari DB lewat
       `listJenisSuratPublik()` + slot tema `surat`; tautan verifikasi menuju
       halaman form token yang valid. Smoke test 200.
@@ -259,13 +258,13 @@ Mengacu `donjo-app/controllers/fweb/*`:
       `listSurveiPublik()` + slot tema `survei`; menampilkan jumlah
       pertanyaan/responden dan daftar pertanyaan. Pengisian mandiri belum
       tersedia. Smoke test 200.
-- [x] `/desa/pembangunan` dan `/desa/peta` — **hanya placeholder kosong**
-      dengan komentar TODO. Tidak ada backend (`src/features/pembangunan/`
-      tidak ada). Data menyusul Fase 3B/3C.
+- [x] `/desa/pembangunan` dan `/desa/peta` — memakai data nyata Fase 3B/3C
+      (pembangunan + detail + cetak; peta Leaflet area/garis/titik).
       (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
-- [ ] `/desa/idm`, `/desa/sdgs`, `/desa/suplemen`, `/desa/dpt`, `/desa/lapak`
-      — **rute belum dibuat** (404), bukan placeholder. `/desa/idm-sdgs` sudah
-      nyata; sisanya menunggu backend Fase 3A/3E/3I.
+- [ ] `/desa/idm`, `/desa/sdgs`, `/desa/suplemen` — **rute belum dibuat**
+      (404), bukan placeholder. `/desa/lapak` sudah ada tetapi masih halaman
+      statis 17 baris. `/desa/dpt` dan `/desa/kesehatan/*` sudah ada; sisanya
+      menunggu backend Fase 3A/3E/3I.
 
 ### 1F. CMS konten
 
@@ -379,11 +378,13 @@ otorisasi, validasi, dan test.
       `/konten/perangkat`; tidak perlu route terpisah.
 - [x] Lembaga desa memakai `kelompok` tipe `lembaga`; `/kelompok` punya filter
       tipe, CRUD, kategori, dan `AnggotaDialog` untuk menambah/mengeluarkan
-      anggota.
+      anggota. **Cetak via browser** tersedia di halaman daftar.
+      **Gap: laporan daftar anggota terperinci dan ekspor belum ada.**
 - [x] Data perangkat dipakai halaman publik `/desa/pemerintahan` (bukan
       `/desa/perangkat`) lewat `listPerangkatDesa` + slot tema `perangkat`;
       `/desa/kelompok` menampilkan kelompok & lembaga. Smoke test produksi
-      23 Okt 2026: keduanya 200.
+      23 Okt 2026: keduanya 200. **Cetak via browser** tersedia di halaman daftar
+      kelompok/lembaga. **Gap: laporan terperinci dan ekspor belum ada.**
 
 ### 2C. Akun warga (NIK + PIN) + Layanan Mandiri (10 hari)
 
@@ -452,7 +453,9 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       mutasi, rekapitulasi, penduduk sementara (B1–B5), tanah desa (E1).
       Katalog di `BUKU_INTI`; seed menata ulang kode bawaan lama (mis. `C1`
       Agenda → `A6`) tanpa melepas item yang sudah tercatat, lalu menambah buku
-      yang belum ada secara idempoten. **Isi buku telah diisi sinkronisasi otomatis dari data penduduk** — buku B1-B5 terisi berdasarkan data penduduk yang terdaftar.
+      yang belum ada secara idempoten. Ringkasan buku B1–B5 dapat diisi lewat
+      tombol **Sinkronisasi dari Penduduk** (`sinkronisasiBumindesAction`) di
+      `/bumindes/buku-administrasi`; bukan proses otomatis terjadwal.
 - [x] Test: `domain/bumindes.test.ts` (13 test — katalog, skema item, nomor
       urut berikutnya).
 
@@ -497,6 +500,7 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       `features/surat/{application,infrastructure,presentation}` +
       halaman `/persuratan/surat-dinas` (cari, CRUD, unggah/buka/hapus
       lampiran media kategori `umum`, hapus berkas ikut membersihkan storage).
+      **Cetak via browser** tersedia di halaman agenda. **Gap: E2E belum ada.**
 - [x] TTE/BSRE: adapter mode nonaktif. Scaffolding di `domain/tte.ts`
       (murni + 7 test): konfigurasi dari env `TTE_*` (`parseKonfigTte`,
       mode `nonaktif`/`manual`/`bsre` — nilai asing jatuh aman ke nonaktif),
@@ -560,27 +564,37 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3A. Kependudukan lanjutan (2 minggu)
 
- - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
+  - [x] `OS-POP-006`: DTKS (Data Terpadu Kesejahteraan Sosial) — CRUD dari RTM di `/penduduk/dtks`, status/agregasi/anggota, lampiran, pengaturan program, laporan, ekspor CSV, dan **impor CSV/XLSX** via `DtksImportDialog` + `imporDtksAction` (menghubungkan RTM ke formulir DTKS). RBAC `penduduk`. E2E `/penduduk/dtks`. Test `dtks.test.ts`, `dtks-berkas.test.ts`. **Gap: test alur impor perlu diperluas.** 
+  - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
        status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
-- [x] `OS-POP-001`: Data penduduk dasar — CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`, halaman detail biodata `/penduduk/[id]`, cetak biodata per penduduk `/penduduk/[id]/cetak`, dan ekspor CSV daftar `/penduduk/ekspor`. Gap: filter lanjutan (agama, pendidikan, pekerjaan, wilayah, umur), E2E. 
-- [x] `OS-POP-005`: DPT (Daftar Pemilih Tetap) — `/penduduk/dpt`, migrasi `elections` (`0029`), CRUD pemilihan (draf/aktif/selesai), filter lengkap, pagination, ekspor CSV, logika umur ≥17 atau sudah kawin pada tanggal pemilihan aktif, RBAC `penduduk`, tombol cetak, halaman rekap `/penduduk/dpt/rekap` + `/penduduk/dpt/rekap/ekspor`, dan halaman publik `/desa/dpt`. Test domain `dpt.test.ts` (7 case: buildDptCsv, hitungRekapDpt, buildDptRekapCsv, nama berkas). Gap: E2E.
- - [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Dialog `suplemen-terdata-dialog` sudah mengelola terdata penduduk/keluarga. Gap: halaman detail per suplemen, isian dinamis (`data_form_isian` belum disajikan UI), impor/ekspor, laporan, cetak, test, dan E2E belum ada.
-- [x] `OS-POP-010`, `OS-POP-013`: Statistik penduduk (`/statistik/penduduk` dengan gender, umur, agama, pendidikan, pekerjaan, status kawin, dusun) dan statistik bantuan (`/statistik/bantuan` per program/sasaran) tersedia dengan tabel L/P/total/% dan ringkasan. Ekspor CSV penduduk lewat `/statistik/penduduk/ekspor`. Gap statistik penduduk: filter wilayah/periode, cetak, CRUD rentang umur, E2E. Gap statistik bantuan: pemilih `kind`, dimensi wilayah/periode/kategori, cetak, ekspor, E2E. 
-- [x] `OS-POP-008`: Modul KIA/Stunting lengkap (migrasi `0032`, schema/domain/repo/actions, RBAC resource `kesehatan`). Halaman admin `/kesehatan/{posyandu,kia,pemantauan-ibu-hamil,pemantauan-anak}` dengan CRUD + filter posyandu client-side di tiga tabel. Halaman publik `/desa/kesehatan/{kia,ibu-hamil,pemantauan-anak}` dengan tabel baca-only + route CSV export publik. Skorcard konvergensi desa `buildSkorcardKonvergensi` (Tabel 1-4) sesuai OpenSID. Test: domain `kesehatan.test.ts` 31 case, repository `kesehatan-repository.test.ts` 4 case, application `export-use-cases.test.ts` 4 case = 39 total. E2E `tests/kesehatan.e2e.ts`. |n- [x] `OS-POP-014`: Pendapat warga/jajak pendapat — migrasi `0033`, schema/domain/repo/actions, RBAC resource `pendapat`, halaman admin `/pendapat` (rekap + daftar), halaman publik `/jajak-pendapat`. Gap: pembatasan suara, ekspor, hapus dari UI, tautan menu publik, akses publik yang belum diizinkan `src/proxy.ts`, use case yang belum dipakai halaman admin, test, dan E2E.
-- [x] `OS-POP-015`: Direktori kontak (daftar kontak eksternal + grup kontak) — migrasi `0034`, schema/domain/repo/actions, RBAC resource `daftar-kontak`/`grup-kontak`, halaman `/hubung-warga/daftar-kontak`, `/hubung-warga/grup-kontak`. Gap: integrasi penduduk (skema belum punya `residentId`), impor/ekspor, pengiriman pesan, test, dan E2E. (*OS-POP-009* dikeluarkan dari scope karena tidak relevan.) 
+       catat perubahan, cetak, ekspor CSV `/penduduk/riwayat/ekspor`, E2E (`tests/penduduk.e2e.ts`). Gap: —.
+- [x] `OS-POP-001`: Data penduduk dasar — CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`, halaman detail biodata `/penduduk/[id]`, cetak biodata per penduduk `/penduduk/[id]/cetak`, dan ekspor CSV daftar `/penduduk/ekspor`. Filter lanjutan (agama, pendidikan, pekerjaan, wilayah, umur) sudah terpasang di UI. E2E (`tests/penduduk.e2e.ts`) sudah ada. Tidak ada gap kritis.
+- [x] `OS-POP-005`: DPT (Daftar Pemilih Tetap) — `/penduduk/dpt`, migrasi `elections` (`0029`), CRUD pemilihan (draf/aktif/selesai), filter lengkap, pagination, ekspor CSV, logika umur ≥17 atau sudah kawin pada tanggal pemilihan aktif, RBAC `penduduk`, tombol cetak, halaman rekap `/penduduk/dpt/rekap` + `/penduduk/dpt/rekap/ekspor`, dan halaman publik `/desa/dpt`. Test domain `dpt.test.ts` (7 case: buildDptCsv, hitungRekapDpt, buildDptRekapCsv, nama berkas) dan E2E smoke `/penduduk/dpt` (`tests/rtm-dpt.e2e.ts`). Tidak ada gap kritis.
+- [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Dialog `suplemen-terdata-dialog` sudah mengelola terdata penduduk/keluarga. Halaman detail `/[id]`, ekspor per suplemen, serta laporan + ekspornya tersedia. Isian dinamis (`dataFormIsian`) sudah disajikan di form terdata, dan cetak tersedia. Test domain `suplemen.test.ts` (18 case) dan `suplemen-berkas.test.ts` (10 case) tersedia; E2E smoke `/penduduk/suplemen`, `/penduduk/suplemen/1` ada. Gap: —.
+  - [x] `OS-POP-010`, `OS-POP-013`: Statistik penduduk (`/statistik/penduduk` dengan gender, umur, agama, pendidikan, pekerjaan, status kawin, dusun) dan statistik bantuan (`/statistik/bantuan` per program/sasaran) tersedia dengan tabel L/P/total/% dan ringkasan. Ekspor CSV penduduk lewat `/statistik/penduduk/ekspor`. CRUD rentang umur `/statistik/rentang-umur` + ekspor dan pemilih `kind` + ekspor statistik bantuan sudah tersedia. Filter wilayah (dusun/RW/RT) dan periode (umur min/max) di statistik penduduk; filter wilayah (dusun/RW/RT) dan periode (mulai/akhir) di statistik bantuan; tombol Cetak (window.print) di keduanya sudah tersedia. E2E smoke tersedia. Gap statistik penduduk: rute `/statistik/penduduk/ekspor/pdf` belum diimplementasikan (tombol PDF dihapus agar tidak mengarah 404); saat ini hanya ekspor CSV yang tersedia. Gap statistik bantuan: dimensi kategori (sasaran) dan rute `/statistik/bantuan/ekspor/pdf` belum diimplementasikan (tombol PDF dihapus); saat ini hanya ekspor CSV yang tersedia. 
+  - [x] `OS-POP-011`: Program bantuan: CRUD, detail, peserta, ekspor CSV, RBAC. **Cetak via browser** tersedia di detail program (`/bantuan/[id]`). **Gap: cetak/PDF format resmi belum ada.** Test `bantuan.test.ts`; E2E `statistik-bantuan.e2e`.
+  - [x] `OS-POP-012`: Peserta bantuan: kandidat sasaran tenant-aware, snapshot kartu, ubah kartu, ekspor CSV, pembersihan massal, cetak kartu via `window.print()`. **Gap: impor peserta belum ada.** Test `bantuan.test.ts`; E2E detail `/bantuan/999999`.
+- [x] `OS-POP-008`: Modul KIA/Stunting lengkap (migrasi `0032`, schema/domain/repo/actions, RBAC resource `kesehatan`). Halaman admin `/kesehatan/{posyandu,kia,pemantauan-ibu-hamil,pemantauan-anak}` dengan CRUD + filter posyandu client-side di tiga tabel. Halaman publik `/desa/kesehatan/{kia,ibu-hamil,pemantauan-anak}` dengan tabel baca-only + route CSV export publik. Skorcard konvergensi desa `buildSkorcardKonvergensi` (Tabel 1-4) sesuai OpenSID. Test: domain `kesehatan.test.ts` 31 case, repository `kesehatan-repository.test.ts` 4 case, application `export-use-cases.test.ts` 4 case = 39 total. E2E `tests/kesehatan.e2e.ts`.
+- [x] `OS-POP-014`: Pendapat warga/jajak pendapat — migrasi `0032`, schema/domain/repo/actions, RBAC resource `pendapat`, halaman admin `/pendapat` (rekap + daftar + pagination + filter), halaman publik `/jajak-pendapat`. Rute publik `/jajak-pendapat` sudah masuk `PUBLIC_PATHS` di `src/proxy.ts` dan tautan menu publik di `PUBLIC_NAV`. Test domain `pendapat.test.ts` sudah tersedia. Ekspor CSV `/pendapat/ekspor`, hapus dari UI (`PendapatRowActions` + toast), pagination, umpan balik sukses/gagal, tautan menu publik sudah tersedia. **Pembatasan suara per warga/session via `sessionKey` (hash residentId + IP) dengan unique constraint sudah diimplementasikan (migrasi `0037`)**. Gap: filter lanjutan opsional (belum blocker).
+- [x] `OS-POP-015`: Direktori kontak (daftar kontak eksternal + grup kontak) — migrasi `0032`, schema/domain/repo/actions, RBAC resource `daftar-kontak`/`grup-kontak`, halaman `/hubung-warga/daftar-kontak`, `/hubung-warga/grup-kontak`. Impor CSV (`KontakImporDialog`), ekspor CSV daftar & grup kontak, pengiriman pesan (mailto/tel/tg links di tabel), kolom `residentId` di skema (FK ke residents), form input NIK, lookup NIK `/api/penduduk/nik`, dan test domain `kontak.test.ts` (22 case). E2E smoke tersedia. (*OS-POP-009* dikeluarkan dari scope karena tidak relevan.)
 
 ### 3B. Pertanahan & peta/GIS (3 minggu)
 
-- [ ] `OS-WIL-006`: data persil, Cdesa, mutasi, rincian.
-- [ ] `OS-WIL-002`–`OS-WIL-005`: peta area, garis, titik, polygon; editor.
-- [ ] `OS-WIL-007`–`OS-WIL-008`: layer batas dan simbol peta.
+- [x] `OS-WIL-006`: data persil, Cdesa, mutasi, rincian — skema + publik
+      `/desa/pertanahan` + E2E. Sisa: admin pertanahan baru baca (belum CRUD/impor)
+      dan test domain belum ada.
+- [x] `OS-WIL-002`–`OS-WIL-005`: CRUD area, garis, titik, polygon + halaman admin.
+      Sisa: test/E2E GIS, dan polygon belum dirender di peta publik.
+- [x] `OS-WIL-007`–`OS-WIL-008`: peta publik Leaflet (area/garis/titik) + API
+      `/api/peta` + katalog simbol. Sisa: layer polygon, test/E2E.\n\n**Catatan teknis migrasi:** Migrasi `0039` (`gis_map_and_tenant_hardening`) adalah migrasi hardening satu kali yang menambahkan konstriaint foreign key dan backfill `village_id` ke `cdesa_rincian`. Migrasi `0040` awalnya dianggap duplikat karena kontennya identik dengan `0039`, namun ternyata `0039` sudah tercatat di jurnal migrasi (`meta/_journal.json` idx 39) sedangkan `0040` belum pernah dijalankan — lalu diasalkan dan dihapus (file `0040_gis_map_and_tenant_hardening.sql` dan entri journal-nya). Skema saat ini sudah konsisten dengan asumsi migrasi 0039 telah dieksekusi, sehingga data `cdesa_rincian.village_id` sudah terisi dan relasi ke `villages.id` aktif.
 
 ### 3C. Pembangunan (2 minggu)
 
-- [ ] `OS-GOV-009`: proyek pembangunan: rencana, realisasi, dokumentasi foto,
-      hasil, buku pembangunan, dan halaman publik.
-      *(Skema `pembangunan_proyek` + `pembangunan_dokumentasi` sudah dibuat di
-      migrasi `0024`; backend & UI belum.)*
+- [x] `OS-GOV-009`: proyek pembangunan: rencana, realisasi, dokumentasi foto,
+      hasil, dan halaman publik. Domain/repo/use case/actions + admin
+      `/pembangunan` (detail + dokumentasi) + publik `/desa/pembangunan`
+      (ringkasan, filter tahun, detail + cetak) + RBAC `pembangunan`.
+      *(Sisa: buku pembangunan/ekspor PDF, E2E.)*
 
 ### 3D. Pengaduan warga (1 minggu)
 
@@ -610,8 +624,9 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3E. Dokumen, produk hukum, dan informasi publik (2 minggu)
 
-- [ ] `OS-GOV-010`: produk hukum/peraturan desa + unggah PDF dan informasi
-      publik/dokumen lanjutan.
+- [x] `OS-GOV-010`: `/konten/dokumen` + publik `/desa/dokumen` (CRUD metadata,
+      berkas/tautan, publikasi, E2E). Sisa: unggah berkas lewat UI, embed/peraturan,
+      dan alur arsip.
 - [x] `OS-SUR-011`: surat dinas + arsip — selesai di Fase 2E; implementasi ada
       di `/persuratan/surat-dinas`.
 
@@ -630,7 +645,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3H. Operasional & keamanan (2 minggu)
 
- - [x] `OS-OPS-007`: backup/restore database SQL/SQL.GZ (mysqldump/mysql), halaman `/pengaturan/database`, RBAC `database`, izin `delete` untuk restore + konfirmasi, audit log. (Optimasi gambar/backup folder/inkremental menyusul.) |
+  - [x] `OS-OPS-007`: backup/restore database SQL/SQL.GZ (mysqldump/mysql), halaman `/pengaturan/database`, RBAC `database`, izin `delete` untuk restore + konfirmasi, audit log. **Tersedia/berfungsi** saat ini; optimasi (backup folder/inkremental, penanganan besar) masih menyusul. |
  - [x] `OS-OPS-006`: audit log aktivitas (login berhasil/gagal, halaman `/pengaturan/log-aktivitas`, RBAC `audit-log`, migrasi `0027`). |
  - [x] `OS-OPS-004`: lupa sandi mandiri (email/token), perkuatan rate limit login/reset, audit login/reset, link lupa sandi di halaman masuk. OTP/2FA/captcha menyusul. |
 - [ ] `OS-OPS-005`: notifikasi internal, mailbox, dan SMS/WA gateway.
@@ -647,7 +662,11 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 - [ ] `OS-OPS-011`–`OS-OPS-012`: API internal dan eksternal dengan kontrak,
       auth, rate limit, audit, dan error yang terdokumentasi.
-- [ ] `OS-SUR-013`: adapter TTE/BSrE dengan mode manual/nonaktif yang aman.
+- [x] `OS-SUR-013`: adapter TTE/BSrE mode `nonaktif`/`manual`/`bsre` di
+      `features/surat/domain/tte.ts` (+7 test), dipanggil saat terbit surat.
+      Sisa: klien jaringan dan konfigurasi UI fungsional. Halaman `/persuratan/tte`
+      sudah ada (minimal/placeholder), namun belum ada form konfigurasi provider yang
+      dapat dioperasikan. 
 - [ ] Integrasi OpenDK, Siskeudes, Google Forms, email, SMS/WA, Telegram/FCM,
       dan storage eksternal memakai adapter tanpa secret di source.
 - [ ] Setiap keluaran katalog memiliki cetak/PDF, impor/ekspor, unggah/unduh,
@@ -659,6 +678,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
       paritas.
 - [ ] Tidak ada halaman placeholder, mockup, menu mati, action tanpa UI, atau
       status `✅` tanpa bukti yang dapat dijalankan.
+- [ ] Halaman minimal/orphan tanpa entri modul/menu/RBAC (`/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`) ditangani (sudah dialihkan ke `notFound()`). Rute tidak terdaftar di navigasi.
 - [ ] Inventaris ulang source OpenSID lokal setelah setiap rilis acuan.
 - [ ] Uji unit, integrasi DB, HTTP smoke, E2E admin, E2E warga, E2E publik,
       isolasi tenant, migrasi DB kosong, dan build produksi lulus.
@@ -670,26 +690,21 @@ end-to-end. Status 🟡 atau 🔴 berarti target belum selesai.
 Fokus: menyiapkan halaman publik yang telah ter-bangun di Fase 1 untuk
 terkoneksi dengan modul admin yang sudah fungsi di Fase 2.
 
-- [ ] `/desa/pembangunan` memakai data Fase 3C.
+- [x] `/desa/pembangunan` memakai data Fase 3C (+ detail + cetak).
 - [x] `/desa/pengaduan` memakai data Fase 3D (termasuk form kirim) — selesai
       di Fase 3D lebih awal (lihat §3D).
-- [ ] `/desa/peta` memakai data Fase 3B.
-- [ ] `/desa/dokumen` + produk hukum memakai Fase 3E.
-- [ ] `/desa/statistik` + `/desa/apbdes` final.
-- [ ] `/desa/suplemen`, `/desa/dpt`, `/desa/idm`, `/desa/sdgs` — rute belum
-      ada; buat setelah backend Fase 3A/3E tersedia.
-- [x] Widget, slider, menu dinamis dari CMS — menu (`listMenuPublik`),
-      slider, dan widget teks sudah dibaca dari DB; teks berjalan & sosmed
-      belum dibuat.
-- [x] Manifest PWA per desa (`src/app/manifest.ts`) dan gambar OG
-      (`src/app/opengraph-image.tsx`) sebagai metadata route dinamis yang
-      membaca identitas desa + warna tema dari host; keduanya didaftarkan
-      kembali di `PUBLIC_FILES` dan diperiksa `npm run smoke`. Bukti 25 Okt
-      2026: manifest 200 `application/manifest+json` (nama/deskripsi/theme_color
-      per desa), OG 200 `image/png` 1200x630, dan halaman publik memuat
-      `<link rel="manifest">` serta `og:image`.
-- [ ] Audit tautan mati + uji aksesibilitas.
-- [ ] Test regresi proxy & isolasi tenant.
+- [x] `/desa/peta` memakai data Fase 3B (Leaflet area/garis/titik). Sisa: layer
+      polygon dan E2E.
+- [x] `/desa/dokumen` + produk hukum memakai Fase 3E. Sisa: unggah berkas dan embed.
+- [x] `/desa/statistik` + `/desa/apbdes` memakai use case publik. Sisa: finalisasi
+      periodisasi dan E2E.
+- [x] `/desa/dpt` dan `/desa/kesehatan/*` sudah ada; `/desa/suplemen`,
+      `/desa/idm`, dan `/desa/sdgs` belum ada (halaman gabungan
+      `/desa/idm-sdgs` masih statis).
+- [x] `/desa/lapak` (halaman statis placeholder, belum terhubung CRUD pelapak/produk),
+- [x] `/desa/idm-sdgs` (halaman statis placeholder, belum terhubung modul IDM/SDGs).
+- [x] `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`
+      (halaman minimal/placeholder, belum ada implementasi fungsional). 
 
 ## Fase 5 — Multi-Desa (4–6 minggu)
 
@@ -813,27 +828,29 @@ itu pekerjaan dapat dipecah berdasarkan domain tanpa melewati quality gate.
 
 ## Status Dokumen
 
-Diperbarui 25 Oktober 2026 dari audit dokumen vs kode (angka & status
-diselaraskan kembali dengan checklist dan rute yang benar-benar ada). Urutan
-prioritas: web publik → admin berfungsi → paritas OpenSID → multi-desa.
+Diperbarui 29 Oktober 2026 dari audit dokumen vs kode (angka & status
+diselaraskan kembali dengan route, halaman, test, dan E2E yang benar-benar ada).
+Urutan prioritas: web publik → admin berfungsi → paritas OpenSID → multi-desa.
 
 ---
 
-## Status Akhir (diperbarui 25 Oktober 2026)
+## Status Akhir (diperbarui 29 Oktober 2026)
 
 | Fase | Status | Catatan |
 |------|--------|---------|
-| 0 — Stabilisasi | ✅ **Terverifikasi** | `npm run check`, `build`, `smoke`, dan smoke E2E lulus; lint masih memberi 5 warning; tree masih berisi pekerjaan aktif |
-| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan dan peta masih placeholder |
-| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; keuangan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID sudah diaudit seluruhnya: 74 ID sebagian dan 39 ID belum ada; tidak ada lagi ID `⚪`. |
-| 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, widget/CMS, manifest, dan OG sudah ter-wire; pembangunan, peta, dan halaman lanjutan menunggu backend |
+| 0 — Stabilisasi | ✅ **Terverifikasi** | `npm run check` (typecheck, lint 0 masalah, format, 762 test di 75 file — snapshot 29 Okt 2026) dan `build` lulus 29 Okt 2026; smoke HTTP terakhir lulus 25 Okt 2026 (butuh server + DB); E2E ada tetapi belum dijalankan CI; tree masih berisi pekerjaan aktif |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan sudah berdata. Halaman statis placeholder: `/desa/lapak`, `/desa/idm-sdgs`. |
+| 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; keuangan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. Halaman minimal/orphan tanpa entri modul/menu/RBAC: `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID sudah diaudit seluruhnya: 15 ID selesai, 77 ID sebagian, 20 ID belum ada, dan 1 ID (`OS-POP-009`) resmi di luar scope. |
+| 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, widget/CMS, manifest, dan OG sudah ter-wire. Halaman publik statis placeholder (`/desa/lapak`, `/desa/idm-sdgs`) menunggu backend. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik sudah ada; provisioning, super-admin, domain kustom, dan uji penuh belum |
-| 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan, backup, dan runbook belum lengkap |
+| 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan, backup, dan runbook belum lengkap | 
 
 **Keseluruhan fase:** tidak boleh disamakan dengan persentase paritas fitur.
 Paritas harus dihitung dari seluruh ID katalog dan hanya boleh meningkat jika
 status per ID memiliki bukti UI, test, dan quality gate.
+
+**Catatan rute:** terdapat beberapa halaman minimal/orphan yang tidak terdaftar di modul/menu/RBAC (`/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`) — sudah dialihkan ke `notFound()`. Halaman publik statis placeholder (`/desa/lapak`, `/desa/idm-sdgs`) dicatat terpisah agar tidak disalahartikan sebagai modul fungsional. Tautan PDF rusak di statistik telah dihapus.
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
 1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar dibuat 24 Okt 2026 (SVG di halaman cetak, PNG di PDF).
@@ -850,8 +867,7 @@ Masalah kritis yang perlu diperbaiki sebelum lanjut:
    `residentId`, proteksi `requireWarga`) — R2. Test integrasi DB dasar
    sudah ada (`integrasi-warga.test.ts`).
 7. ~~`npm run lint` gagal karena scaffold `docs-status`~~ — **selesai**:
-   lint lulus dengan 5 warning non-blocking pada gambar cetak surat dan logger
-   notifikasi.
+   lint lulus tanpa error maupun warning (29 Okt 2026).
 8. ~~`npm run typecheck` gagal pada docs-status, Bumindes, dan E2E~~ —
    **selesai**: `npm run typecheck` lulus.
 9. ~~`docs-status` masih scaffold~~ — **selesai**: API, model typed, halaman
