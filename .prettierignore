@@ -7,6 +7,7 @@ dist
 docs
 public
 .e2e
+.vitest
 .mcp.json
 .cursor/mcp.json
 package-lock.json
