@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
@@ -13,9 +14,33 @@ import {
   deletePendapat,
 } from "@/features/pendapat/infrastructure/pendapat-repository";
 import { hasPermission } from "@/features/rbac/application/authorization";
+import {
+  errorState,
+  successState,
+  toErrorState,
+  zodToFieldErrors,
+  type ActionState,
+} from "@/lib/action-state";
 import { verifySession } from "@/lib/dal";
 
-export async function submitPendapatPublikAction(formData: FormData): Promise<void> {
+function generateSessionKey(residentId: number | null, ipAddress: string): string {
+  const key = `${residentId ?? "anon"}:${ipAddress}`;
+  return createHash("sha256").update(key).digest("hex").slice(0, 64);
+}
+
+/** Kesalahan MySQL untuk pelanggaran indeks unik. */
+function isDuplicate(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "ER_DUP_ENTRY"
+  );
+}
+
+export async function submitPendapatPublikAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   const desa = await getIdentitasFromRequest();
   const villageId = desa.id;
   const h = await headers();
@@ -31,21 +56,28 @@ export async function submitPendapatPublikAction(formData: FormData): Promise<vo
 
   const parsed = pendapatSchema.safeParse(raw);
   if (!parsed.success) {
-    return;
+    return errorState("Periksa kembali pilihan Anda.", zodToFieldErrors(parsed.error));
   }
+
+  const sessionKey = generateSessionKey(parsed.data.residentId ?? null, ipAddress);
 
   try {
     await createPendapat({
       villageId,
       residentId: parsed.data.residentId ?? null,
+      sessionKey,
       pengguna: parsed.data.pengguna || null,
       pilihan: parsed.data.pilihan,
       ipAddress: parsed.data.ipAddress || null,
     });
     revalidatePath("/jajak-pendapat");
     revalidatePath("/beranda");
-  } catch {
-    // ignore
+    return successState("Terima kasih, pendapat Anda sudah tercatat.");
+  } catch (error) {
+    if (isDuplicate(error)) {
+      return errorState("Anda sudah pernah mengirimkan pendapat untuk sesi ini.");
+    }
+    return toErrorState(error);
   }
 }
 export async function deletePendapatAction(id: number) {

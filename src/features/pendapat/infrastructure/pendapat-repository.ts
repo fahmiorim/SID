@@ -34,14 +34,30 @@ export async function rekapPendapat(villageId: number): Promise<PendapatRekapRow
   });
 }
 
-export async function listPendapat(villageId: number, limit = 100): Promise<PendapatListRow[]> {
-  const rows = await db
-    .select()
-    .from(pendapat)
-    .where(eq(pendapat.villageId, villageId))
-    .orderBy(desc(pendapat.createdAt))
-    .limit(limit);
-  return rows as unknown as PendapatListRow[];
+export async function listPendapat(
+  villageId: number,
+  page = 1,
+  perPage = 20,
+): Promise<{ rows: PendapatListRow[]; total: number }> {
+  const safePage = Math.max(1, page);
+  const safePerPage = Math.min(100, Math.max(1, perPage));
+  const offset = (safePage - 1) * safePerPage;
+
+  const [rows, totalRow] = await Promise.all([
+    db
+      .select()
+      .from(pendapat)
+      .where(eq(pendapat.villageId, villageId))
+      .orderBy(desc(pendapat.createdAt))
+      .limit(safePerPage)
+      .offset(offset),
+    db.select({ total: count() }).from(pendapat).where(eq(pendapat.villageId, villageId)),
+  ]);
+
+  return {
+    rows: rows as unknown as PendapatListRow[],
+    total: Number(totalRow[0]?.total ?? 0),
+  };
 }
 
 export async function createPendapat(input: typeof pendapat.$inferInsert): Promise<number> {
