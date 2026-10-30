@@ -1,59 +1,88 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { listIdm } from "@/features/idm/infrastructure/idm-repository";
+import { ringkasanIdmPublik } from "@/features/idm/application/idm-use-cases";
+import {
+  formatSkor,
+  hitungRekapIdm,
+  hitungRekapSdgs,
+  SDGS_RESOURCE,
+} from "@/features/idm/domain/idm";
+import { SdgsTable } from "@/features/idm/presentation/components/sdgs-table";
+import { hasPermission } from "@/features/rbac/application/authorization";
+import { getCurrentUser } from "@/lib/dal";
 
 export const metadata = { title: "IDM & SDGs Desa" };
+export const dynamic = "force-dynamic";
 
-export default async function IdmSdgsPublicPage() {
+export default async function IdmSdgsPage() {
+  // Detect admin session (if any). `getCurrentUser` returns null when
+  // unauthenticated, so the public page stays safe without a session.
+  const user = await getCurrentUser();
+  const isAdmin = Boolean(user && hasPermission(user.permissions, SDGS_RESOURCE, "read"));
+
   const desa = await getIdentitasFromRequest();
-  const tahun = new Date().getFullYear();
-  const indikatorList = await listIdm(desa.id, tahun);
+  const villageId = isAdmin && user?.villageId ? user.villageId : desa.id;
+  const { tahun, indikator, sdgs } = await ringkasanIdmPublik(villageId);
+  const rekap = hitungRekapIdm(indikator);
+  const rekapSdgs = hitungRekapSdgs(sdgs);
+
+  // Public view only shows the empty state when there is no data at all.
+  const kosong = indikator.length === 0 && sdgs.length === 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Indeks Desa Membangun (IDM) & SDGs"
-        description={`Capaian IDM dan SDGs ${desa.namaDesa ?? "Desa"}`}
+        title={isAdmin ? "Capaian SDGs Desa" : "Indeks Desa Membangun (IDM) & SDGs"}
+        description={
+          isAdmin
+            ? `Daftar 18 tujuan SDGs Desa tahun ${tahun}`
+            : `Capaian IDM dan SDGs ${desa.namaDesa ?? "Desa"} tahun ${tahun}`
+        }
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Indikator IDM Tahun {tahun}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {indikatorList.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Belum ada data IDM yang dipublikasikan untuk tahun {tahun}.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {indikatorList.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div>
-                    <span className="mr-2 font-mono text-xs text-muted-foreground">
-                      {item.kode}
-                    </span>
-                    <span className="font-medium">{item.nama}</span>
-                    {item.keterangan ? (
-                      <p className="text-sm text-muted-foreground">{item.keterangan}</p>
-                    ) : null}
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold">{item.skor ?? "-"}</span>
-                    {item.kategori ? (
-                      <span className="block text-xs text-muted-foreground">{item.kategori}</span>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {kosong && !isAdmin ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Belum ada data IDM/SDGs yang dipublikasikan untuk tahun {tahun}.
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Skor IDM</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-bold tabular-nums">
+                {rekap.skor !== null ? formatSkor(rekap.skor) : "—"}
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Status IDM</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-bold">{rekap.status ?? "—"}</CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Skor rata‑rata SDGs</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-bold tabular-nums">
+                {rekapSdgs.skor !== null ? (rekapSdgs.skor * 100).toFixed(1) : "—"} %
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Predikat SDGs</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-bold">{rekapSdgs.predikat ?? "—"}</CardContent>
+            </Card>
+          </div>
+
+          <SdgsTable rows={sdgs} tahun={tahun} canManage={isAdmin} />
+        </>
+      )}
     </div>
   );
 }

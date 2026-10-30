@@ -20,9 +20,10 @@ import { KehadiranFormDialog } from "./kehadiran-form-dialog";
 
 interface KehadiranTableProps {
   items: KehadiranDTO[];
+  perangkatList?: Array<{ id: number; nama: string }>;
 }
 
-export function KehadiranTable({ items }: KehadiranTableProps) {
+export function KehadiranTable({ items, perangkatList }: KehadiranTableProps) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<KehadiranDTO | null>(null);
   const [filterBulan, setFilterBulan] = useState("");
@@ -121,7 +122,12 @@ export function KehadiranTable({ items }: KehadiranTableProps) {
           </TableBody>
         </Table>
       </CardContent>
-      <KehadiranFormDialog open={open} onOpenChange={setOpen} item={selected} />
+      <KehadiranFormDialog
+        open={open}
+        onOpenChange={setOpen}
+        item={selected}
+        perangkatList={perangkatList}
+      />
     </Card>
   );
 }

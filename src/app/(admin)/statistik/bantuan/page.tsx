@@ -1,6 +1,7 @@
-import { FileDown, Printer } from "lucide-react";
+import { FileDown } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { PrintButton } from "@/components/layout/page-header-actions";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,10 +101,7 @@ export default async function StatistikBantuanPage({
                 Ekspor CSV
               </a>
             </Button>
-            <Button type="button" variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" />
-              Cetak
-            </Button>
+            <PrintButton />
           </div>
         }
       />

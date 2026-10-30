@@ -20,11 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { PelangganDTO } from "@/features/pelanggan/domain/pelanggan";
 import { createIdleActionState } from "@/lib/action-state";
 
-import {
-  createPelangganAction,
-  deletePelangganAction,
-  updatePelangganAction,
-} from "../pelanggan-actions";
+import { createPelangganAction, updatePelangganAction } from "../pelanggan-actions";
 
 interface PelangganFormDialogProps {
   open: boolean;
@@ -38,10 +34,6 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
     isEdit ? updatePelangganAction : createPelangganAction,
     createIdleActionState<{ id: number } | null>(),
   );
-  const [deleteState, deleteAction, isDeletePending] = useActionState(
-    deletePelangganAction,
-    createIdleActionState<{ id: number } | null>(),
-  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {
@@ -51,19 +43,12 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
     }
   }, [state, onOpenChange]);
 
-  useEffect(() => {
-    if (deleteState.status === "success") {
-      toast.success(deleteState.message);
-      onOpenChange(false);
-    }
-  }, [deleteState, onOpenChange]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Ubah Pelanggan" : "Tambah Pelanggan"}</DialogTitle>
-          <DialogDescription>Kelola data pelanggan desa</DialogDescription>
+          <DialogDescription>Kelola data pelanggan kerja sama desa</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
@@ -81,8 +66,8 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
             <Input
               id="nama"
               name="nama"
+              placeholder="Nama perusahaan atau individu"
               defaultValue={item?.nama ?? ""}
-              placeholder="Nama pelanggan"
               required
             />
             {fieldErrors?.nama ? (
@@ -95,44 +80,42 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
             <Input
               id="kontak"
               name="kontak"
+              placeholder="Nomor telepon atau email"
               defaultValue={item?.kontak ?? ""}
-              placeholder="Telepon/Email"
             />
+            {fieldErrors?.kontak ? (
+              <p className="text-sm text-destructive">{fieldErrors.kontak[0]}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="alamat">Alamat</Label>
-            <Textarea
+            <Input
               id="alamat"
               name="alamat"
+              placeholder="Alamat kerja sama"
               defaultValue={item?.alamat ?? ""}
-              placeholder="Alamat lengkap"
             />
+            {fieldErrors?.alamat ? (
+              <p className="text-sm text-destructive">{fieldErrors.alamat[0]}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="keterangan">Keterangan</Label>
-            <Textarea id="keterangan" name="keterangan" defaultValue={item?.keterangan ?? ""} />
+            <Textarea
+              id="keterangan"
+              name="keterangan"
+              placeholder="Keterangan tambahan"
+              defaultValue={item?.keterangan ?? ""}
+              rows={3}
+            />
+            {fieldErrors?.keterangan ? (
+              <p className="text-sm text-destructive">{fieldErrors.keterangan[0]}</p>
+            ) : null}
           </div>
 
           <DialogFooter className="flex justify-between">
-            {isEdit && item ? (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <Button type="submit" variant="destructive" disabled={isDeletePending}>
-                  {isDeletePending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Menghapus...
-                    </>
-                  ) : (
-                    "Hapus"
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <div />
-            )}
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Batal

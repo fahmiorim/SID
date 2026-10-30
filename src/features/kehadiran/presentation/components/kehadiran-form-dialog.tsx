@@ -32,20 +32,19 @@ import {
   updateKehadiranAction,
 } from "../kehadiran-actions";
 
-// TODO: replace with actual perangkat list from server
-const dummyPerangkatList = [
-  { id: 1, nama: "Kepala Desa" },
-  { id: 2, nama: "Sekretaris Desa" },
-  { id: 3, nama: "Kaur Keuangan" },
-];
-
 interface KehadiranFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item?: KehadiranDTO | null;
+  perangkatList?: Array<{ id: number; nama: string }>;
 }
 
-export function KehadiranFormDialog({ open, onOpenChange, item }: KehadiranFormDialogProps) {
+export function KehadiranFormDialog({
+  open,
+  onOpenChange,
+  item,
+  perangkatList,
+}: KehadiranFormDialogProps) {
   const isEdit = Boolean(item);
   const [state, formAction, isPending] = useActionState(
     isEdit ? updateKehadiranAction : createKehadiranAction,
@@ -96,11 +95,16 @@ export function KehadiranFormDialog({ open, onOpenChange, item }: KehadiranFormD
                 <SelectValue placeholder="Pilih Perangkat" />
               </SelectTrigger>
               <SelectContent>
-                {dummyPerangkatList.map((perangkat) => (
+                {perangkatList?.map((perangkat) => (
                   <SelectItem key={perangkat.id} value={String(perangkat.id)}>
                     {perangkat.nama}
                   </SelectItem>
                 ))}
+                {!perangkatList && (
+                  <SelectItem value="" disabled>
+                    Loading...
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
             {fieldErrors?.perangkatId ? (

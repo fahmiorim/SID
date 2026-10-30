@@ -407,6 +407,13 @@
       "when": 1793140250000,
       "tag": "0060_create_sinergi_program",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1793397287613,
+      "tag": "0061_create_idm_sdgs",
+      "breakpoints": true
     }
   ]
 }

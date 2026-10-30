@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { PrintButton } from "@/components/layout/page-header-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -31,9 +32,7 @@ export default async function WilayahRekapPage() {
         description="Hierarki dusun, RW, dan RT"
         actions={
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
-              Cetak
-            </Button>
+            <PrintButton />
             <Button asChild variant="outline" size="sm">
               <Link href="/wilayah">Kembali</Link>
             </Button>

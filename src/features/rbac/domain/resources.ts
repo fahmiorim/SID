@@ -61,6 +61,8 @@ export const RESOURCES = {
   gisSimbol: "simbol-peta",
   pertanahan: "pertanahan",
   sinergi: "sinergi",
+  idm: "idm",
+  idmSdgs: "idm-sdgs",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

@@ -643,6 +643,33 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
   },
 
   {
+    slug: "pemerintahan-desa",
+    name: "Pemerintahan Desa",
+    url: null,
+    icon: "landmark",
+    sortOrder: 52,
+    isGroup: true,
+  },
+  {
+    slug: "idm",
+    name: "Status Desa / IDM",
+    url: "/desa/idm",
+    icon: "chart-column",
+    sortOrder: 1,
+    isGroup: false,
+    parentSlug: "pemerintahan-desa",
+  },
+  {
+    slug: "idm-sdgs",
+    name: "IDM & SDGs",
+    url: "/desa/idm-sdgs",
+    icon: "bar-chart-3",
+    sortOrder: 2,
+    isGroup: false,
+    parentSlug: "pemerintahan-desa",
+  },
+
+  {
     slug: "pemetaan",
     name: "Pemetaan",
     url: null,

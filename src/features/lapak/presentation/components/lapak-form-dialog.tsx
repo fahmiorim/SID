@@ -16,27 +16,30 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { LapakDTO } from "@/features/lapak/domain/lapak";
 import { createIdleActionState } from "@/lib/action-state";
 
-import { createLapakAction, deleteLapakAction, updateLapakAction } from "../lapak-actions";
+import { createLapakAction, updateLapakAction } from "../lapak-actions";
 
 interface LapakFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item?: LapakDTO | null;
-  kategoriList: string[];
+  kategoriList?: string[];
 }
 
 export function LapakFormDialog({ open, onOpenChange, item, kategoriList }: LapakFormDialogProps) {
   const isEdit = Boolean(item);
   const [state, formAction, isPending] = useActionState(
     isEdit ? updateLapakAction : createLapakAction,
-    createIdleActionState<{ id: number } | null>(),
-  );
-  const [deleteState, deleteAction, isDeletePending] = useActionState(
-    deleteLapakAction,
     createIdleActionState<{ id: number } | null>(),
   );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
@@ -48,19 +51,12 @@ export function LapakFormDialog({ open, onOpenChange, item, kategoriList }: Lapa
     }
   }, [state, onOpenChange]);
 
-  useEffect(() => {
-    if (deleteState.status === "success") {
-      toast.success(deleteState.message);
-      onOpenChange(false);
-    }
-  }, [deleteState, onOpenChange]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Ubah Lapak" : "Tambah Lapak"}</DialogTitle>
-          <DialogDescription>Kelola data lapak UMKM desa</DialogDescription>
+          <DialogDescription>Kelola data lapak UMKM</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
@@ -78,8 +74,8 @@ export function LapakFormDialog({ open, onOpenChange, item, kategoriList }: Lapa
             <Input
               id="nama"
               name="nama"
+              placeholder="Nama lapak atau usaha"
               defaultValue={item?.nama ?? ""}
-              placeholder="Nama usaha/warung"
               required
             />
             {fieldErrors?.nama ? (
@@ -92,60 +88,62 @@ export function LapakFormDialog({ open, onOpenChange, item, kategoriList }: Lapa
             <Input
               id="pemilik"
               name="pemilik"
-              defaultValue={item?.pemilik ?? ""}
               placeholder="Nama pemilik"
+              defaultValue={item?.pemilik ?? ""}
             />
+            {fieldErrors?.pemilik ? (
+              <p className="text-sm text-destructive">{fieldErrors.pemilik[0]}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="kategori">Kategori</Label>
-            <Input
-              id="kategori"
-              name="kategori"
-              list="kategori-suggestions"
-              defaultValue={item?.kategori ?? ""}
-              placeholder="Makanan, Minuman, Jasa, dll"
-            />
-            <datalist id="kategori-suggestions">
-              {kategoriList.map((k) => (
-                <option key={k} value={k} />
-              ))}
-            </datalist>
+            <Select name="kategori" defaultValue={item?.kategori ?? ""}>
+              <SelectTrigger id="kategori">
+                <SelectValue placeholder="Pilih kategori" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tanpa kategori</SelectItem>
+                {kategoriList?.map((k) => (
+                  <SelectItem key={k} value={k}>
+                    {k}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldErrors?.kategori ? (
+              <p className="text-sm text-destructive">{fieldErrors.kategori[0]}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="alamat">Alamat</Label>
-            <Textarea
+            <Input
               id="alamat"
               name="alamat"
+              placeholder="Alamat lapak"
               defaultValue={item?.alamat ?? ""}
-              placeholder="Alamat lengkap lapak"
             />
+            {fieldErrors?.alamat ? (
+              <p className="text-sm text-destructive">{fieldErrors.alamat[0]}</p>
+            ) : null}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="keterangan">Keterangan</Label>
-            <Textarea id="keterangan" name="keterangan" defaultValue={item?.keterangan ?? ""} />
+            <Textarea
+              id="keterangan"
+              name="keterangan"
+              placeholder="Keterangan tambahan"
+              defaultValue={item?.keterangan ?? ""}
+              rows={3}
+            />
+            {fieldErrors?.keterangan ? (
+              <p className="text-sm text-destructive">{fieldErrors.keterangan[0]}</p>
+            ) : null}
           </div>
 
           <DialogFooter className="flex justify-between">
-            {isEdit && item ? (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <Button type="submit" variant="destructive" disabled={isDeletePending}>
-                  {isDeletePending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Menghapus...
-                    </>
-                  ) : (
-                    "Hapus"
-                  )}
-                </Button>
-              </form>
-            ) : (
-              <div />
-            )}
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Batal

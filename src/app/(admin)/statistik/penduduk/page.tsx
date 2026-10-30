@@ -1,6 +1,7 @@
-import { FileDown, Printer } from "lucide-react";
+import { FileDown } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { PrintButton } from "@/components/layout/page-header-actions";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,6 @@ export default async function StatistikPendudukPage({
     rt?: string;
     umurMin?: string;
     umurMax?: string;
-    page?: string;
   }>;
 }) {
   const user = await verifySession();
@@ -62,6 +62,7 @@ export default async function StatistikPendudukPage({
       rt,
       umurMin,
       umurMax,
+      page: 1,
       perPage: PAGE_SIZE,
     }),
     listWilayahOptions(villageId),
@@ -98,24 +99,13 @@ export default async function StatistikPendudukPage({
                 Ekspor PDF
               </a>
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => typeof window !== "undefined" && window.print()}
-            >
-              <Printer className="size-4" />
-              Cetak
-            </Button>
             <Button variant="outline" asChild>
               <a href={exportHref}>
                 <FileDown className="size-4" />
                 Ekspor CSV
               </a>
             </Button>
-            <Button type="button" variant="outline" onClick={() => (window as Window).print()}>
-              <Printer className="size-4" />
-              Cetak
-            </Button>
+            <PrintButton />
           </div>
         }
       />

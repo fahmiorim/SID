@@ -13,7 +13,7 @@ test(
 
 test("persuratan admin loads", { session: "admin" }, async ({ app, browser }) => {
   await app.open("/persuratan");
-  await expect(browser).toHaveURL("/persuratan");
+  await expect(browser).toHaveURL("/persuratan/surat");
   await expect(browser.locator("body")).toBeVisible();
 });
 

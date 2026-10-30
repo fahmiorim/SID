@@ -3,6 +3,7 @@ import "server-only";
 import { and, desc, eq, sql } from "drizzle-orm";
 
 import { db } from "@/db";
+import { perangkatDesa } from "@/db/schema/content";
 import {
   kehadiranPerangkat,
   type KehadiranPerangkat,
@@ -57,9 +58,9 @@ export async function deleteKehadiran(id: number, villageId: number): Promise<vo
 }
 
 export async function getRekapKehadiran(
-  _villageId: number,
-  _tahun: number,
-  _bulan?: number,
+  villageId: number,
+  tahun: number,
+  bulan?: number,
 ): Promise<
   {
     perangkatId: number;
@@ -71,5 +72,75 @@ export async function getRekapKehadiran(
     alpa: number;
   }[]
 > {
-  return [];
+  const conditions = [eq(kehadiranPerangkat.villageId, villageId)];
+  if (tahun) {
+    conditions.push(
+      and(
+        sql`${kehadiranPerangkat.tanggal} >= ${new Date(tahun, 0, 1).toISOString().split("T")[0]}`,
+        sql`${kehadiranPerangkat.tanggal} <= ${new Date(tahun, 11, 31, 23, 59, 59).toISOString().split("T")[0]}`,
+      ),
+    );
+    if (bulan) {
+      conditions.pop();
+      conditions.push(
+        and(
+          sql`${kehadiranPerangkat.tanggal} >= ${new Date(tahun, bulan - 1, 1).toISOString().split("T")[0]}`,
+          sql`${kehadiranPerangkat.tanggal} <= ${new Date(tahun, bulan, 0, 23, 59, 59).toISOString().split("T")[0]}`,
+        ),
+      );
+    }
+  }
+
+  const filteredConditions = conditions.filter((c): c is NonNullable<typeof c> => c != null);
+  const rows = await db
+    .select({
+      perangkatId: kehadiranPerangkat.perangkatId,
+      tanggal: kehadiranPerangkat.tanggal,
+      status: kehadiranPerangkat.status,
+    })
+    .from(kehadiranPerangkat)
+    .where(and(...filteredConditions));
+
+  const perangkatList = await db
+    .select()
+    .from(perangkatDesa)
+    .where(eq(perangkatDesa.villageId, villageId));
+  const perangkatMap = new Map(perangkatList.map((p) => [p.id, p]));
+
+  const result = new Map<
+    number,
+    {
+      perangkatId: number;
+      nama: string;
+      jabatan: string;
+      hadir: number;
+      izin: number;
+      sakit: number;
+      alpa: number;
+    }
+  >();
+
+  for (const row of rows) {
+    if (!row.perangkatId) continue;
+    const existing = result.get(row.perangkatId);
+    if (!existing) {
+      const perangkat = perangkatMap.get(row.perangkatId);
+      result.set(row.perangkatId, {
+        perangkatId: row.perangkatId,
+        nama: perangkat?.nama ?? "-",
+        jabatan: perangkat?.jabatanId?.toString() ?? "-",
+        hadir: 0,
+        izin: 0,
+        sakit: 0,
+        alpa: 0,
+      });
+    }
+    const current = result.get(row.perangkatId)!;
+    if (row.status === "hadir") current.hadir += 1;
+    else if (row.status === "izin") current.izin += 1;
+    else if (row.status === "sakit") current.sakit += 1;
+    else if (row.status === "alpa") current.alpa += 1;
+  }
+
+  return [...result.values()];
 }

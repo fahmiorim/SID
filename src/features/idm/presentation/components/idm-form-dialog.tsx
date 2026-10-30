@@ -49,11 +49,15 @@ export function IdmFormDialog({ open, onOpenChange, item, tahun }: IdmFormDialog
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Ubah Indikator IDM" : "Tambah Indikator IDM"}</DialogTitle>
-          <DialogDescription>Input indikator Indeks Desa Membangun (IDM)</DialogDescription>
+          <DialogDescription>
+            Input indikator Indeks Desa Membangun (IDM). Kode menentukan dimensi: I sosial, II
+            ekonomi, III lingkungan.
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="tahun" value={item?.tahun ?? tahun} />
+          {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
           {state.status === "error" ? (
             <Alert variant="destructive">
@@ -68,7 +72,7 @@ export function IdmFormDialog({ open, onOpenChange, item, tahun }: IdmFormDialog
               id="kode"
               name="kode"
               defaultValue={item?.kode ?? ""}
-              placeholder="I.DM.01"
+              placeholder="I.1 / II.3 / III.2"
               required
             />
             {fieldErrors?.kode ? (
@@ -86,7 +90,7 @@ export function IdmFormDialog({ open, onOpenChange, item, tahun }: IdmFormDialog
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="skor">Skor</Label>
+              <Label htmlFor="skor">Skor (0–100)</Label>
               <Input
                 id="skor"
                 name="skor"
@@ -96,6 +100,9 @@ export function IdmFormDialog({ open, onOpenChange, item, tahun }: IdmFormDialog
                 defaultValue={item?.skor ?? 0}
                 required
               />
+              {fieldErrors?.skor ? (
+                <p className="text-sm text-destructive">{fieldErrors.skor[0]}</p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="kategori">Kategori</Label>

@@ -33,9 +33,9 @@ export async function createPelangganAction(
       alamat: formData.get("alamat"),
       keterangan: formData.get("keterangan"),
     };
-    const result = await tambahPelanggan(user.villageId, input);
+    const id = await tambahPelanggan(user.villageId, input);
     revalidatePath("/pelanggan");
-    return successState("Pelanggan berhasil ditambahkan.", result);
+    return successState("Pelanggan berhasil ditambahkan.", { id });
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
       return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
