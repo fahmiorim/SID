@@ -25,6 +25,8 @@ interface SuplemenTerdataIsianFormProps {
   penduduk: SuplemenOption[];
   keluarga: SuplemenOption[];
   canManage: boolean;
+  /** Nama kolom isian yang sudah pernah dipakai, ditampilkan sebagai saran. */
+  suggestedColumns?: readonly string[];
 }
 
 /**
@@ -40,6 +42,7 @@ export function SuplemenTerdataIsianForm({
   penduduk,
   keluarga,
   canManage,
+  suggestedColumns,
 }: SuplemenTerdataIsianFormProps) {
   const router = useRouter();
   const modeKeluarga = sasaran === 2;
@@ -97,7 +100,14 @@ export function SuplemenTerdataIsianForm({
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">Isian tambahan (opsional)</p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-medium">Isian tambahan (opsional)</p>
+          {suggestedColumns && suggestedColumns.length > 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Kolom yang pernah dipakai: {suggestedColumns.join(", ")}
+            </p>
+          ) : null}
+        </div>
         {baris.map((item, indeks) => (
           <div key={indeks} className="flex flex-wrap items-center gap-2">
             <Input

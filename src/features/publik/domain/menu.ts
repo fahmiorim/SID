@@ -15,8 +15,9 @@ export const PUBLIC_NAV = [
   { href: "/desa/galeri", label: "Galeri" },
   { href: "/desa/statistik", label: "Statistik" },
   { href: "/desa/apbdes", label: "APBDes" },
+  { href: "/desa/pembangunan", label: "Pembangunan" },
   { href: "/desa/dpt", label: "DPT" },
-  { href: "/desa/dpt", label: "DPT" },
+  { href: "/jajak-pendapat", label: "Jajak Pendapat" },
   { href: "/desa/kontak", label: "Kontak" },
 ] as const;
 

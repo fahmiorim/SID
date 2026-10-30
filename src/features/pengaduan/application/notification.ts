@@ -63,8 +63,7 @@ export async function notifyStatusChange(
       `,
     });
 
-    logger.info(`[notifikasi] Email berhasil terkirim untuk pengaduan ${nomorTiket}`, {});
-    console.log(`[notifikasi] Email berhasil terkirim untuk pengaduan ${nomorTiket}`, data);
+    logger.info(`[notifikasi] Email berhasil terkirim untuk pengaduan ${nomorTiket}`, { data });
     return { success: true, message: "Email terkirim", data, skipped: false };
   } catch (error) {
     // Jika terjadi error lain, catat tapi jangan melempar ke use case

@@ -69,13 +69,14 @@ export async function tanggapiPengaduanData(
     ditanggapiPada: new Date(),
   });
 
-  // Kirim notifikasi ke pelapor setelah status berubah
+  // Kirim notifikasi ke pelapor hanya bila status benar-benar berubah dan
+  // pelapor meninggalkan email (kolom `pengaduan.email` boleh kosong).
   const statusBaru = input.status;
   const statusLama = pengaduan.status;
-  const emailPelapor = pengaduan.email!;
-  const nomorTiket = pengaduan.nomorTiket;
 
-  await notifyStatusChange(nomorTiket, emailPelapor, statusBaru, statusLama);
+  if (pengaduan.email && statusBaru !== statusLama) {
+    await notifyStatusChange(pengaduan.nomorTiket, pengaduan.email, statusBaru, statusLama);
+  }
 
   return { id };
 }
@@ -88,19 +89,8 @@ export async function setPublikPengaduanData(id: number, publik: boolean): Promi
   const updated = await setPublikPengaduan(villageId, id, publik);
   if (!updated) throw notFound("Pengaduan tidak ditemukan.");
 
-  // Kirim notifikasi jika pengaduan dipublikasikan ke halaman publik
-  if (publik) {
-    const pengaduan = await getPengaduan(villageId, id);
-    if (pengaduan && pengaduan.email) {
-      await notifyStatusChange(
-        pengaduan.nomorTiket,
-        pengaduan.email,
-        pengaduan.status,
-        pengaduan.status,
-      );
-    }
-  }
-
+  // Publikasi bukan perubahan status, jadi tidak dikirim notifikasi email
+  // "status berubah" (yang status lamanya sama dengan status barunya).
   return { id };
 }
 

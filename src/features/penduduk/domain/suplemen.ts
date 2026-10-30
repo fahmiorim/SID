@@ -12,10 +12,18 @@ export const SASARAN_LABELS: Record<number, string> = {
   [SASARAN_KELUARGA]: "Keluarga (KK)",
 };
 
+export const suplemenFormFieldSchema = z.object({
+  label: z.string().min(1).max(100),
+  tipe: z.string().min(1).max(50),
+  required: z.boolean().optional().default(false),
+  options: z.array(z.string()).optional(),
+});
+
 export const suplemenCreateSchema = z.object({
   nama: z.string().min(1, "Nama suplemen wajib diisi.").max(200),
   sasaran: z.coerce.number().int().default(SASARAN_PENDUDUK),
   keterangan: z.string().max(1000).optional().nullable(),
+  dataFormIsian: z.array(suplemenFormFieldSchema).optional().default([]),
 });
 
 export type SuplemenCreateInput = z.infer<typeof suplemenCreateSchema>;

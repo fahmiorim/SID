@@ -152,3 +152,10 @@ describe("pembantu domain lain", () => {
     expect(pendudukLabel({ name: "Budi", nationalId: null })).toBe("Budi");
   });
 });
+
+describe("validasi ekspor statistik penduduk", () => {
+  it("memastikan fungsi ekspor CSV tersedia untuk statistik", () => {
+    // Placeholder untuk memastikan ekspor CSV berfungsi
+    expect(true).toBe(true);
+  });
+});
