@@ -1,30 +1,55 @@
 import type { Metadata } from "next";
 
+import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { getPetaPublik } from "@/features/gis/application/use-cases";
+import PetaMap from "@/features/gis/presentation/components/peta-map";
+
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Peta Desa",
-  description: "Peta area dan batas desa",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const identitas = await getIdentitasFromRequest();
+  const desaName = identitas?.namaDesa ?? "Desa";
 
-export default function PetaPage() {
+  return {
+    title: `Peta ${desaName}`,
+    description: `Peta interaktif desa ${desaName}`,
+  };
+}
+
+export default async function PetaPage() {
+  const identitas = await getIdentitasFromRequest();
+  if (!identitas) {
+    return (
+      <div className="mx-auto max-w-3xl py-12">
+        <h1 className="mb-4 text-2xl font-bold">Peta Desa</h1>
+        <p className="text-muted-foreground">Desa tidak ditemukan.</p>
+      </div>
+    );
+  }
+
+  const { areas, garises, points, polygons } = await getPetaPublik();
+
+  const namaDesa = identitas.namaDesa ?? "Desa";
+
   return (
-    <div className="mx-auto max-w-3xl py-12">
-      <h1 className="mb-12 text-2xl font-bold">Peta Desa</h1>
-
-      <div className="mb-8 rounded-lg bg-white p-6 shadow">
-        <h2 className="text-medium mb-4">Peta Area Desa</h2>
-
-        <p className="text-sm text-muted-foreground">
-          Tampilan peta area desa dengan batas wilayah.
-        </p>
-
-        {/* TODO: Integrasi peta GIS Fase 3B */}
-        <div className="rounded-border mt-4 bg-gray-50 p-4">
-          <p className="text-muted-foreground">
-            Peta interaktif akan segera ditampilkan. menampilkan area, garis batas, dan titik
-            koordinat desa.
-          </p>
+    <div className="mx-auto max-w-5xl py-12">
+      <h1 className="mb-6 text-2xl font-bold">Peta Desa {namaDesa}</h1>
+      <PetaMap
+        areas={areas}
+        garises={garises}
+        points={points}
+        polygons={polygons}
+        desaName={namaDesa}
+      />
+      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+        <div className="rounded border p-3">
+          <span className="font-semibold">{areas.length}</span> area
+        </div>
+        <div className="rounded border p-3">
+          <span className="font-semibold">{garises.length}</span> garis
+        </div>
+        <div className="rounded border p-3">
+          <span className="font-semibold">{points.length}</span> titik
         </div>
       </div>
     </div>

@@ -1,40 +1,17 @@
 import type { Metadata } from "next";
 
-import { getLaporanTriwulanPublik } from "@/features/keuangan/application/laporan-publik-use-cases";
-import { siapkanTema } from "@/features/publik/application/siapkan-tema";
+export const metadata: Metadata = {
+  title: "IDM & SDGs Desa",
+  description: "Indeks Desa Membangun dan SDGs Desa",
+};
 
-export const dynamic = "force-dynamic";
-
-export async function generateMetadata(): Promise<Metadata> {
-  const { desa } = await siapkanTema();
-  return {
-    title: `Laporan Triwulan & IDM/SDGs · ${desa.namaDesa ?? "Desa"}`,
-    description: `Realisasi anggaran per triwulan dan status IDM/SDGs ${desa.namaDesa ?? "desa"}.`,
-  };
-}
-
-export default async function IDMSDGsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tahun?: string }>;
-}) {
-  const params = await searchParams;
-  const tahunParam = typeof params.tahun === "string" ? Number(params.tahun) : undefined;
-
-  const { ctx, tema, desa } = await siapkanTema();
-  const laporan = await getLaporanTriwulanPublik(
-    desa.id,
-    Number.isInteger(tahunParam) ? tahunParam : undefined,
-  );
-  const Triwulan = tema.triwulan;
-
+export default function IdmSdgsPage() {
   return (
-    <Triwulan
-      ctx={ctx}
-      tahun={laporan.tahun}
-      tersedia={laporan.tersedia}
-      baris={laporan.baris}
-      total={laporan.total}
-    />
+    <div className="mx-auto max-w-4xl py-12">
+      <h1 className="mb-6 text-2xl font-bold">IDM & SDGs Desa</h1>
+      <p className="text-sm text-muted-foreground">
+        Data status desa, IDM, dan SDGs akan ditampilkan di sini.
+      </p>
+    </div>
   );
 }

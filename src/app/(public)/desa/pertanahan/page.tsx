@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { listCatatanPertanahan } from "@/features/publik/application/pertanahan-publik";
+import { listPertanahanPublik } from "@/features/publik/application/pertanahan-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
@@ -9,50 +9,128 @@ export async function generateMetadata(): Promise<Metadata> {
   const { desa, ctx } = await siapkanTema();
   void ctx;
 
-  const rows = await listCatatanPertanahan(desa.id);
-  const total = rows.length;
-
   return {
     title: `Pertanahan · ${desa.namaDesa ?? "Desa"}`,
-    description: `Data pertanahan dan persil di desa ${desa.namaDesa ?? "desa"} (${total} catatan)`,
+    description: `Data pertanahan dan persil di desa ${desa.namaDesa ?? "desa"}`,
   };
 }
 
 export default async function PertanahanPage() {
   const { desa } = await siapkanTema();
-  const rows = await listCatatanPertanahan(desa.id);
+  const data = await listPertanahanPublik(desa.id);
 
   return (
-    <div className="mx-auto max-w-3xl py-12">
-      <h1 className="mb-12 text-2xl font-bold">Data Pertanahan</h1>
+    <div className="mx-auto max-w-4xl py-12">
+      <h1 className="mb-8 text-2xl font-bold">Data Pertanahan</h1>
 
-      <p className="mb-8 text-sm text-muted-foreground">
-        Total catatan: {rows.length.toLocaleString("id-ID")}
-      </p>
+      {/* Persil */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-lg font-semibold">Persil Tanah</h2>
+        {data.persil.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Belum ada data persil.</p>
+        ) : (
+          <div className="overflow-hidden rounded border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left">No. Persil</th>
+                  <th className="px-4 py-2 text-left">No. Cdesa</th>
+                  <th className="px-4 py-2 text-right">Luas (m²)</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-2 text-left">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.persil.map((p) => (
+                  <tr key={p.id} className="border-t">
+                    <td className="px-4 py-2">{p.nomor}</td>
+                    <td className="px-4 py-2">{p.nomorCdesa ?? "—"}</td>
+                    <td className="px-4 py-2 text-right">
+                      {p.luas?.toLocaleString("id-ID") ?? "—"}
+                    </td>
+                    <td className="px-4 py-2">{p.status ?? "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{p.keterangan ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
-      {rows.length === 0 ? (
-        <div className="rounded-lg bg-white p-6 text-center shadow">
-          <p className="text-muted-foreground">Belum ada data pertanahan di desa ini.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map((row) => (
-            <div
-              key={row.id}
-              className="rounded-md border border-border bg-white p-4 shadow-sm transition-shadow hover:shadow-lg"
-            >
-              <div className="flex items-start justify-between">
-                <h3 className="text-medium">{row.nama || "—"}</h3>
-                <span className="text-xs text-muted-foreground">Kd: {row.kode || "—"}</span>
-              </div>
-              <p className="mb-1 text-xs text-muted-foreground">{row.keterangan || "—"}</p>
-              <p className="text-xs text-muted-foreground">
-                Ditambahkan: {row.createdAt.toLocaleDateString("id-ID")}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Cdesa / Sertifikat */}
+      <section className="mb-10">
+        <h2 className="mb-4 text-lg font-semibold">Cdesa / Sertifikat</h2>
+        {data.cdesa.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Belum ada data Cdesa.</p>
+        ) : (
+          <div className="overflow-hidden rounded border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left">No. Cdesa</th>
+                  <th className="px-4 py-2 text-left">No. Persil</th>
+                  <th className="px-4 py-2 text-left">No. Sertifikat</th>
+                  <th className="px-4 py-2 text-left">Tanggal</th>
+                  <th className="px-4 py-2 text-left">Pemegang</th>
+                  <th className="px-4 py-2 text-right">Luas (m²)</th>
+                  <th className="px-4 py-2 text-left">Ket.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.cdesa.map((c) => (
+                  <tr key={c.id} className="border-t">
+                    <td className="px-4 py-2">{c.nomor}</td>
+                    <td className="px-4 py-2">{c.nomorPersil ?? "—"}</td>
+                    <td className="px-4 py-2">{c.nomorSertifikat ?? "—"}</td>
+                    <td className="px-4 py-2">
+                      {c.tanggal ? new Date(c.tanggal).toLocaleDateString("id-ID") : "—"}
+                    </td>
+                    <td className="px-4 py-2">{c.namaPemegang ?? "—"}</td>
+                    <td className="px-4 py-2 text-right">
+                      {c.luas?.toLocaleString("id-ID") ?? "—"}
+                    </td>
+                    <td className="px-4 py-2 text-muted-foreground">{c.keterangan ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      {/* Mutasi */}
+      <section>
+        <h2 className="mb-4 text-lg font-semibold">Mutasi</h2>
+        {data.mutasi.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Belum ada data mutasi.</p>
+        ) : (
+          <div className="overflow-hidden rounded border">
+            <table className="w-full text-sm">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-4 py-2 text-left">No.</th>
+                  <th className="px-4 py-2 text-left">Tanggal</th>
+                  <th className="px-4 py-2 text-left">Tipe</th>
+                  <th className="px-4 py-2 text-left">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.mutasi.map((m) => (
+                  <tr key={m.id} className="border-t">
+                    <td className="px-4 py-2">{m.nomor}</td>
+                    <td className="px-4 py-2">{m.tanggal.toLocaleDateString("id-ID")}</td>
+                    <td className="px-4 py-2">{m.tipe}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{m.keterangan ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
+// Terintegrasi dengan data GIS persil, cdesa, dan mutasi
