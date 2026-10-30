@@ -221,3 +221,49 @@ describe("isSasaranTersedia", () => {
     ]);
   });
 });
+
+describe("validasi peserta bantuan", () => {
+  it("menerima peserta dengan nomor kartu opsional", () => {
+    const parsed = pesertaFormSchema.parse({
+      programId: "1",
+      sasaranId: "1",
+      nomorKartu: "",
+      kartuNik: "",
+      kartuNama: "",
+      kartuTempatLahir: "",
+      kartuTanggalLahir: null,
+      kartuAlamat: "",
+    });
+    expect(parsed.programId).toBe(1);
+    expect(parsed.nomorKartu).toBe("");
+  });
+
+  it("menerima nomor kartu maksimal 60 karakter", () => {
+    const parsed = pesertaFormSchema.parse({
+      programId: "1",
+      sasaranId: "1",
+      nomorKartu: "KARTU-12345678901234567890123456789012345678901234567890",
+      kartuNik: "",
+      kartuNama: "",
+      kartuTempatLahir: "",
+      kartuTanggalLahir: null,
+      kartuAlamat: "",
+    });
+    expect(parsed.nomorKartu).toBeTruthy();
+  });
+
+  it("menolak nomor kartu lebih dari 60 karakter", () => {
+    expect(
+      pesertaFormSchema.safeParse({
+        programId: "1",
+        sasaranId: "1",
+        nomorKartu: "x".repeat(61),
+        kartuNik: "",
+        kartuNama: "",
+        kartuTempatLahir: "",
+        kartuTanggalLahir: null,
+        kartuAlamat: "",
+      }).success,
+    ).toBe(false);
+  });
+});

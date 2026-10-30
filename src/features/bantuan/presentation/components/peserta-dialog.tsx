@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, Plus, UserMinus } from "lucide-react";
+import { AlertCircle, Edit, Loader2, Plus, Printer, Trash2, UserMinus } from "lucide-react";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -36,9 +36,15 @@ import {
   type PesertaBantuanRow,
   type PesertaReferenceData,
 } from "@/features/bantuan/domain/bantuan";
+import { EditPesertaCard } from "@/features/bantuan/presentation/components/edit-peserta-card";
 import { idleActionState } from "@/lib/action-state";
 
-import { addPesertaAction, loadPesertaAction, removePesertaAction } from "../actions";
+import {
+  addPesertaAction,
+  deleteAllPesertaAction,
+  loadPesertaAction,
+  removePesertaAction,
+} from "../actions";
 
 interface PesertaDialogProps {
   open: boolean;
@@ -55,7 +61,7 @@ type PesertaState =
     }
   | { readonly status: "error"; readonly message: string };
 
-/** Satu baris peserta dengan tombol keluarkan (aksi mandiri). */
+/** Satu baris peserta dengan tombol keluarkan + ubah kartu (aksi mandiri). */
 function PesertaRow({ programId, peserta }: { programId: number; peserta: PesertaBantuanRow }) {
   const [isPending, startTransition] = useTransition();
 
@@ -86,6 +92,24 @@ function PesertaRow({ programId, peserta }: { programId: number; peserta: Pesert
         {peserta.cardNumber ?? <span className="text-muted-foreground">—</span>}
       </TableCell>
       <TableCell className="text-right">
+        <EditPesertaCard
+          programId={programId}
+          pesertaId={peserta.id}
+          initial={{
+            cardNumber: peserta.cardNumber,
+            cardName: peserta.cardName,
+            cardNationalId: peserta.cardNationalId,
+            cardBirthPlace: null,
+            cardBirthDate: null,
+            cardAddress: null,
+          }}
+          trigger={
+            <Button type="button" variant="ghost" size="sm" disabled={isPending}>
+              <Edit className="size-4" />
+              Ubah
+            </Button>
+          }
+        />
         <Button
           type="button"
           variant="ghost"
@@ -268,6 +292,28 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
         </p>
       ) : (
         <div className="max-h-72 overflow-auto rounded-lg border">
+          <div className="flex items-center justify-between gap-2 p-2">
+            <p className="text-xs text-muted-foreground">
+              {state.peserta.length} peserta terdaftar.
+            </p>
+            <form
+              action={async (formData) => {
+                const res = await deleteAllPesertaAction(idleActionState, formData);
+                if (res.status === "success") {
+                  toast.success(res.message);
+                  setReloadKey((key) => key + 1);
+                } else if (res.status === "error") {
+                  toast.error(res.message);
+                }
+              }}
+            >
+              <input type="hidden" name="programId" value={program.id} />
+              <Button type="submit" variant="destructive" size="sm">
+                <Trash2 className="size-4" />
+                Hapus semua peserta
+              </Button>
+            </form>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -299,13 +345,22 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
 export function PesertaDialog({ open, onOpenChange, program }: PesertaDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="relative sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Peserta — {program.name}</DialogTitle>
           <DialogDescription>
             Sasaran {SASARAN_LABELS[program.sasaran as 1 | 2 | 3 | 4] ?? "-"} ·{" "}
             {program.pesertaCount} peserta
           </DialogDescription>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => window.print()}
+            className="absolute top-4 right-4"
+          >
+            <Printer className="size-4" />
+          </Button>
         </DialogHeader>
 
         <PesertaContent program={program} />

@@ -741,6 +741,52 @@ export async function deletePeserta(
     );
 }
 
+/**
+ * Perbarui snapshot kartu seorang peserta.
+ *
+ * Hanya kolom `card_*` yang boleh diubah; kolom sasaran (penduduk/keluarga/
+ * rumah tangga/kelompok) tidak berubah — ganti peserta berarti keluarkan dulu.
+ */
+export async function updatePeserta(
+  villageId: number,
+  programId: number,
+  pesertaId: number,
+  input: Partial<PesertaFormInput>,
+): Promise<boolean> {
+  const affected = await db
+    .update(bantuanPeserta)
+    .set({
+      cardNumber: input.nomorKartu !== undefined ? blankToNull(input.nomorKartu) : undefined,
+      cardNationalId: input.kartuNik,
+      cardName: input.kartuNama !== undefined ? blankToNull(input.kartuNama) : undefined,
+      cardBirthPlace:
+        input.kartuTempatLahir !== undefined ? blankToNull(input.kartuTempatLahir) : undefined,
+      cardBirthDate: input.kartuTanggalLahir,
+      cardAddress: input.kartuAlamat !== undefined ? blankToNull(input.kartuAlamat) : undefined,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(bantuanPeserta.villageId, villageId),
+        eq(bantuanPeserta.programId, programId),
+        eq(bantuanPeserta.id, pesertaId),
+      ),
+    );
+
+  return Number((affected as { affectedRows?: number }).affectedRows ?? 0) > 0;
+}
+
+/** Hapus semua peserta sebuah program (pembersihan massal, scoped desa). */
+export async function deleteAllPesertaByProgram(
+  villageId: number,
+  programId: number,
+): Promise<number> {
+  const res = await db
+    .delete(bantuanPeserta)
+    .where(and(eq(bantuanPeserta.villageId, villageId), eq(bantuanPeserta.programId, programId)));
+  return Number((res as { affectedRows?: number }).affectedRows ?? 0);
+}
+
 /** Penduduk desa untuk memilih peserta (identitas ringkas + NIK). */
 export async function listPendudukRingkas(villageId: number): Promise<BantuanReferenceOption[]> {
   const rows = await db

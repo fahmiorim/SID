@@ -19,6 +19,7 @@ import {
 import {
   bantuanSlugExists,
   countPesertaByProgram,
+  deleteAllPesertaByProgram,
   deleteBantuan as deleteBantuanRow,
   deletePeserta as deletePesertaRow,
   findAlamatSasaran,
@@ -35,6 +36,7 @@ import {
   listRumahTanggaSasaran,
   listSebaranWilayah,
   updateBantuan as updateBantuanRow,
+  updatePeserta as updatePesertaRow,
   type BantuanListResult,
 } from "@/features/bantuan/infrastructure/bantuan-repository";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
@@ -326,4 +328,32 @@ export async function removePeserta(programId: number, pesertaId: number): Promi
 
   await getScopedProgram(villageId, programId);
   await deletePesertaRow(villageId, programId, pesertaId);
+}
+
+/**
+ * Perbarui snapshot kartu seorang peserta.
+ *
+ * Hanya kolom `card_*` yang boleh diubah; kolom sasaran (penduduk/keluarga/
+ * rumah tangga/kelompok) tidak berubah — ganti peserta berarti keluarkan dulu.
+ */
+export async function updatePeserta(
+  programId: number,
+  pesertaId: number,
+  input: Partial<PesertaFormInput>,
+): Promise<void> {
+  const user = await requirePermission(BANTUAN_PESERTA_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  await getScopedProgram(villageId, programId);
+  const updated = await updatePesertaRow(villageId, programId, pesertaId, input);
+  if (!updated) throw notFound("Peserta tidak ditemukan.");
+}
+
+/** Hapus semua peserta sebuah program (pembersihan massal). */
+export async function deleteAllPeserta(programId: number): Promise<number> {
+  const user = await requirePermission(BANTUAN_PESERTA_RESOURCE, "delete");
+  const villageId = await resolveVillageId(user);
+
+  await getScopedProgram(villageId, programId);
+  return deleteAllPesertaByProgram(villageId, programId);
 }

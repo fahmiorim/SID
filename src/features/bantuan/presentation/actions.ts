@@ -5,11 +5,13 @@ import { revalidatePath } from "next/cache";
 import {
   addPeserta,
   createBantuan,
+  deleteAllPeserta,
   deleteBantuan,
   getPesertaReference,
   listPesertaBantuan,
   removePeserta,
   updateBantuan,
+  updatePeserta,
 } from "@/features/bantuan/application/use-cases";
 import {
   bantuanFormSchema,
@@ -176,5 +178,66 @@ export async function loadPesertaAction(programId: number): Promise<PesertaLoadR
   } catch (error) {
     const state = toErrorState(error);
     return { ok: false, message: state.status === "error" ? state.message : "Gagal memuat data." };
+  }
+}
+
+/**
+ * Perbarui kartu peserta (nomor kartu, nama, alamat, dll.).
+ *
+ * Hanya kolom `card_*` yang boleh diubah; kolom sasaran tidak berubah.
+ */
+export async function updatePesertaAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const programId = parseId(formData.get("programId"));
+  const pesertaId = parseId(formData.get("pesertaId"));
+
+  if (programId === null || pesertaId === null) {
+    return errorState("Data peserta tidak valid.");
+  }
+
+  const parsed = pesertaFormSchema.safeParse({
+    programId: text(formData, "programId"),
+    sasaranId: text(formData, "sasaranId"),
+    nomorKartu: text(formData, "nomorKartu"),
+    kartuNik: text(formData, "kartuNik"),
+    kartuNama: text(formData, "kartuNama"),
+    kartuTempatLahir: text(formData, "kartuTempatLahir"),
+    kartuTanggalLahir: text(formData, "kartuTanggalLahir"),
+    kartuAlamat: text(formData, "kartuAlamat"),
+  });
+
+  if (!parsed.success) {
+    return errorState("Periksa kembali isian Anda.", zodToFieldErrors(parsed.error));
+  }
+
+  try {
+    await updatePeserta(programId, pesertaId, parsed.data);
+    revalidatePath(`/bantuan/${programId}`);
+    return successState("Kartu peserta diperbarui.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/** Hapus semua peserta sebuah program (pembersihan massal). */
+export async function deleteAllPesertaAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const programId = parseId(formData.get("programId"));
+  if (programId === null) {
+    return errorState("Data program bantuan tidak valid.");
+  }
+
+  try {
+    const dihapus = await deleteAllPeserta(programId);
+    revalidatePath(`/bantuan/${programId}`);
+    return successState(
+      dihapus === 0 ? "Tidak ada peserta yang dihapus." : `${dihapus} peserta dihapus.`,
+    );
+  } catch (error) {
+    return toErrorState(error);
   }
 }
