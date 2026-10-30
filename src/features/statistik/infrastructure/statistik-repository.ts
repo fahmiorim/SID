@@ -12,7 +12,6 @@ import {
   residents,
 } from "@/db/schema";
 import { bantuanPeserta, bantuanProgram } from "@/db/schema/bantuan";
-import { KELOMPOK_UMUR, kelompokUmurUntuk } from "@/features/penduduk/domain/laporan-penduduk";
 import { calculateAge } from "@/features/penduduk/domain/penduduk";
 import {
   type StatistikBantuanParams,
@@ -24,8 +23,23 @@ import {
   type StatistikPendudukRow,
   type StatistikPendudukSummary,
 } from "@/features/statistik/domain/statistik";
+import { listRentangUmur } from "@/features/statistik/infrastructure/rentang-umur-repository";
 
 const MAX_PAGE = 100;
+
+function buildPendudukWhere(villageId: number, params: StatistikPendudukParams) {
+  const filters = [eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")];
+  if (params.dusun) filters.push(eq(regions.dusun, params.dusun));
+  if (params.rw) filters.push(eq(regions.rw, params.rw));
+  if (params.rt) filters.push(eq(regions.rt, params.rt));
+  if (params.umurMin !== undefined) {
+    filters.push(sql`TIMESTAMPDIFF(YEAR, ${residents.birthDate}, CURDATE()) >= ${params.umurMin}`);
+  }
+  if (params.umurMax !== undefined) {
+    filters.push(sql`TIMESTAMPDIFF(YEAR, ${residents.birthDate}, CURDATE()) <= ${params.umurMax}`);
+  }
+  return and(...filters);
+}
 
 /** Statistik penduduk berdasarkan jenis kategorinya. */
 export async function getStatistikPenduduk(
@@ -35,6 +49,8 @@ export async function getStatistikPenduduk(
   const page = Math.max(1, params.page ?? 1);
   const perPage = Math.min(MAX_PAGE, Math.max(1, params.perPage ?? 10));
   const offset = (page - 1) * perPage;
+
+  const baseWhere = buildPendudukWhere(villageId, params);
 
   let rows: StatistikPendudukRow[];
   let totalResidents: StatistikPendudukSummary;
@@ -49,7 +65,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.gender);
 
       const maleRow = grouped.find((r) => r.gender === "male");
@@ -88,7 +105,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.religionId);
 
       const allReligions = await db
@@ -127,7 +145,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.educationId);
 
       const allEducations = await db
@@ -166,7 +185,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.occupationId);
 
       const allOccupations = await db
@@ -205,7 +225,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.maritalStatusId);
 
       const allMarital = await db
@@ -244,7 +265,8 @@ export async function getStatistikPenduduk(
           female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
         })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere)
         .groupBy(residents.regionId);
 
       const allRegions = await db
@@ -284,7 +306,8 @@ export async function getStatistikPenduduk(
       const all = await db
         .select({ birthDate: residents.birthDate, gender: residents.gender })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere);
 
       const groups: Record<string, { total: number; male: number; female: number }> = {
         "0-4 tahun": { total: 0, male: 0, female: 0 },
@@ -338,24 +361,25 @@ export async function getStatistikPenduduk(
       const all = await db
         .select({ birthDate: residents.birthDate, gender: residents.gender })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
-
-      const groups = new Map(KELOMPOK_UMUR.map((k) => [k.label, { total: 0, male: 0, female: 0 }]));
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere);
+      const ranges = await listRentangUmur(villageId);
+      const groups = new Map(ranges.map((k) => [k.label, { total: 0, male: 0, female: 0 }]));
       for (const r of all) {
-        const kelompok = kelompokUmurUntuk(calculateAge(r.birthDate));
-        if (!kelompok) continue;
-        const group = groups.get(kelompok.label)!;
+        const age = calculateAge(r.birthDate);
+        if (age === null) continue;
+        const bucket = ranges.find((k) => age >= k.min && (k.max === null || age <= k.max));
+        if (!bucket) continue;
+        const group = groups.get(bucket.label)!;
         group.total += 1;
         if (r.gender === "male") group.male += 1;
         else if (r.gender === "female") group.female += 1;
       }
-
       totalResidents = {
         total: [...groups.values()].reduce((s, g) => s + g.total, 0),
         male: [...groups.values()].reduce((s, g) => s + g.male, 0),
         female: [...groups.values()].reduce((s, g) => s + g.female, 0),
       };
-
       rows = [...groups.entries()].map(([label, g]) => ({
         label,
         total: g.total,
@@ -370,7 +394,8 @@ export async function getStatistikPenduduk(
       const all = await db
         .select({ birthDate: residents.birthDate, gender: residents.gender })
         .from(residents)
-        .where(and(eq(residents.villageId, villageId), eq(residents.lifeStatus, "alive")));
+        .leftJoin(regions, eq(residents.regionId, regions.id))
+        .where(baseWhere);
 
       const groups: Record<string, { total: number; male: number; female: number }> = {
         "Balita (0–5 tahun)": { total: 0, male: 0, female: 0 },
@@ -450,7 +475,14 @@ export async function getStatistikBantuan(
         sasaran: bantuanProgram.sasaran,
       })
       .from(bantuanProgram)
-      .where(eq(bantuanProgram.villageId, villageId));
+      .where(
+        params.programSlug
+          ? and(
+              eq(bantuanProgram.villageId, villageId),
+              eq(bantuanProgram.slug, params.programSlug),
+            )
+          : eq(bantuanProgram.villageId, villageId),
+      );
 
     const programIds = programs.map((p) => p.id);
 
@@ -470,8 +502,15 @@ export async function getStatistikBantuan(
         })
         .from(bantuanPeserta)
         .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
+        .leftJoin(regions, eq(residents.regionId, regions.id))
         .where(
-          and(inArray(bantuanPeserta.programId, programIds), eq(residents.lifeStatus, "alive")),
+          and(
+            inArray(bantuanPeserta.programId, programIds),
+            eq(residents.lifeStatus, "alive"),
+            params.dusun ? eq(regions.dusun, params.dusun) : undefined,
+            params.rw ? eq(regions.rw, params.rw) : undefined,
+            params.rt ? eq(regions.rt, params.rt) : undefined,
+          ),
         )
         .groupBy(bantuanPeserta.programId);
     }
@@ -512,7 +551,26 @@ export async function getStatistikBantuan(
       .from(bantuanProgram)
       .leftJoin(bantuanPeserta, eq(bantuanPeserta.programId, bantuanProgram.id))
       .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
-      .where(and(eq(bantuanProgram.villageId, villageId), eq(residents.lifeStatus, "alive")))
+      .leftJoin(regions, eq(residents.regionId, regions.id))
+      .where(
+        and(
+          params.sasaran
+            ? and(
+                eq(bantuanProgram.villageId, villageId),
+                eq(bantuanProgram.sasaran, params.sasaran),
+              )
+            : eq(bantuanProgram.villageId, villageId),
+          params.dusun ? eq(regions.dusun, params.dusun) : undefined,
+          params.rw ? eq(regions.rw, params.rw) : undefined,
+          params.rt ? eq(regions.rt, params.rt) : undefined,
+          params.periodeMulai
+            ? sql`(${bantuanProgram.startDate} IS NULL AND ${bantuanProgram.endDate} IS NULL) OR (${bantuanProgram.startDate} <= ${params.periodeMulai})`
+            : undefined,
+          params.periodeAkhir
+            ? sql`(${bantuanProgram.endDate} IS NULL AND ${bantuanProgram.startDate} IS NULL) OR (${bantuanProgram.endDate} >= ${params.periodeAkhir})`
+            : undefined,
+        ),
+      )
       .groupBy(bantuanProgram.sasaran);
 
     const labels: Record<number, string> = {

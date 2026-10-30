@@ -68,12 +68,22 @@ export interface StatistikPendudukParams {
   search?: string;
   page?: number;
   perPage?: number;
+  dusun?: string;
+  rw?: string;
+  rt?: string;
+  umurMin?: number;
+  umurMax?: number;
 }
 
 export interface StatistikBantuanParams {
   kind: StatistikBantuanKind;
   programSlug?: string;
   sasaran?: number;
+  dusun?: string;
+  rw?: string;
+  rt?: string;
+  periodeMulai?: string;
+  periodeAkhir?: string;
   search?: string;
   page?: number;
   perPage?: number;

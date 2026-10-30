@@ -78,6 +78,23 @@ export const ibuHamilSchema = z.object({
 });
 
 export type IbuHamilInput = z.infer<typeof ibuHamilSchema>;
+export interface IbuHamilRow {
+  id: number;
+  posyanduId: number;
+  kiaId: number;
+  statusKehamilan: number | null;
+  usiaKehamilan: number | null;
+  tanggalMelahirkan: string | null;
+  pemeriksaanKehamilan: boolean;
+  konsumsiPilFe: boolean;
+  butirPilFe: number | null;
+  pemeriksaanNifas: boolean;
+  konselingGizi: boolean;
+  kunjunganRumah: boolean;
+  aksesAirBersih: boolean;
+  kepemilikanJamban: boolean;
+  jaminanKesehatan: boolean;
+}
 
 export const bulananAnakSchema = z.object({
   id: z.number().int().positive().optional(),
@@ -104,6 +121,28 @@ export const bulananAnakSchema = z.object({
 });
 
 export type BulananAnakInput = z.infer<typeof bulananAnakSchema>;
+export interface BulananAnakRow {
+  id: number;
+  posyanduId: number;
+  kiaId: number;
+  statusGizi: number;
+  umurBulan: number;
+  statusTikar: number;
+  pemberianImunisasiDasar: boolean;
+  pemberianImunisasiCampak: boolean | null;
+  pengukuranBeratBadan: boolean;
+  beratBadan: number | null;
+  pengukuranTinggiBadan: boolean;
+  tinggiBadan: number | null;
+  konselingGiziAyah: boolean;
+  konselingGiziIbu: boolean;
+  kunjunganRumah: boolean;
+  airBersih: boolean;
+  kepemilikanJamban: boolean;
+  aktaLahir: boolean;
+  jaminanKesehatan: boolean;
+  pengasuhanPaud: boolean;
+}
 
 // --- Rekapitulasi skorcard KIA ---
 
@@ -172,4 +211,176 @@ export function kiaRekapFilename(namaDesa: string | null): string {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "desa";
   return `rekap-kia-${slug}.csv`;
+}
+// --- Skorcard Konvergensi Desa ---
+
+export interface SkorcardKonvergensiIbuHamil {
+  capaianKonvergensi: Record<string, { Y: number; persen: number }> | null;
+  tingkatKonvergensiDesa: {
+    jumlah_diterima: number;
+    jumlah_seharusnya: number;
+    persen: number;
+  } | null;
+}
+
+export interface SkorcardKonvergensiAnak {
+  capaianKonvergensi: Record<string, { Y: number; persen: number }> | null;
+  tingkatKonvergensiDesa: {
+    jumlah_diterima: number;
+    jumlah_seharusnya: number;
+    persen: number;
+  } | null;
+}
+
+export interface SkorcardKonvergensiResult {
+  jumlahTotalRt: number;
+  ibuHamilTotal: number;
+  jumlahKekRisti: number;
+  bulananAnakTotal: number;
+  jumlahGiziBukanNormal: number;
+  tikar: { H: number; K: number; M: number };
+  ibuHamil: SkorcardKonvergensiIbuHamil;
+  bulananAnak: SkorcardKonvergensiAnak;
+}
+
+/**
+ * Menghitung rekapitulasi skorcard konvergensi desa dari data ibu hamil dan anak.
+ * Mengikuti pola OpenSID: Tabel 1 (sasaran), Tabel 2 (tikar pertumbuhan),
+ * Tabel 3 (kele玲apan konvergensi), Tabel 4 (tingkat konvergensi desa).
+ */
+export function buildSkorcardKonvergensi(
+  ibuHamilRows: readonly IbuHamilRow[],
+  bulananAnakRows: readonly BulananAnakRow[],
+): SkorcardKonvergensiResult {
+  const ibuHamilTotal = ibuHamilRows.length;
+  const bulananAnakTotal = bulananAnakRows.length;
+  const jumlahKekRisti = ibuHamilRows.filter((r) => r.statusKehamilan === 3).length;
+  const jumlahGiziBukanNormal = bulananAnakRows.filter(
+    (r) => r.statusGizi === 2 || r.statusGizi === 3 || r.statusGizi === 4,
+  ).length;
+
+  // Tabel 2: Tikar pertumbuhan
+  const tikar = { H: 0, K: 0, M: 0 };
+  for (const row of bulananAnakRows) {
+    if (row.statusTikar === 4) tikar.H++;
+    else if (row.statusTikar === 3) tikar.K++;
+    else if (row.statusTikar === 2) tikar.M++;
+  }
+
+  // Tabel 3: Capaian konvergensi Ibu Hamil (8 indikator)
+  const ibuIndicators = [
+    "periksa_kehamilan",
+    "pil_fe",
+    "pemeriksaan_nifas",
+    "konseling_gizi",
+    "kunjungan_rumah",
+    "akses_air_bersih",
+    "kepemilikan_jamban",
+    "jaminan_kesehatan",
+  ] as const;
+
+  const ibuIndicatorsMap: Record<string, keyof IbuHamilRow> = {
+    periksa_kehamilan: "pemeriksaanKehamilan",
+    pil_fe: "konsumsiPilFe",
+    pemeriksaan_nifas: "pemeriksaanNifas",
+    konseling_gizi: "konselingGizi",
+    kunjungan_rumah: "kunjunganRumah",
+    akses_air_bersih: "aksesAirBersih",
+    kepemilikan_jamban: "kepemilikanJamban",
+    jaminan_kesehatan: "jaminanKesehatan",
+  };
+  const ibuCapaian: Record<string, { Y: number; persen: number }> = {};
+  for (const key of ibuIndicators) {
+    const col = ibuIndicatorsMap[key];
+    if (!col) continue;
+    const y = ibuHamilRows.filter((r) => r[col] === true).length;
+    ibuCapaian[key] = {
+      Y: y,
+      persen: ibuHamilTotal === 0 ? 0 : Math.round((y / ibuHamilTotal) * 10000) / 100,
+    };
+  }
+
+  // Tabel 3: Capaian konvergensi Anak (10 indikator)
+  const anakIndicators = [
+    "imunisasi",
+    "pengukuran_berat_badan",
+    "pengukuran_tinggi_badan",
+    "konseling_gizi",
+    "kunjungan_rumah",
+    "air_bersih",
+    "jamban_sehat",
+    "akta_lahir",
+    "jaminan_kesehatan",
+    "pengasuhan_paud",
+  ] as const;
+
+  const anakCapaian: Record<string, { Y: number; persen: number }> = {};
+  const indicatorsMap: Record<string, keyof BulananAnakRow> = {
+    imunisasi: "pemberianImunisasiDasar",
+    pengukuran_berat_badan: "pengukuranBeratBadan",
+    pengukuran_tinggi_badan: "pengukuranTinggiBadan",
+    konseling_gizi: "konselingGiziIbu",
+    kunjungan_rumah: "kunjunganRumah",
+    air_bersih: "airBersih",
+    jamban_sehat: "kepemilikanJamban",
+    akta_lahir: "aktaLahir",
+    jaminan_kesehatan: "jaminanKesehatan",
+    pengasuhan_paud: "pengasuhanPaud",
+  };
+
+  for (const key of anakIndicators) {
+    const col = indicatorsMap[key];
+    const y = bulananAnakRows.filter((r) => r[col as keyof BulananAnakRow] === true).length;
+    anakCapaian[key] = {
+      Y: y,
+      persen: bulananAnakTotal === 0 ? 0 : Math.round((y / bulananAnakTotal) * 10000) / 100,
+    };
+  }
+
+  // Tingkat konvergensi desa
+  const ibuTingkatKonvergensi = hitungTingkatKonvergensi(
+    ibuHamilTotal,
+    ibuIndicators,
+    ibuHamilRows as unknown as Record<string, unknown>[],
+    ibuIndicatorsMap,
+  );
+  const anakTingkatKonvergensi = hitungTingkatKonvergensi(
+    bulananAnakTotal,
+    anakIndicators,
+    bulananAnakRows as unknown as Record<string, unknown>[],
+    indicatorsMap,
+  );
+
+  return {
+    jumlahTotalRt: ibuHamilTotal + bulananAnakTotal,
+    ibuHamilTotal,
+    jumlahKekRisti,
+    bulananAnakTotal,
+    jumlahGiziBukanNormal,
+    tikar,
+    ibuHamil: { capaianKonvergensi: ibuCapaian, tingkatKonvergensiDesa: ibuTingkatKonvergensi },
+    bulananAnak: {
+      capaianKonvergensi: anakCapaian,
+      tingkatKonvergensiDesa: anakTingkatKonvergensi,
+    },
+  };
+}
+
+function hitungTingkatKonvergensi(
+  total: number,
+  indicators: readonly string[],
+  rows: readonly Record<string, unknown>[],
+  indicatorsMap?: Record<string, string>,
+): { jumlah_diterima: number; jumlah_seharusnya: number; persen: number } | null {
+  if (total === 0) return null;
+  let jumlahDiterima = 0;
+  let jumlahSeharusnya = 0;
+  for (const key of indicators) {
+    jumlahSeharusnya += total;
+    const col = indicatorsMap?.[key];
+    if (col) jumlahDiterima += rows.filter((r) => r[col] === true).length;
+  }
+  const persen =
+    jumlahSeharusnya === 0 ? 0 : Math.round((jumlahDiterima / jumlahSeharusnya) * 10000) / 100;
+  return { jumlah_diterima: jumlahDiterima, jumlah_seharusnya: jumlahSeharusnya, persen };
 }

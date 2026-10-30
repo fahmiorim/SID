@@ -1,5 +1,7 @@
 "use client";
 
+import { Download } from "lucide-react";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -137,24 +139,54 @@ function KiaDialog({
 export function KiaTable({
   rows,
   pendudukOptions,
+  posyanduOptions,
   canManage,
 }: {
   rows: KiaTableRow[];
   pendudukOptions: Option[];
+  posyanduOptions: Option[];
   canManage: boolean;
 }) {
+  const [selectedPosyandu, setSelectedPosyandu] = useState<string>("");
   const label = (id: number) =>
     pendudukOptions.find((option) => option.id === id)?.label ?? String(id);
 
+  const filteredRows = selectedPosyandu
+    ? rows.filter((row) => row.posyanduId === Number(selectedPosyandu))
+    : rows;
+
   return (
     <div className="space-y-4">
-      {canManage && (
-        <KiaDialog
-          posyanduOptions={[]}
-          pendudukOptions={pendudukOptions}
-          trigger={<Button>Tambah KIA</Button>}
-        />
-      )}
+      <div className="flex items-center justify-between gap-2">
+        {canManage && (
+          <KiaDialog
+            posyanduOptions={posyanduOptions}
+            pendudukOptions={pendudukOptions}
+            trigger={<Button>Tambah KIA</Button>}
+          />
+        )}
+        <div className="flex items-center gap-2">
+          <Select value={selectedPosyandu} onValueChange={setSelectedPosyandu}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter Posyandu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Semua Posyandu</SelectItem>
+              {posyanduOptions.map((opt) => (
+                <SelectItem key={opt.id} value={String(opt.id)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" asChild className="ml-auto">
+          <Link href="/kesehatan/kia/ekspor">
+            <Download className="mr-2 h-4 w-4" />
+            Ekspor CSV
+          </Link>
+        </Button>
+      </div>
       <div className="rounded-md border">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -168,7 +200,7 @@ export function KiaTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id} className="border-b">
                   <td className="p-2">{row.noKia}</td>
                   <td className="p-2">{row.ibuName ?? label(row.ibuId)}</td>
@@ -204,7 +236,7 @@ export function KiaTable({
                   )}
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
                   <td className="p-2 text-muted-foreground" colSpan={canManage ? 5 : 4}>
                     Belum ada data KIA.

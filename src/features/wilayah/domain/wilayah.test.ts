@@ -68,3 +68,12 @@ describe("formatWilayahLabel", () => {
     expect(formatWilayahLabel({ dusun: "", rw: "", rt: "" })).toBe("Wilayah tanpa nama");
   });
 });
+
+describe("validasi wilayah - rekap", () => {
+  it("memastikan kombinasi dusun rw rt divalidasi", () => {
+    const parsed = wilayahFormSchema.parse({ dusun: "Dusun A", rw: "001", rt: "001", urut: 1 });
+    expect(parsed.dusun).toBe("Dusun A");
+    expect(parsed.rw).toBe("001");
+    expect(parsed.rt).toBe("001");
+  });
+});

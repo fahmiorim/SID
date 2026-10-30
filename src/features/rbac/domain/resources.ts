@@ -54,6 +54,12 @@ export const RESOURCES = {
   daftarKontak: "daftar-kontak",
   grupKontak: "grup-kontak",
   rtm: "rtm",
+  gisPolygon: "polygon",
+  gisArea: "area-peta",
+  gisGaris: "garis-peta",
+  gisPoint: "titik-peta",
+  gisSimbol: "simbol-peta",
+  pertanahan: "pertanahan",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

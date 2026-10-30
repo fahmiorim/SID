@@ -1,5 +1,7 @@
 "use client";
 
+import { Download } from "lucide-react";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -236,18 +238,46 @@ export function BulananAnakTable({
   kiaOptions: Option[];
   canManage: boolean;
 }) {
+  const [selectedPosyandu, setSelectedPosyandu] = useState<string>("");
   const label = (options: Option[], id: number) =>
     options.find((option) => option.id === id)?.label ?? String(id);
 
+  const filteredRows = selectedPosyandu
+    ? rows.filter((row) => row.posyanduId === Number(selectedPosyandu))
+    : rows;
+
   return (
     <div className="space-y-4">
-      {canManage && (
-        <BulananAnakDialog
-          posyanduOptions={posyanduOptions}
-          kiaOptions={kiaOptions}
-          trigger={<Button>Tambah Pemantauan</Button>}
-        />
-      )}
+      <div className="flex items-center justify-between gap-2">
+        {canManage && (
+          <BulananAnakDialog
+            posyanduOptions={posyanduOptions}
+            kiaOptions={kiaOptions}
+            trigger={<Button>Tambah Pemantauan</Button>}
+          />
+        )}
+        <div className="flex items-center gap-2">
+          <Select value={selectedPosyandu} onValueChange={setSelectedPosyandu}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter Posyandu" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Semua Posyandu</SelectItem>
+              {posyanduOptions.map((opt) => (
+                <SelectItem key={opt.id} value={String(opt.id)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button variant="outline" asChild className="ml-auto">
+          <Link href="/kesehatan/pemantauan-anak/ekspor">
+            <Download className="mr-2 h-4 w-4" />
+            Ekspor CSV
+          </Link>
+        </Button>
+      </div>
       <div className="rounded-md border">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -262,7 +292,7 @@ export function BulananAnakTable({
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id} className="border-b">
                   <td className="p-2">{label(kiaOptions, row.kiaId)}</td>
                   <td className="p-2">{label(posyanduOptions, row.posyanduId)}</td>
@@ -305,7 +335,7 @@ export function BulananAnakTable({
                   )}
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
                   <td className="p-2 text-muted-foreground" colSpan={canManage ? 6 : 5}>
                     Belum ada data pemantauan anak.
