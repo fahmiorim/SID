@@ -34,7 +34,7 @@ import {
   loadReferensiKelompokAction,
   saveKelompokAction,
 } from "@/features/kelompok/presentation/actions";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION, type LabelOption } from "@/lib/forms";
 
 interface KelompokFormDialogProps {
@@ -76,7 +76,10 @@ export function KelompokFormDialog({
   defaultTipe = "kelompok",
 }: KelompokFormDialogProps) {
   const isEdit = Boolean(kelompok);
-  const [state, formAction, isPending] = useActionState(saveKelompokAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveKelompokAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   const [tipe, setTipe] = useState<KelompokTipe>(

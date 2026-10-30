@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { RoleDTO } from "@/features/rbac/domain/grup";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { saveRoleAction } from "../actions";
 
@@ -42,7 +42,7 @@ function FieldError({ messages }: { messages?: string[] }) {
 
 export function RoleFormDialog({ open, onOpenChange, role }: RoleFormDialogProps) {
   const isEdit = Boolean(role);
-  const [state, formAction, isPending] = useActionState(saveRoleAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(saveRoleAction, createIdleActionState());
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

@@ -1,0 +1,1 @@
+ALTER TABLE `cdesa_rincian` MODIFY COLUMN `nama` varchar(255) DEFAULT NULL, MODIFY COLUMN `dllb` text DEFAULT NULL;

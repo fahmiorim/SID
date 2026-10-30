@@ -33,7 +33,7 @@ import {
   type SoalRow,
   type TipeSoal,
 } from "@/features/survey/domain/survey";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { simpanSoalAction } from "../actions";
 
@@ -68,7 +68,7 @@ export function SoalFormDialog({
 }: SoalFormDialogProps) {
   const router = useRouter();
   const isEdit = Boolean(soal);
-  const [state, formAction, isPending] = useActionState(simpanSoalAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(simpanSoalAction, createIdleActionState());
   const [tipe, setTipe] = useState<TipeSoal>(soal?.tipe ?? "text");
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 

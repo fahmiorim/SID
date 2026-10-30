@@ -29,7 +29,7 @@ import {
   type KategoriKelompokDTO,
 } from "@/features/kelompok/domain/kelompok";
 import { saveKategoriAction } from "@/features/kelompok/presentation/actions";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 interface KategoriFormDialogProps {
   open: boolean;
@@ -56,7 +56,10 @@ function FieldError({ messages }: { messages?: string[] }) {
 /** Dialog formulir tambah/ubah kategori kelompok (terkendali). */
 export function KategoriFormDialog({ open, onOpenChange, kategori }: KategoriFormDialogProps) {
   const isEdit = Boolean(kategori);
-  const [state, formAction, isPending] = useActionState(saveKategoriAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveKategoriAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

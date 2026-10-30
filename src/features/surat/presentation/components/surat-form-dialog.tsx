@@ -34,7 +34,7 @@ import {
   parsePengikutIds,
 } from "@/features/surat/domain/pengikut";
 import type { JenisSuratDTO, SuratListRow } from "@/features/surat/domain/surat";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION, todayIsoDate } from "@/lib/forms";
 
 import { saveSuratAction } from "../actions";
@@ -76,7 +76,7 @@ export function SuratFormDialog({
   surat,
 }: SuratFormDialogProps) {
   const isEdit = Boolean(surat);
-  const [state, formAction, isPending] = useActionState(saveSuratAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(saveSuratAction, createIdleActionState());
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
   const [typeId, setTypeId] = useState(surat ? String(surat.typeId) : "");
 

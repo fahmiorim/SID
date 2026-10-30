@@ -1,0 +1,1 @@
+ALTER TABLE `cdesa_rincian` ADD INDEX `cdesa_rincian_village_cdesa_idx` (`village_id`, `cdesa_id`);

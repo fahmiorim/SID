@@ -1,0 +1,1 @@
+ALTER TABLE `cdesa_rincian` ADD COLUMN `village_id` int NOT NULL AFTER `id`;

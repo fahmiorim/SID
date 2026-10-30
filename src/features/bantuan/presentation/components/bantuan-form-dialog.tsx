@@ -31,7 +31,7 @@ import {
   SASARAN_LABELS,
   type BantuanDTO,
 } from "@/features/bantuan/domain/bantuan";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveBantuanAction } from "../actions";
@@ -67,7 +67,7 @@ function FieldError({ messages }: { messages?: string[] }) {
  */
 export function BantuanFormDialog({ open, onOpenChange, bantuan }: BantuanFormDialogProps) {
   const isEdit = Boolean(bantuan);
-  const [state, formAction, isPending] = useActionState(saveBantuanAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(saveBantuanAction, createIdleActionState());
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

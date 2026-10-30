@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { SyaratSuratDTO } from "@/features/surat/domain/isian";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { saveSyaratSuratAction } from "../master-actions";
 
@@ -45,7 +45,10 @@ function FieldError({ messages }: { messages?: string[] }) {
 
 export function SyaratFormDialog({ open, onOpenChange, syarat }: SyaratFormDialogProps) {
   const isEdit = Boolean(syarat);
-  const [state, formAction, isPending] = useActionState(saveSyaratSuratAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveSyaratSuratAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

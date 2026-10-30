@@ -29,7 +29,7 @@ import {
   type LaporanDokumenRow,
   type LaporanTipe,
 } from "@/features/keuangan/domain/laporan-dokumen";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { saveLaporanDokumenAction } from "../laporan-dokumen-actions";
 
@@ -69,7 +69,10 @@ export function LaporanDokumenFormDialog({
   tahunDefault,
 }: LaporanDokumenFormDialogProps) {
   const isEdit = Boolean(laporan);
-  const [state, formAction, isPending] = useActionState(saveLaporanDokumenAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveLaporanDokumenAction,
+    createIdleActionState(),
+  );
 
   useEffect(() => {
     if (state.status === "success") {

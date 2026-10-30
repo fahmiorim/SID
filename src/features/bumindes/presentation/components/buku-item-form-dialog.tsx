@@ -22,7 +22,7 @@ import {
   URAIAN_ITEM_MAX,
   type ItemBukuRow,
 } from "@/features/bumindes/domain/bumindes";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { todayIsoDate } from "@/lib/forms";
 
 import { simpanItemBukuAction } from "../actions";
@@ -59,7 +59,10 @@ export function BukuItemFormDialog({
   item,
 }: BukuItemFormDialogProps) {
   const isEdit = Boolean(item);
-  const [state, formAction, isPending] = useActionState(simpanItemBukuAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    simpanItemBukuAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

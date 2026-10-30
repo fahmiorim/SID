@@ -1,0 +1,1 @@
+ALTER TABLE `cdesa_mutasi` ADD INDEX `cdesa_mutasi_village_cdesa_idx` (`village_id`, `cdesa_id`);

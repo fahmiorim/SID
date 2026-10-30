@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { PenggunaDTO, RoleOption } from "@/features/pengguna/domain/pengguna";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { savePenggunaAction } from "../actions";
@@ -62,7 +62,10 @@ export function PenggunaFormDialog({
   isSelf = false,
 }: PenggunaFormDialogProps) {
   const isEdit = Boolean(pengguna);
-  const [state, formAction, isPending] = useActionState(savePenggunaAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    savePenggunaAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

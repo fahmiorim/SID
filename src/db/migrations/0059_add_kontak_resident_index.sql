@@ -1,0 +1,1 @@
+CREATE INDEX `kontak_village_resident_idx` ON `kontak` (`village_id`, `resident_id`);

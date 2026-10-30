@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { WilayahDTO } from "@/features/wilayah/domain/wilayah";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { saveWilayahAction } from "../actions";
 
@@ -36,7 +36,7 @@ interface WilayahFormDialogProps {
  */
 export function WilayahFormDialog({ open, onOpenChange, wilayah }: WilayahFormDialogProps) {
   const isEdit = Boolean(wilayah);
-  const [state, formAction, isPending] = useActionState(saveWilayahAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(saveWilayahAction, createIdleActionState());
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

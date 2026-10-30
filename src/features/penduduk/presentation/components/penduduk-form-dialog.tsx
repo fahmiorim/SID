@@ -35,7 +35,7 @@ import {
   type ReferenceOption,
   type RegionOption,
 } from "@/features/penduduk/domain/penduduk";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { savePendudukAction } from "../actions";
@@ -127,7 +127,10 @@ export function PendudukFormDialog({
   penduduk,
 }: PendudukFormDialogProps) {
   const isEdit = Boolean(penduduk);
-  const [state, formAction, isPending] = useActionState(savePendudukAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    savePendudukAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

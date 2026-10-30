@@ -84,6 +84,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       widget: "read",
       slider: "read",
       "dokumen-publik": "read",
+      sinergi: "read",
     },
   },
   {
@@ -143,6 +144,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "titik-peta": "read",
       "simbol-peta": "read",
       pertanahan: "read",
+      sinergi: "read",
     },
   },
   {
@@ -209,6 +211,7 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
       "titik-peta": "manage",
       "simbol-peta": "manage",
       pertanahan: "manage",
+      sinergi: "manage",
     },
   },
 ] as const;

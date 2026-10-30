@@ -272,14 +272,140 @@
       "idx": 38,
       "version": "5",
       "when": 1793140120000,
-      "tag": "0038_create_gis_pertanahan",
+      "tag": "0038_create_persil",
       "breakpoints": true
     },
     {
       "idx": 39,
       "version": "5",
+      "when": 1793140121000,
+      "tag": "0039_create_cdesa",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1793140140000,
+      "tag": "0042_create_polygon",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "5",
       "when": 1793140180000,
-      "tag": "0039_gis_map_and_tenant_hardening",
+      "tag": "0043_create_area",
+      "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "5",
+      "when": 1793140181000,
+      "tag": "0044_create_cdesa_rincian",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "5",
+      "when": 1793140182000,
+      "tag": "0045_create_cdesa_mutasi",
+      "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "5",
+      "when": 1793140183000,
+      "tag": "0046_create_garis",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "5",
+      "when": 1793140184000,
+      "tag": "0047_create_point",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "5",
+      "when": 1793140186000,
+      "tag": "0049_alter_persil_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1793140187000,
+      "tag": "0050_alter_cdesa_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "5",
+      "when": 1793140188000,
+      "tag": "0051_add_cdesa_rincian_village_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "5",
+      "when": 1793140188500,
+      "tag": "0052_backfill_cdesa_rincian_village_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1793140189000,
+      "tag": "0053_alter_cdesa_rincian_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "5",
+      "when": 1793140189500,
+      "tag": "0054_add_cdesa_rincian_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "5",
+      "when": 1793140190000,
+      "tag": "0055_add_cdesa_rincian_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "5",
+      "when": 1793140191000,
+      "tag": "0056_add_cdesa_mutasi_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "5",
+      "when": 1793140200000,
+      "tag": "0057_add_cdesa_mutasi_village_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "5",
+      "when": 1793140201000,
+      "tag": "0058_add_cdesa_mutasi_cdesa_fk",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "5",
+      "when": 1793140240000,
+      "tag": "0059_add_kontak_resident_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "5",
+      "when": 1793140250000,
+      "tag": "0060_create_sinergi_program",
       "breakpoints": true
     }
   ]

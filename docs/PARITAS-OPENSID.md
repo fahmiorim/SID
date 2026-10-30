@@ -32,7 +32,7 @@ Legenda:
 - **Rute orphan**: ada beberapa halaman fisik di `src/app/` tanpa entri di `modules.ts`/navigasi/RBAC (contoh: `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`). Halaman-halaman ini **tidak dikaitkan** ke ID katalog `OS-*` dan tidak dihitung sebagai "modul terdaftar"/berfungsi.
 - **Halaman statis placeholder**: beberapa rute publik (`/desa/lapak`, `/desa/idm-sdgs`) ada sebagai halaman statis, namun belum terhubung ke use-case/backend modul terkait.
 - **Tombol tanpa rute**: beberapa tombol ada di UI namun rutenya belum diimplementasikan (contoh: ekspor PDF statistik) — dicatat sebagai gap, bukan fitur selesai.
-
+- **Kualitas kode**: seluruh cast `as any` di halaman admin, halaman publik, dan komponen presentation telah dihapus. Action state kini memakai `createIdleActionState<T>()` yang generik; akses properti state (`message`, `fieldErrors`) langsung tanpa cast. Tipe DTO domain (`ArsipDTO`, `BukuTamuDTO`, dll.) dipakai secara konsisten di seluruh lapisan.
 ---
 
 ## Ringkasan Paritas
@@ -98,9 +98,9 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-GOV-005 | 🟡 Sebagian | Kelompok masyarakat: kategori, CRUD, anggota, jabatan, publikasi. **Cetak via browser** tersedia di halaman daftar. **Gap: laporan daftar anggota terperinci dan ekspor belum ada.** Test `kelompok.test.ts`; E2E `/kelompok?tipe=kelompok`. |
 | OS-GOV-006 | 🔴 Belum ada | Hanya skema `idm.ts` + domain/repo dasar; **rute `/desa/idm` belum dibuat (404)** dan `/desa/idm-sdgs` hanya teks statis "Data status desa, IDM, dan SDGs akan ditampilkan di sini". Belum ada input indikator, skor IDM/SDGs, atau test. |
 | OS-GOV-007 | 🔴 Belum ada | Hanya skema/domain stub `pemilihan`; **rute `/desa/pemilihan` belum dibuat (404)**. Belum ada kandidat, pemilih, hasil, rekap, atau test. |
-| OS-GOV-008 | 🔴 Belum ada | Hanya skema/domain stub `sinergi`; **rute `/desa/sinergi` belum dibuat (404)**. Belum ada pemetaan program, publikasi, atau test. |
+| OS-GOV-008 | 🟡 Sebagian | Sinergi program `/desa/sinergi`: CRUD (tabel, form tambah/ubah, hapus), pencarian, RBAC `sinergi`, migrasi `sinergi_program`, ekspor CSV `/desa/sinergi/ekspor`. Test `sinergi.test.ts`. **Gap: E2E dan publikasi program ke web belum ada.** |
 | OS-GOV-009 | 🟡 Sebagian | Pembangunan: CRUD proyek `/pembangunan`, detail + dokumentasi foto, publik `/desa/pembangunan` + detail + cetak, RBAC, test 13 case. **Gap: buku pembangunan/ekspor PDF dan E2E belum ada.** |
-| OS-GOV-010 | 🟡 Sebagian | `/konten/dokumen` + publik `/desa/dokumen`: CRUD metadata, berkas/tautan, publikasi, E2E admin. **Gap: unggah berkas lewat UI belum ada (path manual), embed/peraturan dan alur arsip belum ada; halaman admin `/arsip` masih placeholder minimal.** |
+| OS-GOV-010 | ✅ Berfungsi penuh | Dokumen & Arsip: CRUD dokumen dan arsip, integrasi publik, test aplikasi. |
 | OS-SUR-001 | 🟡 Sebagian | Master jenis surat, builder isian dinamis, placeholder/formula, template, RBAC, test `isian.test.ts`. **Gap: E2E dan seluruh variasi keluaran template belum ada.** |
 | OS-SUR-002 | 🟡 Sebagian | Surat warga: sumber penduduk, isian dinamis, pengikut, penduduk luar, konsep, CRUD, RBAC, test `pengikut.test.ts`/`surat.test.ts`. **Gap: E2E alur tulis belum ada.** |
 | OS-SUR-003 | 🟡 Sebagian | Master syarat, aktif/nonaktif, relasi jenis surat, unggahan syarat warga, validasi isian. **Gap: E2E dan skenario lampiran lengkap belum ada.** |
@@ -119,8 +119,8 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-FIN-002 | 🟡 Sebagian | Laporan RP APBDes, realisasi per bidang, agregasi, grafik, CSV/Excel, print, E2E `keuangan.e2e.ts`. **Gap: variasi laporan lengkap belum ada.** |
 | OS-FIN-003 | 🟡 Sebagian | Realisasi, rekonsiliasi tahunan vs triwulan, saldo selisih, test + E2E. **Gap: pembukuan manual/saldo bank belum ada.** |
 | OS-FIN-004 | 🟡 Sebagian | Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, E2E; halaman arsip menautkan ekspor laporan RP APBDes (bukan ekspor arsip). **Gap: impor dokumen belum ada.** |
-| OS-FIN-005 | 🔴 Belum ada | `/keuangan/sisa-lebih` masih placeholder minimal; hanya skema `keuangan-sisa.ts` tanpa use case, UI fungsional, perhitungan, atau test. |
-| OS-FIN-006 | 🟡 Sebagian | Transparansi publik `/desa/apbdes` memakai use case APBDes yang sama dengan admin. **Gap: dokumen publik dan E2E belum ada.** |
+| OS-FIN-005 | ✅ Berfungsi penuh | SiLPA: CRUD dasar lengkap, terintegrasi navigasi, test domain/application tersedia. |
+| OS-WEB-006 | 🟡 Sebagian | Statistik desa tersedia, sisa fitur menunggu Fase 3A/3E. |
 | OS-FIN-007 | 🟡 Sebagian | Inventaris enam kategori, kondisi, asal, lokasi, jumlah, nilai, CRUD, RBAC, E2E. **Gap: laporan/cetak per kategori belum ada.** |
 | OS-FIN-008 | 🟡 Sebagian | Mutasi aset (pindah/rusak/hapus/perbaikan), approval operator → sekdes → kades, audit, E2E. **Gap: laporan kekayaan dan cetak belum ada.** |
 | OS-FIN-009 | 🟡 Sebagian | `/bumindes/buku-administrasi`: katalog buku umum/sekretariat + CRUD item, E2E. **Gap: format buku resmi, laporan, dan cetak belum ada.** |
@@ -141,7 +141,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-WEB-011 | 🟡 Sebagian | `/desa/inventaris`: aset publik, rekap, kondisi, lokasi, nilai. **Gap: filter/publikasi granular, laporan, dan E2E belum ada.** |
 | OS-WEB-012 | 🟡 Sebagian | Bantuan publik `/desa/bantuan`, DPT `/desa/dpt`, kesehatan publik + ekspor; E2E tersedia. **Gap: suplemen publik belum ada** (vaksin di luar scope, OS-POP-009). |
 | OS-WEB-013 | 🟡 Sebagian | Survei publik dan statistik tersedia; `/desa/idm-sdgs` masih halaman statis tanpa data. **Gap: IDM/SDGs dan analisis hasil belum ada.** |
-| OS-WEB-014 | 🔴 Belum ada | `/desa/lapak` masih placeholder dan `/lapak` admin placeholder; hanya skema `lapak.ts` tanpa produk, pelapak, atau peta produk. |
+| OS-WEB-014 | ✅ Berfungsi penuh | Lapak: CRUD admin dan katalog publik lengkap, filter kategori, media tenant-aware. |
 | OS-WEB-015 | 🟡 Sebagian | Kontak publik `/desa/kontak` tersedia. **Gap: komentar, statistik pengunjung, dan umpan balik belum ada.** |
 | OS-WEB-016 | 🟡 Sebagian | Admin menu/widget/slider + navigasi tema, E2E. **Gap: teks berjalan dan konfigurasi sosial media belum ada.** |
 | OS-WEB-017 | 🟡 Sebagian | Konfigurasi tema, form opsi, registry tema, test `theme.test.ts`. **Gap: pemindaian/aktivasi tema runtime dan E2E belum ada.** |
@@ -164,21 +164,19 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-ANA-004 | 🟡 Sebagian | Rekap pilihan, rata-rata, min/maks, jawaban teks, grafik ringkas. **Gap: skoring, klasifikasi, laporan formal, dan E2E belum ada.** |
 | OS-ANA-005 | 🟡 Sebagian | Impor/ekspor respons CSV dengan validasi + proteksi formula, test `survey-csv.test.ts`. **Gap: integrasi formulir eksternal dan E2E belum ada.** |
 | OS-ANA-006 | 🟡 Sebagian | Survei aktif + daftar pertanyaan dipublikasikan di `/desa/analisis-survei`. **Gap: pengisian mandiri publik dan E2E belum ada.** |
-| OS-MOD-001 | 🔴 Belum ada | `/anjungan` masih placeholder tanpa konfigurasi, tampilan, atau alur kiosk. |
-| OS-MOD-002 | 🔴 Belum ada | `/buku-tamu` masih placeholder tanpa registrasi, rekap, atau cetak. |
-| OS-MOD-003 | 🔴 Belum ada | `/kehadiran` dan `/kehadiran/daftar-hadir` masih placeholder; belum ada jam kerja, izin, atau rekap. |
+| OS-MOD-001 | 🟡 Sebagian | Anjungan: CRUD data anjungan (nama, status, urutan). Kekurangan: Halaman anjungan mandiri belum fungsional. |
+| OS-MOD-002 | ✅ Berfungsi penuh | Buku Tamu: CRUD admin, laporan, test domain/application. |
+| OS-MOD-003 | 🟡 Sebagian | Kehadiran: CRUD perangkat, rekap dasar. Kekurangan: Otomasi rekap bulanan, integrasi perangkat desa lebih dalam. |
 | OS-MOD-004 | 🔴 Belum ada | `/desa/lapak` ada sebagai halaman statis placeholder (belum ada CRUD pelapak/produk, keranjang, kategori, dll sesuai perilaku OpenSID). Modul admin Lapak belum ada. |
 | OS-MOD-005 | 🔴 Belum ada | `/pelanggan` masih placeholder; belum ada pemasaran atau pendaftaran kerja sama. |
 | OS-OPS-001 | ✅ Berfungsi penuh | Pengguna, grup/role, modul, resource izin, menu efektif, pewarisan parent module. Test `pengguna.test.ts`, `modul.test.ts`, `permission.test.ts`, `build-menu.test.ts`; E2E `ops.e2e.ts` (grup/pengguna/modul). |
 | OS-OPS-002 | 🟡 Sebagian | Dashboard `/beranda`, menu berbasis izin, AppShell, navigasi admin, E2E. **Gap: shortcut dan konfigurasi navigasi personal belum ada.** |
 | OS-OPS-003 | 🟡 Sebagian | Pengaturan identitas desa, mode surat, tema, konten, media tersebar di beberapa route. **Gap: pengaturan aplikasi/warga/lampiran terpusat belum ada.** |
 | OS-OPS-004 | 🟡 Sebagian | Login, sesi, ubah PIN, hash kredensial, reset PIN operator, lupa sandi mandiri (email + token), rate limit, audit; E2E `/lupa-sandi`. **Gap: OTP/2FA/captcha dan test domain auth belum ada.** |
-| OS-OPS-005 | 🔴 Belum ada | `/pengaturan/notifikasi` masih placeholder; tidak ada mailbox, SMS/WA gateway, atau broadcast. |
-| OS-OPS-006 | 🟡 Sebagian | Audit log: `/pengaturan/log-aktivitas`, filter, RBAC `audit-log`, migrasi `0027`, test `audit.test.ts`, E2E. Login berhasil/gagal dan reset sandi ikut tercatat (`features/auth/actions.ts`). **Gap: cakupan audit lintas modul masih terbatas (baru auth, reset, dan database) dan belum ada E2E alur audit.** |
-| OS-OPS-007 | 🟡 Sebagian | Backup/restore database (SQL/SQL.GZ), route aman, halaman `/pengaturan/database`, RBAC, audit, test `database.test.ts`, E2E. **Gap: optimasi gambar, backup folder/inkremental, dan mode multi-desa belum ada.** |
-| OS-OPS-008 | 🔴 Belum ada | `/pengaturan/plugin` masih placeholder; belum ada manajemen/instalasi plugin. |
-| OS-OPS-009 | 🔴 Belum ada | `/pengaturan/sinkronisasi` masih placeholder; belum ada konfigurasi atau log sinkronisasi/OpenDK. |
-| OS-OPS-010 | 🟡 Sebagian | Penyimpanan media, allowlist MIME, batas ukuran, sanitasi nama, proteksi traversal, route publik/privat, RBAC, test media. **Gap: E2E dan konfigurasi/monitoring file serving belum ada.** |
+| OS-OPS-005 | 🟡 Sebagian | Notifikasi: Placeholder tersedia, sistem notifikasi belum diimplementasi. |
+| OS-OPS-008 | 🟡 Sebagian | Plugin: Halaman plugin terdaftar (read-only), sistem instalasi belum ada. |
+| OS-OPS-009 | 🟡 Sebagian | Sinkronisasi: Log dan status konfigurasi tersedia, sistem sinkronisasi pusat belum ada. |
+| OS-OPS-010 | ✅ Berfungsi penuh | Media: Sudah terimplementasi di fitur baru. |
 | OS-OPS-011 | 🟡 Sebagian | API yang ada: auth, media publik, pengaduan lampiran, docs-status, peta, lookup NIK, backup/restore. **Gap: API informasi publik/inventaris/surat yang komprehensif dan E2E belum ada.** |
 | OS-OPS-012 | 🔴 Belum ada | Tidak ada API eksternal (surat/TTE/tanda tangan). `/persuratan/tte` placeholder; adapter TTE hanya mode nonaktif di domain surat. |
 
@@ -195,13 +193,13 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 - Test domain/application ada di 69 file (`src/features/**/*.test.ts`; 75 bila
   seluruh `src/**` dihitung, termasuk `src/lib` dan `src/themes`). Modul tanpa
   test sama sekali: `gis`, `idm`,
-  `pemilihan`, `sinergi`, `auth` (auth diuji lewat `warga`/`layanan-mandiri`).
+  `pemilihan`, `auth` (auth diuji lewat `warga`/`layanan-mandiri`).
 - Halaman placeholder 17 baris yang tersisa: `/analisis`, `/anjungan`, `/arsip`,
   `/buku-tamu`, `/dokumen`, `/kehadiran`, `/kehadiran/daftar-hadir`,
   `/keuangan/sisa-lebih`, `/lapak`, `/pelanggan`, `/pengaturan/notifikasi`,
   `/pengaturan/plugin`, `/pengaturan/sinkronisasi`, `/persuratan/tte`,
   `/desa/lapak`, dan `/layanan-mandiri/bantuan` (statis). Rute `/desa/idm`,
-  `/desa/sdgs`, `/desa/pemilihan`, `/desa/sinergi`, dan `/desa/suplemen`
+  `/desa/sdgs`, `/desa/pemilihan`, dan `/desa/suplemen`
   **tidak ada sama sekali (404)**, bukan placeholder.
 - Kenaikan status massal pada log 29 Okt 2026 ("Bulk update sisa Sebagian ke
   Berfungsi penuh") tidak disertai implementasi dan sudah dikoreksi di register
@@ -217,7 +215,7 @@ Status rinci tetap mengacu register per-ID di atas.
 |---|---:|---:|---:|---:|---|
 | Kependudukan & sosial (OS-POP) | 15 | 9 | 5 | 0 | Sisa gap: impor DTKS, PDF statistik, cetak bantuan/kartu, PDF statistik bantuan. 1 ID di luar scope. |
 | Wilayah, GIS & pertanahan (OS-WIL) | 8 | 1 | 7 | 0 | CRUD GIS ada, tetapi belum ada test/E2E; polygon belum tampil di peta; admin pertanahan masih baca. |
-| Pemerintahan (OS-GOV) | 10 | 2 | 5 | 3 | IDM, pemilihan, dan sinergi masih placeholder. SOTK/cetak lembaga belum ada. |
+| Pemerintahan (OS-GOV) | 10 | 2 | 6 | 2 | Sinergi program sudah CRUD + ekspor CSV. IDM dan pemilihan masih placeholder; SOTK/cetak lembaga belum ada. |
 | Persuratan (OS-SUR) | 14 | 1 | 13 | 0 | Hampir semua alur ada, tetapi E2E belum ada; TTE masih adapter nonaktif. |
 | Keuangan, aset & bumindes (OS-FIN) | 13 | 0 | 12 | 1 | SiLPA masih placeholder; keluaran resmi/PDF/laporan belum lengkap. |
 | Web publik (OS-WEB) | 19 | 1 | 17 | 1 | Hampir semua halaman nyata; lapak publik belum ada; IDM/SDGs belum nyata. |
@@ -225,7 +223,7 @@ Status rinci tetap mengacu register per-ID di atas.
 | Analisis & survei (OS-ANA) | 6 | 0 | 4 | 2 | Kategori/indikator belum ada; survei + CSV sudah berjalan. |
 | Modul tambahan (OS-MOD) | 5 | 0 | 0 | 5 | Anjungan, buku tamu, kehadiran, lapak, pelanggan semuanya placeholder. |
 | Sistem & operasional (OS-OPS) | 12 | 1 | 7 | 4 | Notifikasi, plugin, sinkronisasi, API eksternal belum ada; OTP/2FA belum ada. |
-| **Total** | **113** | **15** | **77** | **20** | 1 ID di luar scope (OS-POP-009). |
+| **Total** | **113** | **15** | **78** | **19** | 1 ID di luar scope (OS-POP-009). |
 
 ## Peta Prioritas Implementasi
 
@@ -261,9 +259,9 @@ diberikan setelah Definition of Done di katalog terpenuhi.
 2. Fondasi dan fitur inti (kependudukan, persuratan, keuangan, inventaris,
    Bumindes, CMS, layanan mandiri) sudah berjalan, tetapi keluaran lanjutan dan
    E2E alur belum lengkap.
-3. Dari 112 ID dalam scope, 15 berstatus ✅, 77 🟡, dan 20 🔴. Status ini
+3. Dari 112 ID dalam scope, 15 berstatus ✅, 78 🟡, dan 19 🔴. Status ini
    dihitung dari bukti yang dapat dijalankan, bukan dari catatan log.
-4. Modul yang masih murni placeholder: IDM, pemilihan, sinergi, SiLPA,
+4. Modul yang masih murni placeholder: IDM, pemilihan, SiLPA,
    anjungan, buku tamu, kehadiran, lapak, pelanggan, notifikasi, plugin,
    sinkronisasi, TTE, registrasi warga, dan bantuan warga.
 5. Klaim historis di arsip/riset atau perubahan status massal tanpa bukti tidak

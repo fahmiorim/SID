@@ -1,0 +1,1 @@
+ALTER TABLE `cdesa_mutasi` ADD CONSTRAINT `cdesa_mutasi_cdesa_id_cdesa_id_fk` FOREIGN KEY (`cdesa_id`) REFERENCES `cdesa` (`id`) ON DELETE CASCADE;

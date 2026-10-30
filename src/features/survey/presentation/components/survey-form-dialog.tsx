@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DESKRIPSI_MAX, JUDUL_MAX, type SurveyRow } from "@/features/survey/domain/survey";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { simpanSurveyAction } from "../actions";
 
@@ -47,7 +47,10 @@ function FieldError({ messages }: { messages?: string[] }) {
 export function SurveyFormDialog({ open, onOpenChange, survey }: SurveyFormDialogProps) {
   const router = useRouter();
   const isEdit = Boolean(survey);
-  const [state, formAction, isPending] = useActionState(simpanSurveyAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    simpanSurveyAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

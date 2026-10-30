@@ -27,7 +27,7 @@ import type {
   RumahTanggaDTO,
   RumahTanggaReferenceData,
 } from "@/features/rumah-tangga/domain/rumah-tangga";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveRumahTanggaAction } from "../actions";
@@ -69,7 +69,10 @@ export function RumahTanggaFormDialog({
   rumahTangga,
 }: RumahTanggaFormDialogProps) {
   const isEdit = Boolean(rumahTangga);
-  const [state, formAction, isPending] = useActionState(saveRumahTanggaAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveRumahTanggaAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

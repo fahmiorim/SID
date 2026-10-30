@@ -20,6 +20,11 @@ export type ActionState<T = null> =
 
 export const idleActionState: ActionState<null> = { status: "idle" };
 
+/** Buat idle state dengan tipe data generik untuk menghindari cast `as any`. */
+export function createIdleActionState<T = null>(): ActionState<T> {
+  return { status: "idle" };
+}
+
 export function successState<T = null>(message: string, data: T = null as T): ActionState<T> {
   return { status: "success", message, data };
 }

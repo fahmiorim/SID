@@ -36,7 +36,7 @@ import {
   type JenisSuratDTO,
   type KlasifikasiSuratDTO,
 } from "@/features/surat/domain/surat";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveJenisSuratAction } from "../master-actions";
@@ -74,7 +74,10 @@ export function JenisSuratFormDialog({
   syarat,
 }: JenisSuratFormDialogProps) {
   const isEdit = Boolean(jenis);
-  const [state, formAction, isPending] = useActionState(saveJenisSuratAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveJenisSuratAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

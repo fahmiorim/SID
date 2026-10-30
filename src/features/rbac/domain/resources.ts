@@ -60,6 +60,7 @@ export const RESOURCES = {
   gisPoint: "titik-peta",
   gisSimbol: "simbol-peta",
   pertanahan: "pertanahan",
+  sinergi: "sinergi",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

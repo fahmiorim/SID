@@ -633,6 +633,16 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     parentSlug: "pengaturan",
   },
   {
+    slug: "sinergi",
+    name: "Sinergi Program",
+    url: "/desa/sinergi",
+    icon: "handshake",
+    sortOrder: 7,
+    isGroup: false,
+    parentSlug: "pengaturan",
+  },
+
+  {
     slug: "pemetaan",
     name: "Pemetaan",
     url: null,

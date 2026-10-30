@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ModulDTO, ModulOption } from "@/features/modul/domain/modul";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveModulAction } from "../actions";
@@ -52,7 +52,7 @@ function FieldError({ messages }: { messages?: string[] }) {
 
 export function ModulFormDialog({ open, onOpenChange, modul, parents }: ModulFormDialogProps) {
   const isEdit = Boolean(modul);
-  const [state, formAction, isPending] = useActionState(saveModulAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(saveModulAction, createIdleActionState());
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { KlasifikasiSuratDTO } from "@/features/surat/domain/surat";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { saveKlasifikasiAction } from "../master-actions";
 
@@ -47,7 +47,10 @@ export function KlasifikasiFormDialog({
   klasifikasi,
 }: KlasifikasiFormDialogProps) {
   const isEdit = Boolean(klasifikasi);
-  const [state, formAction, isPending] = useActionState(saveKlasifikasiAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveKlasifikasiAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { SoalRow } from "@/features/survey/domain/survey";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 
 import { simpanRespondenAction } from "../actions";
 
@@ -52,7 +52,10 @@ export function RespondenFormDialog({
   soal,
 }: RespondenFormDialogProps) {
   const router = useRouter();
-  const [state, formAction, isPending] = useActionState(simpanRespondenAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    simpanRespondenAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

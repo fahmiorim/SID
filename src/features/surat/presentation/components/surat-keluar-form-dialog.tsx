@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { KlasifikasiSuratDTO, SuratKeluarDTO } from "@/features/surat/domain/surat";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION, todayIsoDate } from "@/lib/forms";
 
 import { saveSuratKeluarAction } from "../agenda-actions";
@@ -58,7 +58,10 @@ export function SuratKeluarFormDialog({
   surat,
 }: SuratKeluarFormDialogProps) {
   const isEdit = Boolean(surat);
-  const [state, formAction, isPending] = useActionState(saveSuratKeluarAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveSuratKeluarAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {

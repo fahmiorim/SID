@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { KeluargaDTO, KeluargaReferenceData } from "@/features/keluarga/domain/keluarga";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState } from "@/lib/action-state";
 import { NO_SELECTION } from "@/lib/forms";
 
 import { saveKeluargaAction } from "../actions";
@@ -65,7 +65,10 @@ export function KeluargaFormDialog({
   keluarga,
 }: KeluargaFormDialogProps) {
   const isEdit = Boolean(keluarga);
-  const [state, formAction, isPending] = useActionState(saveKeluargaAction, idleActionState);
+  const [state, formAction, isPending] = useActionState(
+    saveKeluargaAction,
+    createIdleActionState(),
+  );
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {
