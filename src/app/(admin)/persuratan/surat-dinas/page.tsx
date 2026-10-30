@@ -1,4 +1,4 @@
-import { ScrollText } from "lucide-react";
+import { Printer, ScrollText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -44,8 +44,16 @@ export default async function SuratDinasPage({
     <div className="space-y-6">
       <PageHeader
         title="Surat Dinas"
-        description="Surat resmi antar instansi beserta arsip lampirannya."
-        actions={canManage ? <SuratDinasCreateButton classifications={classifications} /> : null}
+        description="Buku surat dinas antar instansi."
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Cetak
+            </Button>
+            {canManage ? <SuratDinasCreateButton classifications={classifications} /> : null}
+          </div>
+        }
       />
 
       <Card>

@@ -1,4 +1,4 @@
-import { Scale, Wallet } from "lucide-react";
+import { BookOpen, Scale, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -66,6 +66,12 @@ export default async function AnggaranPage({
               <Link href={`/keuangan/rekonsiliasi?tahun=${tahun}`}>
                 <Scale className="size-4" />
                 Rekonsiliasi
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/keuangan/pembukuan">
+                <BookOpen className="size-4" />
+                Pembukuan
               </Link>
             </Button>
             <LaporanPrintButton />

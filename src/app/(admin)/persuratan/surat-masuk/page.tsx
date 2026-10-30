@@ -1,4 +1,4 @@
-import { Inbox } from "lucide-react";
+import { Inbox, Printer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -45,7 +45,15 @@ export default async function SuratMasukPage({
       <PageHeader
         title="Surat Masuk"
         description="Buku agenda surat yang diterima desa."
-        actions={canManage ? <SuratMasukCreateButton classifications={classifications} /> : null}
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Cetak
+            </Button>
+            {canManage ? <SuratMasukCreateButton classifications={classifications} /> : null}
+          </div>
+        }
       />
 
       <Card>

@@ -1,9 +1,11 @@
+import { Printer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -63,11 +65,17 @@ export default async function BantuanDetailPage({ params }: { params: Promise<{ 
         title={program.name}
         description={`Program bantuan desa | ${sasaranLabel(program.sasaran)} | ${asalDanaLabel(program.asalDana)}`}
         actions={
-          canManage ? (
-            <Link href="/bantuan" className="rounded-md border px-3 py-2 text-sm">
-              Kembali daftar program
-            </Link>
-          ) : null
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Cetak
+            </Button>
+            {canManage ? (
+              <Button asChild variant="outline">
+                <Link href="/bantuan">Kembali daftar program</Link>
+              </Button>
+            ) : null}
+          </div>
         }
       />
 

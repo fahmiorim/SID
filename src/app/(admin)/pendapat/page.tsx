@@ -1,17 +1,28 @@
+import { FileDown } from "lucide-react";
+import Link from "next/link";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Button } from "@/components/ui/button";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { JAWABAN_KEPUASAN, PENDAPAT_RESOURCE } from "@/features/pendapat/domain/pendapat";
 import {
-  listPendapat,
-  rekapPendapat,
-} from "@/features/pendapat/infrastructure/pendapat-repository";
+  getRekapPendapatUseCase,
+  listPendapatUseCase,
+} from "@/features/pendapat/application/use-cases";
+import { JAWABAN_KEPUASAN, PENDAPAT_RESOURCE } from "@/features/pendapat/domain/pendapat";
+import { PendapatRowActions } from "@/features/pendapat/presentation/components/pendapat-row-actions";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
 export const dynamic = "force-dynamic";
 
-export default async function PendapatPage() {
+const PAGE_SIZE = 20;
+
+export default async function PendapatPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
   const user = await verifySession();
   if (!hasPermission(user.permissions, PENDAPAT_RESOURCE, "read")) {
     return (
@@ -19,12 +30,32 @@ export default async function PendapatPage() {
     );
   }
   const villageId = await resolveVillageId(user);
-  const [rekap, list] = await Promise.all([rekapPendapat(villageId), listPendapat(villageId, 100)]);
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page ?? 1));
+  const [rekap, result] = await Promise.all([
+    getRekapPendapatUseCase(villageId),
+    listPendapatUseCase(villageId, page, PAGE_SIZE),
+  ]);
   const labelMap = new Map<number, string>(JAWABAN_KEPUASAN.map((j) => [j.value, j.label]));
+  const pageCount = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+  const canDelete = hasPermission(user.permissions, PENDAPAT_RESOURCE, "delete");
 
   return (
     <div className="space-y-6 p-6">
-      <PageHeader title="Pendapat Warga" description="Jajak pendapat kepuasan pelayanan" />
+      <PageHeader
+        title="Pendapat Warga"
+        description="Jajak pendapat kepuasan pelayanan"
+        actions={
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button variant="outline" asChild>
+              <a href="/pendapat/ekspor">
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
+          </div>
+        }
+      />
       <div className="rounded-md border">
         <div className="p-4 font-medium">Rekapitulasi</div>
         <div className="overflow-x-auto">
@@ -49,7 +80,7 @@ export default async function PendapatPage() {
         </div>
       </div>
       <div className="rounded-md border">
-        <div className="p-4 font-medium">Daftar Pendapat</div>
+        <div className="p-4 font-medium">Daftar Pendapat ({result.total})</div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -57,21 +88,27 @@ export default async function PendapatPage() {
                 <th className="p-2 text-left">Tanggal</th>
                 <th className="p-2 text-left">Pengguna</th>
                 <th className="p-2 text-left">Jawaban</th>
+                {canDelete ? <th className="p-2 text-right">Aksi</th> : null}
               </tr>
             </thead>
             <tbody>
-              {list.map((r) => (
+              {result.rows.map((r) => (
                 <tr key={r.id} className="border-b">
                   <td className="p-2">
                     {r.createdAt ? new Date(r.createdAt as string).toLocaleString("id-ID") : "-"}
                   </td>
                   <td className="p-2">{r.pengguna ?? "-"}</td>
                   <td className="p-2">{labelMap.get(Number(r.pilihan)) ?? r.pilihan}</td>
+                  {canDelete ? (
+                    <td className="p-2 text-right">
+                      <PendapatRowActions id={r.id} />
+                    </td>
+                  ) : null}
                 </tr>
               ))}
-              {list.length === 0 && (
+              {result.rows.length === 0 && (
                 <tr>
-                  <td className="p-2 text-muted-foreground" colSpan={3}>
+                  <td className="p-2 text-muted-foreground" colSpan={canDelete ? 4 : 3}>
                     Belum ada pendapat warga.
                   </td>
                 </tr>
@@ -80,6 +117,15 @@ export default async function PendapatPage() {
           </table>
         </div>
       </div>
+      {pageCount > 1 && (
+        <div className="flex flex-wrap items-center gap-2">
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+            <Button key={p} variant={p === page ? "default" : "outline"} size="sm" asChild>
+              <Link href={p === 1 ? "/pendapat" : `/pendapat?page=${p}`}>{p}</Link>
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

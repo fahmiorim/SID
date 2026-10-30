@@ -1,4 +1,4 @@
-import { Search, UsersRound } from "lucide-react";
+import { Printer, Search, UsersRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -84,11 +84,17 @@ export default async function KelompokPage({ searchParams }: PageProps<"/kelompo
     <div className="space-y-6">
       <PageHeader
         title="Kelompok & Lembaga"
-        description="Kelompok masyarakat dan lembaga desa beserta ketua dan jumlah anggotanya."
+        description="Master kelompok masyarakat dan lembaga desa."
         actions={
-          canManage ? (
-            <KelompokCreateButton defaultTipe={(tipe as KelompokTipe) || "kelompok"} />
-          ) : null
+          <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button type="button" variant="outline" onClick={() => window.print()}>
+              <Printer className="size-4" />
+              Cetak
+            </Button>
+            {canManage ? (
+              <KelompokCreateButton defaultTipe={(tipe as KelompokTipe) || "kelompok"} />
+            ) : null}
+          </div>
         }
       />
 

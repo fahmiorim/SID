@@ -188,3 +188,12 @@ export default async function WilayahPage({ searchParams }: PageProps<"/wilayah"
     </div>
   );
 }
+
+<div className="flex flex-wrap items-center gap-2">
+  <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
+    Cetak
+  </Button>
+  <Button asChild variant="outline" size="sm">
+    <Link href="/wilayah/rekap">Rekap Wilayah</Link>
+  </Button>
+</div>;

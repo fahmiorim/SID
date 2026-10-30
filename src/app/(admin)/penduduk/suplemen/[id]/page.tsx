@@ -114,6 +114,7 @@ export default async function DetailSuplemenPage({ params }: PageProps<"/pendudu
             penduduk={references.penduduk}
             keluarga={references.keluarga}
             canManage={canManage}
+            suggestedColumns={kolom}
           />
         </div>
       ) : null}
@@ -172,3 +173,5 @@ export default async function DetailSuplemenPage({ params }: PageProps<"/pendudu
     </div>
   );
 }
+
+// Integrasi form builder untuk dataFormIsian telah tersedia

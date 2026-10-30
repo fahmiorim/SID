@@ -84,6 +84,7 @@ export default async function CetakSuratPage({
         <header className="relative border-b-4 border-double border-black pb-3 text-center">
           {logoUrl ? (
             // Logo desa di kiri kop surat (jika sudah diunggah).
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={logoUrl}
               alt={`Logo ${desa.namaDesa ?? "desa"}`}
@@ -125,6 +126,7 @@ export default async function CetakSuratPage({
             {/* Tanda tangan terupload menimpa ruang kosong; stempel menimpa
                 di sisi kirinya (kosmetik: opacity agar tulisan terbaca). */}
             {stempelUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={stempelUrl}
                 alt="Stempel desa"
@@ -132,6 +134,7 @@ export default async function CetakSuratPage({
               />
             ) : null}
             {ttdUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={ttdUrl}
                 alt={`Tanda tangan ${desa.namaKepalaDesa ?? "Kepala Desa"}`}
