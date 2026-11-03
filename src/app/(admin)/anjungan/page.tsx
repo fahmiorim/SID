@@ -1,34 +1,39 @@
 import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent } from "@/components/ui/card";
-import { listAnjunganAction } from "@/features/anjungan/presentation/anjungan-actions";
+import { NoAccess } from "@/components/shared/no-access";
+import { daftarAnjungan } from "@/features/anjungan/application/anjungan-use-cases";
+import { ANJUNGAN_RESOURCE } from "@/features/anjungan/domain/anjungan";
+import { AnjunganManager } from "@/features/anjungan/presentation/components/anjungan-manager";
+import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { hasPermission } from "@/features/rbac/application/authorization";
+import { verifySession } from "@/lib/dal";
 
 export const metadata = { title: "Anjungan Desa" };
+export const dynamic = "force-dynamic";
 
 export default async function AnjunganPage() {
-  const items = await listAnjunganAction();
+  const user = await verifySession();
+
+  if (!hasPermission(user.permissions, ANJUNGAN_RESOURCE, "read")) {
+    return (
+      <NoAccess
+        title="Anjungan Desa"
+        description="Data anjungan hanya dapat dibuka oleh petugas berwenang."
+      />
+    );
+  }
+
+  const villageId = await resolveVillageId(user);
+  const items = await daftarAnjungan(villageId);
+  const canWrite = hasPermission(user.permissions, ANJUNGAN_RESOURCE, "update");
+  const canManage = hasPermission(user.permissions, ANJUNGAN_RESOURCE, "delete");
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Anjungan Desa" description="Kelola anjungan/layanan mandiri desa" />
-      <Card>
-        <CardContent className="p-6">
-          {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Belum ada data anjungan.</p>
-          ) : (
-            <dl className="space-y-4">
-              {items.map((item) => (
-                <div key={item.id} className="border-b pb-4 last:border-0">
-                  <dt className="font-medium">{item.nama}</dt>
-                  <dd className="text-sm text-muted-foreground">{item.deskripsi ?? "-"}</dd>
-                  <dd className="text-xs text-muted-foreground">
-                    Status: {item.aktif ? "Aktif" : "Nonaktif"} | Urutan: {item.urutan}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </CardContent>
-      </Card>
+      <PageHeader
+        title="Anjungan Desa"
+        description="Kelola daftar layanan anjungan mandiri yang tersedia di kantor desa."
+      />
+      <AnjunganManager items={items} canWrite={canWrite} canManage={canManage} />
     </div>
   );
 }

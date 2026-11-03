@@ -33,9 +33,9 @@ export async function createPelangganAction(
       alamat: formData.get("alamat"),
       keterangan: formData.get("keterangan"),
     };
-    const id = await tambahPelanggan(user.villageId, input);
+    const result = await tambahPelanggan(user.villageId, input);
     revalidatePath("/pelanggan");
-    return successState("Pelanggan berhasil ditambahkan.", { id });
+    return successState("Customer added successfully.", result);
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
       return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
@@ -61,7 +61,7 @@ export async function updatePelangganAction(
     };
     await ubahPelanggan(user.villageId, id, input);
     revalidatePath("/pelanggan");
-    return successState("Pelanggan berhasil diperbarui.");
+    return successState("Customer updated successfully.");
   } catch (error) {
     if (error instanceof Error && error.name === "ZodError") {
       return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
@@ -81,7 +81,7 @@ export async function deletePelangganAction(
     if (!id) return errorState("ID tidak valid.");
     await hapusPelanggan(user.villageId, id);
     revalidatePath("/pelanggan");
-    return successState("Pelanggan berhasil dihapus.");
+    return successState("Customer deleted successfully.");
   } catch (error) {
     return errorState(isAppError(error) ? error.message : "Gagal menghapus pelanggan.");
   }

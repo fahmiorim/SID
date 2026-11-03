@@ -76,20 +76,22 @@ export const auth = betterAuth({
       );
 
       const resetUrl = `${env.BETTER_AUTH_URL}/reset-sandi?token=${token}`;
-      const apiKey = process.env.RESEND_API_KEY;
-      if (!apiKey) {
+      const apiKey = env.RESEND_API_KEY;
+      if (!apiKey || !env.RESEND_FROM) {
         // shortcut: tanpa Resend, tautan reset hanya tersedia di console dev.
         if (env.NODE_ENV === "development") {
           console.warn(`[auth] tautan reset sandi ${user.email}: ${resetUrl}`);
         } else {
-          console.error("[auth] RESEND_API_KEY tidak dikonfigurasi; email reset tidak dikirim.");
+          console.error(
+            "[auth] Konfigurasi RESEND_API_KEY/RESEND_FROM tidak lengkap; email reset tidak dikirim.",
+          );
         }
         return;
       }
 
       const { Resend } = await import("resend");
       const { error } = await new Resend(apiKey).emails.send({
-        from: "SID Desa <notifikasi@sid-desa.id>",
+        from: env.RESEND_FROM,
         to: user.email,
         subject: `[${APP_NAME}] Atur ulang sandi`,
         text: `Halo ${user.name},\n\nBuka tautan berikut untuk mengatur ulang sandi Anda:\n${resetUrl}\n\nAbaikan email ini bila Anda tidak memintanya.`,

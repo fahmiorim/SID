@@ -15,7 +15,12 @@ export type FieldErrors = Record<string, string[]>;
  */
 export type ActionState<T = null> =
   | { readonly status: "idle" }
-  | { readonly status: "success"; readonly message: string; readonly data: T }
+  | {
+      readonly status: "success";
+      readonly message: string;
+      readonly data: T;
+      readonly tone?: "warning";
+    }
   | { readonly status: "error"; readonly message: string; readonly fieldErrors?: FieldErrors };
 
 export const idleActionState: ActionState<null> = { status: "idle" };
@@ -25,8 +30,12 @@ export function createIdleActionState<T = null>(): ActionState<T> {
   return { status: "idle" };
 }
 
-export function successState<T = null>(message: string, data: T = null as T): ActionState<T> {
-  return { status: "success", message, data };
+export function successState<T = null>(
+  message: string,
+  data: T = null as T,
+  tone?: "warning",
+): ActionState<T> {
+  return tone ? { status: "success", message, data, tone } : { status: "success", message, data };
 }
 
 export function errorState(message: string, fieldErrors?: FieldErrors): ActionState<never> {

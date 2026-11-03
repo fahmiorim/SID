@@ -1,19 +1,17 @@
 import { z } from "zod";
 
+import {
+  DOKUMEN_KATEGORI,
+  isHttpsEmbedUrl,
+  isSafeDocumentLink,
+  type DokumenKategori,
+} from "@/features/publik/domain/dokumen";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 
 /** Dokumen publik (Fase 1F.6). */
 export const DOKUMEN_RESOURCE = RESOURCES.dokumenPublik;
 
-/** Kategori dokumen yang tampil di situs publik. */
-export const DOKUMEN_KATEGORI = ["informasi_publik", "produk_hukum", "lainnya"] as const;
-export type DokumenKategori = (typeof DOKUMEN_KATEGORI)[number];
-
-export const DOKUMEN_KATEGORI_LABELS: Record<DokumenKategori, string> = {
-  informasi_publik: "Informasi publik",
-  produk_hukum: "Produk hukum",
-  lainnya: "Lainnya",
-};
+export type { DokumenKategori };
 
 /** Baris dokumen yang aman dikirim ke komponen klien. */
 export interface DokumenRow {
@@ -37,8 +35,8 @@ const tautanSchema = z
   .optional()
   .default("")
   .refine(
-    (value) => !value || /^https?:\/\//i.test(value) || value.startsWith("/"),
-    "Tautan harus URL http(s) atau path yang diawali '/'.",
+    (value) => !value || isSafeDocumentLink(value),
+    "Tautan harus URL http(s) aman atau path lokal yang diawali '/'.",
   );
 
 /** Skema form dokumen publik. */
@@ -62,9 +60,12 @@ export const dokumenPublikFormSchema = z
       .optional(),
     aktif: z.boolean().default(true),
   })
-  .refine((data) => data.berkas !== "" || data.tautan !== "", {
+  .refine((data) => data.kategori !== "embed" || isHttpsEmbedUrl(data.tautan), {
+    path: ["tautan"],
+    message: "Sumber embed wajib berupa URL HTTPS publik.",
+  })
+  .refine((data) => !data.aktif || data.berkas || data.tautan, {
     path: ["berkas"],
-    message: "Isi path berkas atau tautan unduhan.",
+    message: "Dokumen aktif harus memiliki berkas atau tautan.",
   });
-
 export type DokumenPublikFormInput = z.infer<typeof dokumenPublikFormSchema>;

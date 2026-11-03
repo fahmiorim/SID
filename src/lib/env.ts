@@ -12,28 +12,50 @@ import { z } from "zod";
  * skrip Node (drizzle-kit, seeder). Jangan pernah mengimpornya dari komponen
  * client — variabel non-`NEXT_PUBLIC_*` hanya untuk server.
  */
-const envSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+const envSchema = z
+  .object({
+    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 
-  /** URL publik aplikasi (untuk tautan absolut, callback OAuth, dsb.). */
-  APP_URL: z.url().default("http://localhost:3000"),
+    /** URL publik aplikasi (untuk tautan absolut, callback OAuth, dsb.). */
+    APP_URL: z.url().default("http://localhost:3000"),
 
-  /** DSN MySQL/MariaDB: mysql://user:pass@host:port/database */
-  DATABASE_URL: z.string().min(1, "DATABASE_URL wajib diisi."),
+    /** DSN MySQL/MariaDB: mysql://user:pass@host:port/database */
+    DATABASE_URL: z.string().min(1, "DATABASE_URL wajib diisi."),
 
-  /** Secret better-auth, minimal 32 karakter. */
-  BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET minimal 32 karakter."),
+    /** Secret better-auth, minimal 32 karakter. */
+    BETTER_AUTH_SECRET: z.string().min(32, "BETTER_AUTH_SECRET minimal 32 karakter."),
 
-  /** Base URL better-auth (biasanya sama dengan APP_URL). */
-  BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
+    /** Base URL better-auth (biasanya sama dengan APP_URL). */
+    BETTER_AUTH_URL: z.url().default("http://localhost:3000"),
+    /** Kredensial pengiriman email Resend; opsional bila email belum diaktifkan. */
+    RESEND_API_KEY: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+    /** Alamat pengirim yang sudah diverifikasi pada domain Resend. */
+    RESEND_FROM: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
 
-  // --- Seeder (opsional; hanya dibaca oleh `npm run db:seed`) ---------------
-  // Divalidasi di sini agar nilai yang salah ketahuan sebelum menyentuh data.
-  SEED_ADMIN_USERNAME: z.string().min(3).optional(),
-  SEED_ADMIN_EMAIL: z.email().optional(),
-  SEED_ADMIN_PASSWORD: z.string().min(8).optional(),
-  SEED_ADMIN_NAME: z.string().min(1).optional(),
-});
+    // --- Seeder (opsional; hanya dibaca oleh `npm run db:seed`) ---------------
+    // Divalidasi di sini agar nilai yang salah ketahuan sebelum menyentuh data.
+    SEED_ADMIN_USERNAME: z.string().min(3).optional(),
+    SEED_ADMIN_EMAIL: z.email().optional(),
+    SEED_ADMIN_PASSWORD: z.string().min(8).optional(),
+    SEED_ADMIN_NAME: z.string().min(1).optional(),
+  })
+  .superRefine(({ RESEND_API_KEY, RESEND_FROM }, context) => {
+    if (RESEND_API_KEY && !RESEND_FROM) {
+      context.addIssue({
+        code: "custom",
+        path: ["RESEND_FROM"],
+        message: "RESEND_FROM wajib diisi saat RESEND_API_KEY dikonfigurasi.",
+      });
+    }
+  });
 
 export type Env = z.infer<typeof envSchema>;
 

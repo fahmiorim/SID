@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { listKategoriLapak, listLapak } from "@/features/lapak/infrastructure/lapak-repository";
+import { daftarLapakPublik } from "@/features/lapak/application/lapak-publik";
 
 export const dynamic = "force-dynamic";
 
@@ -12,15 +13,31 @@ export const metadata: Metadata = {
   description: "Produk dan UMKM Desa",
 };
 
-export default async function LapakPublicPage() {
+function buatHref(opts: { kategori?: string; q?: string }) {
+  const params = new URLSearchParams();
+  if (opts.kategori) params.set("kategori", opts.kategori);
+  if (opts.q) params.set("q", opts.q);
+  const query = params.toString();
+  return query ? `/desa/lapak?${query}` : "/desa/lapak";
+}
+
+export default async function LapakPublicPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategori?: string; q?: string }>;
+}) {
   const identitas = await getIdentitasFromRequest();
   const villageId = identitas?.id;
   if (!villageId) notFound();
 
-  const [items, kategoriList] = await Promise.all([
-    listLapak(villageId),
-    listKategoriLapak(villageId),
-  ]);
+  const params = await searchParams;
+  const kategori = typeof params.kategori === "string" ? params.kategori.trim() : "";
+  const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
+
+  const { items, kategori: kategoriList } = await daftarLapakPublik(villageId, {
+    kategori: kategori || undefined,
+    q: q || undefined,
+  });
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -31,27 +48,68 @@ export default async function LapakPublicPage() {
         </p>
       </header>
 
+      <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
+        {kategori ? <input type="hidden" name="kategori" value={kategori} /> : null}
+        <input
+          type="search"
+          name="q"
+          defaultValue={q}
+          placeholder="Cari nama, pemilik, atau alamat"
+          className="h-9 w-full max-w-sm rounded-md border bg-background px-3 text-sm"
+        />
+        <button
+          type="submit"
+          className="h-9 rounded-md border px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+        >
+          Cari
+        </button>
+        {q ? (
+          <Link
+            href={buatHref({ kategori: kategori || undefined })}
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Hapus pencarian
+          </Link>
+        ) : null}
+      </form>
+
       {kategoriList.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Filter: </span>
-          <button className="rounded-full border px-3 py-1 text-sm hover:bg-accent hover:text-accent-foreground">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Filter:</span>
+          <Link
+            href={buatHref({ q: q || undefined })}
+            className={
+              kategori
+                ? "rounded-full border px-3 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+                : "rounded-full border bg-primary px-3 py-1 text-sm text-primary-foreground"
+            }
+          >
             Semua
-          </button>
+          </Link>
           {kategoriList.map((k) => (
-            <button
+            <Link
               key={k}
-              className="rounded-full border px-3 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+              href={buatHref({ kategori: k, q: q || undefined })}
+              className={
+                kategori === k
+                  ? "rounded-full border bg-primary px-3 py-1 text-sm text-primary-foreground"
+                  : "rounded-full border px-3 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+              }
             >
               {k}
-            </button>
+            </Link>
           ))}
         </div>
       )}
 
+      <p className="mb-3 text-sm text-muted-foreground">
+        {items.length} lapak ditemukan{kategori ? ` pada kategori “${kategori}”` : ""}.
+      </p>
+
       {items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
-            Belum ada data lapak UMKM untuk desa ini.
+            Belum ada data lapak UMKM yang cocok.
           </CardContent>
         </Card>
       ) : (

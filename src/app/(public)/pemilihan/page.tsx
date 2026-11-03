@@ -1,21 +1,5 @@
-import { PageHeader } from "@/components/layout/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Pemilihan Desa" };
-export const dynamic = "force-dynamic";
-
-export default function PemilihanPage() {
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Pemilihan Desa" description="Data pemilihan, pemilih, calon, dan hasil" />
-      <Card>
-        <CardContent className="p-6">
-          <p className="text-sm text-muted-foreground">
-            Modul pemilihan desa tersedia. Silakan login sebagai admin untuk melihat data lengkap
-            pemilih, calon, dan hasil pemilihan.
-          </p>
-        </CardContent>
-      </Card>
-    </div>
-  );
+export default function PemilihanRedirectPage() {
+  redirect("/desa/pemilihan");
 }

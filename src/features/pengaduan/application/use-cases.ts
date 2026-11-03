@@ -50,11 +50,13 @@ export async function getPengaduanDetailData(id: number) {
   return getPengaduan(villageId, id);
 }
 
-/** Simpan status & tanggapan petugas. */
+export type StatusEmailNotification = "not-needed" | "sent" | "skipped" | "failed";
+
+/** Simpan status & tanggapan petugas; hasil email tidak membatalkan penyimpanan. */
 export async function tanggapiPengaduanData(
   id: number,
   input: TanggapanInput,
-): Promise<{ id: number }> {
+): Promise<{ id: number; notification: StatusEmailNotification }> {
   const user = await requirePermission(RESOURCES.pengaduan, "update");
   const villageId = await resolveVillageId(user);
 
@@ -69,16 +71,18 @@ export async function tanggapiPengaduanData(
     ditanggapiPada: new Date(),
   });
 
-  // Kirim notifikasi ke pelapor hanya bila status benar-benar berubah dan
-  // pelapor meninggalkan email (kolom `pengaduan.email` boleh kosong).
-  const statusBaru = input.status;
-  const statusLama = pengaduan.status;
-
-  if (pengaduan.email && statusBaru !== statusLama) {
-    await notifyStatusChange(pengaduan.nomorTiket, pengaduan.email, statusBaru, statusLama);
+  let notification: StatusEmailNotification = "not-needed";
+  if (pengaduan.email && input.status !== pengaduan.status) {
+    const result = await notifyStatusChange(
+      pengaduan.nomorTiket,
+      pengaduan.email,
+      input.status,
+      pengaduan.status,
+    );
+    notification = result.success ? "sent" : result.skipped ? "skipped" : "failed";
   }
 
-  return { id };
+  return { id, notification };
 }
 
 /** Tandai pengaduan boleh tampil di halaman publik. */

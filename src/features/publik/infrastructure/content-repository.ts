@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, isNotNull, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, like, lte, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -17,6 +17,7 @@ import {
   slider,
   widget,
 } from "@/db/schema";
+import { DOKUMEN_PAGE_SIZE, type DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
 
 /**
  * Query konten situs publik (Fase 1C).
@@ -390,6 +391,78 @@ export async function listDokumenPublik(
     .from(dokumenPublik)
     .where(and(...kondisi))
     .orderBy(desc(dokumenPublik.tahun), asc(dokumenPublik.nama));
+}
+
+export interface CariDokumenPublikFilter {
+  search: string;
+  category: DokumenKategoriFilter;
+  year?: number;
+  page: number;
+}
+
+export interface DokumenPublikPage {
+  rows: DokumenRingkas[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Cari dan paginasi dokumen aktif; seluruh hasil dibatasi pada tenant host. */
+export async function cariDokumenPublik(
+  villageId: number,
+  filter: CariDokumenPublikFilter,
+): Promise<DokumenPublikPage> {
+  const conditions = [eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.aktif, true)];
+  if (filter.category !== "semua") {
+    conditions.push(eq(dokumenPublik.kategori, filter.category));
+  }
+  if (filter.year !== undefined) {
+    conditions.push(eq(dokumenPublik.tahun, filter.year));
+  }
+  const query = filter.search.trim().slice(0, 100);
+  if (query) {
+    const search = `%${query}%`;
+    const textFilter = or(
+      like(dokumenPublik.nama, search),
+      like(dokumenPublik.jenis, search),
+      like(dokumenPublik.nomor, search),
+      like(dokumenPublik.keterangan, search),
+    );
+    if (textFilter) conditions.push(textFilter);
+  }
+
+  const where = and(...conditions) ?? eq(dokumenPublik.villageId, -1);
+  const [totalRow] = await db.select({ value: count() }).from(dokumenPublik).where(where);
+  const total = totalRow?.value ?? 0;
+  const requestedPage = Math.max(1, Math.floor(Number.isFinite(filter.page) ? filter.page : 1));
+  const lastPage = Math.max(1, Math.ceil(total / DOKUMEN_PAGE_SIZE));
+  const page = Math.min(requestedPage, lastPage);
+  const rows = await db
+    .select({
+      id: dokumenPublik.id,
+      nama: dokumenPublik.nama,
+      slug: dokumenPublik.slug,
+      kategori: dokumenPublik.kategori,
+      jenis: dokumenPublik.jenis,
+      nomor: dokumenPublik.nomor,
+      tahun: dokumenPublik.tahun,
+      berkas: dokumenPublik.berkas,
+      tautan: dokumenPublik.tautan,
+      keterangan: dokumenPublik.keterangan,
+      aktif: dokumenPublik.aktif,
+    })
+    .from(dokumenPublik)
+    .where(where)
+    .orderBy(desc(dokumenPublik.tahun), asc(dokumenPublik.nama), asc(dokumenPublik.id))
+    .limit(DOKUMEN_PAGE_SIZE)
+    .offset((page - 1) * DOKUMEN_PAGE_SIZE);
+
+  return {
+    rows,
+    total,
+    page,
+    pageSize: DOKUMEN_PAGE_SIZE,
+  };
 }
 
 /** Cek slug dokumen unik per desa (kecuali baris yang sedang diubah). */

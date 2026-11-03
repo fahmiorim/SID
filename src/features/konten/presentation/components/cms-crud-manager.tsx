@@ -57,6 +57,15 @@ export type CmsField =
       wide?: boolean;
     }
   | {
+      type: "file";
+      name: string;
+      label: string;
+      accept?: string;
+      help?: string;
+      required?: boolean;
+      wide?: boolean;
+    }
+  | {
       type: "number";
       name: string;
       label: string;
@@ -197,17 +206,20 @@ function FieldControl({
         <Input
           id={id}
           name={field.name}
-          type={field.type === "number" ? "number" : "text"}
-          defaultValue={typeof value === "string" ? value : ""}
-          placeholder={field.placeholder}
+          type={field.type === "number" ? "number" : field.type === "file" ? "file" : "text"}
+          defaultValue={field.type === "file" ? undefined : typeof value === "string" ? value : ""}
           maxLength={field.type === "text" ? field.maxLength : undefined}
           min={field.type === "number" ? field.min : undefined}
           max={field.type === "number" ? field.max : undefined}
           step={field.type === "number" ? field.step : undefined}
           required={field.required}
           aria-invalid={invalid}
+          accept={field.type === "file" ? field.accept : undefined}
         />
       )}
+      {field.type === "file" && field.help ? (
+        <p className="text-xs text-muted-foreground">{field.help}</p>
+      ) : null}
       <FieldError messages={messages} />
     </div>
   );

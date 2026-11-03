@@ -32,7 +32,7 @@ export function KehadiranTable({ items, perangkatList }: KehadiranTableProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Daftar Hadir Perangkat Desa</CardTitle>
+        <CardTitle>Daftar Kehadiran Perangkat Desa</CardTitle>
         <Button
           onClick={() => {
             setSelected(null);

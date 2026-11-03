@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
 function escapeHtml(value: string): string {
@@ -12,14 +13,10 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Kirim notifikasi email saat status pengaduan berubah.
+ * Kirim email saat status pengaduan berubah.
  *
- * Fungsi ini akan mengirim email ke pelapor pengaduan ketika status
- * pengaduan berubah (oleh petugas/admin). Jika RESEND_API_KEY tidak
- * dikonfigurasi, notifikasi ini hanya akan dicatat ke console dan
- * aksi pengaduan tetap berhasil.
- *
- * Dipanggil dari use case setelah status pengaduan di-update.
+ * Tanpa kredensial Resend, pengiriman dilewati dan dicatat; gangguan provider
+ * tidak membatalkan perubahan status yang sudah disimpan.
  */
 export async function notifyStatusChange(
   nomorTiket: string,
@@ -33,57 +30,97 @@ export async function notifyStatusChange(
   data?: unknown;
   error?: string;
 }> {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = env.RESEND_API_KEY;
   if (!apiKey) {
     logger.warn(
-      `[notifikasi] RESEND_API_KEY not configured, notifikasi email dilewati untuk pengaduan ${nomorTiket}`,
+      `[notifikasi] RESEND_API_KEY tidak dikonfigurasi; email pengaduan ${nomorTiket} dilewati.`,
       {},
     );
-    // Catat bahwa notifikasi tidak terkirim tapi jangan gagalkan aksi pengaduan
     return {
-      success: true,
-      message: "RESEND_API_KEY not configured, notification skipped",
+      success: false,
+      message: "Pengiriman email dilewati karena Resend belum dikonfigurasi.",
       skipped: true,
+    };
+  }
+
+  const from = env.RESEND_FROM;
+  if (!from) {
+    logger.error(
+      `[notifikasi] RESEND_FROM tidak dikonfigurasi; email pengaduan ${nomorTiket} gagal.`,
+      {},
+    );
+    return {
+      success: false,
+      message: "Pengiriman email gagal karena alamat pengirim belum dikonfigurasi.",
+      skipped: true,
+      error: "RESEND_FROM tidak dikonfigurasi.",
     };
   }
 
   const resend = new Resend(apiKey);
 
   try {
-    const data = await resend.emails.send({
-      from: "SID Desa <notifikasi@desa.id>",
+    const { data, error } = await resend.emails.send({
+      from,
       to: [email],
       subject: `[Notifikasi] Status Pengaduan ${nomorTiket} Berubah`,
       html: `
         <p>Hai,</p>
-        <p>Status pengaduan dengan nomor <strong>${nomorTiket}</strong> telah berubah.</p>
-        <p><strong>Dari:</strong> ${escapeHtml(statusLama)}</p>
-        <p><strong>Menjadi:</strong> ${escapeHtml(statusBaru)}</p>
+        <p>Status pengaduan dengan nomor <strong>${escapeHtml(nomorTiket)}</strong> telah berubah.</p>
+        <p><strong>Dari:</strong> ${escapeHtml(formatStatusForNotifikasi(statusLama))}</p>
+        <p><strong>Menjadi:</strong> ${escapeHtml(formatStatusForNotifikasi(statusBaru))}</p>
         <p>Terima kasih telah menggunakan layanan pengaduan desa.</p>
       `,
     });
 
-    logger.info(`[notifikasi] Email berhasil terkirim untuk pengaduan ${nomorTiket}`, { data });
-    return { success: true, message: "Email terkirim", data, skipped: false };
+    if (error) {
+      logger.warn(`[notifikasi] Resend menolak email pengaduan ${nomorTiket}.`, {
+        error: error.message,
+      });
+      return {
+        success: false,
+        message: "Resend gagal menerima email notifikasi.",
+        error: error.message,
+        skipped: false,
+      };
+    }
+
+    if (!data) {
+      logger.warn(`[notifikasi] Resend tidak mengonfirmasi email pengaduan ${nomorTiket}.`, {});
+      return {
+        success: false,
+        message: "Resend tidak mengonfirmasi pengiriman email.",
+        error: "Respons Resend tidak berisi data email.",
+        skipped: false,
+      };
+    }
+
+    logger.info(`[notifikasi] Email pengaduan ${nomorTiket} diterima Resend.`, {
+      emailId: data.id,
+    });
+    return { success: true, message: "Email diterima Resend.", data, skipped: false };
   } catch (error) {
-    // Jika terjadi error lain, catat tapi jangan melempar ke use case
-    logger.warn(`[notifikasi] Gagal kirim email (akan dilanjutkan tanpa notifikasi):`, { error });
+    const message =
+      error instanceof Error ? error.message : "Kesalahan pengiriman email tidak diketahui.";
+    logger.warn(`[notifikasi] Gagal menghubungi Resend untuk pengaduan ${nomorTiket}.`, {
+      error: message,
+    });
     return {
       success: false,
-      message: "Gagal mengirim notifikasi email",
-      error: (error as Error).message,
+      message: "Gagal mengirim notifikasi email.",
+      error: message,
       skipped: false,
     };
   }
 }
 
-/** Format status untuk tampilan notifikasi */
+/** Format status sesuai enum domain pengaduan. */
 export function formatStatusForNotifikasi(status: string): string {
   switch (status) {
     case "baru":
       return "Baru";
-    case "proses":
-      return "Dalam Proses";
+    case "diproses":
+      return "Diproses";
     case "selesai":
       return "Selesai";
     case "ditolak":

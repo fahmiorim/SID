@@ -1,12 +1,12 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import type { DokumenRow } from "@/features/konten/domain/dokumen";
 import {
   DOKUMEN_KATEGORI,
   DOKUMEN_KATEGORI_LABELS,
   type DokumenKategori,
-  type DokumenRow,
-} from "@/features/konten/domain/dokumen";
+} from "@/features/publik/domain/dokumen";
 
 import { deleteDokumenAction, saveDokumenAction } from "../dokumen-actions";
 import { CmsCrudManager, type CmsColumn, type CmsField } from "./cms-crud-manager";
@@ -122,6 +122,14 @@ export function DokumenManager({
       placeholder: "2026",
     },
     {
+      type: "file",
+      name: "unggahan",
+      label: "Unggah dokumen PDF",
+      accept: "application/pdf",
+      help: "PDF maksimal 20 MB. Mengunggah file baru akan mengganti berkas yang tersimpan.",
+      wide: true,
+    },
+    {
       type: "text",
       name: "berkas",
       label: "Path berkas",
@@ -157,7 +165,19 @@ export function DokumenManager({
       getRowId={(row) => row.id}
       getRowLabel={(row) => row.nama}
       columns={columns}
-      fields={() => fields}
+      fields={(_rows, row) =>
+        row?.berkas
+          ? [
+              ...fields,
+              {
+                type: "checkbox",
+                name: "hapusBerkas",
+                label: "Hapus berkas tersimpan",
+                help: "Centang untuk melepas berkas yang sudah diunggah.",
+              },
+            ]
+          : fields
+      }
       getValues={(row) => ({
         nama: row?.nama ?? "",
         slug: row?.slug ?? "",
@@ -169,6 +189,7 @@ export function DokumenManager({
         tautan: row?.tautan ?? "",
         keterangan: row?.keterangan ?? "",
         aktif: row ? row.aktif : true,
+        hapusBerkas: false,
       })}
       saveAction={saveDokumenAction}
       deleteAction={deleteDokumenAction}
@@ -178,7 +199,8 @@ export function DokumenManager({
         add: "Tambah dokumen",
         addTitle: "Tambah Dokumen",
         editTitle: "Ubah Dokumen",
-        formDescription: "Dokumen ini dapat diunduh warga. Isi path berkas media atau tautan luar.",
+        formDescription:
+          "Kelola informasi publik dan produk hukum. Berkas PDF dapat diunggah atau ditautkan.",
         deleteTitle: "Hapus dokumen?",
         deleteDescription: (label) => `Dokumen "${label}" akan dihapus permanen.`,
         empty: "Belum ada dokumen publik.",

@@ -1,6 +1,7 @@
 import {
   FileText,
   FolderOpen,
+  HandCoins,
   KeyRound,
   LayoutDashboard,
   LogOut,
@@ -18,6 +19,7 @@ const NAV = [
   { href: "/layanan-mandiri/beranda", label: "Beranda", icon: LayoutDashboard },
   { href: "/layanan-mandiri/surat", label: "Ajukan Surat", icon: FileText },
   { href: "/layanan-mandiri/dokumen", label: "Dokumen", icon: FolderOpen },
+  { href: "/layanan-mandiri/bantuan", label: "Bantuan", icon: HandCoins },
   { href: "/layanan-mandiri/pesan", label: "Pesan", icon: MessageSquare },
   { href: "/layanan-mandiri/profil", label: "Profil", icon: UserRound },
 ] as const;

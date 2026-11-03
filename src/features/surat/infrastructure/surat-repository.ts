@@ -3,7 +3,14 @@ import "server-only";
 import { and, count, desc, eq, like, max, or, sql, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { incomingLetters, letters, letterTypes, outgoingLetters, residents } from "@/db/schema";
+import {
+  incomingLetters,
+  letterNumberArchive,
+  letters,
+  letterTypes,
+  outgoingLetters,
+  residents,
+} from "@/db/schema";
 import type { LetterStatus, SuratDetail, SuratListRow } from "@/features/surat/domain/surat";
 
 export interface ListSuratParams {
@@ -195,6 +202,10 @@ export async function issueSuratRecord(
   input: {
     number: string;
     sequence: number;
+    year: number;
+    typeId: number;
+    classificationId: number | null;
+    typeName: string;
     content: string;
     issuedAt: Date;
     logVerifikasi?: string | null;
@@ -202,21 +213,35 @@ export async function issueSuratRecord(
     verificationTokenHash?: string | null;
   },
 ): Promise<void> {
-  await db
-    .update(letters)
-    .set({
+  await db.transaction(async (tx) => {
+    await tx
+      .update(letters)
+      .set({
+        number: input.number,
+        sequence: input.sequence,
+        content: input.content,
+        isiSurat: input.content,
+        status: "issued",
+        issuedAt: input.issuedAt,
+        verifikasiKades: true,
+        logVerifikasi: input.logVerifikasi ?? "kades",
+        verificationToken: input.verificationToken ?? null,
+        verificationTokenHash: input.verificationTokenHash ?? null,
+      })
+      .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
+
+    await tx.insert(letterNumberArchive).values({
+      villageId,
+      letterId: id,
       number: input.number,
       sequence: input.sequence,
-      content: input.content,
-      isiSurat: input.content,
-      status: "issued",
+      year: input.year,
+      typeId: input.typeId,
+      classificationId: input.classificationId,
+      typeName: input.typeName,
       issuedAt: input.issuedAt,
-      verifikasiKades: true,
-      logVerifikasi: input.logVerifikasi ?? "kades",
-      verificationToken: input.verificationToken ?? null,
-      verificationTokenHash: input.verificationTokenHash ?? null,
-    })
-    .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
+    });
+  });
 }
 
 /**
@@ -276,30 +301,46 @@ export async function findSuratByTokenHash(
   return { ...row, typeCode: row.typeCode ?? "" };
 }
 
+async function nextSequenceFromLetterArchive(
+  letterFilter: SQL,
+  archiveFilter: SQL,
+): Promise<number> {
+  const [[letterRow], [archiveRow]] = await Promise.all([
+    db
+      .select({ value: max(letters.sequence) })
+      .from(letters)
+      .where(letterFilter),
+    db
+      .select({ value: max(letterNumberArchive.sequence) })
+      .from(letterNumberArchive)
+      .where(archiveFilter),
+  ]);
+
+  return Math.max(Number(letterRow?.value ?? 0), Number(archiveRow?.value ?? 0)) + 1;
+}
+
 // Mode 2: per jenis surat
 export async function nextSuratSequence(
   villageId: number,
   typeId: number,
   year: number,
 ): Promise<number> {
-  const [row] = await db
-    .select({ value: max(letters.sequence) })
-    .from(letters)
-    .where(
-      and(eq(letters.villageId, villageId), eq(letters.typeId, typeId), eq(letters.year, year)),
-    );
-
-  return Number(row?.value ?? 0) + 1;
+  return nextSequenceFromLetterArchive(
+    and(eq(letters.villageId, villageId), eq(letters.typeId, typeId), eq(letters.year, year))!,
+    and(
+      eq(letterNumberArchive.villageId, villageId),
+      eq(letterNumberArchive.typeId, typeId),
+      eq(letterNumberArchive.year, year),
+    )!,
+  );
 }
 
 // Mode 1: seluruh surat layanan per tahun
 export async function nextSuratSequenceGlobal(villageId: number, year: number): Promise<number> {
-  const [row] = await db
-    .select({ value: max(letters.sequence) })
-    .from(letters)
-    .where(and(eq(letters.villageId, villageId), eq(letters.year, year)));
-
-  return Number(row?.value ?? 0) + 1;
+  return nextSequenceFromLetterArchive(
+    and(eq(letters.villageId, villageId), eq(letters.year, year))!,
+    and(eq(letterNumberArchive.villageId, villageId), eq(letterNumberArchive.year, year))!,
+  );
 }
 
 // Mode 4: per klasifikasi surat
@@ -308,7 +349,7 @@ export async function nextSuratSequenceByKlasifikasi(
   classificationId: number,
   year: number,
 ): Promise<number> {
-  const [row] = await db
+  const [letterRow] = await db
     .select({ value: max(letters.sequence) })
     .from(letters)
     .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
@@ -320,64 +361,82 @@ export async function nextSuratSequenceByKlasifikasi(
       ),
     );
 
-  return Number(row?.value ?? 0) + 1;
+  const [archiveRow] = await db
+    .select({ value: max(letterNumberArchive.sequence) })
+    .from(letterNumberArchive)
+    .where(
+      and(
+        eq(letterNumberArchive.villageId, villageId),
+        eq(letterNumberArchive.classificationId, classificationId),
+        eq(letterNumberArchive.year, year),
+      ),
+    );
+
+  return Math.max(Number(letterRow?.value ?? 0), Number(archiveRow?.value ?? 0)) + 1;
 }
 
-// Mode 3: gabungan log_surat, surat_masuk, surat_keluar (maksimum nomor urut)
+// Mode 3: gabungan nomor surat dan nomor agenda
 export async function nextSuratSequenceCombined(villageId: number, year: number): Promise<number> {
-  const [rowLetters] = await db
-    .select({ value: max(letters.sequence) })
-    .from(letters)
-    .where(and(eq(letters.villageId, villageId), eq(letters.year, year)));
+  const [rowLetters, rowArchive, rowIncoming, rowOutgoing] = await Promise.all([
+    db
+      .select({ value: max(letters.sequence) })
+      .from(letters)
+      .where(and(eq(letters.villageId, villageId), eq(letters.year, year))),
+    db
+      .select({ value: max(letterNumberArchive.sequence) })
+      .from(letterNumberArchive)
+      .where(and(eq(letterNumberArchive.villageId, villageId), eq(letterNumberArchive.year, year))),
+    db
+      .select({ value: max(incomingLetters.agendaNumber) })
+      .from(incomingLetters)
+      .where(eq(incomingLetters.villageId, villageId)),
+    db
+      .select({ value: max(outgoingLetters.agendaNumber) })
+      .from(outgoingLetters)
+      .where(eq(outgoingLetters.villageId, villageId)),
+  ]);
 
-  const [rowIncoming] = await db
-    .select({ value: max(incomingLetters.agendaNumber) })
-    .from(incomingLetters)
-    .where(eq(incomingLetters.villageId, villageId));
-
-  const [rowOutgoing] = await db
-    .select({ value: max(outgoingLetters.agendaNumber) })
-    .from(outgoingLetters)
-    .where(eq(outgoingLetters.villageId, villageId));
-
-  const maxSeq = Math.max(
-    Number(rowLetters?.value ?? 0),
-    Number(rowIncoming?.value ?? 0),
-    Number(rowOutgoing?.value ?? 0),
+  return (
+    Math.max(
+      Number(rowLetters[0]?.value ?? 0),
+      Number(rowArchive[0]?.value ?? 0),
+      Number(rowIncoming[0]?.value ?? 0),
+      Number(rowOutgoing[0]?.value ?? 0),
+    ) + 1
   );
-
-  return maxSeq + 1;
 }
 
 export async function suratNumberExists(villageId: number, number: string): Promise<boolean> {
-  const rows = await db
-    .select({ id: letters.id })
-    .from(letters)
-    .where(and(eq(letters.villageId, villageId), eq(letters.number, number)))
-    .limit(1);
+  const [letterRow, archiveRow] = await Promise.all([
+    db
+      .select({ id: letters.id })
+      .from(letters)
+      .where(and(eq(letters.villageId, villageId), eq(letters.number, number)))
+      .limit(1),
+    db
+      .select({ id: letterNumberArchive.id })
+      .from(letterNumberArchive)
+      .where(
+        and(eq(letterNumberArchive.villageId, villageId), eq(letterNumberArchive.number, number)),
+      )
+      .limit(1),
+  ]);
 
-  return rows.length > 0;
+  return Boolean(letterRow[0] || archiveRow[0]);
 }
 
-// Deteksi duplikat lintas agenda (mode 3)
+// Deteksi duplikat lintas agenda (mode 3).
 export async function suratNumberExistsWithAgenda(
   villageId: number,
   number: string,
 ): Promise<boolean> {
-  const [rowLetters] = await db
-    .select({ id: letters.id })
-    .from(letters)
-    .where(and(eq(letters.villageId, villageId), eq(letters.number, number)))
-    .limit(1);
-
-  if (rowLetters) return true;
+  if (await suratNumberExists(villageId, number)) return true;
 
   const [rowIncoming] = await db
     .select({ id: incomingLetters.id })
     .from(incomingLetters)
     .where(and(eq(incomingLetters.villageId, villageId), eq(incomingLetters.letterNumber, number)))
     .limit(1);
-
   if (rowIncoming) return true;
 
   const [rowOutgoing] = await db
@@ -385,10 +444,44 @@ export async function suratNumberExistsWithAgenda(
     .from(outgoingLetters)
     .where(and(eq(outgoingLetters.villageId, villageId), eq(outgoingLetters.letterNumber, number)))
     .limit(1);
+  return Boolean(rowOutgoing);
+}
 
-  if (rowOutgoing) return true;
+export interface ListLetterNumberArchiveParams {
+  q?: string;
+  year?: number;
+}
 
-  return false;
+/** Daftar nomor terbit yang tetap dipertahankan meski surat sumber dihapus. */
+export async function listLetterNumberArchive(
+  villageId: number,
+  params: ListLetterNumberArchiveParams = {},
+) {
+  const filters: SQL[] = [eq(letterNumberArchive.villageId, villageId)];
+  const query = params.q?.trim();
+  if (query) {
+    const search = or(
+      like(letterNumberArchive.number, `%${query}%`),
+      like(letterNumberArchive.typeName, `%${query}%`),
+    );
+    if (search) filters.push(search);
+  }
+  if (params.year !== undefined) {
+    filters.push(eq(letterNumberArchive.year, params.year));
+  }
+
+  const where = and(...filters) ?? eq(letterNumberArchive.villageId, -1);
+  const [rows, totalRows] = await Promise.all([
+    db
+      .select()
+      .from(letterNumberArchive)
+      .where(where)
+      .orderBy(desc(letterNumberArchive.issuedAt), desc(letterNumberArchive.id))
+      .limit(200),
+    db.select({ value: count() }).from(letterNumberArchive).where(where),
+  ]);
+
+  return { rows, total: totalRows[0]?.value ?? 0 };
 }
 
 // Verifikasi berjenjang

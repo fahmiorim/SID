@@ -74,7 +74,7 @@ export function KehadiranFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Ubah Kehadiran" : "Tambah Kehadiran"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Attendance" : "Add Attendance"}</DialogTitle>
           <DialogDescription>Kelola data kehadiran perangkat desa</DialogDescription>
         </DialogHeader>
 

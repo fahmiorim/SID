@@ -4,6 +4,7 @@ import {
   Blocks,
   Building2,
   Calculator,
+  CalendarCheck,
   ChartColumn,
   Circle,
   ClipboardList,
@@ -24,10 +25,12 @@ import {
   Mail,
   Map,
   MessageSquareWarning,
+  MonitorSmartphone,
   ScrollText,
   Send,
   Settings,
   ShieldCheck,
+  Store,
   Tags,
   UserCog,
   UserRound,
@@ -80,6 +83,9 @@ const ICONS: Record<string, LucideIcon> = {
   contact: Contact,
   "contact-round": ContactRound,
   "chart-column": ChartColumn,
+  "calendar-check": CalendarCheck,
+  "monitor-smartphone": MonitorSmartphone,
+  store: Store,
 };
 
 export function MenuIcon({ name, className }: { name: string | null; className?: string }) {

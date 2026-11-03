@@ -47,8 +47,8 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Ubah Pelanggan" : "Tambah Pelanggan"}</DialogTitle>
-          <DialogDescription>Kelola data pelanggan kerja sama desa</DialogDescription>
+          <DialogTitle>{isEdit ? "Edit Customer" : "Add Customer"}</DialogTitle>
+          <DialogDescription>Manage cooperative customer data</DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
@@ -62,11 +62,11 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="nama">Nama</Label>
+            <Label htmlFor="nama">Name</Label>
             <Input
               id="nama"
               name="nama"
-              placeholder="Nama perusahaan atau individu"
+              placeholder="Name perusahaan atau individu"
               defaultValue={item?.nama ?? ""}
               required
             />
@@ -76,11 +76,11 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="kontak">Kontak</Label>
+            <Label htmlFor="kontak">Contact</Label>
             <Input
               id="kontak"
               name="kontak"
-              placeholder="Nomor telepon atau email"
+              placeholder="Phone number or email"
               defaultValue={item?.kontak ?? ""}
             />
             {fieldErrors?.kontak ? (
@@ -89,11 +89,11 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="alamat">Alamat</Label>
+            <Label htmlFor="alamat">Address</Label>
             <Input
               id="alamat"
               name="alamat"
-              placeholder="Alamat kerja sama"
+              placeholder="Address kerja sama"
               defaultValue={item?.alamat ?? ""}
             />
             {fieldErrors?.alamat ? (
@@ -102,11 +102,11 @@ export function PelangganFormDialog({ open, onOpenChange, item }: PelangganFormD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="keterangan">Keterangan</Label>
+            <Label htmlFor="keterangan">Description</Label>
             <Textarea
               id="keterangan"
               name="keterangan"
-              placeholder="Keterangan tambahan"
+              placeholder="Description tambahan"
               defaultValue={item?.keterangan ?? ""}
               rows={3}
             />

@@ -3,6 +3,26 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-04 — Penutupan rute orphan, CRUD modul yang belum ada
+
+- Quality gate: debug `console.log` di alur dokumen/media dihapus, argumen
+  `browser` yang tak terpakai di E2E diperbaiki, dan Prettier dijalankan pada
+  file terdampak. `npm run typecheck` lulus. Test/E2E **tidak** dijalankan pada
+  sesi ini.
+- Modul orphan didaftarkan: `buku-tamu`, `arsip`, `kehadiran`, `lapak`,
+  `pelanggan`, `anjungan`, `analisis`, `pemilihan`, dan `registrasi-warga`
+  (`modules.ts` + resource RBAC + grant: sekdes/kades `read`, operator
+  `manage`).
+- Halaman `/dokumen` duplikat dihapus; `/konten/dokumen` menjadi kanonis dan
+  sudah mendukung unggah PDF.
+- CRUD baru: pemilihan desa (admin + publik), kategori & indikator analisis,
+  anjungan, dan registrasi akun warga (pengajuan publik + persetujuan operator
+  dengan PIN sekali tampil).
+- UI mati diperbaiki: filter/pencarian lapak publik, tombol ubah/hapus
+  pemilihan, serta tautan menu publik untuk lapak dan pemilihan.
+- Status paritas: 22 ✅ / 89 🟡 / 1 🔴 / 1 ⚪. Sisa 🔴: `OS-OPS-012` (API
+  eksternal).
+
 ## 2026-10-29 — Audit ulang klaim dokumen vs kode
 
 - Register paritas sebelumnya dinaikkan massal menjadi ✅ tanpa implementasi

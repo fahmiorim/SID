@@ -103,5 +103,7 @@ export const MENU_SEEDS: {
   { nama: "Statistik", link: "/desa/statistik", linkTipe: "internal", urut: 6 },
   { nama: "APBDes", link: "/desa/apbdes", linkTipe: "internal", urut: 7 },
   { nama: "Informasi Publik", link: "/desa/dokumen", linkTipe: "internal", urut: 8 },
-  { nama: "Kontak", link: "/desa/kontak", linkTipe: "internal", urut: 9 },
+  { nama: "Lapak Desa", link: "/desa/lapak", linkTipe: "internal", urut: 9 },
+  { nama: "Pemilihan", link: "/desa/pemilihan", linkTipe: "internal", urut: 10 },
+  { nama: "Kontak", link: "/desa/kontak", linkTipe: "internal", urut: 11 },
 ];

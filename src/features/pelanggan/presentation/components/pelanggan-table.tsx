@@ -41,7 +41,7 @@ export function PelangganTable({ items: initialItems }: PelangganTableProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Data Pelanggan</CardTitle>
+        <CardTitle>Customer Data</CardTitle>
         <Button
           onClick={() => {
             setSelected(null);
@@ -49,17 +49,17 @@ export function PelangganTable({ items: initialItems }: PelangganTableProps) {
           }}
         >
           <Plus className="mr-2 h-4 w-4" />
-          Tambah Pelanggan
+          Add Customer
         </Button>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Kontak</TableHead>
-              <TableHead>Alamat</TableHead>
-              <TableHead>Keterangan</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Description</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>

@@ -168,8 +168,9 @@ kesalahan, serta validasi environment. Suite juga memiliki test integrasi DB
 untuk isolasi tenant dan siklus akun warga; test ini otomatis di-skip bila MySQL
 tidak tersedia.
 
-CI menjalankan typecheck + lint + format + test + build, lalu smoke test HTTP
-pada build produksi (MySQL + migrate + seed), pada setiap push/PR.
+CI menjalankan typecheck, lint, cek format, test, build produksi, smoke HTTP,
+dan suite browser E2E pada setiap push/PR. E2E memakai database MySQL hasil
+migrasi dan seed; laporan serta jejak kegagalan diunggah sebagai artefak CI.
 
 ```bash
 npm run test        # sekali jalan

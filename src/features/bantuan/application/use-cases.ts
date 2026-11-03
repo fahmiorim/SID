@@ -28,6 +28,7 @@ import {
   findPendudukSasaran,
   insertBantuan,
   insertPeserta,
+  listBantuanDiterimaWarga,
   listBantuan as listBantuanRows,
   listKelompokSasaran,
   listKeluargaSasaran,
@@ -42,7 +43,7 @@ import {
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { formatWilayahLabel } from "@/features/wilayah/domain/wilayah";
-import { requirePermission, requireUser } from "@/lib/dal";
+import { requirePermission, requireUser, requireWargaAktif } from "@/lib/dal";
 import { conflict, notFound, validationError } from "@/lib/errors";
 
 /**
@@ -65,6 +66,13 @@ export async function listBantuan(params: ListBantuanParams): Promise<BantuanLis
   const villageId = await resolveVillageId(user);
 
   return listBantuanRows({ villageId, ...params });
+}
+
+/** Penerimaan yang tercatat untuk warga aktif; identitas selalu dari sesi. */
+export async function getBantuanDiterimaWargaData(): Promise<BantuanDTO[]> {
+  const user = await requireWargaAktif();
+  const villageId = await resolveVillageId(user);
+  return listBantuanDiterimaWarga(villageId, user.residentId);
 }
 
 /**

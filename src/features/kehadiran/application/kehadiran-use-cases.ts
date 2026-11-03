@@ -7,11 +7,16 @@ import { perangkatDesa } from "@/db/schema/content";
 import { requirePermission } from "@/lib/dal";
 import { AppError } from "@/lib/errors";
 
-import { KEHADIRAN_RESOURCE, kehadiranFormSchema } from "../domain/kehadiran";
+import {
+  KEHADIRAN_RESOURCE,
+  kehadiranFormSchema,
+  kehadiranStatusSchema,
+} from "../domain/kehadiran";
 import {
   createKehadiran,
   deleteKehadiran,
   listKehadiran,
+  listPerangkatDesa,
   updateKehadiran,
 } from "../infrastructure/kehadiran-repository";
 
@@ -20,26 +25,28 @@ export async function daftarKehadiran(
   opts?: { bulan?: number; tahun?: number; perangkatId?: number },
 ) {
   await requirePermission(KEHADIRAN_RESOURCE, "read");
-  const items = await listKehadiran(villageId, opts);
-  const perangkatList = await db
-    .select()
-    .from(perangkatDesa)
-    .where(eq(perangkatDesa.villageId, villageId));
-  const perangkatMap = new Map(perangkatList.map((p) => [p.id, p]));
+  const [items, perangkatList] = await Promise.all([
+    listKehadiran(villageId, opts),
+    listPerangkatDesa(villageId),
+  ]);
+  const perangkatMap = new Map(perangkatList.map((perangkat) => [perangkat.id, perangkat]));
 
-  return items.map((item) => ({
-    ...item,
-    tanggal: String(item.tanggal),
-    perangkatNama: perangkatMap.get(item.perangkatId ?? 0)?.nama ?? "-",
-    perangkatJabatan: perangkatMap.get(item.perangkatId ?? 0)?.jabatanId?.toString() ?? "-",
-    status: (item.status as "hadir" | "izin" | "sakit" | "alpa") ?? "hadir",
-  }));
+  return items.map((item) => {
+    const perangkat = perangkatMap.get(item.perangkatId ?? 0);
+    return {
+      ...item,
+      tanggal: item.tanggal.toISOString().slice(0, 10),
+      perangkatNama: perangkat?.nama ?? "-",
+      perangkatJabatan: String(perangkat?.jabatanId ?? "-"),
+      status: kehadiranStatusSchema.catch("hadir").parse(item.status),
+    };
+  });
 }
 
 export async function tambahKehadiran(villageId: number, input: unknown) {
   await requirePermission(KEHADIRAN_RESOURCE, "update");
   const parsed = kehadiranFormSchema.parse(input);
-  return await createKehadiran({
+  return createKehadiran({
     villageId,
     perangkatId: parsed.perangkatId,
     tanggal: new Date(parsed.tanggal),
@@ -71,10 +78,9 @@ export async function hapusKehadiran(villageId: number, id: number) {
  * Status perangkat hari ini.
  *
  * Aturan:
- *  - Jika ada izin tertinggi, atau sakit tertinggi: izin/sakit.
- *  - Jika ada alpa tertinggi: alpa.
- *  - Jika ada permulaan hadir setelah jam masuk: hadir (masih mengalami).
- *  - Jika ada permulaan hadir chef-president (kronologi): kosong.
+ *  - Jika ada izin atau sakit: tampilkan status itu.
+ *  - Jika ada alpa: tampilkan alpa.
+ *  - Jika hadir, tampilkan waktu masuk.
  */
 export async function statusPerangkatHariIni(
   villageId: number,
@@ -83,8 +89,7 @@ export async function statusPerangkatHariIni(
 ) {
   await requirePermission(KEHADIRAN_RESOURCE, "read");
 
-  const mulaiHariIni = new Date(hariIni.getFullYear(), hariIni.getMonth(), hariIni.getDate());
-  const akhirHariIni = new Date(hariIni.getFullYear(), hariIni.getMonth(), hariIni.getDate() + 1);
+  const tanggalHariIni = `${hariIni.getFullYear()}-${String(hariIni.getMonth() + 1).padStart(2, "0")}-${String(hariIni.getDate()).padStart(2, "0")}`;
 
   const records = await db
     .select()
@@ -95,23 +100,17 @@ export async function statusPerangkatHariIni(
   const perangkat = records[0];
   if (!perangkat) return { status: "tidak-ditemukan", jamKurang: null };
 
-  const kehadiranPerangkat = await daftarKehadiran(villageId, {
+  const kehadiranHariIni = await daftarKehadiran(villageId, {
     bulan: hariIni.getMonth() + 1,
     tahun: hariIni.getFullYear(),
     perangkatId,
   });
+  const statusHariIni = kehadiranHariIni.find((item) => item.tanggal === tanggalHariIni);
 
-  const statusHariIni = kehadiranPerangkat.find((k) => {
-    const tgl = new Date(k.tanggal);
-    return tgl >= mulaiHariIni && tgl < akhirHariIni;
-  });
-
-  if (!statusHariIni) {
-    return { status: "kosong", jamKurang: null };
-  }
+  if (!statusHariIni) return { status: "kosong", jamKurang: null };
 
   return {
-    status: statusHariIni.status ?? "kosong",
+    status: statusHariIni.status,
     jamKurang:
       statusHariIni.status === "hadir" && statusHariIni.jamMasuk
         ? new Date(statusHariIni.jamMasuk)

@@ -26,6 +26,7 @@ export * from "./letter-dinas";
 export * from "./letter-requirements";
 export * from "./letter-types";
 export * from "./letters";
+export * from "./letter-number-archive";
 export * from "./outgoing-letters";
 export * from "./pembangunan";
 export * from "./pengaduan";

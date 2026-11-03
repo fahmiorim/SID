@@ -70,6 +70,7 @@ import {
   deleteSurat,
   getSurat,
   issueSuratRecord,
+  listLetterNumberArchive,
   listSurat,
   nextSuratSequence,
   nextSuratSequenceByKlasifikasi,
@@ -218,6 +219,23 @@ export async function listSuratWithMeta(params: { search: string; status: Letter
     recap,
     syarat,
   };
+}
+
+export async function listArsipNomorSuratData(params: { search: string; year?: number }) {
+  const user = await requirePermission(SURAT_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  const year =
+    Number.isInteger(params.year) &&
+    params.year !== undefined &&
+    params.year >= 1900 &&
+    params.year <= 9999
+      ? params.year
+      : undefined;
+
+  return listLetterNumberArchive(villageId, {
+    q: params.search.trim().slice(0, 100),
+    year,
+  });
 }
 
 export async function getSuratFormOptions() {
@@ -518,6 +536,10 @@ async function terbitkanSurat(
   await issueSuratRecord(villageId, surat.id, {
     number,
     sequence,
+    year,
+    typeId: surat.typeId,
+    classificationId: jenis.classificationId,
+    typeName: jenis.name,
     content,
     issuedAt: new Date(),
     logVerifikasi: "kades",

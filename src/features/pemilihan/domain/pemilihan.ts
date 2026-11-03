@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { RESOURCES } from "@/features/rbac/domain/resources";
 
-export const PEMILIHAN_RESOURCE = RESOURCES.pengaturan;
+export const PEMILIHAN_RESOURCE = RESOURCES.pemilihan;
 
 export const pemilihanSchema = z.object({
   tahun: z.coerce.number().int().min(2000).max(2100),

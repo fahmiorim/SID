@@ -13,7 +13,12 @@ import {
 
 export async function daftarAnjungan(villageId: number, aktifOnly = false) {
   await requirePermission(ANJUNGAN_RESOURCE, "read");
-  return listAnjungan(villageId, aktifOnly);
+  const rows = await listAnjungan(villageId, aktifOnly);
+  return rows.map((row) => ({
+    ...row,
+    aktif: row.aktif ?? 1,
+    urutan: row.urutan ?? 0,
+  }));
 }
 
 export async function tambahAnjungan(villageId: number, input: unknown) {

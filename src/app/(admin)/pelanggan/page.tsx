@@ -27,7 +27,7 @@ export default async function PelangganPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pelanggan" description="Kelola data pelanggan kerja sama desa" />
+      <PageHeader title="Pelanggan" description="Manage customer data kerja sama desa" />
       <PelangganTable items={items} />
     </div>
   );

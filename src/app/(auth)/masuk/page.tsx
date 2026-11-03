@@ -1,5 +1,6 @@
 import { Landmark } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,8 +38,18 @@ export default async function LoginPage({ searchParams }: PageProps<"/masuk">) {
         </CardDescription>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-4">
         <LoginForm next={next} />
+        <p className="text-center text-sm text-muted-foreground">
+          Belum punya akun layanan mandiri?{" "}
+          <Link
+            href="/desa/registrasi-warga"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Ajukan di sini
+          </Link>
+          .
+        </p>
       </CardContent>
     </Card>
   );

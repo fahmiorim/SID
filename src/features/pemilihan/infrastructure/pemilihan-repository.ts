@@ -1,15 +1,14 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { pemilihan } from "@/db/schema";
-import { RESOURCES } from "@/features/rbac/domain/resources";
-import { requirePermission } from "@/lib/dal";
 
 /** Ambil semua pemilihan untuk desa */
 export async function listPemilihan(villageId: number) {
   return await db
     .select({
       id: pemilihan.id,
+      villageId: pemilihan.villageId,
       tahun: pemilihan.tahun,
       jenis: pemilihan.jenis,
       tanggal: pemilihan.tanggal,
@@ -38,21 +37,24 @@ export async function createPemilihan(
     keterangan?: string | null;
   },
 ) {
-  await requirePermission(RESOURCES.pengaturan, "update");
   const tanggalDate = input.tanggal ? new Date(input.tanggal) : null;
-  const [result] = await db.insert(pemilihan).values({
-    villageId,
-    tahun: input.tahun,
-    jenis: input.jenis,
-    tanggal: tanggalDate,
-    keterangan: input.keterangan,
-  });
-  return result;
+  const [result] = await db
+    .insert(pemilihan)
+    .values({
+      villageId,
+      tahun: input.tahun,
+      jenis: input.jenis,
+      tanggal: tanggalDate,
+      keterangan: input.keterangan,
+    })
+    .$returningId();
+  return result?.id ?? 0;
 }
 
 /** Update pemilihan */
 export async function updatePemilihan(
   id: number,
+  villageId: number,
   input: {
     tahun?: number;
     jenis?: string;
@@ -60,7 +62,6 @@ export async function updatePemilihan(
     keterangan?: string | null;
   },
 ) {
-  await requirePermission(RESOURCES.pengaturan, "update");
   const tanggalDate = input.tanggal ? new Date(input.tanggal) : null;
   await db
     .update(pemilihan)
@@ -70,12 +71,11 @@ export async function updatePemilihan(
       tanggal: tanggalDate,
       keterangan: input.keterangan,
     })
-    .where(eq(pemilihan.id, id));
+    .where(and(eq(pemilihan.id, id), eq(pemilihan.villageId, villageId)));
   return null;
 }
 
 /** Hapus pemilihan */
-export async function deletePemilihan(id: number) {
-  await requirePermission(RESOURCES.pengaturan, "delete");
-  await db.delete(pemilihan).where(eq(pemilihan.id, id));
+export async function deletePemilihan(id: number, villageId: number) {
+  await db.delete(pemilihan).where(and(eq(pemilihan.id, id), eq(pemilihan.villageId, villageId)));
 }

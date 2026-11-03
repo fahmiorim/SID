@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { hapusDokumen, simpanDokumen } from "@/features/konten/application/dokumen-use-cases";
 import { dokumenPublikFormSchema } from "@/features/konten/domain/dokumen";
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import {
   errorState,
   successState,
@@ -13,6 +14,17 @@ import {
 } from "@/lib/action-state";
 
 import { booleanValue, optionalText, parseId, text } from "./form-utils";
+
+async function unggahanPdf(formData: FormData): Promise<BerkasUnggahan | undefined> {
+  const entry = formData.get("unggahan");
+  if (!(entry instanceof File) || entry.size === 0) return undefined;
+  return {
+    nama: entry.name,
+    mime: entry.type || null,
+    ukuran: entry.size,
+    isi: new Uint8Array(await entry.arrayBuffer()),
+  };
+}
 
 const PATH = "/konten/dokumen";
 
@@ -39,7 +51,10 @@ export async function saveDokumenAction(
 
   try {
     const id = parseId(formData.get("id"));
-    await simpanDokumen(parsed.data, id);
+    await simpanDokumen(parsed.data, id, {
+      unggahan: await unggahanPdf(formData),
+      hapusBerkas: booleanValue(formData, "hapusBerkas"),
+    });
     revalidatePath(PATH);
     revalidatePath("/desa/dokumen");
     return successState(

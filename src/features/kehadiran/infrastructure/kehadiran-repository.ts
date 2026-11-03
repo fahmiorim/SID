@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
 
 import { db } from "@/db";
 import { perangkatDesa } from "@/db/schema/content";
@@ -10,28 +10,48 @@ import {
   type NewKehadiranPerangkat,
 } from "@/db/schema/kehadiran";
 
+function tanggalUtc(tahun: number, bulan: number, hari: number): Date {
+  return new Date(Date.UTC(tahun, bulan, hari));
+}
+
 export async function listKehadiran(
   villageId: number,
   opts?: { bulan?: number; tahun?: number; perangkatId?: number },
 ): Promise<KehadiranPerangkat[]> {
   const conditions = [eq(kehadiranPerangkat.villageId, villageId)];
-  if (opts?.tahun && opts?.bulan) {
-    const start = new Date(opts.tahun, opts.bulan - 1, 1).toISOString().split("T")[0];
-    const end = new Date(opts.tahun, opts.bulan, 0, 23, 59, 59).toISOString().split("T")[0];
-    conditions.push(sql`${kehadiranPerangkat.tanggal} >= ${start}`);
-    conditions.push(sql`${kehadiranPerangkat.tanggal} <= ${end}`);
+
+  if (opts?.tahun && opts.bulan) {
+    conditions.push(
+      gte(kehadiranPerangkat.tanggal, tanggalUtc(opts.tahun, opts.bulan - 1, 1)),
+      lte(kehadiranPerangkat.tanggal, tanggalUtc(opts.tahun, opts.bulan, 0)),
+    );
   } else if (opts?.tahun) {
-    const start = new Date(opts.tahun, 0, 1).toISOString().split("T")[0];
-    const end = new Date(opts.tahun, 11, 31, 23, 59, 59).toISOString().split("T")[0];
-    conditions.push(sql`${kehadiranPerangkat.tanggal} >= ${start}`);
-    conditions.push(sql`${kehadiranPerangkat.tanggal} <= ${end}`);
+    conditions.push(
+      gte(kehadiranPerangkat.tanggal, tanggalUtc(opts.tahun, 0, 1)),
+      lte(kehadiranPerangkat.tanggal, tanggalUtc(opts.tahun, 11, 31)),
+    );
   }
-  if (opts?.perangkatId) conditions.push(eq(kehadiranPerangkat.perangkatId, opts.perangkatId));
+
+  if (opts?.perangkatId) {
+    conditions.push(eq(kehadiranPerangkat.perangkatId, opts.perangkatId));
+  }
+
   return db
     .select()
     .from(kehadiranPerangkat)
     .where(and(...conditions))
     .orderBy(desc(kehadiranPerangkat.tanggal));
+}
+
+export async function listPerangkatDesa(villageId: number) {
+  return db
+    .select({
+      id: perangkatDesa.id,
+      nama: perangkatDesa.nama,
+      jabatanId: perangkatDesa.jabatanId,
+    })
+    .from(perangkatDesa)
+    .where(eq(perangkatDesa.villageId, villageId));
 }
 
 export async function createKehadiran(data: NewKehadiranPerangkat): Promise<number> {
@@ -75,37 +95,26 @@ export async function getRekapKehadiran(
   const conditions = [eq(kehadiranPerangkat.villageId, villageId)];
   if (tahun) {
     conditions.push(
-      and(
-        sql`${kehadiranPerangkat.tanggal} >= ${new Date(tahun, 0, 1).toISOString().split("T")[0]}`,
-        sql`${kehadiranPerangkat.tanggal} <= ${new Date(tahun, 11, 31, 23, 59, 59).toISOString().split("T")[0]}`,
+      gte(
+        kehadiranPerangkat.tanggal,
+        bulan ? tanggalUtc(tahun, bulan - 1, 1) : tanggalUtc(tahun, 0, 1),
+      ),
+      lte(
+        kehadiranPerangkat.tanggal,
+        bulan ? tanggalUtc(tahun, bulan, 0) : tanggalUtc(tahun, 11, 31),
       ),
     );
-    if (bulan) {
-      conditions.pop();
-      conditions.push(
-        and(
-          sql`${kehadiranPerangkat.tanggal} >= ${new Date(tahun, bulan - 1, 1).toISOString().split("T")[0]}`,
-          sql`${kehadiranPerangkat.tanggal} <= ${new Date(tahun, bulan, 0, 23, 59, 59).toISOString().split("T")[0]}`,
-        ),
-      );
-    }
   }
 
-  const filteredConditions = conditions.filter((c): c is NonNullable<typeof c> => c != null);
+  const perangkatList = await listPerangkatDesa(villageId);
+  const perangkatMap = new Map(perangkatList.map((perangkat) => [perangkat.id, perangkat]));
   const rows = await db
     .select({
       perangkatId: kehadiranPerangkat.perangkatId,
-      tanggal: kehadiranPerangkat.tanggal,
       status: kehadiranPerangkat.status,
     })
     .from(kehadiranPerangkat)
-    .where(and(...filteredConditions));
-
-  const perangkatList = await db
-    .select()
-    .from(perangkatDesa)
-    .where(eq(perangkatDesa.villageId, villageId));
-  const perangkatMap = new Map(perangkatList.map((p) => [p.id, p]));
+    .where(and(...conditions));
 
   const result = new Map<
     number,
@@ -122,25 +131,26 @@ export async function getRekapKehadiran(
 
   for (const row of rows) {
     if (!row.perangkatId) continue;
-    const existing = result.get(row.perangkatId);
-    if (!existing) {
+    let current = result.get(row.perangkatId);
+    if (!current) {
       const perangkat = perangkatMap.get(row.perangkatId);
-      result.set(row.perangkatId, {
+      current = {
         perangkatId: row.perangkatId,
         nama: perangkat?.nama ?? "-",
-        jabatan: perangkat?.jabatanId?.toString() ?? "-",
+        jabatan: String(perangkat?.jabatanId ?? "-"),
         hadir: 0,
         izin: 0,
         sakit: 0,
         alpa: 0,
-      });
+      };
+      result.set(row.perangkatId, current);
     }
-    const current = result.get(row.perangkatId)!;
+
     if (row.status === "hadir") current.hadir += 1;
     else if (row.status === "izin") current.izin += 1;
     else if (row.status === "sakit") current.sakit += 1;
     else if (row.status === "alpa") current.alpa += 1;
   }
 
-  return [...result.values()];
+  return [...result.values()].sort((a, b) => b.hadir - a.hadir);
 }

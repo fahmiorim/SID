@@ -37,6 +37,8 @@ export const RESOURCES = {
   laporanPenduduk: "laporan-penduduk",
   kesehatan: "kesehatan",
   widget: "widget",
+  kehadiran: "kehadiran",
+  analisis: "analisis",
   analisisSurvei: "analisis-survei",
   berita: "berita",
   beritaKategori: "berita-kategori",
@@ -63,6 +65,13 @@ export const RESOURCES = {
   sinergi: "sinergi",
   idm: "idm",
   idmSdgs: "idm-sdgs",
+  bukuTamu: "buku-tamu",
+  arsip: "arsip",
+  lapak: "lapak",
+  pelanggan: "pelanggan",
+  anjungan: "anjungan",
+  pemilihan: "pemilihan",
+  registrasiWarga: "registrasi-warga",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

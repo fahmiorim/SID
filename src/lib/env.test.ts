@@ -49,4 +49,24 @@ describe("parseEnv", () => {
       }),
     ).toThrow(/Konfigurasi environment tidak valid/);
   });
+  it("menolak API key Resend tanpa sender terverifikasi", () => {
+    expect(() =>
+      parseEnv({
+        DATABASE_URL: "mysql://x",
+        BETTER_AUTH_SECRET: SECRET,
+        RESEND_API_KEY: "re_test_key",
+      }),
+    ).toThrow(/RESEND_FROM/);
+  });
+
+  it("menerima sender Resend saat email diaktifkan", () => {
+    const env = parseEnv({
+      DATABASE_URL: "mysql://x",
+      BETTER_AUTH_SECRET: SECRET,
+      RESEND_API_KEY: "re_test_key",
+      RESEND_FROM: "SID Desa <notifikasi@example.test>",
+    });
+
+    expect(env.RESEND_FROM).toBe("SID Desa <notifikasi@example.test>");
+  });
 });

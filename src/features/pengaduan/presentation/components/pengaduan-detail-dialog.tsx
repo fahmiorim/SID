@@ -70,7 +70,8 @@ export function PengaduanDetailDialog({
 
   useEffect(() => {
     if (state.status === "success") {
-      toast.success(state.message);
+      if (state.tone === "warning") toast.warning(state.message);
+      else toast.success(state.message);
       router.refresh();
     }
   }, [state, router]);

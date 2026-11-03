@@ -64,7 +64,14 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
       <PageHeader
         title="Layanan Surat"
         description="Buat, terbitkan, dan cetak surat keterangan desa."
-        actions={canManage ? <SuratCreateButton jenis={jenis} penduduk={penduduk} /> : null}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/persuratan/surat/arsip">Arsip nomor</Link>
+            </Button>
+            {canManage ? <SuratCreateButton jenis={jenis} penduduk={penduduk} /> : null}
+          </div>
+        }
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

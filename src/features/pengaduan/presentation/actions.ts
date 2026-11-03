@@ -49,9 +49,29 @@ export async function tanggapiPengaduanAction(
   }
 
   try {
-    await tanggapiPengaduanData(id, parsed.data);
+    const result = await tanggapiPengaduanData(id, parsed.data);
     revalidatePath(PATH);
     revalidatePath(PATH_PUBLIK);
+
+    if (result.notification === "skipped") {
+      return successState(
+        "Tanggapan pengaduan disimpan, tetapi email notifikasi dilewati karena Resend belum dikonfigurasi.",
+        null,
+        "warning",
+      );
+    }
+    if (result.notification === "failed") {
+      return successState(
+        "Tanggapan pengaduan disimpan, tetapi email notifikasi gagal. Periksa konfigurasi Resend dan log aplikasi.",
+        null,
+        "warning",
+      );
+    }
+    if (result.notification === "sent") {
+      return successState(
+        "Tanggapan pengaduan disimpan; email notifikasi diterima Resend untuk diproses.",
+      );
+    }
     return successState("Tanggapan pengaduan disimpan.");
   } catch (error) {
     return toErrorState(error);

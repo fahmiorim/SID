@@ -84,7 +84,7 @@ jobs:
         run: npm run build
 
   smoke:
-    name: Smoke test HTTP halaman publik
+    name: Smoke HTTP & E2E browser
     runs-on: ubuntu-latest
 
     services:
@@ -107,6 +107,7 @@ jobs:
       BETTER_AUTH_SECRET: rahasia-ci-minimal-32-karakter-aman
       APP_URL: http://localhost:3000
       BETTER_AUTH_URL: http://localhost:3000
+      E2E_WARGA_PASSWORD: TestWarga#12345
       NEXT_PUBLIC_APP_NAME: Sistem Informasi Desa
 
     steps:
@@ -119,6 +120,8 @@ jobs:
 
       - name: Pasang dependensi
         run: npm ci
+      - name: Pasang Chromium untuk E2E
+        run: npx @e2e-dev/web install chromium --with-deps
 
       - name: Siapkan skema & data contoh
         run: |
@@ -130,7 +133,7 @@ jobs:
 
       # Server dijalankan di latar belakang; skrip smoke menunggu sendiri bila
       # server belum siap, jadi tunggu di sini sampai halaman masuk merespons.
-      - name: Jalankan server & smoke test
+      - name: Smoke HTTP & E2E browser
         run: |
           npm run start > /tmp/next-start.log 2>&1 &
           for i in $(seq 1 60); do
@@ -139,6 +142,18 @@ jobs:
           done
           curl -fsS -o /dev/null http://localhost:3000/masuk || { tail -50 /tmp/next-start.log; exit 1; }
           npm run smoke
+          npx e2e run --reporter list,junit
+
+      - name: Unggah laporan E2E
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: |
+            .e2e/report.json
+            .e2e/junit.xml
+            .e2e/results
+          if-no-files-found: ignore
 
       - name: Tampilkan log server bila gagal
         if: failure()

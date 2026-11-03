@@ -1,6 +1,19 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, inArray, like, ne, or, sql, type SQL } from "drizzle-orm";
+import {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  inArray,
+  isNotNull,
+  like,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -60,6 +73,64 @@ function toDto(row: typeof bantuanProgram.$inferSelect): BantuanDTO {
     endDate: row.endDate,
     asalDana: row.asalDana,
   };
+}
+
+/** Program bantuan yang terkait dengan penduduk langsung atau keanggotaannya. */
+export async function listBantuanDiterimaWarga(
+  villageId: number,
+  residentId: number,
+): Promise<BantuanDTO[]> {
+  const targetProgram = or(
+    and(eq(bantuanProgram.sasaran, SASARAN_PENDUDUK), eq(bantuanPeserta.residentId, residentId)),
+    and(
+      eq(bantuanProgram.sasaran, SASARAN_KELUARGA),
+      isNotNull(residents.familyId),
+      eq(bantuanPeserta.familyId, residents.familyId),
+    ),
+    and(
+      eq(bantuanProgram.sasaran, SASARAN_RUMAH_TANGGA),
+      isNotNull(residents.rtmId),
+      eq(bantuanPeserta.rtmId, residents.rtmId),
+    ),
+    and(
+      eq(bantuanProgram.sasaran, SASARAN_KELOMPOK),
+      isNotNull(kelompokAnggota.id),
+      eq(bantuanPeserta.kelompokId, kelompokAnggota.kelompokId),
+    ),
+  );
+
+  if (!targetProgram) return [];
+
+  return db
+    .selectDistinct({
+      id: bantuanProgram.id,
+      name: bantuanProgram.name,
+      slug: bantuanProgram.slug,
+      sasaran: bantuanProgram.sasaran,
+      description: bantuanProgram.description,
+      startDate: bantuanProgram.startDate,
+      endDate: bantuanProgram.endDate,
+      asalDana: bantuanProgram.asalDana,
+    })
+    .from(bantuanPeserta)
+    .innerJoin(bantuanProgram, eq(bantuanProgram.id, bantuanPeserta.programId))
+    .innerJoin(residents, and(eq(residents.id, residentId), eq(residents.villageId, villageId)))
+    .leftJoin(
+      kelompokAnggota,
+      and(
+        eq(kelompokAnggota.villageId, villageId),
+        eq(kelompokAnggota.residentId, residentId),
+        eq(kelompokAnggota.kelompokId, bantuanPeserta.kelompokId),
+      ),
+    )
+    .where(
+      and(
+        eq(bantuanPeserta.villageId, villageId),
+        eq(bantuanProgram.villageId, villageId),
+        targetProgram,
+      ),
+    )
+    .orderBy(asc(bantuanProgram.name), asc(bantuanProgram.id));
 }
 
 function buildWhere(villageId: number, search: string): SQL {

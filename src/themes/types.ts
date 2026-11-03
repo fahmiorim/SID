@@ -5,6 +5,7 @@ import type { StatistikPublik } from "@/features/desa/application/statistik-publ
 import type { IdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
 import type { TriwulanBaris, TriwulanTotal } from "@/features/keuangan/domain/laporan-triwulan";
 import type { SurveiPublik } from "@/features/publik/application/survei-publik";
+import type { DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
 import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
@@ -119,6 +120,12 @@ export interface DokumenProps {
     tautan: string | null;
     keterangan: string | null;
   }[];
+  search: string;
+  category: DokumenKategoriFilter;
+  year?: number;
+  page: number;
+  pageSize: number;
+  total: number;
 }
 
 export interface StatistikProps {
