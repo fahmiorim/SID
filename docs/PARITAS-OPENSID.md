@@ -91,7 +91,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-WIL-004 | 🟡 Sebagian | Skema `point` + CRUD + `/pemetaan/point` (Point, simbol, tipe). **Gap: test/E2E belum ada.** |
 | OS-WIL-005 | 🟡 Sebagian | Skema `polygon` + CRUD kategori/layer `/pemetaan/polygon`. **Gap: polygon belum dirender di peta publik dan test/E2E belum ada.** |
 | OS-WIL-006 | 🟡 Sebagian | Publik `/desa/pertanahan` membaca persil/Cdesa/mutasi nyata + E2E. **Gap: admin `/pemetaan/pertanahan` hanya baca (tidak ada UI CRUD/impor), test domain belum ada.** |
-| OS-WIL-007 | 🟡 Sebagian | Peta publik `/desa/peta` memakai Leaflet + `/api/peta` dari area/garis/point/polygon. **Ditambah E2E `tests/peta-publik.e2e.ts`. Gap: coverage layer/E2E peta bisa diperluas.** |
+| OS-WIL-007 | 🟡 Sebagian | Peta publik `/desa/peta` memakai Leaflet + `/api/peta` dari area/garis/point/polygon. **Ditambah E2E `tests/peta-publik.e2e.ts` (lulus). Gap: coverage layer/E2E peta bisa diperluas.** |
 | OS-WIL-008 | 🟡 Sebagian | Katalog simbol `gis_simbol` + CRUD `/pemetaan/simbol`. **Gap: test/E2E belum ada.** |
 | OS-GOV-001 | ✅ Berfungsi penuh | Identitas desa `/pengaturan/desa` (alamat, kontak, kades, logo, TTD, stempel), RBAC, audit, dipakai cetak surat & publik. Test `desa.test.ts`; E2E `ops.e2e.ts`. |
 | OS-GOV-002 | ✅ Berfungsi penuh | Perangkat/jabatan `/konten/perangkat`: CRUD, foto, periode, status, penanda tangan, urutan. Test `perangkat.test.ts`; E2E `wilayah-pemerintahan.e2e.ts`. |
@@ -122,7 +122,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-FIN-003 | 🟡 Sebagian | Realisasi, rekonsiliasi tahunan vs triwulan, saldo selisih, test + E2E. **Gap: pembukuan manual/saldo bank belum ada.** |
 | OS-FIN-004 | 🟡 Sebagian | Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, E2E; halaman arsip menautkan ekspor laporan RP APBDes (bukan ekspor arsip). **Gap: impor dokumen belum ada.** |
 | OS-FIN-005 | ✅ Berfungsi penuh | SiLPA: CRUD dasar lengkap, terintegrasi navigasi, test domain/application tersedia. |
-| OS-FIN-006 | 🟡 Sebagian | Transparansi APBDes dan laporan triwulan publik memakai use case `getLaporanApbdesPublik()` / `getLaporanTriwulanPublik()` pada `/desa/apbdes`. **Gap: cakupan keluaran/periode katalog dan E2E publik belum lengkap.** |
+| OS-FIN-006 | 🟡 Sebagian | Transparansi APBDes dan laporan triwulan publik memakai use case `getLaporanApbdesPublik()` / `getLaporanTriwulanPublik()` pada `/desa/apbdes`. **Ditambah E2E `tests/publik-apbdes.e2e.ts` (lulus). Gap: cakupan keluaran/periode katalog dan E2E publik bisa diperluas.** |
 | OS-FIN-007 | 🟡 Sebagian | Inventaris enam kategori, kondisi, asal, lokasi, jumlah, nilai, CRUD, RBAC, E2E. **Gap: laporan/cetak per kategori belum ada.** |
 | OS-FIN-008 | 🟡 Sebagian | Mutasi aset (pindah/rusak/hapus/perbaikan), approval operator → sekdes → kades, audit, E2E. **Gap: laporan kekayaan dan cetak belum ada.** |
 | OS-FIN-009 | 🟡 Sebagian | `/bumindes/buku-administrasi`: katalog buku umum/sekretariat + CRUD item, E2E. **Gap: format buku resmi, laporan, dan cetak belum ada.** |
@@ -183,7 +183,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-OPS-010 | ✅ Berfungsi penuh | Media: Sudah terimplementasi di fitur baru. |
 | OS-OPS-011 | 🟡 Sebagian | API yang ada: auth, media publik, pengaduan lampiran, docs-status, peta, lookup NIK, backup/restore. **Gap: API informasi publik/inventaris/surat yang komprehensif dan E2E belum ada.** |
 | OS-OPS-012 | 🔴 Belum ada | Tidak ada API eksternal (surat/TTE/tanda tangan). `/persuratan/tte` placeholder; adapter TTE hanya mode nonaktif di domain surat. |
-| OS-OPS-007 | 🟡 Sebagian | Backup SQL/SQL.GZ dan restore melalui `/pengaturan/database`, use case berizin dan audit; test domain tersedia. **Ditambah E2E `tests/backup-database.e2e.ts`. Gap: E2E restore dan pengujian operasi database besar/pemulihan belum lengkap.** |
+| OS-OPS-007 | 🟡 Sebagian | Backup SQL/SQL.GZ dan restore melalui `/pengaturan/database`, use case berizin dan audit; test domain tersedia. **Ditambah E2E `tests/backup-database.e2e.ts` (lulus). Gap: E2E restore dan pengujian operasi database besar/pemulihan belum lengkap.** |
 **Catatan lintas-ID (direkonsiliasi 4 Nov 2026):**
 
 - Register ini mencakup seluruh 113 ID katalog tepat satu kali; ringkasan domain
