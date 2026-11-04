@@ -5,9 +5,13 @@ import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: PageProps<"/desa/apbdes">): Promise<Metadata> {
   const { desa } = await siapkanTema();
-  const laporan = await getLaporanApbdesPublik(desa.id);
+  const params = await searchParams;
+  const tahun = typeof params.tahun === "string" ? Number(params.tahun) : undefined;
+  const laporan = await getLaporanApbdesPublik(desa.id, tahun);
 
   return {
     title: `APBDes ${laporan.tahun} · ${desa.namaDesa ?? "Desa"}`,
@@ -15,9 +19,11 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function APBDesPage() {
+export default async function APBDesPage({ searchParams }: PageProps<"/desa/apbdes">) {
   const { ctx, tema, desa } = await siapkanTema();
-  const laporan = await getLaporanApbdesPublik(desa.id);
+  const params = await searchParams;
+  const tahun = typeof params.tahun === "string" ? Number(params.tahun) : undefined;
+  const laporan = await getLaporanApbdesPublik(desa.id, tahun);
   const Apbdes = tema.apbdes;
 
   return <Apbdes ctx={ctx} laporan={laporan} />;

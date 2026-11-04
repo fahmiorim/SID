@@ -76,53 +76,77 @@ export default function PetaMap({ areas, garises, points, polygons, desaName }: 
 
     const polygonById = new Map(polygons.map((polygon) => [polygon.id, polygon]));
     const bounds: L.LatLngTuple[] = [];
-    const layerGroups = {
-      areas: L.layerGroup().addTo(map),
-      garises: L.layerGroup().addTo(map),
-      points: L.layerGroup().addTo(map),
-    };
+    const overlayLayers: Record<string, L.LayerGroup> = {};
 
-    // Draw areas with the color/publication state of their layer.
+    // Draw areas grouped by polygon layer
+    const areasByPolygon = new Map<number | "lainnya", typeof areas>();
     areas.forEach((area) => {
-      const layer = area.refPolygon === null ? undefined : polygonById.get(area.refPolygon);
-      const path = parseGeoJsonPath(area.path, "Polygon");
-      if (!layer || path === null || path.length < 3) return;
-      L.polygon(path, { color: layer.color ?? "#10b981", weight: 2, fillOpacity: 0.15 })
-        .addTo(layerGroups.areas)
-        .bindPopup(popupContent(area.nama));
-      bounds.push(...path);
+      const key = area.refPolygon ?? "lainnya";
+      const list = areasByPolygon.get(key);
+      if (list) list.push(area);
+      else areasByPolygon.set(key, [area]);
+    });
+
+    areasByPolygon.forEach((list, key) => {
+      const group = L.layerGroup();
+      list.forEach((area) => {
+        const layer = key === "lainnya" ? undefined : polygonById.get(key);
+        const path = parseGeoJsonPath(area.path, "Polygon");
+        if (!layer && key !== "lainnya") return;
+        if (path === null || path.length < 3) return;
+        const color = key === "lainnya" ? "#10b981" : (layer?.color ?? "#10b981");
+        L.polygon(path, { color, weight: 2, fillOpacity: 0.15 })
+          .addTo(group)
+          .bindPopup(popupContent(area.nama));
+        bounds.push(...path);
+      });
+      if (list.length > 0) {
+        group.addTo(map);
+        if (key === "lainnya") {
+          overlayLayers["Area Lainnya"] = group;
+        } else {
+          const polygon = polygonById.get(key);
+          overlayLayers[polygon?.nama ?? `Polygon ${key}`] = group;
+        }
+      }
     });
 
     // Draw garises (roads/lines)
-    garises.forEach((garis) => {
-      const path = parseGeoJsonPath(garis.path, "LineString");
-      if (!path || path.length < 2) return;
-      L.polyline(path, { color: "#f59e0b", weight: 3 })
-        .addTo(layerGroups.garises)
-        .bindPopup(popupContent(garis.nama));
-      bounds.push(...path);
-    });
+    if (garises.length > 0) {
+      const garisGroup = L.layerGroup();
+      garises.forEach((garis) => {
+        const path = parseGeoJsonPath(garis.path, "LineString");
+        if (!path || path.length < 2) return;
+        L.polyline(path, { color: "#f59e0b", weight: 3 })
+          .addTo(garisGroup)
+          .bindPopup(popupContent(garis.nama));
+        bounds.push(...path);
+      });
+      garisGroup.addTo(map);
+      overlayLayers["Garis"] = garisGroup;
+    }
 
     // Draw points
-    points.forEach((point) => {
-      const path = parseGeoJsonPath(point.path, "Point");
-      if (!path || path.length !== 1) return;
-      const coord = path[0];
-      if (!coord) return;
-      const [lat, lng] = coord;
-      L.marker([lat, lng]).addTo(layerGroups.points).bindPopup(popupContent(point.nama));
-      bounds.push([lat, lng]);
-    });
+    if (points.length > 0) {
+      const titikGroup = L.layerGroup();
+      points.forEach((point) => {
+        const path = parseGeoJsonPath(point.path, "Point");
+        if (!path || path.length !== 1) return;
+        const coord = path[0];
+        if (!coord) return;
+        const [lat, lng] = coord;
+        L.marker([lat, lng]).addTo(titikGroup).bindPopup(popupContent(point.nama));
+        bounds.push([lat, lng]);
+      });
+      titikGroup.addTo(map);
+      overlayLayers["Titik"] = titikGroup;
+    }
 
     if (bounds.length > 0) map.fitBounds(bounds, { padding: [24, 24] });
 
-    L.control
-      .layers(undefined, {
-        Area: layerGroups.areas,
-        Garis: layerGroups.garises,
-        Titik: layerGroups.points,
-      })
-      .addTo(map);
+    if (Object.keys(overlayLayers).length > 0) {
+      L.control.layers(undefined, overlayLayers).addTo(map);
+    }
 
     leafletRef.current = map;
 

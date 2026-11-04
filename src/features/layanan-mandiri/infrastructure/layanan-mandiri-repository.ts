@@ -271,6 +271,30 @@ export async function tautkanSuratPermohonan(
   }
 }
 
+/** Batalkan permohonan oleh pemilik (warga). Hanya diperbolehkan sebelum diambil. */
+export async function batalkanPermohonanWarga(
+  villageId: number,
+  residentId: number,
+  id: number,
+  alasan: string,
+) {
+  const [result] = await db
+    .update(permohonanSurat)
+    .set({ status: 5, alasan })
+    .where(
+      and(
+        eq(permohonanSurat.villageId, villageId),
+        eq(permohonanSurat.residentId, residentId),
+        eq(permohonanSurat.id, id),
+        inArray(permohonanSurat.status, [0, 1, 2, 3]),
+      ),
+    );
+
+  if (result.affectedRows === 0) {
+    throw conflict("Permohonan tidak ditemukan atau tidak dapat dibatalkan pada tahap ini.");
+  }
+}
+
 /**
  * Sinkronkan status permohonan saat surat terhubung diterbitkan/ditolak.
  *

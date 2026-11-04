@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
-import { ajukanSuratWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
+import {
+  ajukanSuratWargaData,
+  batalkanPermohonanWargaData,
+} from "@/features/layanan-mandiri/application/warga-use-cases";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
 
@@ -73,6 +76,28 @@ export async function ajukanSuratWargaAction(
     revalidatePath("/permohonan-surat");
 
     return successState(`Permohonan terkirim. Nomor antrian: ${hasil.noAntrian}.`, hasil);
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function batalkanPermohonanWargaAction(
+  _previousState: ActionState<null>,
+  formData: FormData,
+): Promise<ActionState<null>> {
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id < 1) {
+    return errorState("Data permohonan tidak valid.");
+  }
+  const alasan = text(formData, "alasan");
+
+  try {
+    await batalkanPermohonanWargaData(id, alasan);
+    revalidatePath("/layanan-mandiri/surat");
+    revalidatePath("/layanan-mandiri/beranda");
+    revalidatePath("/layanan-mandiri/pesan");
+    revalidatePath("/permohonan-surat");
+    return successState("Permohonan dibatalkan.");
   } catch (error) {
     return toErrorState(error);
   }

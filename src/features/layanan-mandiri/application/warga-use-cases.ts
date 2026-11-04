@@ -8,6 +8,7 @@ import {
   type JenisSuratWarga,
 } from "@/features/layanan-mandiri/domain/layanan-mandiri";
 import {
+  batalkanPermohonanWarga,
   buatPermohonan,
   getPermohonanWarga,
   getSuratUntukWarga,
@@ -156,4 +157,19 @@ export async function getBerkasSyaratWargaData(
   const item = parseBerkasSyarat(permohonan.syarat).find((row) => row.id === syaratId);
   if (!item) throw notFound("Berkas syarat tidak ditemukan.");
   return item;
+}
+
+/** Batalkan permohonan milik warga selama belum diambil. */
+export async function batalkanPermohonanWargaData(
+  permohonanId: number,
+  alasan = "",
+): Promise<void> {
+  const user = await requireWargaAktif();
+  const villageId = await resolveVillageId(user);
+
+  if (!alasan.trim()) {
+    throw validationError("Alasan pembatalan wajib diisi.");
+  }
+
+  await batalkanPermohonanWarga(villageId, user.residentId, permohonanId, alasan.trim());
 }

@@ -6,7 +6,7 @@ export function LayerPanel() {
       <div className="mb-1 font-semibold">Layer</div>
       <label className="flex items-center gap-2">
         <input type="checkbox" defaultChecked />
-        Area
+        Polygon/Area
       </label>
       <label className="flex items-center gap-2">
         <input type="checkbox" defaultChecked />

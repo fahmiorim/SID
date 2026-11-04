@@ -36,9 +36,12 @@ function tahunValid(value: number): boolean {
  * melihat transparansi anggaran. Isi laporan identik karena keduanya memakai
  * fungsi murni yang sama di `domain/keuangan.ts`.
  */
-export async function getLaporanApbdesPublik(villageId: number) {
+export async function getLaporanApbdesPublik(villageId: number, tahunParam?: number) {
   const tersedia = await listKeuanganTahunTersedia(villageId);
-  const tahun = tersedia.at(-1) ?? new Date().getFullYear();
+  const tahun =
+    tahunParam !== undefined && tahunValid(tahunParam) && tersedia.includes(tahunParam)
+      ? tahunParam
+      : (tersedia.at(-1) ?? new Date().getFullYear());
 
   const rows = await listKeuanganTahun(villageId, tahun);
   const baris = laporanRpApbd(rows, AKUN_LAPORAN);
@@ -61,7 +64,6 @@ export async function getLaporanApbdesPublik(villageId: number) {
     grafik: seriGrafik(baris),
   };
 }
-
 /**
  * Laporan realisasi triwulan untuk situs publik.
  *

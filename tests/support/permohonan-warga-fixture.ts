@@ -8,6 +8,13 @@ interface AdminRoleRow extends RowDataPacket {
   role_id: number | null;
 }
 
+interface LetterRow extends RowDataPacket {
+  id: number;
+  number: string | null;
+  status: string;
+  verification_token: string | null;
+}
+
 export interface PermohonanWargaFixture {
   namaJenis: string;
   syaratNama: string;
@@ -16,6 +23,11 @@ export interface PermohonanWargaFixture {
   operatorUsername: string;
   warga: { nama: string; nik: string };
   wargaLain: { nik: string };
+  ambilSuratTerbit(): Promise<{
+    id: number;
+    number: string | null;
+    verificationToken: string | null;
+  } | null>;
   hapus(): Promise<void>;
 }
 
@@ -63,6 +75,28 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
     }
   }
 
+  async function ambilSuratTerbit(): Promise<{
+    id: number;
+    number: string | null;
+    verificationToken: string | null;
+  } | null> {
+    if (desaId === null || jenisId === null) return null;
+    const [rows] = await pool.execute<LetterRow[]>(
+      `SELECT id, number, status, verification_token
+       FROM letters
+       WHERE village_id = ? AND type_id = ? AND status = 'issued'
+       ORDER BY id DESC
+       LIMIT 1`,
+      [desaId, jenisId],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      id: row.id,
+      number: row.number,
+      verificationToken: row.verification_token,
+    };
+  }
   try {
     const [adminRows] = await pool.execute<AdminRoleRow[]>(
       "SELECT role_id FROM users WHERE username = ? LIMIT 1",
@@ -168,6 +202,7 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
       desaId,
       warga,
       wargaLain,
+      ambilSuratTerbit,
       hapus,
     };
   } catch (error) {

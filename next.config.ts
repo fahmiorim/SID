@@ -29,6 +29,15 @@ const nextConfig: NextConfig = {
     },
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/desa/pemilihan",
+        destination: "/pemilihan",
+        permanent: false,
+      },
+    ];
+  },
   /**
    * Permohonan surat mengunggah beberapa berkas syarat sekaligus lewat Server
    * Action. Batas bawaan 1 MB terlalu kecil untuk PDF 20 MB + beberapa gambar,

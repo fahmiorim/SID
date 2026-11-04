@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { formatRupiah } from "@/features/keuangan/domain/keuangan";
 import type { ApbdesProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
@@ -10,6 +12,19 @@ export function EsensiApbdes({ ctx, laporan }: ApbdesProps) {
         title="Transparansi APBDes"
         description={`Ringkasan Anggaran Pendapatan dan Belanja Desa ${ctx.desa.namaDesa ?? "desa"} tahun ${laporan.tahun}.`}
       />
+      {laporan.tersedia.length > 1 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {[...laporan.tersedia].reverse().map((tahun) => (
+            <Link
+              key={tahun}
+              href={`/desa/apbdes?tahun=${tahun}`}
+              className={`rounded-full px-3 py-1 text-sm ${tahun === laporan.tahun ? "bg-primary text-primary-foreground" : "border"}`}
+            >
+              {tahun}
+            </Link>
+          ))}
+        </div>
+      ) : null}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Ringkasan Anggaran</h2>

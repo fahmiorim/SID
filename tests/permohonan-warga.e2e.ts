@@ -117,3 +117,56 @@ test(
     expect(pdfWargaLain.status).toBe(404);
   },
 );
+
+test(
+  "operator menolak permohonan dan surat dikembalikan ke konsep",
+  { timeout: 180_000 },
+  async ({ app, screen, browser, alur }) => {
+    const masukSebagaiWarga = async (username: string) => {
+      await app.clearState();
+      await app.open("/masuk");
+      await screen.getByLabel("Username atau NIK").fill(username);
+      await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
+      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    };
+
+    await masukSebagaiWarga(alur.warga.nik);
+    await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
+    await expect(screen.getByRole("heading", { name: `Ajukan ${alur.namaJenis}` })).toBeVisible();
+    await screen.getByLabel("Keterangan").fill(`Pengujian tolak ${alur.warga.nik}`);
+    await screen
+      .getByLabel(new RegExp(alur.syaratNama))
+      .setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
+    await screen.getByRole("button", { name: "Kirim permohonan" }).tap();
+    await expect(screen.getByText("Permohonan berhasil dikirim")).toBeVisible();
+
+    await app.clearState();
+    await app.open("/masuk");
+    const operator = credentials.user("warga-e2e-operator");
+    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
+    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
+    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await expect(browser).toHaveURL("/beranda");
+
+    await app.open(`/permohonan-surat?status=1`);
+    const permohonan = screen.getByRole("row").filter({ hasText: alur.warga.nik });
+    await permohonan.getByRole("button", { name: "Periksa" }).tap();
+    await expect(screen.getByRole("dialog")).toBeVisible();
+    await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+
+    const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
+    await app.open(urlSurat);
+    const aksiSurat = () => screen.getByRole("button", { name: `Aksi surat ${alur.namaJenis}` });
+    await aksiSurat().tap();
+    await screen.getByRole("menuitem", { name: "Tolak & Kembalikan ke Konsep" }).tap();
+    await expect(screen.getByRole("alertdialog")).toBeVisible();
+    await screen.getByLabel("Alasan penolakan").fill("Berkas kurang lengkap");
+    await screen.getByRole("button", { name: "Tolak" }).tap();
+    await expect(screen.getByText("Surat ditolak")).toBeVisible();
+
+    await masukSebagaiWarga(alur.warga.nik);
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText("Permohonan Dibatalkan")).toBeVisible();
+  },
+);

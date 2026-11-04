@@ -625,6 +625,20 @@ export async function rejectSuratData(id: number, reason: string): Promise<void>
   }
   if (!reason?.trim()) throw conflict("Alasan penolakan wajib diisi.");
 
+  const role = user.roleId === null ? null : await findRoleById(user.roleId);
+  const nextStep = nextVerificationStep(surat);
+  if (nextStep === null) {
+    throw conflict("Surat ini sudah selesai diverifikasi.");
+  }
+  if (!roleCanVerifyStep(nextStep, role?.slug ?? null, user.permissions.isSuperadmin)) {
+    throw forbidden(`Tahap ${VERIFICATION_STEP_LABELS[nextStep]} bukan wewenang role Anda.`);
+  }
+  if (!canVerifyStep(surat, nextStep)) {
+    throw conflict(
+      `Verifikasi harus berurutan. Tahap berikutnya: ${VERIFICATION_STEP_LABELS[nextStep]}.`,
+    );
+  }
+
   await rejectSurat(villageId, id, reason.trim());
 
   // Surat yang ditolak membuat permohonan terkait ikut dibatalkan dengan alasan.

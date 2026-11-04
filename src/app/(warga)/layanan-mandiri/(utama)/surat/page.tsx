@@ -14,6 +14,7 @@ import {
   labelPermohonanStatus,
   parseBerkasSyarat,
 } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import { BatalkanPermohonanWargaButton } from "@/features/layanan-mandiri/presentation/components/batalkan-permohonan-warga-button";
 import { FormAjukanSurat } from "@/features/layanan-mandiri/presentation/components/form-ajukan-surat";
 import { verifyWargaPage } from "@/lib/dal";
 
@@ -188,6 +189,11 @@ export default async function SuratWargaPage({
                           </>
                         ) : null}
                       </p>
+                    ) : null}
+                    {item.status !== 4 && item.status !== 5 ? (
+                      <div className="flex justify-end">
+                        <BatalkanPermohonanWargaButton permohonanId={item.id} />
+                      </div>
                     ) : null}
                   </CardContent>
                 </Card>

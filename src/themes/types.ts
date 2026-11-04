@@ -192,6 +192,7 @@ export interface ApbdesProps {
   ctx: ThemeContext;
   laporan: {
     tahun: number;
+    tersedia: number[];
     baris: { kode: string; uraian: string; anggaran: string; realisasi: string; selisih: string }[];
     total: { anggaran: string; realisasi: string; selisih: string };
     bidang: { kode: string; uraian: string; anggaran: string; realisasi: string; persen: number }[];
