@@ -743,7 +743,7 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
   {
     slug: "pemilihan",
     name: "Pemilihan Desa",
-    url: "/desa/pemilihan",
+    url: "/pemerintahan/pemilihan",
     icon: "vote",
     sortOrder: 3,
     isGroup: false,

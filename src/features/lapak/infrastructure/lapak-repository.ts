@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { lapak, type Lapak, type NewLapak } from "@/db/schema/lapak";
@@ -14,10 +14,10 @@ export async function listLapak(
   if (opts?.q) {
     where.push(
       or(
-        ilike(lapak.nama, `%${opts.q}%`),
-        ilike(lapak.pemilik ?? "", `%${opts.q}%`),
-        ilike(lapak.alamat ?? "", `%${opts.q}%`),
-        ilike(lapak.keterangan ?? "", `%${opts.q}%`),
+        like(lapak.nama, `%${opts.q}%`),
+        like(lapak.pemilik ?? "", `%${opts.q}%`),
+        like(lapak.alamat ?? "", `%${opts.q}%`),
+        like(lapak.keterangan ?? "", `%${opts.q}%`),
       )!,
     );
   }

@@ -13,7 +13,6 @@
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { eq, inArray, sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/mysql2/migrator";
 import mysql from "mysql2/promise";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -31,6 +30,7 @@ import {
   findResidentForAccount,
   resetWargaPin,
 } from "@/features/warga/infrastructure/warga-repository";
+import { jalankanMigrasiUji } from "@/testing/migrasi-uji";
 
 let dbReady = false;
 const MIGRATIONS_FOLDER = fileURLToPath(new URL("../../db/migrations", import.meta.url));
@@ -132,7 +132,7 @@ beforeAll(async () => {
   }
   dbReady = true;
 
-  await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  await jalankanMigrasiUji(db, { dsn, migrationsFolder: MIGRATIONS_FOLDER });
   tenant = await seedTenant();
 });
 

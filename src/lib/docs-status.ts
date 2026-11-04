@@ -61,7 +61,7 @@ export function createDocsStatus(now = new Date()): DocsStatus {
       notDone: 38,
       percentage: 52.2,
       disclaimer:
-        "Ringkasan 92 modul adalah baseline kasar dan bukan status resmi. Status resmi per-ID: 15 ✅ / 77 🟡 / 20 🔴 dari 112 ID dalam scope (1 ID di luar scope) di PARITAS-OPENSID.md.",
+        "Ringkasan 92 modul adalah baseline kasar dan bukan status resmi. Status resmi per-ID: 21 ✅ / 90 🟡 / 1 🔴 dari 112 ID dalam scope (1 ID di luar scope) di PARITAS-OPENSID.md.",
       categories: COARSE_PARITY_CATEGORIES,
     },
     documents: [
@@ -73,12 +73,13 @@ export function createDocsStatus(now = new Date()): DocsStatus {
       {
         name: "PARITAS-OPENSID.md",
         role: "Status implementasi",
-        status: "Seluruh 113 ID sudah diaudit; implementasi belum seluruhnya selesai",
+        status: "113 ID katalog tercatat tepat satu baris; implementasi belum seluruhnya selesai",
       },
       {
         name: "RENCANA-PERBAIKAN.md",
         role: "Roadmap dan milestone",
-        status: "Quality gate dasar lulus (test/typecheck/lint); E2E belum dijalankan CI",
+        status:
+          "Quality gate dasar lulus; CI menjalankan migrasi, seed, check, build, smoke, dan E2E browser",
       },
       {
         name: "ARCHITECTURE.md",

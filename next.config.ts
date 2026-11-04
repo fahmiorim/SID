@@ -30,13 +30,7 @@ const nextConfig: NextConfig = {
   },
 
   async redirects() {
-    return [
-      {
-        source: "/desa/pemilihan",
-        destination: "/pemilihan",
-        permanent: false,
-      },
-    ];
+    return [];
   },
   /**
    * Permohonan surat mengunggah beberapa berkas syarat sekaligus lewat Server

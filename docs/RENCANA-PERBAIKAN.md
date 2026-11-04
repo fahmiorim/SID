@@ -264,7 +264,8 @@ Mengacu `donjo-app/controllers/fweb/*`:
       (pembangunan + detail + cetak; peta Leaflet area/garis/titik).
       (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
 - [ ] `/desa/suplemen` masih menunggu backend publik. Halaman publik lapak
-      (`/desa/lapak`), pemilihan (`/desa/pemilihan`), dan registrasi akun warga
+      (`/desa/lapak`), pemilihan (admin `/pemerintahan/pemilihan`, publik
+      `/desa/pemilihan`), dan registrasi akun warga
       (`/desa/registrasi-warga`) sudah memakai data/aksi nyata. `/desa/idm` dan
       `/desa/idm-sdgs` sudah memakai data IDM/SDGs. Lihat status tiap ID di
       `PARITAS-OPENSID.md`.
@@ -689,7 +690,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 - [ ] `OS-MOD-001`: Anjungan mandiri. Admin `/anjungan` sudah CRUD penuh
       (modul + RBAC); sisa: alur kiosk publik dan test/E2E.
-- [ ] `OS-GOV-007`: Pemilihan desa. Admin `/desa/pemilihan` sudah CRUD
+- [ ] `OS-GOV-007`: Pemilihan desa. Admin `/pemerintahan/pemilihan` sudah CRUD
       (tahun, jenis, tanggal, keterangan) + publik `/desa/pemilihan`; sisa:
       kandidat, daftar pemilih, perolehan suara, rekap, dan E2E.
 - [x] `OS-MOD-002`: Buku tamu — CRUD admin dan laporan; domain/application
@@ -889,10 +890,10 @@ Urutan prioritas: web publik → admin berfungsi → paritas OpenSID → multi-d
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Terverifikasi pada snapshot 31 Okt** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Itu bukti historis; jalankan quality gate ulang sebelum menutup milestone baru. |
-| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan memakai data. `/desa/lapak` masih placeholder; IDM/SDGs sudah memakai data nyata. |
+| 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan memakai data. `/desa/lapak` memakai katalog + pencarian/filter nyata; IDM/SDGs sudah memakai data nyata. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; pembukuan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 22 berfungsi penuh, 89 sebagian, 1 belum ada; `OS-POP-009` di luar scope. |
-| 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, IDM/SDGs, widget/CMS, manifest, dan OG sudah tersambung; lapak publik belum. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 21 berfungsi penuh, 90 sebagian, 1 belum ada; `OS-POP-009` di luar scope. Register diverifikasi `src/db/paritas-register.test.ts`. |
+| 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, IDM/SDGs, lapak, widget/CMS, manifest, dan OG sudah tersambung; sisa gap ada di keluaran analisis dan entitas pelapak. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik tersedia; provisioning, super-admin, domain kustom, dan uji penuh belum. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan menyeluruh, dan runbook belum lengkap; workflow CI telah dikonfigurasi untuk menjalankan suite browser E2E. |
 
@@ -902,7 +903,9 @@ status per ID memiliki bukti UI, test, dan quality gate.
 
 **Catatan rute:** `/pengaturan/plugin`, `/pengaturan/notifikasi`, dan
 `/pengaturan/sinkronisasi` tetap belum menjadi modul operasional. `/desa/lapak`
-masih placeholder; halaman IDM/SDGs bukan lagi statis dan memakai data.
+memakai data nyata (katalog + pencarian/filter); halaman IDM/SDGs juga memakai
+data. Admin pemilihan berada di `/pemerintahan/pemilihan`, sedangkan halaman
+publiknya di `/desa/pemilihan`.
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:
 1. ~~Verifikasi surat IDOR~~ — **selesai P0**: token acak + hash, tenant-aware, `await params`, dan halaman form token. QR gambar dibuat 24 Okt 2026 (SVG di halaman cetak, PNG di PDF).
@@ -924,17 +927,23 @@ Masalah kritis yang perlu diperbaiki sebelum lanjut:
    **selesai**: `npm run typecheck` lulus.
 9. ~~`docs-status` masih scaffold~~ — **selesai**: API, model typed, halaman
    admin, dan smoke E2E sudah tersedia.
-10. Smoke E2E baseline untuk API katalog tetap tersedia. Alur browser surat
-    warga kini lulus dari pengajuan sampai unduh PDF dengan kontrol pemilik
-    (`tests/permohonan-warga.e2e.ts`). E2E admin/warga/public lainnya, variasi
-    alur, dan isolasi tenant lintas fitur tetap perlu ditambahkan; smoke HTTP
-    publik tidak menggantikan uji interaksi/otorisasi/unggah/transaksi.
-    Alur admin+publik Sinergi (`tests/sinergi.e2e.ts`) juga lulus pada DB
-    bermigrasi + ter-seed dari nol (31 Okt 2026).
-11. Integrasi test isolasi (`tests/isolation.e2e.ts`) untuk verifikasi `villageId` pada fitur SiLPA, Lapak, Kehadiran, BukuTamu.
+10. E2E kini berjumlah 25 berkas (`tests/*.e2e.ts`, 103 test) dan dijalankan
+    CI lewat `npx e2e run`; alur surat warga, admin+publik Sinergi, verifikasi
+    publik, dan statistik sudah lulus pada DB bermigrasi + ter-seed. Kualitasnya
+    belum merata: hanya `permohonan-warga.e2e.ts` dan `sinergi.e2e.ts` yang
+    meng-assert kode status HTTP; sisanya memeriksa URL/teks/visibilitas.
+    Smoke HTTP publik tidak menggantikan uji interaksi/otorisasi/unggah/transaksi.
+11. Isolasi `villageId` untuk SiLPA, Lapak, Buku Tamu, Arsip, dan Kehadiran
+    diuji di lapisan data oleh `src/features/isolasi-village.integration.test.ts`
+    (dua desa nyata, termasuk uji update/delete lintas desa). Berkas scaffold
+    `tests/isolation.e2e.ts` yang hanya memeriksa URL sudah dihapus.
 12. Rute orphan yang punya fitur nyata (`buku-tamu`, `arsip`, `kehadiran`,
     `lapak`, `pelanggan`, `anjungan`, `analisis`, `pemilihan`,
     `registrasi-warga`) sudah didaftarkan di modul/menu/RBAC (4 Nov 2026).
     Sisa: `/pengaturan/plugin`, `/pengaturan/notifikasi`,
     `/pengaturan/sinkronisasi`, `/persuratan/tte`, dan `/docs-status` belum
     menjadi modul operasional.
+13. ~~Pencarian lapak, arsip, pelanggan, dan suplemen memakai `ilike`~~
+    **selesai**: MySQL/MariaDB tidak mendukung `ILIKE`, sehingga pencarian
+    gagal `ER_PARSE_ERROR`. Diganti `like` (collation bawaan case-insensitive)
+    dan dibuktikan `isolasi-village.integration.test.ts`.

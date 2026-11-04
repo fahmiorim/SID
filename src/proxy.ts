@@ -1,6 +1,8 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { isPublicPath } from "@/lib/public-paths";
+
 /**
  * Proxy (dahulu "middleware") — Next.js 16.
  *
@@ -9,40 +11,9 @@ import { NextResponse, type NextRequest } from "next/server";
  * lapisan otorisasi — pemeriksaan sesi & izin yang sebenarnya tetap dilakukan
  * di server (Data Access Layer: `src/lib/dal.ts`), karena proxy dapat dilewati
  * (mis. saat memanggil Server Action/Route Handler secara langsung).
- */
-
-/** Halaman publik: boleh diakses tanpa sesi. */
-const PUBLIC_PATHS = ["/desa", "/masuk", "/jajak-pendapat"] as const;
-
-/**
- * Berkas metadata yang harus selalu dapat diambil mesin pencari/perayap tanpa
- * sesi. Tidak boleh dialihkan ke halaman masuk.
  *
- * Semuanya benar-benar ada: `sitemap.ts`/`robots.ts` (`/sitemap.xml`,
- * `/robots.txt`), `icon.svg`, serta metadata route `manifest.ts` dan
- * `opengraph-image.tsx` yang menghasilkan `/manifest.webmanifest` dan
- * `/opengraph-image`.
+ * Aturan rute publik ada di `src/lib/public-paths.ts` agar dapat diuji.
  */
-const PUBLIC_FILES = [
-  "/sitemap.xml",
-  "/robots.txt",
-  "/manifest.webmanifest",
-  "/icon.svg",
-  "/opengraph-image",
-] as const;
-
-function isPublicPath(pathname: string): boolean {
-  // Beranda publik.
-  if (pathname === "/") return true;
-
-  // Halaman informasi layanan mandiri boleh dibaca tanpa sesi; area warga di
-  // bawahnya (`/layanan-mandiri/beranda`, dst.) tetap dilindungi.
-  if (pathname === "/layanan-mandiri") return true;
-
-  if (PUBLIC_FILES.includes(pathname as (typeof PUBLIC_FILES)[number])) return true;
-
-  return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
-}
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

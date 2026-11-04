@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { families, residents, suplemen, suplemenTerdata } from "@/db/schema";
@@ -26,7 +26,7 @@ export async function listSuplemen(
 
   const filters = [eq(suplemen.villageId, villageId)];
   if (params.search) {
-    filters.push(ilike(suplemen.nama, `%${params.search}%`));
+    filters.push(like(suplemen.nama, `%${params.search}%`));
   }
   if (params.sasaran) {
     filters.push(eq(suplemen.sasaran, params.sasaran));

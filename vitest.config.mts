@@ -26,6 +26,10 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Beberapa berkas integrasi memigrasi `desa_test` secara bergiliran
+    // (dikunci lewat `jalankanMigrasiUji`). Migrasi dari nol butuh >10 detik,
+    // jadi timeout hook bawaan terlalu pendek.
+    hookTimeout: 120_000,
     env: {
       NODE_ENV: "test",
       DATABASE_URL: "mysql://root:@127.0.0.1:3306/desa_test",

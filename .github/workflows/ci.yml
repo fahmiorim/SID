@@ -55,12 +55,27 @@ jobs:
     name: Typecheck, lint, test, build
     runs-on: ubuntu-latest
 
+    services:
+      # Test integrasi DB (`*.integration.test.ts`) membuat basis datanya
+      # sendiri, tetapi tetap butuh server MySQL. Tanpa service ini test
+      # tersebut akan skip diam-diam di CI.
+      mysql:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: desa_ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     env:
       # HUSKY=0: lewati pemasangan git hook saat `npm ci` di CI.
       HUSKY: "0"
-      # Nilai dummy: aplikasi tidak menyentuh database saat build karena semua
-      # rute bersifat dinamis. Variabel ini hanya agar validasi env lolos.
-      DATABASE_URL: mysql://root:@127.0.0.1:3306/desa_ci
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/desa_ci
       BETTER_AUTH_SECRET: rahasia-ci-minimal-32-karakter-aman
       APP_URL: http://localhost:3000
       BETTER_AUTH_URL: http://localhost:3000

@@ -13,9 +13,10 @@ CREATE TABLE `incoming_letter_dispositions` (
   `updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `incoming_letter_dispositions_id` PRIMARY KEY(`id`),
   CONSTRAINT `incoming_letter_dispositions_village_id_villages_id_fk` FOREIGN KEY (`village_id`) REFERENCES `villages`(`id`) ON DELETE CASCADE,
-  CONSTRAINT `incoming_letter_dispositions_incoming_letter_id_incoming_letters_id_fk` FOREIGN KEY (`incoming_letter_id`) REFERENCES `incoming_letters`(`id`) ON DELETE CASCADE
+  CONSTRAINT `ild_incoming_letter_id_fk` FOREIGN KEY (`incoming_letter_id`) REFERENCES `incoming_letters`(`id`) ON DELETE CASCADE,
+  CONSTRAINT `ild_to_user_id_fk` FOREIGN KEY (`to_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL
 );
-
+--> statement-breakpoint
 CREATE TABLE `outgoing_letter_shipments` (
   `id` int AUTO_INCREMENT NOT NULL,
   `village_id` int NOT NULL,
@@ -29,9 +30,9 @@ CREATE TABLE `outgoing_letter_shipments` (
   `updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
   CONSTRAINT `outgoing_letter_shipments_id` PRIMARY KEY(`id`),
   CONSTRAINT `outgoing_letter_shipments_village_id_villages_id_fk` FOREIGN KEY (`village_id`) REFERENCES `villages`(`id`) ON DELETE CASCADE,
-  CONSTRAINT `outgoing_letter_shipments_outgoing_letter_id_outgoing_letters_id_fk` FOREIGN KEY (`outgoing_letter_id`) REFERENCES `outgoing_letters`(`id`) ON DELETE CASCADE
+  CONSTRAINT `ols_outgoing_letter_id_fk` FOREIGN KEY (`outgoing_letter_id`) REFERENCES `outgoing_letters`(`id`) ON DELETE CASCADE
 );
-
+--> statement-breakpoint
 CREATE TABLE `letter_agenda_logs` (
   `id` int AUTO_INCREMENT NOT NULL,
   `village_id` int NOT NULL,

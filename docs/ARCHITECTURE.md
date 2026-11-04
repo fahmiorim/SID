@@ -107,10 +107,24 @@ Fitur yang sudah dibangun saat ini:
 
 ### Aturan penting
 
-- **`infrastructure` tidak pernah diimpor `presentation`.** Halaman & aksi
-  memanggil *use case*, bukan *repository*.
-- **`domain` tidak mengimpor apa pun dari aplikasi** selain zod dan primitif
-  murni dari `src/lib/forms.ts`.
+- **`infrastructure` hanya dipanggil `application`.** Halaman & aksi memanggil
+  *use case*, bukan *repository*.
+  **Utang teknis terukur (per Nov 2026):** 38 baris impor runtime di 37 berkas
+  `src/app/**` dan `src/features/*/presentation/**` masih langsung ke
+  `infrastructure`, ditambah 7 impor `import type`. Terbanyak: aksi & halaman
+  `kesehatan` (KIA, ibu hamil, pemantauan anak, posyandu), `media-storage`
+  publik, `surat-pdf`/`keluarga-pdf`, `rbac-repository` di layout admin, dan
+  `penduduk-repository` di halaman/ekspor. Angka ini harus **turun, bukan
+  bertambah**; ubah ke use case setiap kali berkas tersebut disentuh. Jangan
+  menyalin pola impor baru dari berkas yang masih melanggar.
+- **`domain` tidak mengimpor lapisan atas atau I/O.** Dilarang (dan saat ini 0
+  pelanggaran): `application`, `infrastructure`, `presentation`, `@/db`,
+  `server-only`, serta API Node. Yang **diizinkan dan lazim**: domain fitur lain
+  (`@/features/*/domain/*`, 46 baris — terbanyak `rbac/domain/resources` 32
+  baris, `penduduk/domain` 8, `keuangan` 3, `publik` 3) dan primitif murni
+  `src/lib/` (19 baris — `lib/forms` 15, `lib/spreadsheet` 3, `lib/errors` 1),
+  ditambah `zod`. Total 65 baris pada 47 dari 82 berkas domain. Ketergantungan
+  antar-domain harus searah dan tidak boleh membentuk siklus.
 - **Ketergantungan antar-fitur searah.** Fitur yang secara domain memakai data
   fitur lain boleh mengimpornya (mis. `keluarga` → `penduduk`), dan pengetahuan
   tentang sebuah tabel tetap dipegang pemiliknya (mis. opsi wilayah dibaca lewat
@@ -332,9 +346,14 @@ diimplementasikan. Statusnya ada di
 
 ### Route group
 
-- `(public)` — situs desa: `/` (beranda), `/desa/*`, dan `/layanan-mandiri`
-  (halaman informasi/CTA warga). **Sudah berjalan**; seluruh halaman dirender
-  oleh tema aktif lewat `src/app/(public)/layout.tsx`.
+- `(public)` — situs desa: `/` (beranda), `/desa/*`, `/layanan-mandiri`
+  (halaman informasi/CTA warga), serta `/masuk`, `/lupa-sandi`, `/reset-sandi`.
+  **Sudah berjalan**; seluruh halaman dirender oleh tema aktif lewat
+  `src/app/(public)/layout.tsx`.
+  Rute yang boleh dibuka tanpa sesi didefinisikan di `src/lib/public-paths.ts`
+  dan dipakai `src/proxy.ts`. Setiap halaman di route group `(public)` wajib
+  lolos `isPublicPath` (dijaga `src/lib/public-paths.test.ts`); halaman publik
+  yang diletakkan di luar prefix `/desa` akan dialihkan ke `/masuk`.
 - `(warga)` — dasbor warga di `/layanan-mandiri/beranda`, `/surat`,
   `/dokumen`, `/pesan`, `/profil`, dan `/ubah-pin`. Login memakai halaman
   `/masuk` yang sama dengan staf (kolom "Username atau NIK"); `signInAction`
@@ -431,7 +450,7 @@ src/themes/<slug>/
   dan `src/app/opengraph-image.tsx` (`/opengraph-image`) adalah metadata route
   dinamis yang membaca identitas desa dari host + warna tema aktif, dengan
   fallback nilai umum bila host tak dikenal. Keduanya masuk `PUBLIC_FILES` di
-  `src/proxy.ts` agar perayap tidak dialihkan ke halaman masuk.
+  `src/lib/public-paths.ts` agar perayap tidak dialihkan ke halaman masuk.
 
 ### Batas keamanan
 
@@ -453,7 +472,12 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 - Perubahan otorisasi diuji untuk **dua peran**: super admin dan peran terbatas
   (menu yang tampil serta akses langsung ke URL modul yang tidak diizinkan).
 - Perubahan tenant diuji dengan dua host/desa dan akses silang yang ditolak.
-- Perubahan skema disertai berkas migrasi yang ikut di-commit.
+- Perubahan skema disertai berkas migrasi yang ikut di-commit. Penjaga
+  `src/db/migrasi-paritas.test.ts` memastikan setiap tabel pada skema dibuat
+  oleh berkas migrasi dan setiap berkas migrasi terdaftar di `_journal.json`.
+- Perubahan status paritas disertai pembaruan `PARITAS-OPENSID.md`. Penjaga
+  `src/db/paritas-register.test.ts` memastikan register memuat setiap ID
+  katalog tepat satu baris dan ringkasannya cocok dengan hitungan baris.
 
 ### Pengujian
 
@@ -464,13 +488,18 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 - Cakupan integrasi: repository/use case, migrasi DB kosong, seed idempoten,
   otorisasi, isolasi tenant, media, dan siklus akun warga.
 - Cakupan E2E: alur publik, admin, warga, pengajuan surat, persetujuan,
-  cetak/PDF, unggah/unduh, impor/ekspor, serta error/permission.
+  cetak/PDF, unggah/unduh, impor/ekspor, serta sebagian error/permission.
+  Penegakan status HTTP masih tipis (lihat catatan di bawah).
 - Test integrasi DB boleh skip hanya saat lingkungan lokal memang tidak memiliki
   MySQL; CI wajib menyediakan MariaDB dan tidak boleh menganggap skip sebagai
   bukti selesai.
 - Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
   fixture, dan command harus ada di repository serta dapat dijalankan CI.
-- E2E smoke (±80 test, 12 file `tests/*.e2e.ts`) sudah ada, tetapi sebagian besar hanya memeriksa URL dan `body`/`table` terlihat, bukan status HTTP atau isi halaman. **CI `.github/workflows/ci.yml` masih belum menjalankannya** (hanya migrasi, check+build, smoke HTTP). Masih ada.
+- E2E (25 berkas `tests/*.e2e.ts`, 103 test) sudah ada dan **dijalankan CI**
+  lewat `npx e2e run` pada job `smoke`. Sebagian besar masih memeriksa URL dan
+  elemen yang terlihat; hanya 2 berkas yang meng-assert kode status HTTP
+  eksplisit (`permohonan-warga.e2e.ts`, `sinergi.e2e.ts`). Cakupan ini perlu
+  terus diperluas.
 
 CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
 `npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh

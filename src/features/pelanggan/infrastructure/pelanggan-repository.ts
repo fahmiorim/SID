@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { pelanggan, type NewPelanggan, type Pelanggan } from "@/db/schema/pelanggan";
@@ -13,10 +13,10 @@ export async function listPelanggan(
   if (opts?.q) {
     where.push(
       or(
-        ilike(pelanggan.nama, `%${opts.q}%`),
-        ilike(pelanggan.kontak ?? "", `%${opts.q}%`),
-        ilike(pelanggan.alamat ?? "", `%${opts.q}%`),
-        ilike(pelanggan.keterangan ?? "", `%${opts.q}%`),
+        like(pelanggan.nama, `%${opts.q}%`),
+        like(pelanggan.kontak ?? "", `%${opts.q}%`),
+        like(pelanggan.alamat ?? "", `%${opts.q}%`),
+        like(pelanggan.keterangan ?? "", `%${opts.q}%`),
       )!,
     );
   }

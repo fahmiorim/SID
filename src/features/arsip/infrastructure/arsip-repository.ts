@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { arsip, type Arsip, type NewArsip } from "@/db/schema/arsip";
@@ -14,9 +14,9 @@ export async function listArsip(
   if (opts?.q) {
     where.push(
       or(
-        ilike(arsip.judul, `%${opts.q}%`),
-        ilike(arsip.kategori ?? "", `%${opts.q}%`),
-        ilike(arsip.keterangan ?? "", `%${opts.q}%`),
+        like(arsip.judul, `%${opts.q}%`),
+        like(arsip.kategori ?? "", `%${opts.q}%`),
+        like(arsip.keterangan ?? "", `%${opts.q}%`),
       )!,
     );
   }

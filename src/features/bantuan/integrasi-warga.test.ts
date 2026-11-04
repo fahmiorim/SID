@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { inArray, sql } from "drizzle-orm";
-import { migrate } from "drizzle-orm/mysql2/migrator";
 import mysql from "mysql2/promise";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -17,6 +16,7 @@ import {
   villages,
 } from "@/db/schema";
 import { listBantuanDiterimaWarga } from "@/features/bantuan/infrastructure/bantuan-repository";
+import { jalankanMigrasiUji } from "@/testing/migrasi-uji";
 
 let dbReady = false;
 const MIGRATIONS_FOLDER = fileURLToPath(new URL("../../db/migrations", import.meta.url));
@@ -157,7 +157,7 @@ beforeAll(async () => {
   }
 
   dbReady = true;
-  await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+  await jalankanMigrasiUji(db, { dsn, migrationsFolder: MIGRATIONS_FOLDER });
   fixture = await seedFixture();
 });
 

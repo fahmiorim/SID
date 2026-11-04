@@ -9,7 +9,7 @@ import { isAppError } from "@/lib/errors";
 
 import { hapusPemilihan, simpanPemilihan, ubahPemilihan } from "../application/pemilihan-use-cases";
 
-const PATH = "/desa/pemilihan";
+const PATH = "/pemerintahan/pemilihan";
 
 function inputDariForm(formData: FormData) {
   return {
