@@ -8,6 +8,6 @@ test(
   async ({ app, browser, screen }) => {
     await app.open("/pengaturan/database");
     await expect(browser).toHaveURL("/pengaturan/database");
-    await expect(screen.getByText(/Backup/i)).toBeVisible();
+    await expect(screen.getByRole("heading", { name: /Pengaturan Database/i })).toBeVisible();
   },
 );
