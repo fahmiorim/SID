@@ -3,7 +3,11 @@ import "server-only";
 import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { namaBerkasAman, validasiMedia } from "@/features/publik/domain/media";
+import {
+  namaBerkasAman,
+  validasiMedia,
+  validasiMediaDenganPengaturan,
+} from "@/features/publik/domain/media";
 
 /**
  * Penyimpanan media situs publik (gambar, dokumen) di disk lokal — Fase 1C.3.
@@ -23,7 +27,16 @@ const AKAR_PENYIMPANAN = path.join(process.cwd(), "storage", "media");
 
 /** Kategori menentukan subfolder; memudahkan pemisahan jenis konten. */
 export type KategoriMedia =
-  "berita" | "galeri" | "slider" | "perangkat" | "dokumen" | "permohonan" | "pengaduan" | "umum";
+  | "berita"
+  | "galeri"
+  | "slider"
+  | "perangkat"
+  | "dokumen"
+  | "permohonan"
+  | "pengaduan"
+  | "surat-tte"
+  | "surat"
+  | "umum";
 
 export function akarPenyimpananMedia(): string {
   return AKAR_PENYIMPANAN;
@@ -101,6 +114,42 @@ export async function simpanUnggahanMedia(
   berkas: { nama: string; mime: string | null; ukuran: number; isi: Uint8Array },
 ): Promise<HasilSimpanMedia> {
   const validasi = validasiMedia(berkas.mime, berkas.ukuran);
+  if (!validasi.ok) throw new Error(validasi.pesan);
+
+  const relatif = jalurRelatifMedia(
+    villageId,
+    kategori,
+    namaBerkasAman(berkas.nama),
+    validasi.jenis.ekstensi,
+  );
+  await simpanMedia(relatif, berkas.isi);
+
+  return { jalur: relatif, mime: validasi.jenis.mime };
+}
+/**
+ * Validasi lalu simpan berkas unggahan menggunakan pengaturan dinamis.
+ *
+ * @param villageId - ID desa
+ * @param kategori - Kategori media
+ * @param berkas - Data berkas
+ * @param pengaturan - Pengaturan dinamis (opsional): { mimeAllowlist, maxSizeBytes }
+ * @throws Error bila MIME/ukuran tidak sah
+ */
+export async function simpanUnggahanMediaDenganPengaturan(
+  villageId: number,
+  kategori: KategoriMedia,
+  berkas: { nama: string; mime: string | null; ukuran: number; isi: Uint8Array },
+  pengaturan?: { mimeAllowlist: string[]; maxSizeBytes: number },
+): Promise<HasilSimpanMedia> {
+  const validasi = pengaturan
+    ? validasiMediaDenganPengaturan(
+        berkas.mime,
+        berkas.ukuran,
+        pengaturan.mimeAllowlist,
+        pengaturan.maxSizeBytes,
+      )
+    : validasiMedia(berkas.mime, berkas.ukuran);
+
   if (!validasi.ok) throw new Error(validasi.pesan);
 
   const relatif = jalurRelatifMedia(

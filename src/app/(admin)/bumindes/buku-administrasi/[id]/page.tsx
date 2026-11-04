@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FileDown, Printer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -60,6 +60,18 @@ export default async function BukuAdministrasiDetailPage({
                 <ArrowLeft className="size-4" />
                 Kembali
               </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/bumindes/buku-administrasi/${buku.id}/cetak`}>
+                <Printer className="size-4" />
+                Cetak
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={`/bumindes/buku-administrasi/${buku.id}/ekspor`}>
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
             </Button>
             {canWrite ? (
               <BukuItemCreateButton bukuId={buku.id} nomorUrutAwal={nomorUrutBerikutnya} />

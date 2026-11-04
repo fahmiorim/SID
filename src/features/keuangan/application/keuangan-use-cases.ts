@@ -66,11 +66,11 @@ export async function listKeuangan(tahunParam?: number) {
  * Mengembalikan baris RP APBDes (pendapatan/belanja/pembiayaan dengan
  * realisasi, selisih, %) serta rincian realisasi per bidang belanja.
  */
-export async function getLaporanKeuangan(tahunParam?: number) {
+export async function getLaporanKeuangan(tahunParam?: number, bidangKode?: string) {
   const { tahun, tersedia, rows } = await listKeuangan(tahunParam);
 
   const baris = laporanRpApbd(rows, AKUN_LAPORAN);
-  const bidang = listBidangBelanja(rows).map((row) => {
+  let bidang = listBidangBelanja(rows).map((row) => {
     const selisih = formatMoney(toMinor(row.anggaran) - toMinor(row.realisasi));
     return {
       kode: row.templateUuid,
@@ -82,6 +82,10 @@ export async function getLaporanKeuangan(tahunParam?: number) {
     };
   });
 
+  if (bidangKode) {
+    bidang = bidang.filter((b) => b.kode === bidangKode);
+  }
+
   return {
     tahun,
     tersedia,
@@ -91,6 +95,17 @@ export async function getLaporanKeuangan(tahunParam?: number) {
     totalBidang: totalLaporan(bidang),
     grafik: seriGrafik(baris),
   };
+}
+
+/**
+ * Daftar semua bidang belanja yang tersedia untuk filter laporan.
+ */
+export async function getLaporanKeuanganBidangList() {
+  const { rows } = await listKeuangan();
+  return listBidangBelanja(rows).map((row) => ({
+    kode: row.templateUuid,
+    uraian: row.uraian,
+  }));
 }
 
 /**

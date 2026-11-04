@@ -14,6 +14,8 @@ import {
   ringkasRpApbd,
 } from "@/features/keuangan/domain/keuangan";
 import { AnggaranTable } from "@/features/keuangan/presentation/components/anggaran-table";
+import { ApbdesImportDialog } from "@/features/keuangan/presentation/components/apbdes-import-dialog";
+import { ApbdesTemplateButton } from "@/features/keuangan/presentation/components/apbdes-template-button";
 import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
@@ -74,6 +76,12 @@ export default async function AnggaranPage({
                 Pembukuan
               </Link>
             </Button>
+            {canManage && (
+              <>
+                <ApbdesTemplateButton />
+                <ApbdesImportDialog tahunDefault={tahun} tahunList={tahunList} />
+              </>
+            )}
             <LaporanPrintButton />
           </div>
         }

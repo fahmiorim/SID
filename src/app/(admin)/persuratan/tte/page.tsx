@@ -1,50 +1,98 @@
+import { KeyRound, PenTool } from "lucide-react";
+import type { Metadata } from "next";
+
 import { PageHeader } from "@/components/layout/page-header";
+import { NoAccess } from "@/components/shared/no-access";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { parseKonfigTte } from "@/features/surat/domain/tte";
+import { hasPermission } from "@/features/rbac/application/authorization";
+import { RESOURCES } from "@/features/rbac/domain/resources";
+import { getKonfigurasiTtePageData } from "@/features/surat/application/tte-use-cases";
+import { TteForm } from "@/features/surat/presentation/components/tte-form";
+import { verifySession } from "@/lib/dal";
 
-export const metadata = { title: "TTE / BSrE" };
+export const metadata: Metadata = { title: "TTE / BSrE" };
 
-export default function TtePage() {
-  const config = parseKonfigTte(process.env);
+const MODE_LABELS = {
+  nonaktif: "Nonaktif",
+  manual: "Manual",
+  bsre: "BSrE (API)",
+} as const;
 
-  const modeLabel =
-    config.mode === "bsre" ? "BSrE (api)" : config.mode === "manual" ? "Manual" : "Nonaktif";
+export default async function TtePage() {
+  const user = await verifySession();
+
+  if (!hasPermission(user.permissions, RESOURCES.tte, "read")) {
+    return <NoAccess title="TTE / BSrE" description="Konfigurasi tanda tangan elektronik." />;
+  }
+
+  const data = await getKonfigurasiTtePageData();
+  const { tersimpan, efektif, masalah, passwordTersedia } = data;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="TTE / BSrE"
-        description="Konfigurasi penandatanganan elektronik (scaffolding)"
+        description="Konfigurasi penandatanganan elektronik untuk surat yang diterbitkan."
       />
+
       <Card>
         <CardHeader>
-          <CardTitle>Status konfigurasi</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <PenTool className="size-4" />
+            Status Konfigurasi
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Mode</span>
-            <span className="font-medium">{modeLabel}</span>
+        <CardContent className="space-y-3 text-sm">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Mode tersimpan</span>
+            <Badge variant={tersimpan.mode === "bsre" ? "default" : "secondary"}>
+              {MODE_LABELS[tersimpan.mode]}
+            </Badge>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Mode efektif</span>
+            <span className="font-medium">{MODE_LABELS[efektif.mode]}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Konfigurasi aktif</span>
+            <span>{tersimpan.aktif ? "Ya" : "Tidak"}</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">API BSrE</span>
-            <span className="font-mono text-xs">{config.api || "-"}</span>
+            <span className="max-w-[60%] truncate font-mono text-xs">{tersimpan.api || "—"}</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <span className="text-muted-foreground">Username</span>
-            <span className="font-mono text-xs">{config.username || "-"}</span>
+            <span className="font-mono text-xs">{tersimpan.username || "—"}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">SSL verifikasi</span>
-            <span>{config.ssl ? "Aktif" : "Nonaktif"}</span>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">NIK penanda tangan</span>
+            <span className="font-mono text-xs">
+              {tersimpan.nik ? `${tersimpan.nik.slice(0, 6)}••••••${tersimpan.nik.slice(-4)}` : "—"}
+            </span>
           </div>
-          <p className="pt-2 text-xs text-muted-foreground">
-            Atur via environment: <code>TTE_MODE</code>, <code>TTE_API</code>,{" "}
-            <code>TTE_USERNAME</code>, <code>TTE_PASSWORD</code>, <code>TTE_SSL</code>. Mode{" "}
-            <code>bsre</code> memerlukan kredensial lengkap; saat ini klien jaringan belum
-            diimplementasi sehingga penerbitan surat tetap berjalan tanpa TTE.
-          </p>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-muted-foreground">Passphrase server</span>
+            <Badge variant={passwordTersedia ? "default" : "destructive"}>
+              <KeyRound className="size-3" />
+              {passwordTersedia ? "Tersedia" : "Belum diatur"}
+            </Badge>
+          </div>
         </CardContent>
       </Card>
+
+      {data.canManage ? (
+        <TteForm tersimpan={tersimpan} passwordTersedia={passwordTersedia} masalah={masalah} />
+      ) : (
+        <Alert>
+          <AlertDescription>
+            Anda hanya dapat melihat konfigurasi TTE. Hubungi operator yang berwenang untuk
+            mengubahnya.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

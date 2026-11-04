@@ -9,6 +9,7 @@ import {
   validateIsianFields,
   type SyaratSuratInput,
 } from "@/features/surat/domain/isian";
+import type { BarisKlasifikasiImpor } from "@/features/surat/domain/klasifikasi-berkas";
 import {
   JENIS_SURAT_RESOURCE,
   KLASIFIKASI_SURAT_RESOURCE,
@@ -29,6 +30,7 @@ import {
   getJenisSurat,
   getKlasifikasi,
   getSyaratSurat,
+  importKlasifikasi,
   jenisSuratExists,
   klasifikasiExists,
   listJenisSurat,
@@ -95,6 +97,16 @@ export async function deleteKlasifikasiSuratData(id: number): Promise<void> {
   }
 
   await deleteKlasifikasi(villageId, id);
+}
+
+/** Impor klasifikasi lama (kode + nama) dari berkas CSV/XLSX. */
+export async function imporKlasifikasiSuratData(
+  rows: readonly BarisKlasifikasiImpor[],
+): Promise<{ ditambahkan: number; diperbarui: number }> {
+  const user = await requirePermission(KLASIFIKASI_SURAT_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  return importKlasifikasi(villageId, rows);
 }
 
 export async function listJenisSuratWithMeta() {

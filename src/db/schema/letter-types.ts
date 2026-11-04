@@ -35,6 +35,8 @@ export const letterTypes = mysqlTable(
 
     /** Badan surat bertemplat, memakai placeholder `[nama_desa]`, dst. */
     templateBody: text("template_body").notNull(),
+    /** Badan surat alternatif untuk varian kedua (opsional). */
+    templateBodyAlt: text("template_body_alt"),
     /** Form isian dinamis per kategori (JSON) */
     formIsian: text("form_isian"),
     /** Kode isian kustom (JSON) */
@@ -67,6 +69,10 @@ export const letterTypes = mysqlTable(
     header: int("header").default(1),
     footer: int("footer").default(1),
     sumberPendudukBerulang: boolean("sumber_penduduk_berulang"),
+
+    /** Varian template & konfigurasi layout (OS-SUR-001/008) */
+    templateVariant: varchar("template_variant", { length: 50 }),
+    layoutConfig: text("layout_config"),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

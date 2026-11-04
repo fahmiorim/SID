@@ -1,6 +1,14 @@
 "use client";
 
-import { AlertCircle, ArrowRightLeft, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowRightLeft,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Upload,
+} from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -29,6 +37,9 @@ import { createIdleActionState, idleActionState } from "@/lib/action-state";
 
 import { deleteSuratMasukAction, tambahDisposisiSuratMasukAction } from "../agenda-actions";
 import { SuratMasukFormDialog } from "./surat-masuk-form-dialog";
+
+const TERIMA_BERKAS = "image/jpeg,image/png,image/webp,application/pdf";
+const MAKS_BERKAS = 5;
 
 interface SuratMasukRowActionsProps {
   surat: SuratMasukDTO;
@@ -106,14 +117,14 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
       />
 
       <AlertDialog open={disposisiOpen} onOpenChange={setDisposisiOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Disposisi surat masuk</AlertDialogTitle>
             <AlertDialogDescription>
               Tambahkan instruksi disposisi untuk surat masuk ini.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <form action={disposisiAction} className="space-y-3">
+          <form action={disposisiAction} className="space-y-3" encType="multipart/form-data">
             <input type="hidden" name="incomingLetterId" value={surat.id} />
             <div className="space-y-2">
               <Label htmlFor={`instruksi-${surat.id}`}>Instruksi</Label>
@@ -135,6 +146,19 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
               <Label htmlFor={`catatan-${surat.id}`}>Catatan</Label>
               <Input id={`catatan-${surat.id}`} name="note" />
             </div>
+            <div className="space-y-2">
+              <Label>Lampiran (maks. {MAKS_BERKAS} berkas)</Label>
+              <Input
+                type="file"
+                name="lampiran"
+                accept={TERIMA_BERKAS}
+                multiple
+                aria-describedby={`lampiran-desc-${surat.id}`}
+              />
+              <p id={`lampiran-desc-${surat.id}`} className="text-xs text-muted-foreground">
+                Format: JPG, PNG, WEBP, atau PDF. Maksimal 10 MB per berkas.
+              </p>
+            </div>
             {disposisiState.status === "error" ? (
               <Alert variant="destructive">
                 <AlertDescription>{disposisiState.message}</AlertDescription>
@@ -145,8 +169,12 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
                 Batal
               </AlertDialogCancel>
               <Button type="submit" disabled={disposisiPending}>
-                {disposisiPending ? <Loader2 className="animate-spin" /> : null}
-                Simpan disposisi
+                {disposisiPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Upload className="size-4" />
+                )}
+                {disposisiPending ? "Menyimpan…" : "Simpan disposisi"}
               </Button>
             </AlertDialogFooter>
           </form>

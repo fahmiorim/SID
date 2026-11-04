@@ -67,6 +67,8 @@ export const letters = mysqlTable(
     catatanVerifikasi: text("catatan_verifikasi"),
     /** Tanda TTE (BSRE) */
     tte: boolean("tte"),
+    /** Jalur relatif berkas PDF hasil tanda tangan elektronik (privat). */
+    tteFile: varchar("tte_file", { length: 255 }),
     /** Relasi ke tabel urls untuk QR verifikasi */
     urlsId: int("urls_id"),
 

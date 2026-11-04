@@ -115,6 +115,28 @@ export function EsensiApbdes({ ctx, laporan }: ApbdesProps) {
           </ThemeCard>
         )}
       </section>
+
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Realisasi per Periode (Triwulan)</h2>
+        <p className="text-sm text-muted-foreground">
+          Serapan anggaran tahun {laporan.tahun} per triwulan.
+        </p>
+        {laporan.periode.every((row) => Number(row.realisasi) === 0) ? (
+          <ThemeEmpty>Data realisasi per triwulan belum tersedia.</ThemeEmpty>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {laporan.periode.map((row) => (
+              <ThemeCard key={row.triwulan} className="space-y-1 p-4">
+                <p className="text-sm font-medium text-muted-foreground">{row.label}</p>
+                <p className="text-lg font-semibold tabular-nums">{formatRupiah(row.realisasi)}</p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {row.persen.toLocaleString("id-ID", { maximumFractionDigits: 2 })}% dari anggaran
+                </p>
+              </ThemeCard>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

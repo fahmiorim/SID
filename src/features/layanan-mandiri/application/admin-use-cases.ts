@@ -1,10 +1,19 @@
 import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { getIdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
+import { notifyPermohonanStatusChange } from "@/features/layanan-mandiri/application/notification";
 import {
   parseBerkasSyarat,
   type BerkasSyarat,
 } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import {
+  buildPermohonanCsv,
+  namaBerkasPermohonan,
+  ringkasPermohonanPerJenis,
+  saringPermohonan,
+  type FilterPermohonan,
+} from "@/features/layanan-mandiri/domain/permohonan-berkas";
 import {
   getPermohonan,
   kembalikanPermohonan,
@@ -29,14 +38,50 @@ import { conflict, notFound, validationError } from "@/lib/errors";
  * hanya punya akses `read` (mis. sekdes/kades). Otorisasi sebenarnya tetap
  * ditegakkan di use case mutasi (`requirePermission(..., "update")`).
  */
-export async function getPermohonanAdminData() {
+export async function getPermohonanAdminData(filter: FilterPermohonan = {}) {
   const user = await requirePermission(RESOURCES.permohonanSurat, "read");
   const villageId = await resolveVillageId(user);
-  const permohonan = await listPermohonan(villageId);
+  const semua = await listPermohonan(villageId);
+  const permohonan = saringPermohonan(semua, filter);
+
+  const jenis = new Map<number, string>();
+  for (const row of semua) {
+    jenis.set(row.idSurat, row.namaSurat?.trim() || `Jenis #${row.idSurat}`);
+  }
 
   return {
     permohonan,
+    rekapJenis: ringkasPermohonanPerJenis(permohonan),
+    jenis: [...jenis.entries()]
+      .map(([id, nama]) => ({ id, nama }))
+      .sort((a, b) => a.nama.localeCompare(b.nama)),
     canManage: hasPermission(user.permissions, RESOURCES.permohonanSurat, "update"),
+  };
+}
+
+/** Data ekspor CSV rekap permohonan (mengikuti filter yang aktif). */
+export async function eksporPermohonanData(filter: FilterPermohonan = {}) {
+  const user = await requirePermission(RESOURCES.permohonanSurat, "read");
+  const villageId = await resolveVillageId(user);
+
+  const [semua, desa] = await Promise.all([listPermohonan(villageId), getIdentitasDesa(villageId)]);
+  const rows = saringPermohonan(semua, filter);
+
+  const labelFilter = [
+    filter.dari || filter.sampai
+      ? `Tanggal ${filter.dari ?? "awal"} s.d. ${filter.sampai ?? "akhir"}`
+      : null,
+    filter.typeId !== undefined
+      ? `Jenis ${semua.find((row) => row.idSurat === filter.typeId)?.namaSurat ?? filter.typeId}`
+      : null,
+    filter.status !== undefined ? `Status ${filter.status}` : null,
+  ]
+    .filter((item): item is string => item !== null)
+    .join(" · ");
+
+  return {
+    csv: buildPermohonanCsv({ namaDesa: desa?.namaDesa ?? null, rows, filter: labelFilter }),
+    filename: namaBerkasPermohonan(desa?.namaDesa ?? null),
   };
 }
 
@@ -109,7 +154,21 @@ export async function ubahStatusPermohonanData(
     throw validationError("Alasan wajib diisi saat mengembalikan atau membatalkan permohonan.");
   }
 
+  const sebelum = await getPermohonan(villageId, id);
+  if (!sebelum) throw notFound("Permohonan tidak ditemukan.");
+
   await prosesPermohonan(villageId, id, status, alasan.trim() || undefined);
+
+  if (sebelum.status !== status) {
+    await notifyPermohonanStatusChange({
+      villageId,
+      residentId: sebelum.residentId,
+      noAntrian: sebelum.noAntrian,
+      statusLama: sebelum.status,
+      statusBaru: status,
+      alasan: alasan.trim() || null,
+    });
+  }
 }
 
 /** Kembalikan permohonan ke status 0 dengan alasan. */
@@ -121,5 +180,16 @@ export async function kembalikanPermohonanAdminData(id: number, alasan: string):
     throw validationError("Alasan wajib diisi.");
   }
 
+  const sebelum = await getPermohonan(villageId, id);
+  if (!sebelum) throw notFound("Permohonan tidak ditemukan.");
+
   await kembalikanPermohonan(villageId, id, alasan.trim());
+  await notifyPermohonanStatusChange({
+    villageId,
+    residentId: sebelum.residentId,
+    noAntrian: sebelum.noAntrian,
+    statusLama: sebelum.status,
+    statusBaru: 0,
+    alasan: alasan.trim(),
+  });
 }

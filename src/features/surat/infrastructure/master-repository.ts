@@ -5,6 +5,7 @@ import { and, asc, count, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { letterClassifications, letterRequirements, letters, letterTypes } from "@/db/schema";
 import { parseSyaratIds, type SyaratSuratDTO } from "@/features/surat/domain/isian";
+import type { BarisKlasifikasiImpor } from "@/features/surat/domain/klasifikasi-berkas";
 import type {
   JenisSuratDTO,
   JenisSuratInput,
@@ -85,6 +86,53 @@ export async function updateKlasifikasi(
     .where(and(eq(letterClassifications.villageId, villageId), eq(letterClassifications.id, id)));
 }
 
+/**
+ * Impor klasifikasi lama: perbarui kode yang sudah ada, tambahkan yang baru.
+ *
+ * Dijalankan dalam satu transaksi agar kegagalan di tengah berkas tidak
+ * meninggalkan data setengah jadi.
+ */
+export async function importKlasifikasi(
+  villageId: number,
+  rows: readonly BarisKlasifikasiImpor[],
+): Promise<{ ditambahkan: number; diperbarui: number }> {
+  let ditambahkan = 0;
+  let diperbarui = 0;
+
+  await db.transaction(async (tx) => {
+    for (const row of rows) {
+      const [existing] = await tx
+        .select({ id: letterClassifications.id })
+        .from(letterClassifications)
+        .where(
+          and(
+            eq(letterClassifications.villageId, villageId),
+            eq(letterClassifications.code, row.kode),
+          ),
+        )
+        .limit(1);
+
+      if (existing) {
+        await tx
+          .update(letterClassifications)
+          .set({ name: row.nama, description: row.keterangan })
+          .where(eq(letterClassifications.id, existing.id));
+        diperbarui += 1;
+      } else {
+        await tx.insert(letterClassifications).values({
+          villageId,
+          code: row.kode,
+          name: row.nama,
+          description: row.keterangan,
+        });
+        ditambahkan += 1;
+      }
+    }
+  });
+
+  return { ditambahkan, diperbarui };
+}
+
 export async function deleteKlasifikasi(villageId: number, id: number): Promise<void> {
   await db
     .delete(letterClassifications)
@@ -112,6 +160,7 @@ const jenisColumns = {
   classificationId: letterTypes.classificationId,
   classificationName: letterClassifications.name,
   templateBody: letterTypes.templateBody,
+  templateBodyAlt: letterTypes.templateBodyAlt,
   formIsian: letterTypes.formIsian,
   syaratSurat: letterTypes.syaratSurat,
   requiresResident: letterTypes.requiresResident,
@@ -119,6 +168,8 @@ const jenisColumns = {
   numberFormat: letterTypes.numberFormat,
   validityMonths: letterTypes.validityMonths,
   sortOrder: letterTypes.sortOrder,
+  templateVariant: letterTypes.templateVariant,
+  layoutConfig: letterTypes.layoutConfig,
 };
 
 export async function listJenisSurat(villageId: number): Promise<JenisSuratDTO[]> {
@@ -189,6 +240,7 @@ export async function createJenisSurat(villageId: number, input: JenisSuratInput
       code: input.code,
       name: input.name,
       templateBody: input.templateBody,
+      templateBodyAlt: input.templateBodyAlt ?? "",
       formIsian: input.formIsian,
       syaratSurat: input.syaratSurat,
       requiresResident: input.requiresResident,
@@ -196,6 +248,8 @@ export async function createJenisSurat(villageId: number, input: JenisSuratInput
       numberFormat: input.numberFormat,
       validityMonths: input.validityMonths,
       sortOrder: input.sortOrder,
+      templateVariant: input.templateVariant ?? "default",
+      layoutConfig: input.layoutConfig ?? "{}",
     })
     .$returningId();
 
@@ -215,6 +269,7 @@ export async function updateJenisSurat(
       code: input.code,
       name: input.name,
       templateBody: input.templateBody,
+      templateBodyAlt: input.templateBodyAlt ?? "",
       formIsian: input.formIsian,
       syaratSurat: input.syaratSurat,
       requiresResident: input.requiresResident,
@@ -222,6 +277,8 @@ export async function updateJenisSurat(
       numberFormat: input.numberFormat,
       validityMonths: input.validityMonths,
       sortOrder: input.sortOrder,
+      templateVariant: input.templateVariant ?? "default",
+      layoutConfig: input.layoutConfig ?? "{}",
     })
     .where(and(eq(letterTypes.villageId, villageId), eq(letterTypes.id, id)));
 }

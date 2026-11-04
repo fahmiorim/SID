@@ -1,6 +1,9 @@
 import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { getMediaSettings } from "@/features/kebijakan-berkas/domain/pengaturan-berkas";
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
+import { simpanUnggahanMediaDenganPengaturan } from "@/features/publik/infrastructure/media-storage";
 import {
   SURAT_KELUAR_RESOURCE,
   SURAT_MASUK_RESOURCE,
@@ -136,6 +139,7 @@ export async function tambahDisposisiSuratMasukData(
     instruction: string;
     dueDate?: string | null;
     note?: string | null;
+    lampiran?: BerkasUnggahan[];
   },
 ) {
   const user = await requirePermission(SURAT_MASUK_RESOURCE, "update");
@@ -143,10 +147,32 @@ export async function tambahDisposisiSuratMasukData(
   const surat = await getSuratMasuk(villageId, incomingLetterId);
   if (!surat) throw notFound("Surat masuk tidak ditemukan.");
   if (!input.instruction?.trim()) throw conflict("Instruksi disposisi wajib diisi.");
+
+  let lampiranJson: string | null = null;
+  if (input.lampiran && input.lampiran.length > 0) {
+    // Validasi menggunakan pengaturan terpusat kategori "surat"
+    const pengaturan = await getMediaSettings(villageId, "surat");
+    const hasil: { path: string; name: string; mime: string; size: number }[] = [];
+    for (const berkas of input.lampiran) {
+      const saved = await simpanUnggahanMediaDenganPengaturan(villageId, "surat", berkas, {
+        mimeAllowlist: pengaturan.mimeAllowlist,
+        maxSizeBytes: pengaturan.maxSizeBytes,
+      });
+      hasil.push({
+        path: saved.jalur,
+        name: berkas.nama,
+        mime: berkas.mime ?? saved.mime,
+        size: berkas.ukuran,
+      });
+    }
+    lampiranJson = JSON.stringify(hasil);
+  }
+
   const id = await tambahDisposisiSuratMasuk(villageId, incomingLetterId, {
     ...input,
     instruction: input.instruction.trim(),
     dispatchedBy: user.id,
+    lampiran: lampiranJson,
   });
   await catatLogAgenda(villageId, {
     type: "masuk",
@@ -172,6 +198,7 @@ export async function tambahEkspedisiSuratKeluarData(
     deliveryMethod?: string | null;
     trackingNo?: string | null;
     note?: string | null;
+    lampiran?: BerkasUnggahan[];
   },
 ) {
   const user = await requirePermission(SURAT_KELUAR_RESOURCE, "update");
@@ -179,7 +206,31 @@ export async function tambahEkspedisiSuratKeluarData(
   const surat = await getSuratKeluar(villageId, outgoingLetterId);
   if (!surat) throw notFound("Surat keluar tidak ditemukan.");
   if (!input.sentDate) throw conflict("Tanggal kirim wajib diisi.");
-  const id = await tambahEkspedisiSuratKeluar(villageId, outgoingLetterId, input);
+
+  let lampiranJson: string | null = null;
+  if (input.lampiran && input.lampiran.length > 0) {
+    // Validasi menggunakan pengaturan terpusat kategori "surat"
+    const pengaturan = await getMediaSettings(villageId, "surat");
+    const hasil: { path: string; name: string; mime: string; size: number }[] = [];
+    for (const berkas of input.lampiran) {
+      const saved = await simpanUnggahanMediaDenganPengaturan(villageId, "surat", berkas, {
+        mimeAllowlist: pengaturan.mimeAllowlist,
+        maxSizeBytes: pengaturan.maxSizeBytes,
+      });
+      hasil.push({
+        path: saved.jalur,
+        name: berkas.nama,
+        mime: berkas.mime ?? saved.mime,
+        size: berkas.ukuran,
+      });
+    }
+    lampiranJson = JSON.stringify(hasil);
+  }
+
+  const id = await tambahEkspedisiSuratKeluar(villageId, outgoingLetterId, {
+    ...input,
+    lampiran: lampiranJson,
+  });
   await catatLogAgenda(villageId, {
     type: "keluar",
     letterId: outgoingLetterId,

@@ -29,9 +29,12 @@ export async function GET(
   const url = new URL(request.url);
   const tahunRaw = url.searchParams.get("tahun");
   const tahunParam = tahunRaw ? Number(tahunRaw) : undefined;
-
+  const bidangParam = url.searchParams.get("bidang") ?? undefined;
   try {
-    const [laporan, desa] = await Promise.all([getLaporanKeuangan(tahunParam), getIdentitas()]);
+    const [laporan, desa] = await Promise.all([
+      getLaporanKeuangan(tahunParam, bidangParam),
+      getIdentitas(),
+    ]);
 
     const xml = buildLaporanExcel({
       namaDesa: desa?.namaDesa ?? null,

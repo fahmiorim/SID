@@ -60,7 +60,7 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    impor/unggah/laporan yang diminta katalog ada; baris PARITAS tidak lagi
    menyebut gap selain E2E.
 
-Saat ini ada **91 ID** dengan gap (90 🟡 + 1 🔴). Dua ID sudah E2E-only dan
+Saat ini ada **91 ID** dengan gap (91 🟡 + 0 🔴). Dua ID sudah E2E-only dan
 tidak masuk batch: `OS-SUR-011` dan `OS-WGA-003`.
 
 | Batch | ID | Fokus non-E2E | Kriteria selesai |
@@ -81,8 +81,16 @@ didahulukan karena menutup keluaran inti yang menahan banyak ID; batch 4–8
 menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
 
 **Progres:** Batch 0 selesai 4 Nov 2026 (IDM/status pages + pelanggaran lapisan
-domain). Batch berikutnya: **Batch 1 — Persuratan & TTE**.
+domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 
+- Selesai non-E2E: `OS-SUR-001`/`002`/`008` (varian keluaran template/PDF),
+  `OS-SUR-003` (validasi lampiran komprehensif), `OS-SUR-004` (impor klasifikasi + test),
+  `OS-SUR-005` (rekap/filter/ekspor permohonan + notifikasi email), `OS-SUR-006` (filter,
+  pagination, ekspor CSV arsip nomor), `OS-SUR-007` (verifikasi per peran),
+  `OS-SUR-009`/`010`/`012` (lampiran disposisi/ekspedisi + log ekspedisi),
+  `OS-SUR-013` (konfigurasi TTE per desa, klien BSrE, penyimpanan PDF TTE),
+  `OS-SUR-014` (pengaturan lampiran terpusat), `OS-OPS-012` (API eksternal TTE + metadata surat ber-API key).
+- Batch 1 **selesai** — semua ID non-E2E terpenuhi; sisa gap hanya E2E (`OS-SUR-011`).
 ---
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
@@ -756,13 +764,17 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3J. Integrasi, API, dan kompatibilitas keluaran
 
-- [ ] `OS-OPS-011`–`OS-OPS-012`: API internal dan eksternal dengan kontrak,
-      auth, rate limit, audit, dan error yang terdokumentasi.
-- [x] `OS-SUR-013`: adapter TTE/BSrE mode `nonaktif`/`manual`/`bsre` di
-      `features/surat/domain/tte.ts` (+7 test), dipanggil saat terbit surat.
-      Sisa: klien jaringan dan konfigurasi UI fungsional. Halaman `/persuratan/tte`
-      sudah ada (minimal/placeholder), namun belum ada form konfigurasi provider yang
-      dapat dioperasikan. 
+- [ ] `OS-OPS-011`: API internal dengan kontrak, auth, rate limit, audit, dan
+      error yang terdokumentasi.
+- [x] `OS-OPS-012`: API eksternal dasar ber-API key
+      (`POST /api/eksternal/tte/tanda-tangan`, `GET /api/eksternal/surat/[nomor]`),
+      tenant dari host, audit, error JSON. Sisa: kontrak OpenAPI, rate limit,
+      endpoint tulis surat, dan E2E.
+- [x] `OS-SUR-013`: TTE operasional — konfigurasi non-rahasia per desa
+      (`tte_config`), form `/persuratan/tte`, passphrase hanya dari
+      `TTE_PASSWORD`, klien BSrE `buatKlienBsre` (+19 test), PDF bertanda tangan
+      disimpan di media privat dan disajikan lewat route berizin. Sisa: uji
+      provider nyata dan E2E. 
 - [ ] Integrasi OpenDK, Siskeudes, Google Forms, email, SMS/WA, Telegram/FCM,
       dan storage eksternal memakai adapter tanpa secret di source.
 - [ ] Setiap keluaran katalog memiliki cetak/PDF, impor/ekspor, unggah/unduh,
@@ -951,7 +963,7 @@ OpenSID → multi-desa.
 | 0 — Stabilisasi | ✅ **Terverifikasi pada snapshot 31 Okt** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Itu bukti historis; jalankan quality gate ulang sebelum menutup milestone baru. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan memakai data. `/desa/lapak` memakai katalog + pencarian/filter nyata; IDM/SDGs sudah memakai data nyata. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; pembukuan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 21 berfungsi penuh, 90 sebagian, 1 belum ada; `OS-POP-009` di luar scope. Register diverifikasi `src/db/paritas-register.test.ts`. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 21 berfungsi penuh, 91 sebagian, 0 belum ada; `OS-POP-009` di luar scope. Batch 1 masih menyisakan gap keluaran/lampiran. Register diverifikasi `src/db/paritas-register.test.ts`. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, IDM/SDGs, lapak, widget/CMS, manifest, dan OG sudah tersambung; sisa gap ada di keluaran analisis dan entitas pelapak. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik tersedia; provisioning, super-admin, domain kustom, dan uji penuh belum. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan menyeluruh, dan runbook belum lengkap; workflow CI telah dikonfigurasi untuk menjalankan suite browser E2E. |

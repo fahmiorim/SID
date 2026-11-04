@@ -15,6 +15,12 @@ import {
   type MutasiStep,
 } from "@/features/inventaris/domain/inventaris";
 import {
+  buildInventarisCsv,
+  neracaAset,
+  rekapPerKategori,
+  type LaporanInventarisItem,
+} from "@/features/inventaris/domain/laporan-inventaris";
+import {
   countInventarisByKategori,
   createInventaris,
   createInventarisKategori,
@@ -70,6 +76,57 @@ export async function getInventarisKategoriPageData() {
     kategori,
     canWrite: hasPermission(user.permissions, INVENTARIS_RESOURCE, "update"),
     canManage: hasPermission(user.permissions, INVENTARIS_RESOURCE, "delete"),
+  };
+}
+
+/**
+ * Laporan inventaris: rekap jumlah unit dan nilai per kategori. Bila
+ * `kategoriId` diberikan, hanya aset kategori itu yang direkap. Tenant
+ * dibatasi `villageId` dari sesi.
+ */
+export async function getLaporanInventaris(kategoriId?: number) {
+  const user = await requirePermission(INVENTARIS_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  const [kategori, data] = await Promise.all([
+    listInventarisKategori(villageId),
+    listInventaris(villageId),
+  ]);
+  const items: LaporanInventarisItem[] =
+    kategoriId != null ? data.rows.filter((row) => row.kategoriId === kategoriId) : data.rows;
+  return {
+    kategori,
+    kategoriId: kategoriId ?? null,
+    rekap: rekapPerKategori(items),
+  };
+}
+
+/**
+ * Neraca kekayaan desa: total nilai aset per kategori dipecah menurut kondisi.
+ * Tenant dibatasi `villageId` dari sesi.
+ */
+export async function getNeracaAset() {
+  const user = await requirePermission(INVENTARIS_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  const { rows } = await listInventaris(villageId);
+  return { neraca: neracaAset(rows) };
+}
+
+/**
+ * Data CSV laporan inventaris untuk route ekspor. Mengembalikan teks CSV dan
+ * nama kategori terpilih (untuk nama berkas). Tenant dibatasi sesi.
+ */
+export async function getLaporanInventarisCsv(kategoriId?: number) {
+  const user = await requirePermission(INVENTARIS_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  const [kategoriList, data] = await Promise.all([
+    listInventarisKategori(villageId),
+    listInventaris(villageId),
+  ]);
+  const kategoriNama =
+    kategoriId != null ? (kategoriList.find((item) => item.id === kategoriId)?.nama ?? null) : null;
+  return {
+    csv: buildInventarisCsv(data.rows, kategoriId ?? null),
+    kategoriNama,
   };
 }
 

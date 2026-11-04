@@ -1,11 +1,8 @@
 import { hasPermission } from "@/features/rbac/application/authorization";
-import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
+import { getSuratPdfBytes } from "@/features/surat/application/surat-use-cases";
 import { SURAT_RESOURCE } from "@/features/surat/domain/surat";
-import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
-import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
-import { getRequestOrigin } from "@/lib/request-origin";
 
 export async function GET(
   _request: Request,
@@ -26,21 +23,7 @@ export async function GET(
   }
 
   try {
-    const { surat, jenis, desa, content } = await getSuratPrintData(suratId);
-    const origin = await getRequestOrigin();
-    const verificationUrl = surat.verificationToken
-      ? buildVerificationUrl(origin, surat.verificationToken)
-      : null;
-
-    const pdf = await buildSuratPdf({
-      desa,
-      jenisNama: jenis.name,
-      nomor: surat.number,
-      tanggal: surat.letterDate,
-      content,
-      verificationUrl,
-    });
-
+    const { surat, pdf } = await getSuratPdfBytes(suratId);
     const filename = `surat-${(surat.number ?? String(surat.id)).replace(/[^a-zA-Z0-9._-]+/g, "-")}.pdf`;
 
     return new Response(Buffer.from(pdf), {

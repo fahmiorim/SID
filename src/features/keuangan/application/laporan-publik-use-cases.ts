@@ -12,6 +12,7 @@ import {
 } from "@/features/keuangan/domain/keuangan";
 import {
   buildTriwulanRows,
+  ringkasRealisasiPeriode,
   totalTriwulan,
   type TriwulanBarisInput,
 } from "@/features/keuangan/domain/laporan-triwulan";
@@ -43,7 +44,10 @@ export async function getLaporanApbdesPublik(villageId: number, tahunParam?: num
       ? tahunParam
       : (tersedia.at(-1) ?? new Date().getFullYear());
 
-  const rows = await listKeuanganTahun(villageId, tahun);
+  const [rows, triwulan] = await Promise.all([
+    listKeuanganTahun(villageId, tahun),
+    listKeuanganTriwulan(villageId, tahun),
+  ]);
   const baris = laporanRpApbd(rows, AKUN_LAPORAN);
   const bidang = listBidangBelanja(rows).map((row) => ({
     kode: row.templateUuid,
@@ -54,6 +58,23 @@ export async function getLaporanApbdesPublik(villageId: number, tahunParam?: num
     persen: realisasiPersen(row.anggaran, row.realisasi),
   }));
 
+  // Dimensi periode: realisasi per triwulan untuk tahun terpilih. Pagu tetap
+  // dari pohon rekening; nilai triwulan dibaca apa adanya dari keuangan_triwulan.
+  const byKode = new Map(triwulan.map((row) => [row.templateUuid, row]));
+  const triwulanInput: TriwulanBarisInput[] = listBidangBelanja(rows).map((row) => {
+    const nilai = byKode.get(row.templateUuid);
+    return {
+      kode: row.templateUuid,
+      uraian: row.uraian,
+      anggaran: row.anggaran,
+      tw1: nilai?.tw1 ?? "0.00",
+      tw2: nilai?.tw2 ?? "0.00",
+      tw3: nilai?.tw3 ?? "0.00",
+      tw4: nilai?.tw4 ?? "0.00",
+    };
+  });
+  const totalTw = totalTriwulan(buildTriwulanRows(triwulanInput));
+
   return {
     tahun,
     tersedia,
@@ -62,6 +83,7 @@ export async function getLaporanApbdesPublik(villageId: number, tahunParam?: num
     bidang,
     totalBidang: totalLaporan(bidang),
     grafik: seriGrafik(baris),
+    periode: ringkasRealisasiPeriode(totalTw),
   };
 }
 /**

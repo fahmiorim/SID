@@ -17,9 +17,12 @@ export async function GET(request: Request, _context: RouteContext<"/keuangan/la
   const url = new URL(request.url);
   const tahunRaw = url.searchParams.get("tahun");
   const tahunParam = tahunRaw ? Number(tahunRaw) : undefined;
-
+  const bidangParam = url.searchParams.get("bidang") ?? undefined;
   try {
-    const [laporan, desa] = await Promise.all([getLaporanKeuangan(tahunParam), getIdentitas()]);
+    const [laporan, desa] = await Promise.all([
+      getLaporanKeuangan(tahunParam, bidangParam),
+      getIdentitas(),
+    ]);
 
     const csv = buildLaporanCsv({
       namaDesa: desa?.namaDesa ?? null,

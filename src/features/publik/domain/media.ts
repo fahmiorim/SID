@@ -97,6 +97,31 @@ export function validasiMedia(
 
   return { ok: true, jenis };
 }
+/**
+ * Validasi MIME + ukuran unggahan menggunakan pengaturan dinamis.
+ */
+export function validasiMediaDenganPengaturan(
+  mime: string | null | undefined,
+  ukuranByte: number,
+  mimeAllowlist: string[],
+  maxSizeBytes: number,
+): HasilValidasiMedia {
+  if (!mime) return { ok: false, pesan: "Tipe berkas tidak dikenali." };
+
+  if (!mimeAllowlist.includes(mime.toLowerCase())) {
+    return { ok: false, pesan: `Tipe berkas ${mime} tidak diizinkan.` };
+  }
+
+  if (ukuranByte <= 0) return { ok: false, pesan: "Berkas kosong." };
+  if (ukuranByte > maxSizeBytes) {
+    const maksMb = Math.round(maxSizeBytes / MB);
+    return { ok: false, pesan: `Ukuran berkas melebihi ${maksMb} MB.` };
+  }
+
+  // Ekstensi default dari JENIS_MEDIA jika ada, fallback ke ekstensi umum
+  const jenis = JENIS_MEDIA[mime.toLowerCase()];
+  return { ok: true, jenis: jenis ?? { mime, ekstensi: "bin", maksByte: maxSizeBytes } };
+}
 
 /**
  * Bersihkan nama berkas kiriman menjadi basis slug yang aman.

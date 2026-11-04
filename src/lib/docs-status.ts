@@ -61,7 +61,7 @@ export function createDocsStatus(now = new Date()): DocsStatus {
       notDone: 38,
       percentage: 52.2,
       disclaimer:
-        "Ringkasan 92 modul adalah baseline kasar dan bukan status resmi. Status resmi per-ID: 21 ✅ / 90 🟡 / 1 🔴 dari 112 ID dalam scope (1 ID di luar scope) di PARITAS-OPENSID.md.",
+        "Ringkasan 92 modul adalah baseline kasar dan bukan status resmi. Status resmi per-ID: 21 ✅ / 91 🟡 / 0 🔴 dari 112 ID dalam scope (1 ID di luar scope) di PARITAS-OPENSID.md.",
       categories: COARSE_PARITY_CATEGORIES,
     },
     documents: [

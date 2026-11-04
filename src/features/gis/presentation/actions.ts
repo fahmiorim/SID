@@ -5,12 +5,16 @@ import type { ZodError } from "zod";
 
 import {
   createArea,
+  createCdesa,
+  createCdesaMutasi,
   createGaris,
   createPersil,
   createPoint,
   createPolygon,
   createSimbol,
   deleteArea,
+  deleteCdesa,
+  deleteCdesaMutasi,
   deleteGaris,
   deletePersil,
   deletePoint,
@@ -26,6 +30,8 @@ import {
 import {
   AREA_RESOURCE,
   areaFormSchema,
+  cdesaMutasiSchema,
+  cdesaSchema,
   GARIS_RESOURCE,
   garisFormSchema,
   persilFormSchema,
@@ -473,5 +479,101 @@ export async function deletePersilAction(
     return successState("Persil berhasil dihapus.");
   } catch (error) {
     return errorState(isAppError(error) ? error.message : "Gagal menghapus persil.");
+  }
+}
+
+// --- Cdesa Actions ----------------------------------------------------------
+
+function cdesaInput(formData: FormData) {
+  return {
+    nomor: formData.get("nomor"),
+    nomorPersil: formText(formData, "nomorPersil"),
+    nomorSertifikat: formText(formData, "nomorSertifikat"),
+    tanggal: formText(formData, "tanggal"),
+    namaPemegang: formText(formData, "namaPemegang"),
+    luas: formNumber(formData, "luas"),
+    keterangan: formText(formData, "keterangan"),
+    sortOrder: formNumber(formData, "sortOrder"),
+  };
+}
+
+export async function createCdesaAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    const input = cdesaSchema.parse(cdesaInput(formData));
+    const _newCdesa = await createCdesa(input);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Cdesa berhasil dibuat.");
+  } catch (error) {
+    if (error instanceof Error && error.name === "ZodError") {
+      return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
+    }
+    return errorState(isAppError(error) ? error.message : "Gagal membuat cdesa.");
+  }
+}
+
+export async function deleteCdesaAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  const id = readId(formData);
+  if (id === null) return errorState("ID tidak valid.");
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    await deleteCdesa(id);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Cdesa berhasil dihapus.");
+  } catch (error) {
+    return errorState(isAppError(error) ? error.message : "Gagal menghapus cdesa.");
+  }
+}
+
+// --- Cdesa Mutasi Actions ---------------------------------------------------
+
+function cdesaMutasiInput(formData: FormData) {
+  return {
+    cdesaId: formNumber(formData, "cdesaId"),
+    nomor: formData.get("nomor"),
+    tanggal: formText(formData, "tanggal"),
+    tipe: formData.get("tipe"),
+    keterangan: formText(formData, "keterangan"),
+    sortOrder: formNumber(formData, "sortOrder"),
+  };
+}
+
+export async function createCdesaMutasiAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    const input = cdesaMutasiSchema.parse(cdesaMutasiInput(formData));
+    const _newMutasi = await createCdesaMutasi(input);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Mutasi berhasil dibuat.");
+  } catch (error) {
+    if (error instanceof Error && error.name === "ZodError") {
+      return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
+    }
+    return errorState(isAppError(error) ? error.message : "Gagal membuat mutasi.");
+  }
+}
+
+export async function deleteCdesaMutasiAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  const id = readId(formData);
+  if (id === null) return errorState("ID tidak valid.");
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    await deleteCdesaMutasi(id);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Mutasi berhasil dihapus.");
+  } catch (error) {
+    return errorState(isAppError(error) ? error.message : "Gagal menghapus mutasi.");
   }
 }

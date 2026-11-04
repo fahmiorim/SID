@@ -18,6 +18,7 @@ export const RESOURCES = {
   suratMasuk: "surat-masuk",
   suratDinas: "surat-dinas",
   klasifikasiSurat: "klasifikasi-surat",
+  tte: "tte",
   permohonanSurat: "permohonan-surat",
   pengaduan: "pengaduan",
   agenda: "agenda",

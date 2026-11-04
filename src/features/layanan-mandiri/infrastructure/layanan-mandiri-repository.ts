@@ -3,7 +3,14 @@ import "server-only";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { letterRequirements, letters, letterTypes, permohonanSurat, residents } from "@/db/schema";
+import {
+  letterRequirements,
+  letters,
+  letterTypes,
+  permohonanSurat,
+  residents,
+  users,
+} from "@/db/schema";
 import {
   canTransitionPermohonan,
   statusPermohonan,
@@ -137,6 +144,38 @@ export async function getPermohonan(villageId: number, id: number) {
     .from(permohonanSurat)
     .where(and(eq(permohonanSurat.villageId, villageId), eq(permohonanSurat.id, id)))
     .limit(1);
+  return row ?? null;
+}
+
+/** Email akun warga yang tertaut ke penduduk (untuk notifikasi status). */
+export async function findWargaEmailByResident(
+  villageId: number,
+  residentId: number,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(
+      and(eq(users.villageId, villageId), eq(users.residentId, residentId), eq(users.active, true)),
+    )
+    .limit(1);
+
+  return row?.email ?? null;
+}
+
+/** Permohonan yang tertaut ke surat dinas tertentu. */
+export async function findPermohonanByLetterId(villageId: number, letterId: number) {
+  const [row] = await db
+    .select({
+      id: permohonanSurat.id,
+      residentId: permohonanSurat.residentId,
+      noAntrian: permohonanSurat.noAntrian,
+      status: permohonanSurat.status,
+    })
+    .from(permohonanSurat)
+    .where(and(eq(permohonanSurat.villageId, villageId), eq(permohonanSurat.letterId, letterId)))
+    .limit(1);
+
   return row ?? null;
 }
 

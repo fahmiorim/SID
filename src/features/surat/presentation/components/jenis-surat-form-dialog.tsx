@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";
@@ -42,6 +40,13 @@ import { NO_SELECTION } from "@/lib/forms";
 import { saveJenisSuratAction } from "../master-actions";
 import { IsianBuilder } from "./isian-builder";
 import { SyaratPicker } from "./syarat-picker";
+
+const LAYOUT_PRESETS = [
+  { value: "", label: "— Default sistem —" },
+  { value: '{"orientasi":"landscape"}', label: "Landscape" },
+  { value: '{"orientasi":"portrait","margin":40}', label: "Compact (margin 40)" },
+  { value: '{"orientasi":"portrait","margin":72}', label: "Wide margin (72)" },
+] as const;
 
 interface JenisSuratFormDialogProps {
   open: boolean;
@@ -206,6 +211,59 @@ export function JenisSuratFormDialog({
           <IsianBuilder initialFields={parseIsianFields(jenis?.formIsian)} />
 
           <SyaratPicker syarat={syarat} initialIds={parseSyaratIds(jenis?.syaratSurat)} />
+
+          <div className="space-y-2">
+            <Label htmlFor="templateBodyAlt">Badan Surat Alternatif (varian)</Label>
+            <Textarea
+              id="templateBodyAlt"
+              name="templateBodyAlt"
+              defaultValue={jenis?.templateBodyAlt ?? ""}
+              rows={6}
+              className="font-mono text-sm"
+              aria-invalid={Boolean(fieldErrors?.templateBodyAlt)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Digunakan bila varian template bukan &ldquo;default&rdquo;. Placeholder sama seperti
+              badan surat utama.
+            </p>
+            <FieldError messages={fieldErrors?.templateBodyAlt} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="templateVariant">Varian Template</Label>
+              <Select name="templateVariant" defaultValue={jenis?.templateVariant ?? "default"}>
+                <SelectTrigger id="templateVariant" className="w-full">
+                  <SelectValue placeholder="Pilih varian" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">Default</SelectItem>
+                  <SelectItem value="landscape">Landscape</SelectItem>
+                  <SelectItem value="compact">Compact</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="layoutConfig">Preset Layout</Label>
+              <Select name="layoutConfig" defaultValue={jenis?.layoutConfig ?? ""}>
+                <SelectTrigger id="layoutConfig" className="w-full">
+                  <SelectValue placeholder="Pilih preset" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LAYOUT_PRESETS.map((p) => (
+                    <SelectItem key={p.value} value={p.value}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                JSON konfigurasi: margin, orientasi, ukuran, dll. Preset akan menimpa field di
+                bawah.
+              </p>
+            </div>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">

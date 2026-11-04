@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import {
   deleteLaporanKeuanganDokumen,
+  imporDokumenLaporan,
   saveLaporanKeuanganDokumen,
   setLaporanKeuanganDiserahkan,
+  type ImporDokumenBerkasInput,
 } from "@/features/keuangan/application/laporan-dokumen-use-cases";
 import { MAKS_UKURAN_BERKAS, tanggalPenyerahan } from "@/features/keuangan/domain/laporan-dokumen";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
@@ -55,6 +57,51 @@ export async function saveLaporanDokumenAction(
     await saveLaporanKeuanganDokumen({ metadata, berkas, id });
     revalidatePath(LAPORAN_PATH);
     return successState(id ? "Dokumen laporan diperbarui." : "Dokumen laporan disimpan.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/**
+ * Impor banyak dokumen laporan sekaligus.
+ *
+ * Berkas dikirim sebagai beberapa entri `berkas`; metadata tiap berkas memakai
+ * sufiks indeks (`judul-0`, `jenis-0`, `tahun-0`, `semester-0`, dst.) sesuai
+ * urutan berkas pada FormData. Isi berkas dibaca menjadi `Uint8Array` di sini
+ * agar use-case tidak menyentuh `File`.
+ */
+export async function imporDokumenLaporanAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const files = formData
+    .getAll("berkas")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+  if (files.length === 0) {
+    return errorState("Pilih minimal satu berkas PDF untuk diimpor.");
+  }
+
+  const berkas: ImporDokumenBerkasInput[] = [];
+  for (const [index, file] of files.entries()) {
+    if (file.size > MAKS_UKURAN_BERKAS) {
+      return errorState(`Berkas ${file.name} melebihi batas 8 MB.`);
+    }
+    berkas.push({
+      nama: file.name,
+      mime: file.type,
+      isi: new Uint8Array(await file.arrayBuffer()),
+      judul: String(formData.get(`judul-${index}`) ?? ""),
+      jenis: String(formData.get(`jenis-${index}`) ?? ""),
+      tahun: Number(formData.get(`tahun-${index}`) ?? Number.NaN),
+      semester: Number(formData.get(`semester-${index}`) ?? Number.NaN),
+    });
+  }
+
+  try {
+    const { berhasil } = await imporDokumenLaporan({ berkas });
+    revalidatePath(LAPORAN_PATH);
+    return successState(`${berhasil} dokumen laporan berhasil diimpor.`);
   } catch (error) {
     return toErrorState(error);
   }

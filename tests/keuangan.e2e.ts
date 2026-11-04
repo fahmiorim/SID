@@ -13,6 +13,13 @@ test("laporan keuangan loads", { session: "admin" }, async ({ app, browser }) =>
   await expect(browser.locator("body")).toBeVisible();
 });
 
+test("laporan keuangan filter bidang loads", { session: "admin" }, async ({ app, browser }) => {
+  // Assuming bidang code "5.1" (Pendapatan Belanja) exists in test data.
+  await app.open("/keuangan/laporan?bidang=5.1");
+  await expect(browser).toHaveURL("/keuangan/laporan?bidang=5.1");
+  await expect(browser.locator("body")).toBeVisible();
+});
+
 test("rekonsiliasi loads", { session: "admin" }, async ({ app, browser }) => {
   await app.open("/keuangan/rekonsiliasi");
   await expect(browser).toHaveURL("/keuangan/rekonsiliasi");

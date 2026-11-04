@@ -196,6 +196,7 @@ export interface ApbdesProps {
     baris: { kode: string; uraian: string; anggaran: string; realisasi: string; selisih: string }[];
     total: { anggaran: string; realisasi: string; selisih: string };
     bidang: { kode: string; uraian: string; anggaran: string; realisasi: string; persen: number }[];
+    periode: { triwulan: number; label: string; realisasi: string; persen: number }[];
   };
 }
 

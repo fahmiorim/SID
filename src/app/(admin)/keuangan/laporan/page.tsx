@@ -1,11 +1,19 @@
 import { FileDown, FileSpreadsheet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -16,7 +24,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
-import { getLaporanKeuangan } from "@/features/keuangan/application/keuangan-use-cases";
+import {
+  getLaporanKeuangan,
+  getLaporanKeuanganBidangList,
+} from "@/features/keuangan/application/keuangan-use-cases";
 import {
   AKUN_LAPORAN,
   formatRupiah,
@@ -39,7 +50,7 @@ function akunNama(kode: string): string {
 export default async function LaporanKeuanganPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tahun?: string }>;
+  searchParams: Promise<{ tahun?: string; bidang?: string }>;
 }) {
   const user = await verifySession();
 
@@ -49,7 +60,12 @@ export default async function LaporanKeuanganPage({
 
   const params = await searchParams;
   const tahunParam = params.tahun ? Number(params.tahun) : undefined;
-  const [laporan, desa] = await Promise.all([getLaporanKeuangan(tahunParam), getIdentitas()]);
+  const bidangParam = params.bidang ? params.bidang : undefined;
+  const [laporan, desa, bidangList] = await Promise.all([
+    getLaporanKeuangan(tahunParam, bidangParam),
+    getIdentitas(),
+    getLaporanKeuanganBidangList(),
+  ]);
 
   const tahunList = [...new Set([...laporan.tersedia, laporan.tahun])].sort((a, b) => a - b);
   const totalPersen =
@@ -67,7 +83,7 @@ export default async function LaporanKeuanganPage({
             {tahunList.map((item) => (
               <Link
                 key={item}
-                href={`/keuangan/laporan?tahun=${item}`}
+                href={`/keuangan/laporan?tahun=${item}${bidangParam ? `&bidang=${bidangParam}` : ""}`}
                 className={`rounded-md border px-3 py-1.5 text-sm tabular-nums transition-colors ${
                   item === laporan.tahun
                     ? "bg-primary text-primary-foreground"
@@ -77,14 +93,39 @@ export default async function LaporanKeuanganPage({
                 {item}
               </Link>
             ))}
+            <Select
+              value={bidangParam ?? ""}
+              onValueChange={(value) => {
+                const newParams = new URLSearchParams();
+                if (laporan.tahun) newParams.set("tahun", String(laporan.tahun));
+                if (value) newParams.set("bidang", value);
+                redirect(`/keuangan/laporan?${newParams.toString()}`);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter Bidang" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Semua Bidang</SelectItem>
+                {bidangList.map((bidang) => (
+                  <SelectItem key={bidang.kode} value={bidang.kode}>
+                    {bidang.uraian}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" asChild>
-              <a href={`/keuangan/laporan/ekspor-excel?tahun=${laporan.tahun}`}>
+              <a
+                href={`/keuangan/laporan/ekspor-excel?tahun=${laporan.tahun}${bidangParam ? `&bidang=${bidangParam}` : ""}`}
+              >
                 <FileSpreadsheet className="size-4" />
                 Ekspor Excel
               </a>
             </Button>
             <Button variant="outline" asChild>
-              <a href={`/keuangan/laporan/ekspor?tahun=${laporan.tahun}`}>
+              <a
+                href={`/keuangan/laporan/ekspor?tahun=${laporan.tahun}${bidangParam ? `&bidang=${bidangParam}` : ""}`}
+              >
                 <FileDown className="size-4" />
                 Ekspor CSV
               </a>
@@ -187,7 +228,12 @@ export default async function LaporanKeuanganPage({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Realisasi Belanja per Bidang</CardTitle>
+          <CardTitle className="text-base">
+            Realisasi Belanja per Bidang
+            {bidangParam
+              ? ` — ${bidangList.find((b) => b.kode === bidangParam)?.uraian ?? ""}`
+              : ""}
+          </CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>

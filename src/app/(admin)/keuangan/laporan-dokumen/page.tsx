@@ -19,6 +19,7 @@ import {
 import { listLaporanKeuanganDokumen } from "@/features/keuangan/application/laporan-dokumen-use-cases";
 import { KEUANGAN_RESOURCE, LAPORAN_KEUANGAN_RESOURCE } from "@/features/keuangan/domain/keuangan";
 import { LaporanDokumenCreateButton } from "@/features/keuangan/presentation/components/laporan-dokumen-form-dialog";
+import { LaporanDokumenImportButton } from "@/features/keuangan/presentation/components/laporan-dokumen-import-dialog";
 import { LaporanDokumenRowActions } from "@/features/keuangan/presentation/components/laporan-dokumen-row-actions";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
@@ -71,6 +72,7 @@ export default async function LaporanDokumenPage({
                 {item}
               </Link>
             ))}
+            {bisaUbah ? <LaporanDokumenImportButton tahunDefault={tahun} /> : null}
             {bisaUbah ? <LaporanDokumenCreateButton tahunDefault={tahun} /> : null}
           </div>
         }

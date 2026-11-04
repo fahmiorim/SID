@@ -5,6 +5,11 @@ export const AUDIT_EVENTS = {
   passwordResetSuccess: "auth.password.reset.success",
   databaseBackup: "database.backup",
   databaseRestore: "database.restore",
+  tteConfigUpdate: "surat.tte.config",
+  tteSigned: "surat.tte.signed",
+  externalTteSign: "api.eksternal.tte.sign",
+  externalSuratGet: "api.eksternal.surat.get",
+  externalSuratVerifikasi: "api.eksternal.surat.verifikasi",
 } as const;
 
 export type AuditEvent = (typeof AUDIT_EVENTS)[keyof typeof AUDIT_EVENTS];
@@ -16,6 +21,11 @@ export const AUDIT_EVENT_LABELS: Record<AuditEvent, string> = {
   [AUDIT_EVENTS.passwordResetSuccess]: "Reset sandi berhasil",
   [AUDIT_EVENTS.databaseBackup]: "Backup basis data",
   [AUDIT_EVENTS.databaseRestore]: "Restore basis data",
+  [AUDIT_EVENTS.tteConfigUpdate]: "Ubah konfigurasi TTE",
+  [AUDIT_EVENTS.tteSigned]: "Surat ditandatangani elektronik",
+  [AUDIT_EVENTS.externalTteSign]: "Tanda tangan TTE via API eksternal",
+  [AUDIT_EVENTS.externalSuratGet]: "Baca surat via API eksternal",
+  [AUDIT_EVENTS.externalSuratVerifikasi]: "Verifikasi surat via API eksternal",
 };
 
 export interface AuditEventInput {

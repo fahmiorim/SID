@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import {
   createSuratKeluarData,
   createSuratMasukData,
@@ -33,6 +34,30 @@ function parseId(raw: FormDataEntryValue | null): number | null {
   if (typeof raw !== "string" || raw.trim() === "") return null;
   const value = Number(raw);
   return Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function isFile(value: FormDataEntryValue | null): value is File {
+  return Boolean(
+    value &&
+    typeof value === "object" &&
+    "arrayBuffer" in value &&
+    typeof (value as File).arrayBuffer === "function",
+  );
+}
+
+async function bacaMultiBerkas(formData: FormData, field: string): Promise<BerkasUnggahan[]> {
+  const results: BerkasUnggahan[] = [];
+  for (const [key, value] of formData.entries()) {
+    if (key !== field) continue;
+    if (!isFile(value) || value.size === 0) continue;
+    results.push({
+      nama: value.name,
+      mime: value.type || null,
+      ukuran: value.size,
+      isi: new Uint8Array(await value.arrayBuffer()),
+    });
+  }
+  return results;
 }
 
 export async function saveSuratMasukAction(
@@ -143,6 +168,9 @@ export async function tambahDisposisiSuratMasukAction(
   const instruction = text(formData, "instruction");
   if (!instruction) return errorState("Instruksi disposisi wajib diisi.");
 
+  const lampiran = await bacaMultiBerkas(formData, "lampiran");
+  if (lampiran.length > 5) return errorState("Maksimal 5 berkas lampiran.");
+
   try {
     await tambahDisposisiSuratMasukData(id, {
       toUserId: text(formData, "toUserId") || null,
@@ -150,6 +178,7 @@ export async function tambahDisposisiSuratMasukAction(
       instruction,
       dueDate: text(formData, "dueDate") || null,
       note: text(formData, "note") || null,
+      lampiran: lampiran.length > 0 ? lampiran : undefined,
     });
     revalidatePath(MASUK_PATH);
     return successState("Disposisi surat masuk ditambahkan.");
@@ -167,6 +196,9 @@ export async function tambahEkspedisiSuratKeluarAction(
   const sentDate = text(formData, "sentDate");
   if (!sentDate) return errorState("Tanggal kirim wajib diisi.");
 
+  const lampiran = await bacaMultiBerkas(formData, "lampiran");
+  if (lampiran.length > 5) return errorState("Maksimal 5 berkas lampiran.");
+
   try {
     await tambahEkspedisiSuratKeluarData(id, {
       sentDate,
@@ -174,6 +206,7 @@ export async function tambahEkspedisiSuratKeluarAction(
       deliveryMethod: text(formData, "deliveryMethod") || null,
       trackingNo: text(formData, "trackingNo") || null,
       note: text(formData, "note") || null,
+      lampiran: lampiran.length > 0 ? lampiran : undefined,
     });
     revalidatePath(KELUAR_PATH);
     return successState("Ekspedisi surat keluar dicatat.");

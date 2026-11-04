@@ -38,56 +38,15 @@ export interface SuratPdfInput {
   content: string;
   /** Tautan verifikasi publik; dicetak di footer bila tersedia. */
   verificationUrl?: string | null;
+  /** JSON konfigurasi layout (opsional). */
+  layoutConfig?: string | null;
+  /** Varian template aktif (mis. default, landscape, compact). */
+  templateVariant?: string | null;
+  /** Badan surat alternatif untuk varian template (opsional). */
+  templateBodyAlt?: string | null;
 }
 
-const PAGE_WIDTH = 595.28;
-const PAGE_HEIGHT = 841.89;
-const MARGIN = 56;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-const LINE_HEIGHT = 15;
-
-/** pdf-lib dengan font standar hanya mendukung WinAnsi; normalkan karakter. */
-function clean(value: string): string {
-  return value
-    .replace(/[\u2018\u2019]/g, "'")
-    .replace(/[\u201C\u201D]/g, '"')
-    .replace(/[\u2013\u2014]/g, "-")
-    .replace(/\u00a0/g, " ")
-    .replace(/[^\x20-\x7E\n]/g, "?");
-}
-
-function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
-  const lines: string[] = [];
-
-  for (const rawLine of text.split("\n")) {
-    const words = rawLine.split(/\s+/).filter(Boolean);
-    if (words.length === 0) {
-      lines.push("");
-      continue;
-    }
-
-    let current = "";
-    for (const word of words) {
-      const candidate = current === "" ? word : `${current} ${word}`;
-      if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
-        current = candidate;
-        continue;
-      }
-      if (current !== "") lines.push(current);
-      current = word;
-    }
-    if (current !== "") lines.push(current);
-  }
-
-  return lines;
-}
-
-function centered(page: PDFPage, text: string, y: number, font: PDFFont, size: number): void {
-  const width = font.widthOfTextAtSize(text, size);
-  page.drawText(text, { x: (PAGE_WIDTH - width) / 2, y, size, font, color: rgb(0, 0, 0) });
-}
-
-// ── Muat gambar desa (logo / ttd / stempel) ────────────────────────────────
+// ── Helper functions ──────────────────────────────────────────────────────────
 
 /**
  * Baca bytes gambar dari jalur berbentuk:
@@ -138,7 +97,84 @@ async function tanamGambar(pdf: PDFDocument, bytes: Buffer | null): Promise<PDFI
   return null;
 }
 
+// ── buildSuratPdf ─────────────────────────────────────────────────────────────
+
 export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
+  // Parse layout config (JSON)
+  let layout: Record<string, unknown> = {};
+  if (input.layoutConfig) {
+    try {
+      layout = JSON.parse(input.layoutConfig);
+    } catch {
+      layout = {};
+    }
+  }
+
+  // Default page settings
+  const orientasi = (layout.orientasi as string) ?? "potrait";
+  const isLandscape = orientasi === "landscape";
+  const PAGE_WIDTH = isLandscape ? 841.89 : 595.28;
+  const PAGE_HEIGHT = isLandscape ? 595.28 : 841.89;
+  const MARGIN = typeof layout.margin === "number" ? layout.margin : 56;
+  const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+  const LINE_HEIGHT = 15;
+
+  // Determin posisi elemen berdasarkan varian template
+  const variant = input.templateVariant ?? "default";
+  const variantPos =
+    variant === "landscape"
+      ? { ttdXOffset: 20, stampXOffset: 10, qrPosition: "header", qrMargin: 5 }
+      : variant === "compact"
+        ? { ttdXOffset: 50, stampXOffset: 5, qrPosition: "footer", qrMargin: 15 }
+        : { ttdXOffset: 40, stampXOffset: 30, qrPosition: "footer", qrMargin: 10 };
+
+  // Pilih template body berdasarkan varian
+  const templateBody =
+    input.templateVariant && input.templateVariant !== "default" && input.templateBodyAlt
+      ? input.templateBodyAlt
+      : (input.content ?? "");
+
+  /** pdf-lib dengan font standar hanya mendukung WinAnsi; normalkan karakter. */
+  function clean(value: string): string {
+    return value
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2013\u2014]/g, "-")
+      .replace(/\u00a0/g, " ")
+      .replace(/[^\x20-\x7E\n]/g, "?");
+  }
+
+  function wrap(text: string, font: PDFFont, size: number, maxWidth: number): string[] {
+    const lines: string[] = [];
+
+    for (const rawLine of text.split("\n")) {
+      const words = rawLine.split(/\s+/).filter(Boolean);
+      if (words.length === 0) {
+        lines.push("");
+        continue;
+      }
+
+      let current = "";
+      for (const word of words) {
+        const candidate = current === "" ? word : `${current} ${word}`;
+        if (font.widthOfTextAtSize(candidate, size) <= maxWidth) {
+          current = candidate;
+          continue;
+        }
+        if (current !== "") lines.push(current);
+        current = word;
+      }
+      if (current !== "") lines.push(current);
+    }
+
+    return lines;
+  }
+
+  function centered(page: PDFPage, text: string, y: number, font: PDFFont, size: number): void {
+    const width = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: (PAGE_WIDTH - width) / 2, y, size, font, color: rgb(0, 0, 0) });
+  }
+
   const pdf = await PDFDocument.create();
   const font = await pdf.embedFont(StandardFonts.TimesRoman);
   const bold = await pdf.embedFont(StandardFonts.TimesRomanBold);
@@ -220,7 +256,7 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
     y -= 8;
   }
 
-  const bodyLines = wrap(clean(input.content), font, 11, CONTENT_WIDTH);
+  const bodyLines = wrap(clean(templateBody), font, 11, CONTENT_WIDTH);
   const ensurePage = () => {
     if (y < MARGIN + 90) {
       page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
@@ -261,7 +297,7 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
   const headWidth = bold.widthOfTextAtSize(headName, 11);
 
   // Gambar tanda tangan (di atas baris nama) & stempel (menimpa area ttd).
-  const kolomTtdAwal = PAGE_WIDTH - MARGIN - Math.max(headWidth, 120);
+  const kolomTtdAwal = PAGE_WIDTH - MARGIN - Math.max(headWidth, 120) - variantPos.ttdXOffset;
   const gambarTtdX = kolomTtdAwal + 40;
   const gambarTtdTinggi = 40;
 
@@ -279,7 +315,7 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
     const tinggiStamp = 70;
     const lebar = Math.min((stamp.width / stamp.height) * tinggiStamp, 90);
     page.drawImage(stamp, {
-      x: gambarTtdX - lebar - 10,
+      x: kolomTtdAwal + variantPos.stampXOffset - lebar - 10,
       y: y - 68,
       width: lebar,
       height: tinggiStamp,
@@ -304,6 +340,7 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
 
   if (input.verificationUrl) {
     const ukuranQr = qr ? 66 : 0;
+    const qrPosition = variantPos.qrPosition;
     const footer = wrap(
       clean(`Verifikasi: ${input.verificationUrl}`),
       font,
@@ -311,29 +348,47 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
       CONTENT_WIDTH - (qr ? ukuranQr + 10 : 0),
     );
     const tinggiFooter = Math.max(ukuranQr, footer.length * 10);
+    const headerHeight = 60; // estimasi tinggi header
 
-    // Footer selalu di dasar halaman; pindah halaman bila tanda tangan terlalu
-    // dekat dengan batas bawah agar tidak bertumpuk dengan QR/teks.
-    if (y < MARGIN + tinggiFooter + 8) {
-      page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    let pageToUse = page;
+    let footerY: number;
+    let qrX: number;
+
+    // Pindah halaman bila tanda tangan terlalu dekat dengan batas bawah agar tidak bertumpuk dengan QR/teks.
+    if (qrPosition === "header") {
+      // QR di header: letakkan di bagian atas halaman, di bawah header lines
+      if (y < MARGIN + headerHeight + tinggiFooter + 8) {
+        pageToUse = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+        y = PAGE_HEIGHT - MARGIN;
+      }
+      footerY = MARGIN + headerHeight + tinggiFooter - 8;
+      qrX = MARGIN;
+    } else {
+      // QR di footer (default & compact)
+      if (y < MARGIN + tinggiFooter + 8) {
+        pageToUse = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+        y = PAGE_HEIGHT - MARGIN;
+      }
+      footerY = MARGIN + tinggiFooter - 8;
+      qrX = MARGIN + variantPos.qrMargin;
     }
 
     if (qr) {
-      page.drawImage(qr, { x: MARGIN, y: MARGIN, width: ukuranQr, height: ukuranQr });
+      pageToUse.drawImage(qr, { x: qrX, y: footerY, width: ukuranQr, height: ukuranQr });
     }
 
-    let footerY = MARGIN + tinggiFooter - 8;
+    let footerYActual = qrPosition === "header" ? footerY + headerHeight - 8 : footerY;
     for (const line of footer) {
       const width = font.widthOfTextAtSize(line, 8);
-      page.drawText(line, {
+      pageToUse.drawText(line, {
         // QR di kiri, teks di kanannya; tanpa QR teks tetap di tengah.
-        x: qr ? MARGIN + ukuranQr + 10 : (PAGE_WIDTH - width) / 2,
-        y: footerY,
+        x: qr ? qrX + ukuranQr + 10 : (PAGE_WIDTH - width) / 2,
+        y: footerYActual,
         size: 8,
         font,
         color: rgb(0, 0, 0),
       });
-      footerY -= 10;
+      footerYActual -= 10;
     }
   }
 

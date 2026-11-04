@@ -19,6 +19,8 @@ export default {
     admin: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
     "warga-e2e": { username: "warga-e2e", password: E2E_WARGA_PASSWORD },
     "warga-e2e-operator": { username: "warga-e2e-operator", password: E2E_WARGA_PASSWORD },
+    "sekdes-e2e": { username: "sekdes-e2e", password: E2E_WARGA_PASSWORD },
+    "kades-e2e": { username: "kades-e2e", password: E2E_WARGA_PASSWORD },
   },
   targets: [
     {

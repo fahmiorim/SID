@@ -8,13 +8,14 @@ import {
   kembalikanPermohonanAdminData,
   ubahStatusPermohonanData,
 } from "@/features/layanan-mandiri/application/admin-use-cases";
+import type { FilterPermohonan } from "@/features/layanan-mandiri/domain/permohonan-berkas";
 import { errorState, successState, toErrorState, type ActionState } from "@/lib/action-state";
 
 const PATH = "/permohonan-surat";
 
 /** Data halaman operator permohonan surat (termasuk izin ubah untuk UI). */
-export async function getLayananMandiriData() {
-  return getPermohonanAdminData();
+export async function getLayananMandiriData(filter: FilterPermohonan = {}) {
+  return getPermohonanAdminData(filter);
 }
 
 export async function buatKonsepSuratPermohonanAction(

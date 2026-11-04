@@ -273,6 +273,7 @@ export async function tambahDisposisiSuratMasuk(
     dueDate?: string | null;
     note?: string | null;
     dispatchedBy?: string | null;
+    lampiran?: string | null;
   },
 ) {
   const [row] = await db
@@ -285,6 +286,7 @@ export async function tambahDisposisiSuratMasuk(
       instruction: input.instruction,
       dueDate: input.dueDate ?? null,
       note: input.note ?? null,
+      lampiran: input.lampiran ?? null,
       dispatchedBy: input.dispatchedBy ?? null,
       status: "pending",
     })
@@ -314,6 +316,7 @@ export async function tambahEkspedisiSuratKeluar(
     deliveryMethod?: string | null;
     trackingNo?: string | null;
     note?: string | null;
+    lampiran?: string | null;
   },
 ) {
   const [row] = await db
@@ -326,6 +329,7 @@ export async function tambahEkspedisiSuratKeluar(
       deliveryMethod: input.deliveryMethod ?? null,
       trackingNo: input.trackingNo ?? null,
       note: input.note ?? null,
+      lampiran: input.lampiran ?? null,
     })
     .$returningId();
   return row?.id;

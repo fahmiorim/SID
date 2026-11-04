@@ -9,11 +9,17 @@ import {
   deleteJenisSuratData,
   deleteKlasifikasiSuratData,
   deleteSyaratSuratData,
+  imporKlasifikasiSuratData,
   updateJenisSuratData,
   updateKlasifikasiSuratData,
   updateSyaratSuratData,
 } from "@/features/surat/application/master-use-cases";
 import { syaratSuratFormSchema } from "@/features/surat/domain/isian";
+import {
+  KOLOM_IMPOR_KLASIFIKASI,
+  siapkanBarisKlasifikasi,
+  type KunciImporKlasifikasi,
+} from "@/features/surat/domain/klasifikasi-berkas";
 import { jenisSuratFormSchema, klasifikasiSuratFormSchema } from "@/features/surat/domain/surat";
 import {
   errorState,
@@ -22,6 +28,7 @@ import {
   zodToFieldErrors,
   type ActionState,
 } from "@/lib/action-state";
+import { bacaImporDariFormData } from "@/lib/impor-berkas";
 
 const JENIS_PATH = "/persuratan/jenis";
 const KLASIFIKASI_PATH = "/persuratan/klasifikasi";
@@ -71,6 +78,47 @@ export async function saveKlasifikasiAction(
   }
 }
 
+export async function imporKlasifikasiAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const hasil = await bacaImporDariFormData<KunciImporKlasifikasi>(
+    formData.get("berkas"),
+    KOLOM_IMPOR_KLASIFIKASI,
+  );
+
+  if (!hasil.ok) return errorState(hasil.pesan);
+  if (hasil.hasil.baris.length === 0) {
+    return errorState(hasil.hasil.galat[0]?.pesan ?? "Tidak ada baris data pada berkas.");
+  }
+
+  const siap = siapkanBarisKlasifikasi(
+    hasil.hasil.baris.map((baris) => ({
+      nomorBaris: baris.baris,
+      kode: baris.nilai.kode,
+      nama: baris.nilai.nama,
+      keterangan: baris.nilai.keterangan,
+    })),
+  );
+
+  if (siap.rows.length === 0) {
+    return errorState(siap.galat[0]?.pesan ?? "Tidak ada klasifikasi yang dapat diimpor.");
+  }
+
+  try {
+    const ringkasan = await imporKlasifikasiSuratData(siap.rows);
+    revalidatePath(KLASIFIKASI_PATH);
+    revalidatePath(JENIS_PATH);
+    const dilewati = siap.galat.length + hasil.hasil.galat.length;
+    return successState(
+      `Impor selesai: ${ringkasan.ditambahkan} ditambahkan, ${ringkasan.diperbarui} diperbarui` +
+        (dilewati > 0 ? `, ${dilewati} baris dilewati.` : "."),
+    );
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
 export async function deleteKlasifikasiAction(
   _previousState: ActionState,
   formData: FormData,
@@ -98,6 +146,7 @@ export async function saveJenisSuratAction(
     name: text(formData, "name"),
     classificationId: text(formData, "classificationId"),
     templateBody: text(formData, "templateBody"),
+    templateBodyAlt: text(formData, "templateBodyAlt"),
     formIsian: text(formData, "formIsian"),
     syaratSurat: text(formData, "syaratSurat"),
     requiresResident: parseBoolean(formData, "requiresResident"),
@@ -105,6 +154,8 @@ export async function saveJenisSuratAction(
     numberFormat: text(formData, "numberFormat"),
     validityMonths: text(formData, "validityMonths"),
     sortOrder: text(formData, "sortOrder"),
+    templateVariant: text(formData, "templateVariant"),
+    layoutConfig: text(formData, "layoutConfig"),
   });
 
   if (!parsed.success) {

@@ -1,11 +1,17 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   getIdentitasDesa,
   type IdentitasDesa,
 } from "@/features/desa/infrastructure/desa-repository";
-import { sinkronStatusSuratPermohonan } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
+import { notifyPermohonanStatusChange } from "@/features/layanan-mandiri/application/notification";
+import {
+  findPermohonanByLetterId,
+  sinkronStatusSuratPermohonan,
+} from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
 import { calculateAge, GENDER_LABELS } from "@/features/penduduk/domain/penduduk";
 import {
   getPendudukSuratData,
@@ -15,7 +21,18 @@ import {
   type AnggotaKeluargaSuratRow,
   type PendudukSuratData,
 } from "@/features/penduduk/infrastructure/penduduk-repository";
+import { bacaMedia } from "@/features/publik/infrastructure/media-storage";
 import { findRoleById } from "@/features/rbac/infrastructure/rbac-repository";
+import {
+  getKonfigurasiTteEfektif,
+  simpanBerkasTte,
+  tandatanganiPdfTte,
+} from "@/features/surat/application/tte-use-cases";
+import {
+  ARSIP_MAKS_EKSPOR,
+  buildArsipNomorCsv,
+  namaBerkasArsipNomor,
+} from "@/features/surat/domain/arsip-nomor";
 import {
   buildIsianValues,
   isianErrorsToFieldErrors,
@@ -59,12 +76,14 @@ import {
   type VerificationStep,
 } from "@/features/surat/domain/surat";
 import { isiTerbilangDanHitung, terbilangIsi } from "@/features/surat/domain/terbilang";
-import { parseKonfigTte, siapTte, tandaiTte, type KlienTte } from "@/features/surat/domain/tte";
+import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import {
   getJenisSurat,
   listJenisSurat,
+  listKlasifikasi,
   listSyaratSurat,
 } from "@/features/surat/infrastructure/master-repository";
+import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
 import {
   createSuratDraft,
   deleteSurat,
@@ -86,6 +105,7 @@ import {
 } from "@/features/surat/infrastructure/surat-repository";
 import { requirePermission, requireWargaAktif } from "@/lib/dal";
 import { conflict, forbidden, notFound, validationError } from "@/lib/errors";
+import { getRequestOrigin } from "@/lib/request-origin";
 
 export interface SuratPrintData {
   surat: SuratDetail;
@@ -93,6 +113,8 @@ export interface SuratPrintData {
   desa: IdentitasDesa;
   penduduk: PendudukSuratData | null;
   content: string;
+  /** JSON konfigurasi layout (opsional). */
+  layoutConfig?: string | null;
 }
 
 function text(value: string | null | undefined): string {
@@ -221,21 +243,92 @@ export async function listSuratWithMeta(params: { search: string; status: Letter
   };
 }
 
-export async function listArsipNomorSuratData(params: { search: string; year?: number }) {
+export interface ArsipNomorFilter {
+  search: string;
+  year?: number;
+  typeId?: number;
+  classificationId?: number;
+  page?: number;
+}
+
+function bersihkanFilterArsip(params: ArsipNomorFilter): {
+  q: string;
+  year?: number;
+  typeId?: number;
+  classificationId?: number;
+  page: number;
+} {
+  const idPositif = (value: number | undefined) =>
+    value !== undefined && Number.isInteger(value) && value > 0 ? value : undefined;
+
+  return {
+    q: params.search.trim().slice(0, 100),
+    year:
+      params.year !== undefined &&
+      Number.isInteger(params.year) &&
+      params.year >= 1900 &&
+      params.year <= 9999
+        ? params.year
+        : undefined,
+    typeId: idPositif(params.typeId),
+    classificationId: idPositif(params.classificationId),
+    page:
+      params.page !== undefined && Number.isInteger(params.page) && params.page > 0
+        ? params.page
+        : 1,
+  };
+}
+
+export async function listArsipNomorSuratData(params: ArsipNomorFilter) {
   const user = await requirePermission(SURAT_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
-  const year =
-    Number.isInteger(params.year) &&
-    params.year !== undefined &&
-    params.year >= 1900 &&
-    params.year <= 9999
-      ? params.year
-      : undefined;
+  const filter = bersihkanFilterArsip(params);
 
-  return listLetterNumberArchive(villageId, {
-    q: params.search.trim().slice(0, 100),
-    year,
-  });
+  const [result, jenis, klasifikasi] = await Promise.all([
+    listLetterNumberArchive(villageId, filter),
+    listJenisSurat(villageId),
+    listKlasifikasi(villageId),
+  ]);
+
+  return { ...result, jenis, klasifikasi };
+}
+
+/** Data ekspor CSV arsip nomor (mengikuti filter yang aktif). */
+export async function eksporArsipNomorSuratData(params: ArsipNomorFilter) {
+  const user = await requirePermission(SURAT_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  const filter = bersihkanFilterArsip(params);
+
+  const [result, desa, jenis, klasifikasi] = await Promise.all([
+    listLetterNumberArchive(villageId, { ...filter, page: 1, pageSize: ARSIP_MAKS_EKSPOR }),
+    getIdentitasDesa(villageId),
+    listJenisSurat(villageId),
+    listKlasifikasi(villageId),
+  ]);
+
+  const labelFilter = [
+    filter.year !== undefined ? `Tahun ${filter.year}` : null,
+    filter.typeId !== undefined
+      ? `Jenis ${jenis.find((item) => item.id === filter.typeId)?.name ?? filter.typeId}`
+      : null,
+    filter.classificationId !== undefined
+      ? `Klasifikasi ${
+          klasifikasi.find((item) => item.id === filter.classificationId)?.code ??
+          filter.classificationId
+        }`
+      : null,
+  ]
+    .filter((item): item is string => item !== null)
+    .join(" · ");
+
+  return {
+    csv: buildArsipNomorCsv({
+      namaDesa: desa?.namaDesa ?? null,
+      rows: result.rows,
+      filter: labelFilter,
+    }),
+    filename: namaBerkasArsipNomor(desa?.namaDesa ?? null),
+  };
 }
 
 export async function getSuratFormOptions() {
@@ -439,41 +532,64 @@ async function nomorSudahDipakai(
 }
 
 /**
- * Jalur TTE pasca-penerbitan (Fase 2E — adapter nonaktif).
+ * Jalur TTE pasca-penerbitan.
  *
- * Konfigurasi dibaca dari variabel `TTE_*` lingkungan. Selama mode
- * `nonaktif` (default), fungsi ini keluar segera tanpa I/O — penerbitan
- * surat tidak pernah menunggu/karena TTE. Ketika adapter BSRE nanti
- * dipasang (`KLIEN_TTE` diganti implementasi jaringan) dan konfigurasi
- * lengkap, hasil tanda tangan mengisi kolom `letters.tte`.
+ * Konfigurasi efektif = pengaturan desa (`tte_config`) + kredensial
+ * environment. Selama mode bukan `bsre` atau kredensial belum lengkap,
+ * fungsi ini keluar tanpa I/O — penerbitan surat tidak pernah menunggu TTE.
+ *
+ * Kegagalan provider sengaja tidak melempar: surat tetap terbit tanpa TTE dan
+ * operator hanya menerima peringatan pada log.
  */
-const KLIEN_TTE: KlienTte = null; // Adapter jaringan BSRE belum diimplementasi.
-
 async function prosesTteSurat(
   villageId: number,
   suratId: number,
   nomor: string,
-  pdf: Uint8Array | null,
+  cetak: {
+    desa: IdentitasDesa;
+    jenisNama: string;
+    tanggal: string;
+    content: string;
+    verificationUrl: string | null;
+  },
 ): Promise<void> {
-  const config = parseKonfigTte(process.env as Record<string, string | undefined>);
-  if (!siapTte(config)) return;
+  try {
+    const config = await getKonfigurasiTteEfektif(villageId);
+    if (config.mode !== "bsre") return;
 
-  const permintaan = {
-    villageId,
-    suratId,
-    nomor,
-    pdf: pdf ?? new Uint8Array(),
-  };
-  const hasil = await tandaiTte(config, permintaan, KLIEN_TTE);
+    const pdf = await buildSuratPdf({
+      desa: cetak.desa,
+      jenisNama: cetak.jenisNama,
+      nomor,
+      tanggal: cetak.tanggal,
+      content: cetak.content,
+      verificationUrl: cetak.verificationUrl,
+    });
 
-  if (hasil.ok) {
-    await setSuratTte(villageId, suratId, true);
-    return;
+    const hasil = await tandatanganiPdfTte({ villageId, suratId, nomor, pdf, config });
+
+    if (!hasil.ok) {
+      console.warn(`TTE tidak diterapkan pada surat ${nomor}: ${hasil.alasan}`);
+      return;
+    }
+
+    const berkas = await simpanBerkasTte(villageId, nomor, hasil.pdf);
+    await setSuratTte(villageId, suratId, true, berkas);
+    await recordAuditEvent({
+      villageId,
+      event: AUDIT_EVENTS.tteSigned,
+      resource: SURAT_RESOURCE,
+      resourceId: String(suratId),
+      details: { nomor, mode: "bsre" },
+    });
+  } catch (error) {
+    // Jangan pernah menggagalkan penerbitan karena TTE.
+    console.warn(
+      `TTE tidak diterapkan pada surat ${nomor}: ${
+        error instanceof Error ? error.message : "kesalahan tidak diketahui"
+      }`,
+    );
   }
-
-  // Kegagalan TTE tidak memblokir penerbitan; cukup catatan untuk operator
-  // memeriksa konfigurasi.
-  console.warn(`TTE tidak diterapkan pada surat ${nomor}: ${hasil.alasan}`);
 }
 
 /**
@@ -548,7 +664,14 @@ async function terbitkanSurat(
   });
 
   // TTE pasca-terbit: mode nonaktif (default) → keluar segera tanpa I/O.
-  await prosesTteSurat(villageId, surat.id, number, null);
+  const origin = await getRequestOrigin();
+  await prosesTteSurat(villageId, surat.id, number, {
+    desa,
+    jenisNama: jenis.name,
+    tanggal: surat.letterDate ?? "-",
+    content,
+    verificationUrl: buildVerificationUrl(origin, token),
+  });
 
   return { number, verificationToken: token };
 }
@@ -609,7 +732,17 @@ export async function verifySuratData(
   const { number, verificationToken } = await terbitkanSurat(villageId, surat, desa);
 
   // Permohonan warga yang terhubung menjadi "Siap Diambil" begitu surat terbit.
+  const permohonan = await findPermohonanByLetterId(villageId, id);
   await sinkronStatusSuratPermohonan(villageId, id, 3);
+  if (permohonan && permohonan.status !== 3) {
+    await notifyPermohonanStatusChange({
+      villageId,
+      residentId: permohonan.residentId,
+      noAntrian: permohonan.noAntrian,
+      statusLama: permohonan.status,
+      statusBaru: 3,
+    });
+  }
 
   return { number, verificationToken };
 }
@@ -662,6 +795,12 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
   const anggotaKeluarga = await loadAnggotaKeluarga(villageId, penduduk);
   const pengikutSurat = await loadPengikutSurat(villageId, surat.nilaiIsian);
 
+  // Pilih template sesuai varian aktif
+  const templateBody =
+    jenis.templateVariant && jenis.templateVariant !== "default" && jenis.templateBodyAlt
+      ? jenis.templateBodyAlt
+      : jenis.templateBody;
+
   const values = buildValues(
     surat,
     jenis,
@@ -672,9 +811,9 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
     surat.number ?? "KONSEP",
   );
   const content =
-    surat.content ?? isiTerbilangDanHitung(renderSuratTemplate(jenis.templateBody, values), values);
+    surat.content ?? isiTerbilangDanHitung(renderSuratTemplate(templateBody, values), values);
 
-  return { surat, jenis, desa, penduduk, content };
+  return { surat, jenis, desa, penduduk, content, layoutConfig: jenis.layoutConfig };
 }
 
 /** Data lengkap untuk halaman cetak & PDF (konsep memakai render sementara). */
@@ -704,4 +843,64 @@ export async function getSuratPrintDataWarga(id: number): Promise<SuratPrintData
   }
 
   return data;
+}
+
+function berkasPdfSah(bytes: Uint8Array): boolean {
+  return (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  );
+}
+
+/**
+ * PDF surat: pakai berkas hasil TTE bila ada, jika tidak render ulang.
+ *
+ * Berkas TTE disimpan pada kategori privat `surat-tte`; bila berkas hilang
+ * (mis. volume storage dipulihkan), surat tetap dapat diunduh dalam bentuk
+ * PDF tanpa TTE daripada gagal total.
+ */
+async function bangunPdfSurat(data: SuratPrintData): Promise<Uint8Array> {
+  if (data.surat.tteFile) {
+    try {
+      const bytes = await bacaMedia(data.surat.tteFile);
+      if (berkasPdfSah(bytes)) return new Uint8Array(bytes);
+    } catch {
+      // Lanjut merender PDF baru di bawah.
+    }
+  }
+
+  const origin = await getRequestOrigin();
+  return buildSuratPdf({
+    desa: data.desa,
+    jenisNama: data.jenis.name,
+    nomor: data.surat.number,
+    tanggal: data.surat.letterDate,
+    content: data.content,
+    verificationUrl: data.surat.verificationToken
+      ? buildVerificationUrl(origin, data.surat.verificationToken)
+      : null,
+    layoutConfig: data.layoutConfig,
+    templateVariant: data.jenis.templateVariant,
+    templateBodyAlt: data.jenis.templateBodyAlt,
+  });
+}
+
+/** PDF surat untuk admin (memeriksa izin baca surat). */
+export async function getSuratPdfBytes(
+  id: number,
+): Promise<{ surat: SuratDetail; pdf: Uint8Array }> {
+  const data = await getSuratPrintData(id);
+  return { surat: data.surat, pdf: await bangunPdfSurat(data) };
+}
+
+/** PDF surat untuk warga pemilik (hanya surat terbit miliknya). */
+export async function getSuratPdfBytesWarga(
+  id: number,
+): Promise<{ surat: SuratDetail; pdf: Uint8Array }> {
+  const data = await getSuratPrintDataWarga(id);
+  return { surat: data.surat, pdf: await bangunPdfSurat(data) };
 }

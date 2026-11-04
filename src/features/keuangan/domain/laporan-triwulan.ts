@@ -65,6 +65,43 @@ export function totalTriwulan(rows: readonly TriwulanBaris[]): TriwulanTotal {
   };
 }
 
+/** Angka triwulan 1–4 dalam angka Romawi untuk label publik. */
+const TRIWULAN_ROMAWI = ["I", "II", "III", "IV"] as const;
+
+/** Label periode triwulan, mis. `1` → `"Triwulan I"`. */
+export function triwulanLabel(triwulan: number): string {
+  const romawi = TRIWULAN_ROMAWI[triwulan - 1];
+  return romawi ? `Triwulan ${romawi}` : `Triwulan ${triwulan}`;
+}
+
+/** Ringkasan realisasi satu periode (triwulan) untuk keluaran publik. */
+export interface RealisasiPeriode {
+  /** Nomor triwulan 1–4. */
+  triwulan: number;
+  label: string;
+  /** Realisasi periode tersebut (jumlah seluruh bidang). */
+  realisasi: string;
+  /** Porsi realisasi periode terhadap total anggaran tahunan (%). */
+  persen: number;
+}
+
+/**
+ * Ringkas realisasi per triwulan dari total tahunan.
+ *
+ * Dipakai keluaran publik APBDes untuk menampilkan dimensi periode
+ * (tahun + triwulan) di samping ringkasan anggaran tahunan. Porsi `persen`
+ * dihitung terhadap total anggaran agar terbaca sebagai serapan per periode.
+ */
+export function ringkasRealisasiPeriode(total: TriwulanTotal): RealisasiPeriode[] {
+  const perTriwulan = [total.tw1, total.tw2, total.tw3, total.tw4];
+  return perTriwulan.map((realisasi, index) => ({
+    triwulan: index + 1,
+    label: triwulanLabel(index + 1),
+    realisasi,
+    persen: realisasiPersen(total.anggaran, realisasi),
+  }));
+}
+
 const nilaiTriwulan = z.coerce
   .number()
   .min(0, "Realisasi tidak boleh negatif.")

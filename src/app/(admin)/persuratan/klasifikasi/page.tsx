@@ -16,6 +16,7 @@ import { hasPermission } from "@/features/rbac/application/authorization";
 import { listKlasifikasiSurat } from "@/features/surat/application/master-use-cases";
 import { KLASIFIKASI_SURAT_RESOURCE } from "@/features/surat/domain/surat";
 import { KlasifikasiCreateButton } from "@/features/surat/presentation/components/klasifikasi-create-button";
+import { KlasifikasiImporDialog } from "@/features/surat/presentation/components/klasifikasi-impor-dialog";
 import { KlasifikasiRowActions } from "@/features/surat/presentation/components/klasifikasi-row-actions";
 import { verifySession } from "@/lib/dal";
 
@@ -38,7 +39,14 @@ export default async function KlasifikasiSuratPage() {
       <PageHeader
         title="Klasifikasi Surat"
         description="Kode klasifikasi dipakai pada jenis surat dan buku agenda."
-        actions={canManage ? <KlasifikasiCreateButton /> : null}
+        actions={
+          canManage ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <KlasifikasiImporDialog />
+              <KlasifikasiCreateButton />
+            </div>
+          ) : null
+        }
       />
 
       <Card>

@@ -5,6 +5,14 @@ import { toString as qrToString } from "qrcode";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { urlMedia } from "@/features/publik/domain/format";
 import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
 import { formatTanggalIndonesia, LETTER_STATUS_LABELS } from "@/features/surat/domain/surat";
@@ -12,6 +20,12 @@ import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
 import { isAppError } from "@/lib/errors";
 import { getRequestOrigin } from "@/lib/request-origin";
+
+const TEMPLATE_VARIANTS = [
+  { value: "default", label: "Default (Potrait)" },
+  { value: "landscape", label: "Landscape" },
+  { value: "compact", label: "Compact (margin kecil)" },
+] as const;
 
 export default async function CetakSuratPage({
   params,
@@ -22,10 +36,12 @@ export default async function CetakSuratPage({
     return <p className="text-sm text-destructive">Surat tidak valid.</p>;
   }
 
-  const { surat, jenis, desa, content } = await getSuratPrintData(suratId).catch((error) => {
-    if (isAppError(error) && error.code === "NOT_FOUND") notFound();
-    throw error;
-  });
+  const { surat, jenis, desa, content, layoutConfig } = await getSuratPrintData(suratId).catch(
+    (error) => {
+      if (isAppError(error) && error.code === "NOT_FOUND") notFound();
+      throw error;
+    },
+  );
 
   const origin = await getRequestOrigin();
   const verificationUrl = surat.verificationToken
@@ -52,6 +68,22 @@ export default async function CetakSuratPage({
   const ttdUrl = urlMedia(desa.tandaTangan);
   const stempelUrl = urlMedia(desa.stempel);
 
+  // Parse layout config
+  let layout: Record<string, unknown> = {};
+  if (layoutConfig) {
+    try {
+      layout = JSON.parse(layoutConfig);
+    } catch {
+      layout = {};
+    }
+  }
+
+  const orientasi =
+    (layout.orientasi as string) ??
+    (jenis.templateVariant === "landscape" ? "landscape" : "portrait");
+  const isLandscape = orientasi === "landscape";
+  const pageClass = isLandscape ? "max-w-[297mm]" : "max-w-[210mm]";
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
@@ -65,9 +97,33 @@ export default async function CetakSuratPage({
           <Badge variant={surat.status === "issued" ? "secondary" : "outline"}>
             {LETTER_STATUS_LABELS[surat.status]}
           </Badge>
+          {surat.tte ? <Badge variant="default">TTE</Badge> : null}
         </div>
 
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="template-variant" className="text-sm font-medium">
+              Varian:
+            </Label>
+            <Select
+              value={jenis.templateVariant ?? "default"}
+              onValueChange={(_value) => {
+                // Update via URL reload atau server action
+                window.location.reload();
+              }}
+            >
+              <SelectTrigger id="template-variant" className="w-48">
+                <SelectValue placeholder="Pilih varian" />
+              </SelectTrigger>
+              <SelectContent>
+                {TEMPLATE_VARIANTS.map((v) => (
+                  <SelectItem key={v.value} value={v.value}>
+                    {v.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           {surat.status === "issued" ? (
             <Button variant="outline" size="sm" asChild>
               <a href={`/persuratan/surat/${surat.id}/pdf`} target="_blank" rel="noreferrer">
@@ -80,7 +136,9 @@ export default async function CetakSuratPage({
         </div>
       </div>
 
-      <article className="mx-auto max-w-[210mm] rounded-lg border bg-white p-10 text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:text-black print:shadow-none">
+      <article
+        className={`mx-auto ${pageClass} rounded-lg border bg-white p-10 text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:text-black print:shadow-none`}
+      >
         <header className="relative border-b-4 border-double border-black pb-3 text-center">
           {logoUrl ? (
             // Logo desa di kiri kop surat (jika sudah diunggah).

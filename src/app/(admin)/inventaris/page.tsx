@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Tags } from "lucide-react";
+import { ArrowLeftRight, FileText, Scale, Tags } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -48,6 +48,18 @@ export default async function InventarisPage({ searchParams }: PageProps<"/inven
                 </Link>
               </Button>
             ) : null}
+            <Button variant="outline" asChild>
+              <Link href="/inventaris/laporan">
+                <FileText className="size-4" />
+                Laporan
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/inventaris/neraca">
+                <Scale className="size-4" />
+                Neraca Aset
+              </Link>
+            </Button>
             {canSeeMutasi ? (
               <Button variant="outline" asChild>
                 <Link href="/inventaris/mutasi">

@@ -3,6 +3,34 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-04 — Batch 1 persuratan: TTE, API eksternal, arsip, permohonan
+
+- TTE operasional: konfigurasi non-rahasia per desa (`tte_config`, resource dan
+  menu `tte`), form `/persuratan/tte`, passphrase hanya dari `TTE_PASSWORD`,
+  klien BSrE `buatKlienBsre` (Basic Auth, form-data, timeout, respons PDF/JSON
+  URL/base64). Surat terbit menyimpan PDF bertanda tangan di media privat
+  `surat-tte`, disajikan lewat route PDF admin/warga berizin; kegagalan TTE
+  tidak memblokir penerbitan. Migrasi `0066_add_tte_file_and_config_unique`.
+- API eksternal ber-API key: `POST /api/eksternal/tte/tanda-tangan` dan
+  `GET /api/eksternal/surat/[nomor]`, tenant dari host, audit
+  `api.eksternal.tte.sign`.
+- Klasifikasi: impor CSV/XLSX kode lama dengan upsert transaksional + dialog
+  template; test `klasifikasi-berkas.test.ts`.
+- Arsip nomor: filter tahun/jenis/klasifikasi, pagination 25 baris, ekspor CSV
+  `/persuratan/surat/arsip/ekspor`; test `arsip-nomor.test.ts`.
+- Permohonan: filter tanggal/jenis/status, rekap per jenis, ekspor CSV
+  `/permohonan-surat/ekspor`, dan notifikasi email perubahan status ke akun
+  warga via Resend (dilewati aman tanpa email/kredensial). Test
+  `permohonan-berkas.test.ts`.
+- Dokumen diperbarui: `PARITAS-OPENSID.md` (`OS-SUR-004/005/006/007/013`,
+  `OS-OPS-012` 🔴→🟡; register 21 ✅ / 91 🟡 / 0 🔴), `RENCANA-PERBAIKAN.md`
+  (progres dan sisa Batch 1), `src/lib/docs-status.ts`, `.env.example`.
+- Verifikasi: `npm run typecheck`, `npm run lint`, `npm run format:check`,
+  `npm run test` (930/930), dan `npm run build` semuanya lulus. E2E tidak
+  dijalankan. Batch 1 belum selesai: varian keluaran `OS-SUR-001/002/008`,
+  lampiran disposisi/ekspedisi `OS-SUR-009/010/012`, pengaturan lampiran
+  `OS-SUR-014`, validasi `OS-SUR-003`, dan `OS-SUR-011` (E2E-only) tersisa.
+
 ## 2026-11-04 — Rute IDM kanonis, halaman status jujur, lapisan domain
 
 - `/idm` dialihkan permanen ke halaman kanonis `/desa/idm-sdgs`; komentar

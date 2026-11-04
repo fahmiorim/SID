@@ -40,6 +40,24 @@ const envSchema = z
       .optional()
       .transform((value) => value || undefined),
 
+    // --- TTE / BSrE (opsional; konfigurasi non-rahasia juga dapat diatur
+    // lewat halaman /persuratan/tte) -------------------------------------
+    TTE_MODE: z.string().trim().optional(),
+    TTE_API: z.string().trim().optional(),
+    TTE_USERNAME: z.string().trim().optional(),
+    TTE_NIK: z.string().trim().optional(),
+    /** Passphrase BSrE — JANGAN disimpan di basis data atau log. */
+    TTE_PASSWORD: z.string().optional(),
+    TTE_SSL: z.string().trim().optional(),
+
+    /** Kunci API untuk endpoint `/api/eksternal/*` (minimal 16 karakter). */
+    EKSTERNAL_API_KEY: z
+      .string()
+      .trim()
+      .min(16, "EKSTERNAL_API_KEY minimal 16 karakter.")
+      .optional()
+      .transform((value) => value || undefined),
+
     // --- Seeder (opsional; hanya dibaca oleh `npm run db:seed`) ---------------
     // Divalidasi di sini agar nilai yang salah ketahuan sebelum menyentuh data.
     SEED_ADMIN_USERNAME: z.string().min(3).optional(),

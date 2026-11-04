@@ -11,6 +11,7 @@ import {
   outgoingLetters,
   residents,
 } from "@/db/schema";
+import { ARSIP_MAKS_EKSPOR, ARSIP_PER_HALAMAN } from "@/features/surat/domain/arsip-nomor";
 import type { LetterStatus, SuratDetail, SuratListRow } from "@/features/surat/domain/surat";
 
 export interface ListSuratParams {
@@ -44,6 +45,7 @@ const listColumns = {
   verifikasiKades: letters.verifikasiKades,
   logVerifikasi: letters.logVerifikasi,
   catatanVerifikasi: letters.catatanVerifikasi,
+  tte: letters.tte,
 };
 
 function buildWhere(villageId: number, search: string, status: LetterStatus | null): SQL {
@@ -117,6 +119,7 @@ export async function getSurat(villageId: number, id: number): Promise<SuratDeta
     .select({
       ...listColumns,
       content: letters.content,
+      tteFile: letters.tteFile,
       verificationToken: letters.verificationToken,
     })
     .from(letters)
@@ -250,10 +253,15 @@ export async function issueSuratRecord(
  * Hanya dipanggil dari jalur TTE yang berhasil; surat terbit tanpa TTE
  * membiarkan kolom ini `null` (lihat domain/tte.ts).
  */
-export async function setSuratTte(villageId: number, id: number, nilai: boolean): Promise<void> {
+export async function setSuratTte(
+  villageId: number,
+  id: number,
+  nilai: boolean,
+  berkas: string | null = null,
+): Promise<void> {
   await db
     .update(letters)
-    .set({ tte: nilai })
+    .set({ tte: nilai, tteFile: nilai ? berkas : null })
     .where(and(eq(letters.villageId, villageId), eq(letters.id, id)));
 }
 
@@ -282,6 +290,7 @@ export async function findSuratByTokenHash(
       purpose: letters.purpose,
       nilaiIsian: letters.nilaiIsian,
       content: letters.content,
+      tteFile: letters.tteFile,
       verificationToken: letters.verificationToken,
       createdAt: letters.createdAt,
       issuedAt: letters.issuedAt,
@@ -290,6 +299,7 @@ export async function findSuratByTokenHash(
       verifikasiKades: letters.verifikasiKades,
       logVerifikasi: letters.logVerifikasi,
       catatanVerifikasi: letters.catatanVerifikasi,
+      tte: letters.tte,
     })
     .from(letters)
     .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
@@ -447,9 +457,48 @@ export async function suratNumberExistsWithAgenda(
   return Boolean(rowOutgoing);
 }
 
+/**
+ * Cari surat terbit berdasarkan nomor (API eksternal).
+ *
+ * Hanya metadata yang aman dibagikan; data pribadi pemohon tidak ikut.
+ */
+export async function findSuratByNumber(
+  villageId: number,
+  number: string,
+): Promise<{
+  id: number;
+  number: string;
+  typeName: string;
+  status: LetterStatus;
+  letterDate: string;
+  issuedAt: Date | null;
+  tte: boolean | null;
+} | null> {
+  const [row] = await db
+    .select({
+      id: letters.id,
+      number: letters.number,
+      typeName: letters.typeName,
+      status: letters.status,
+      letterDate: letters.letterDate,
+      issuedAt: letters.issuedAt,
+      tte: letters.tte,
+    })
+    .from(letters)
+    .where(and(eq(letters.villageId, villageId), eq(letters.number, number)))
+    .limit(1);
+
+  if (!row || !row.number) return null;
+  return { ...row, number: row.number };
+}
+
 export interface ListLetterNumberArchiveParams {
   q?: string;
   year?: number;
+  typeId?: number;
+  classificationId?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 /** Daftar nomor terbit yang tetap dipertahankan meski surat sumber dihapus. */
@@ -469,7 +518,15 @@ export async function listLetterNumberArchive(
   if (params.year !== undefined) {
     filters.push(eq(letterNumberArchive.year, params.year));
   }
+  if (params.typeId !== undefined) {
+    filters.push(eq(letterNumberArchive.typeId, params.typeId));
+  }
+  if (params.classificationId !== undefined) {
+    filters.push(eq(letterNumberArchive.classificationId, params.classificationId));
+  }
 
+  const pageSize = Math.min(Math.max(params.pageSize ?? ARSIP_PER_HALAMAN, 1), ARSIP_MAKS_EKSPOR);
+  const page = Math.max(params.page ?? 1, 1);
   const where = and(...filters) ?? eq(letterNumberArchive.villageId, -1);
   const [rows, totalRows] = await Promise.all([
     db
@@ -477,11 +534,12 @@ export async function listLetterNumberArchive(
       .from(letterNumberArchive)
       .where(where)
       .orderBy(desc(letterNumberArchive.issuedAt), desc(letterNumberArchive.id))
-      .limit(200),
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
     db.select({ value: count() }).from(letterNumberArchive).where(where),
   ]);
 
-  return { rows, total: totalRows[0]?.value ?? 0 };
+  return { rows, total: totalRows[0]?.value ?? 0, page, pageSize };
 }
 
 // Verifikasi berjenjang

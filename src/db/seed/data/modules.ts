@@ -208,6 +208,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "persuratan",
   },
+  {
+    slug: "tte",
+    name: "TTE / BSrE",
+    url: "/persuratan/tte",
+    icon: "pen-tool",
+    sortOrder: 8,
+    isGroup: false,
+    parentSlug: "persuratan",
+  },
 
   {
     slug: "bantuan",

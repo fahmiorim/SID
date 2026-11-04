@@ -375,6 +375,8 @@ export const jenisSuratFormSchema = z.object({
     .trim()
     .min(1, "Badan surat wajib diisi.")
     .max(20000, "Maksimal 20.000 karakter."),
+  /** Badan surat alternatif untuk varian template (opsional). */
+  templateBodyAlt: z.string().trim().max(20000).optional().default(""),
   /** JSON daftar isian dinamis (lihat `domain/isian.ts`). */
   formIsian: z.string().trim().max(20000).optional().default("[]"),
   /** JSON daftar id syarat surat. */
@@ -396,6 +398,10 @@ export const jenisSuratFormSchema = z.object({
     .optional()
     .default(1),
   sortOrder: z.coerce.number().int().min(0).max(9999).optional().default(0),
+  /** Varian template aktif (mis. default, landscape, compact). */
+  templateVariant: z.string().trim().max(50).optional().default("default"),
+  /** JSON konfigurasi layout: margin, orientasi, ukuran, header/footer, posisi QR, TTD, stempel. */
+  layoutConfig: z.string().trim().max(5000).optional().default("{}"),
 });
 export type JenisSuratInput = z.infer<typeof jenisSuratFormSchema>;
 
@@ -479,6 +485,8 @@ export interface JenisSuratDTO {
   classificationId: number | null;
   classificationName: string | null;
   templateBody: string;
+  /** Badan surat alternatif untuk varian template (opsional). */
+  templateBodyAlt: string | null;
   /** JSON daftar isian dinamis jenis surat ini. */
   formIsian: string | null;
   /** JSON daftar id syarat surat yang wajib dilengkapi. */
@@ -488,6 +496,10 @@ export interface JenisSuratDTO {
   numberFormat: string;
   validityMonths: number;
   sortOrder: number;
+  /** Varian template aktif (mis. default, landscape, compact). */
+  templateVariant: string | null;
+  /** JSON konfigurasi layout: margin, orientasi, ukuran, header/footer, posisi QR, TTD, stempel. */
+  layoutConfig: string | null;
 }
 
 export interface SuratListRow {
@@ -512,10 +524,14 @@ export interface SuratListRow {
   verifikasiKades: boolean | null;
   logVerifikasi: string | null;
   catatanVerifikasi: string | null;
+  /** Surat sudah ditandatangani elektronik (BSrE). */
+  tte: boolean | null;
 }
 
 export interface SuratDetail extends SuratListRow {
   content?: string | null;
+  /** Jalur relatif berkas PDF hasil TTE (privat). */
+  tteFile: string | null;
   /**
    * Token mentah untuk tautan verifikasi publik.
    *

@@ -11,6 +11,10 @@ import {
   type LaporanDokumenInput,
 } from "@/features/keuangan/domain/laporan-dokumen";
 import {
+  validasiImporDokumen,
+  type ImporDokumenItem,
+} from "@/features/keuangan/domain/laporan-dokumen-impor";
+import {
   adaLaporanSama,
   deleteLaporanDokumen,
   findLaporanDokumen,
@@ -193,4 +197,87 @@ export async function deleteLaporanKeuanganDokumen(id: number) {
   await deleteLaporanDokumen(villageId, id);
   await hapusBerkasLaporan(row.jalurFile);
   return { id };
+}
+
+/** Satu berkas + metadata yang sudah dibaca dari `FormData` untuk diimpor. */
+export interface ImporDokumenBerkasInput {
+  nama: string;
+  /** Tipe MIME berkas. */
+  mime: string;
+  isi: Uint8Array;
+  judul: string;
+  jenis: string;
+  tahun: number;
+  semester: number;
+}
+
+/**
+ * Impor banyak dokumen laporan periodik sekaligus.
+ *
+ * Seluruh metadata divalidasi di domain lebih dulu; bila ada yang gagal, impor
+ * dibatalkan seluruhnya (tak ada berkas tersimpan). Keunikan (jenis, tahun,
+ * semester) diperiksa terhadap arsip yang sudah ada, dan berkas yang telanjur
+ * tersimpan dibersihkan bila penyisipan baris gagal di tengah jalan.
+ */
+export async function imporDokumenLaporan(input: { berkas: ImporDokumenBerkasInput[] }) {
+  const user = await requirePermission(LAPORAN_KEUANGAN_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  const items: ImporDokumenItem[] = input.berkas.map((it) => ({
+    nama: it.nama,
+    ukuran: it.isi.byteLength,
+    mime: it.mime,
+    judul: it.judul,
+    jenis: it.jenis,
+    tahun: it.tahun,
+    semester: it.semester,
+  }));
+
+  const validasi = validasiImporDokumen(items);
+  if (!validasi.ok) {
+    const gagal = validasi.items.filter((item) => !item.ok);
+    const detail = gagal.map((item) => `${item.nama}: ${item.pesan}`).join("; ");
+    throw validationError(detail || validasi.pesan || "Dokumen impor tidak valid.");
+  }
+
+  // Tolak dokumen yang periodenya sudah ada di arsip sebelum menyimpan apa pun.
+  const konflik: string[] = [];
+  for (const item of validasi.items) {
+    if (await adaLaporanSama(villageId, item.jenis, item.tahun, item.semester)) {
+      konflik.push(`${item.nama} (${item.tahun} Semester ${item.semester})`);
+    }
+  }
+  if (konflik.length > 0) {
+    throw conflict(`Dokumen untuk periode berikut sudah ada: ${konflik.join(", ")}.`);
+  }
+
+  const tersimpan: string[] = [];
+  try {
+    for (const [index, item] of validasi.items.entries()) {
+      const berkas = input.berkas[index];
+      if (!berkas) continue;
+      const namaAman = berkasLaporanAman(berkas.nama);
+      const relatif = jalurRelatifLaporan(villageId, item.tahun, namaAman);
+
+      await simpanBerkasLaporan(relatif, berkas.isi);
+      tersimpan.push(relatif);
+
+      await insertLaporanDokumen(villageId, {
+        tipe: item.jenis,
+        judul: item.judul,
+        tahun: item.tahun,
+        semester: item.semester,
+        namaFile: berkas.nama,
+        jalurFile: relatif,
+        ukuranFile: berkas.isi.byteLength,
+        createdBy: user.id,
+      });
+    }
+  } catch (error) {
+    // Rollback berkas yang telanjur tersimpan agar tidak ada berkas yatim.
+    for (const relatif of tersimpan) await hapusBerkasLaporan(relatif);
+    throw error;
+  }
+
+  return { berhasil: validasi.items.length };
 }

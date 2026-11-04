@@ -1,14 +1,11 @@
-import { getSuratPrintDataWarga } from "@/features/surat/application/surat-use-cases";
-import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
-import { buildSuratPdf } from "@/features/surat/infrastructure/surat-pdf";
+import { getSuratPdfBytesWarga } from "@/features/surat/application/surat-use-cases";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
-import { getRequestOrigin } from "@/lib/request-origin";
 
 /**
  * PDF surat untuk warga pemilik.
  *
- * `getSuratPrintDataWarga` membatasi surat pada `residentId` sesi dan hanya
+ * `getSuratPdfBytesWarga` membatasi surat pada `residentId` sesi dan hanya
  * status `issued`. Parameter `id` adalah id surat, bukan id permohonan.
  */
 export async function GET(
@@ -26,21 +23,7 @@ export async function GET(
   }
 
   try {
-    const { surat, jenis, desa, content } = await getSuratPrintDataWarga(suratId);
-    const origin = await getRequestOrigin();
-    const verificationUrl = surat.verificationToken
-      ? buildVerificationUrl(origin, surat.verificationToken)
-      : null;
-
-    const pdf = await buildSuratPdf({
-      desa,
-      jenisNama: jenis.name,
-      nomor: surat.number,
-      tanggal: surat.letterDate,
-      content,
-      verificationUrl,
-    });
-
+    const { surat, pdf } = await getSuratPdfBytesWarga(suratId);
     const filename = `surat-${(surat.number ?? String(surat.id)).replace(/[^a-zA-Z0-9._-]+/g, "-")}.pdf`;
 
     return new Response(Buffer.from(pdf), {

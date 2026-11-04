@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, MoreHorizontal, Pencil, Send, Trash2 } from "lucide-react";
+import { AlertCircle, Loader2, MoreHorizontal, Pencil, Send, Trash2, Upload } from "lucide-react";
 import { useActionState, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -28,6 +28,9 @@ import { createIdleActionState, idleActionState } from "@/lib/action-state";
 
 import { deleteSuratKeluarAction, tambahEkspedisiSuratKeluarAction } from "../agenda-actions";
 import { SuratKeluarFormDialog } from "./surat-keluar-form-dialog";
+
+const TERIMA_BERKAS = "image/jpeg,image/png,image/webp,application/pdf";
+const MAKS_BERKAS = 5;
 
 interface SuratKeluarRowActionsProps {
   surat: SuratKeluarDTO;
@@ -105,12 +108,12 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
       />
 
       <AlertDialog open={ekspedisiOpen} onOpenChange={setEkspedisiOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="sm:max-w-xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Catat ekspedisi surat keluar</AlertDialogTitle>
             <AlertDialogDescription>Tambahkan data pengiriman surat keluar.</AlertDialogDescription>
           </AlertDialogHeader>
-          <form action={ekspedisiAction} className="space-y-3">
+          <form action={ekspedisiAction} className="space-y-3" encType="multipart/form-data">
             <input type="hidden" name="outgoingLetterId" value={surat.id} />
             <div className="space-y-2">
               <Label htmlFor={`tgl-kirim-${surat.id}`}>Tanggal kirim</Label>
@@ -132,6 +135,19 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
               <Label htmlFor={`catatan-keluar-${surat.id}`}>Catatan</Label>
               <Input id={`catatan-keluar-${surat.id}`} name="note" />
             </div>
+            <div className="space-y-2">
+              <Label>Lampiran (maks. {MAKS_BERKAS} berkas)</Label>
+              <Input
+                type="file"
+                name="lampiran"
+                accept={TERIMA_BERKAS}
+                multiple
+                aria-describedby={`lampiran-desc-keluar-${surat.id}`}
+              />
+              <p id={`lampiran-desc-keluar-${surat.id}`} className="text-xs text-muted-foreground">
+                Format: JPG, PNG, WEBP, atau PDF. Maksimal 10 MB per berkas.
+              </p>
+            </div>
             {ekspedisiState.status === "error" ? (
               <Alert variant="destructive">
                 <AlertDescription>{ekspedisiState.message}</AlertDescription>
@@ -142,8 +158,12 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
                 Batal
               </AlertDialogCancel>
               <Button type="submit" disabled={ekspedisiPending}>
-                {ekspedisiPending ? <Loader2 className="animate-spin" /> : null}
-                Simpan ekspedisi
+                {ekspedisiPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Upload className="size-4" />
+                )}
+                {ekspedisiPending ? "Menyimpan…" : "Simpan ekspedisi"}
               </Button>
             </AlertDialogFooter>
           </form>
