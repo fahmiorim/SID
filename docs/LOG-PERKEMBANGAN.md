@@ -3,6 +3,45 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-04 — Rute IDM kanonis, halaman status jujur, lapisan domain
+
+- `/idm` dialihkan permanen ke halaman kanonis `/desa/idm-sdgs`; komentar
+  `src/lib/public-paths.ts` diperbarui.
+- `/pengaturan/notifikasi` tidak lagi 404: menampilkan status "belum tersedia".
+  `/pengaturan/plugin` dan `/pengaturan/sinkronisasi` tidak lagi menampilkan
+  plugin/log contoh; keduanya menyatakan integrasinya belum tersedia.
+- Pelanggaran lapisan domain dihapus: konstanta mutasi penduduk dipindah ke
+  `src/lib/resident-mutation.ts`, sehingga domain penduduk tidak lagi mengimpor
+  `@/db/schema`.
+- Dokumen diperbarui: `PARITAS-OPENSID.md` (OS-GOV-006, OS-WEB-013,
+  OS-OPS-005/008/009, catatan umum), `RENCANA-PERBAIKAN.md` (rute/halaman +
+  rencana penutupan gap non-E2E), `ARCHITECTURE.md` (domain 0 pelanggaran).
+- Verifikasi: `npm run typecheck`, `npm run lint`, `npm run format:check`, dan
+  `npm run test` (898/898 lulus) — semuanya lulus. E2E tidak dijalankan.
+
+## 2026-11-04 — Audit konsistensi dokumen vs kode
+
+- Audit membandingkan seluruh dokumen aktif dengan kode dan hasil eksekusi.
+  Register 113 ID tetap **21 ✅ / 90 🟡 / 1 🔴 / 1 ⚪** (baris register,
+  ringkasan, dan `RENCANA-PERBAIKAN.md` konsisten); angka 22 ✅ / 89 🟡 pada
+  entri di bawah dikoreksi.
+- Koreksi klaim: `/pengaturan/notifikasi` ternyata `notFound()` (404), bukan
+  placeholder; `/pengaturan/plugin` dan `/pengaturan/sinkronisasi` memakai data
+  contoh hardcoded; halaman publik IDM ada di `/idm` (belum tertaut menu),
+  bukan `/desa/idm`; polygon sudah dirender di `/desa/peta`; adapter TTE
+  mendukung `nonaktif`/`manual`/`bsre` dengan klien jaringan `null`; unggah PDF
+  `/konten/dokumen` sudah ada; rute ekspor PDF statistik sudah ada.
+- Koreksi bukti: E2E DPT ada di `tests/rtm-dpt.e2e.ts` (bukan
+  `publik-verifikasi.e2e.ts`); `import type` infrastruktur berjumlah 4 (bukan
+  7); satu file domain masih mengimpor `@/db/schema`.
+- Dokumen yang diperbarui: `PARITAS-OPENSID.md`, `RENCANA-PERBAIKAN.md`,
+  `ARCHITECTURE.md`, `KATALOG-FITUR-OPENSID.md`, `README.md`,
+  `LOG-PERKEMBANGAN.md`, dan `src/lib/docs-status.ts`.
+- Verifikasi: `npm run typecheck`, `npm run lint`, dan `npm run format:check`
+  lulus; `npm run test` run pertama 897/898 (timeout flaky di
+  `spreadsheet.test.ts`), run ulang 898/898 lulus. Suite E2E **tidak**
+  dijalankan pada mesin ini.
+
 ## 2026-11-04 — Penutupan rute orphan, CRUD modul yang belum ada
 
 - Quality gate: debug `console.log` di alur dokumen/media dihapus, argumen
@@ -20,8 +59,8 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
   dengan PIN sekali tampil).
 - UI mati diperbaiki: filter/pencarian lapak publik, tombol ubah/hapus
   pemilihan, serta tautan menu publik untuk lapak dan pemilihan.
-- Status paritas: 22 ✅ / 89 🟡 / 1 🔴 / 1 ⚪. Sisa 🔴: `OS-OPS-012` (API
-  eksternal).
+- Status paritas: 21 ✅ / 90 🟡 / 1 🔴 / 1 ⚪ (dikoreksi pada audit 4 Nov 2026;
+  sebelumnya tertulis 22 ✅ / 89 🟡). Sisa 🔴: `OS-OPS-012` (API eksternal).
 
 ## 2026-10-29 — Audit ulang klaim dokumen vs kode
 

@@ -33,8 +33,8 @@ OpenSID diperbarui, lakukan inventaris ulang sebelum mengubah status paritas.
 - Katalog ini mendefinisikan **cakupan yang wajib dipetakan**; baris tanpa status
   berarti bukan berarti sudah selesai.
 - `OS-xxx` adalah ID stabil untuk issue, milestone, test, dan review.
-- Register status awal `⚪` di `PARITAS-OPENSID.md` berarti ID sudah terdaftar
-  tetapi belum direkonsiliasi per bukti; itu bukan klaim fitur belum tersedia.
+- Status `⚪` di `PARITAS-OPENSID.md` berarti ID sengaja berada di luar scope
+  implementasi (mis. `OS-POP-009`), bukan fitur yang sudah selesai.
 - Fitur premium, modul tambahan, API, dan integrasi tetap masuk katalog. Jika
   perilaku provider tidak bisa direplikasi tanpa layanan eksternal, implementasi
   memakai adapter dengan mode nonaktif/manual yang terdokumentasi.

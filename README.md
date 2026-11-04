@@ -126,7 +126,8 @@ Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
 ## Autentikasi & Hak Akses
 
 - **Staf login memakai username** (email opsional) — sesuai kebiasaan operator
-  desa. **Warga login memakai NIK + PIN 6 digit**; akun dibuat operator.
+  desa. **Warga login memakai NIK + PIN 6 digit**; akun dapat diajukan mandiri
+  lewat `/desa/registrasi-warga` lalu disetujui operator, atau dibuat operator.
 - Sesi disimpan sebagai cookie `HttpOnly` berlaku **7 hari**. Login dibatasi
   5 percobaan/menit per IP.
 - **RBAC** memakai tabel sendiri: `modules` (katalog modul/menu), `roles`

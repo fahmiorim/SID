@@ -79,7 +79,7 @@ export function createDocsStatus(now = new Date()): DocsStatus {
         name: "RENCANA-PERBAIKAN.md",
         role: "Roadmap dan milestone",
         status:
-          "Quality gate dasar lulus; CI menjalankan migrasi, seed, check, build, smoke, dan E2E browser",
+          "Quality gate dijalankan manual dan riwayatnya ada di LOG; CI menjalankan migrasi, seed, check, build, smoke, dan E2E browser",
       },
       {
         name: "ARCHITECTURE.md",

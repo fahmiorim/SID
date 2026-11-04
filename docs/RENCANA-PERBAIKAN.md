@@ -24,7 +24,7 @@ di `/home/super/Projects/opensid`.
 |---|---|---|
 | 1 | Web publik di `/`, admin di `/beranda` | Sesuai keputusan sebelumnya |
 | 2 | Konten berita memakai **HTML + sanitizer** | `sanitize-html`, allowlist ketat |
-| 3 | Akun warga **dibuat operator** | Sesuai keputusan; tanpa self-register |
+| 3 | Akun warga **diajukan mandiri, disetujui operator** | Form `/desa/registrasi-warga`; operator menyetujui di `/penduduk/registrasi`; PIN tampil sekali |
 | 4 | Login warga **NIK + PIN** | Meniru alur OpenSID; PIN 6 digit, bisa diganti |
 | 5 | Tema publik dipasang di build, opsi diubah dari admin | Next.js tidak aman memuat kode tema saat runtime |
 | 6 | Multi-desa: subdomain `*.desa.id` + domain kustom | Aktivasi penuh setelah domain tunggal stabil |
@@ -34,6 +34,54 @@ di `/home/super/Projects/opensid`.
 Estimasi terdahulu hanya berlaku untuk target parsial. Estimasi penyelesaian
 seluruh katalog tidak ditentukan sebelum inventaris detail dan acceptance
 criteria per ID selesai.
+
+---
+
+## Rencana Penutupan Gap Non-E2E (4 November 2026)
+
+Tujuan: **setiap ID katalog hanya menyisakan gap E2E**. Seluruh pekerjaan
+fungsional dikerjakan lebih dulu; penambahan dan eksekusi E2E ditunda ke fase
+terpisah setelah batch non-E2E selesai.
+
+**Gap non-E2E** meliputi: UI/CRUD yang belum ada, aksi/use case, otorisasi atau
+scoping tenant, keluaran (PDF/CSV/print/QR), impor/unggah, laporan/rekap,
+integrasi/adapter, serta unit/integration test yang belum ada. **Gap E2E**
+adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
+
+**Aturan kerja:**
+
+1. Sebelum batch dimulai, salin gap per-ID dari `PARITAS-OPENSID.md`.
+2. Kerjakan seluruh gap non-E2E; jangan menambah atau menjalankan E2E.
+3. Setelah batch, perbarui baris PARITAS. Jika hanya E2E tersisa, tulis
+   `Gap: E2E`; jangan menaikkan status ke ✅ sebelum E2E tersedia.
+4. Sertakan test non-E2E (unit, integrasi DB, HTTP smoke) pada perubahan.
+5. Batch selesai bila seluruh ID di dalamnya lolos checklist "E2E-only":
+   UI/aksi ada; CRUD/keluaran lengkap; otorisasi + tenant diuji non-E2E;
+   impor/unggah/laporan yang diminta katalog ada; baris PARITAS tidak lagi
+   menyebut gap selain E2E.
+
+Saat ini ada **91 ID** dengan gap (90 🟡 + 1 🔴). Dua ID sudah E2E-only dan
+tidak masuk batch: `OS-SUR-011` dan `OS-WGA-003`.
+
+| Batch | ID | Fokus non-E2E | Kriteria selesai |
+|---|---|---|---|
+| 0 — Fondasi & kejujuran | Lintas-ID: `OS-GOV-006`, `OS-WEB-013`, `OS-OPS-005`, `OS-OPS-008`, `OS-OPS-009` | Rute IDM kanonis (`/idm` dialihkan), halaman status tanpa data contoh, pelanggaran lapisan domain | **Selesai 4 Nov 2026** untuk bagian yang tercantum; ID tetap 🟡 karena gap fungsional/E2E lain |
+| 1 — Persuratan & TTE | `OS-SUR-001`–`OS-SUR-010`, `OS-SUR-012`–`OS-SUR-014`; `OS-OPS-012` | Varian template/PDF, QR/stempel, syarat, klasifikasi, disposisi/ekspedisi, verifikasi per peran, TTE client, API eksternal | Semua alur/keluaran ada + test non-E2E |
+| 2 — Keuangan, aset, bumindes | `OS-FIN-001`–`OS-FIN-004`, `OS-FIN-006`–`OS-FIN-013` | Impor/template APBDes, varian laporan, pembukuan manual, impor dokumen, laporan aset, format buku resmi | Keluaran dan impor ada + test |
+| 3 — Pemerintahan & kependudukan | `OS-GOV-003`–`OS-GOV-007`, `OS-GOV-009`; `OS-POP-006`, `OS-POP-010`–`OS-POP-013` | SOTK/cetak, laporan lembaga, keluaran IDM/SDGs, kandidat/hasil pemilihan, buku pembangunan, impor DTKS, PDF statistik, kartu/impor peserta | Laporan/keluaran ada + test |
+| 4 — GIS & pertanahan | `OS-WIL-002`–`OS-WIL-008` | Test use case/repository, CRUD admin pertanahan, cetak peta/layer | Test non-E2E ada; CRUD lengkap |
+| 5 — Web publik | `OS-WEB-001`–`OS-WEB-013`, `OS-WEB-015`–`OS-WEB-018` | Agenda, pencarian berita/galeri, SOTK, publikasi anggota, laporan, komentar/pengunjung, sosmed, teks berjalan, URL sitemap dinamis | Keluaran/UI ada + test |
+| 6 — Layanan warga | `OS-WGA-001`–`OS-WGA-002`, `OS-WGA-004`–`OS-WGA-007`, `OS-WGA-009`–`OS-WGA-011` | Anti-abuse/verifikasi akun, pesan dua arah, UI verifikasi warga, lapak/produk warga, izin + rekap kehadiran | Alur warga ada + test integrasi |
+| 7 — Analisis & survei | `OS-ANA-001`–`OS-ANA-006` | Parameter/bobot/skoring, klasifikasi, laporan formal, pengisian mandiri publik, integrasi formulir eksternal | Skoring/laporan ada + test |
+| 8 — Modul tambahan & sistem | `OS-MOD-001`, `OS-MOD-003`–`OS-MOD-005`; `OS-OPS-002`–`OS-OPS-009`, `OS-OPS-011` | Kiosk anjungan, otomasi kehadiran, entitas pelapak/keranjang, langganan, notifikasi, plugin, sinkronisasi, API publik/inventaris/surat | Modul/alur/API ada + test |
+| E2E (ditunda) | Seluruh ID yang masih 🟡 hanya karena E2E | Penambahan/perluasan uji browser | Dikerjakan setelah batch 0–8 |
+
+**Urutan eksekusi:** 0 → 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → E2E. Batch 1–3
+didahulukan karena menutup keluaran inti yang menahan banyak ID; batch 4–8
+menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
+
+**Progres:** Batch 0 selesai 4 Nov 2026 (IDM/status pages + pelanggaran lapisan
+domain). Batch berikutnya: **Batch 1 — Persuratan & TTE**.
 
 ---
 
@@ -248,11 +296,13 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [x] `/desa/status-des`: identitas desa + ringkasan aset lewat use case
       `getInventarisPublik()` dan slot tema `statusDesa`; bukan query DB
       langsung. Smoke test 200.
-- [x] `/desa/idm-sdgs` dan `/desa/idm` memakai data IDM/SDGs nyata melalui
-      `ringkasanIdmPublik()`; admin mengelola indikator dan capaian SDGs.
-      Bukti: `features/idm/domain/idm.test.ts`, `tests/idm.e2e.ts`, migrasi
-      `0061_create_idm_sdgs.sql`. Keluaran laporan dan E2E isolasi tenant masih
-      perlu dilengkapi (lihat `OS-GOV-006` / `OS-WEB-013`).
+- [x] `/desa/idm-sdgs` adalah halaman publik kanonis; rute lama `/idm`
+      dialihkan permanen ke sana. Admin mengelola indikator dan capaian SDGs di
+      `/desa/idm` dan `/desa/idm-sdgs`. Bukti:
+      `features/idm/domain/idm.test.ts`, `tests/idm.e2e.ts` (CRUD admin; publik
+      `/desa/idm-sdgs`), migrasi `0061_create_idm_sdgs.sql`. Keluaran laporan
+      dan E2E isolasi tenant masih perlu dilengkapi (lihat `OS-GOV-006` /
+      `OS-WEB-013`).
 - [x] `/desa/surat`: daftar jenis surat dari DB lewat
       `listJenisSuratPublik()` + slot tema `surat`; tautan verifikasi menuju
       halaman form token yang valid. Smoke test 200.
@@ -261,14 +311,14 @@ Mengacu `donjo-app/controllers/fweb/*`:
       pertanyaan/responden dan daftar pertanyaan. Pengisian mandiri belum
       tersedia. Smoke test 200.
 - [x] `/desa/pembangunan` dan `/desa/peta` — memakai data nyata Fase 3B/3C
-      (pembangunan + detail + cetak; peta Leaflet area/garis/titik).
+      (pembangunan + detail + cetak; peta Leaflet area/garis/titik/polygon).
       (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
 - [ ] `/desa/suplemen` masih menunggu backend publik. Halaman publik lapak
       (`/desa/lapak`), pemilihan (admin `/pemerintahan/pemilihan`, publik
       `/desa/pemilihan`), dan registrasi akun warga
-      (`/desa/registrasi-warga`) sudah memakai data/aksi nyata. `/desa/idm` dan
-      `/desa/idm-sdgs` sudah memakai data IDM/SDGs. Lihat status tiap ID di
-      `PARITAS-OPENSID.md`.
+      (`/desa/registrasi-warga`) sudah memakai data/aksi nyata. `/desa/idm-sdgs`
+      (publik kanonis; `/idm` dialihkan ke sana; admin: `/desa/idm`) memakai
+      data IDM/SDGs. Lihat status tiap ID di `PARITAS-OPENSID.md`.
 
 ### 1F. CMS konten
 
@@ -516,7 +566,7 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       halaman `/persuratan/surat-dinas` (cari, CRUD, unggah/buka/hapus
       lampiran media kategori `umum`, hapus berkas ikut membersihkan storage).
       **Cetak via browser** tersedia di halaman agenda. **Gap: E2E belum ada.**
-- [x] TTE/BSRE: adapter mode nonaktif. Scaffolding di `domain/tte.ts`
+- [x] TTE/BSRE: adapter mode `nonaktif`/`manual`/`bsre` (default nonaktif). Scaffolding di `domain/tte.ts`
       (murni + 7 test): konfigurasi dari env `TTE_*` (`parseKonfigTte`,
       mode `nonaktif`/`manual`/`bsre` — nilai asing jatuh aman ke nonaktif),
       tipe adapter `KlienTte` siap ditukar dengan klien jaringan nanti.
@@ -661,7 +711,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 ### 3E. Dokumen, produk hukum, dan informasi publik (2 minggu)
 
 - [x] `OS-GOV-010`: `/konten/dokumen` + publik `/desa/dokumen` (CRUD metadata,
-      berkas/tautan, publikasi, E2E). Sisa: unggah berkas lewat UI, embed/peraturan,
+      berkas/tautan, unggah PDF lewat UI, publikasi, E2E). Sisa: embed/peraturan
       dan alur arsip.
 - [x] `OS-SUR-011`: surat dinas + arsip — selesai di Fase 2E; implementasi ada
       di `/persuratan/surat-dinas`.
@@ -726,10 +776,11 @@ tidak ada kategori yang dikeluarkan dari target akhir.
       status `✅` tanpa bukti yang dapat dijalankan.
 - [x] Halaman minimal/orphan yang punya fitur nyata (`buku-tamu`, `arsip`,
       `kehadiran`, `lapak`, `pelanggan`, `anjungan`, `analisis`, `pemilihan`,
-      `registrasi-warga`) sudah terdaftar di modul/menu/RBAC. Sisa: putuskan
-      `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`,
-      `/persuratan/tte`, dan `/docs-status` (alihkan ke `notFound()` atau
-      implementasikan).
+      `registrasi-warga`) sudah terdaftar di modul/menu/RBAC. Halaman
+      `/pengaturan/notifikasi`, `/pengaturan/plugin`, dan
+      `/pengaturan/sinkronisasi` kini menyatakan fiturnya belum tersedia tanpa
+      data contoh; `/persuratan/tte` read-only; `/docs-status` halaman
+      pengembangan.
 - [ ] Inventaris ulang source OpenSID lokal setelah setiap rilis acuan.
 - [ ] Uji unit, integrasi DB, HTTP smoke, E2E admin, E2E warga, E2E publik,
       isolasi tenant, migrasi DB kosong, dan build produksi lulus.
@@ -744,18 +795,21 @@ terkoneksi dengan modul admin yang sudah fungsi di Fase 2.
 - [x] `/desa/pembangunan` memakai data Fase 3C (+ detail + cetak).
 - [x] `/desa/pengaduan` memakai data Fase 3D (termasuk form kirim) — selesai
       di Fase 3D lebih awal (lihat §3D).
-- [x] `/desa/peta` memakai data Fase 3B (Leaflet area/garis/titik). Sisa: layer
-      polygon dan E2E.
-- [x] `/desa/dokumen` + produk hukum memakai Fase 3E. Sisa: unggah berkas dan embed.
+- [x] `/desa/peta` memakai data Fase 3B (Leaflet area/garis/titik/polygon).
+      Sisa: E2E.
+- [x] `/desa/dokumen` + produk hukum memakai Fase 3E. Sisa: embed/peraturan
+      (unggah PDF tersedia di `/konten/dokumen`).
 - [x] `/desa/statistik` + `/desa/apbdes` memakai use case publik. Sisa: finalisasi
       periodisasi dan E2E.
-- [x] `/desa/dpt` dan `/desa/kesehatan/*` memakai data; `/desa/idm` dan
-      `/desa/idm-sdgs` memakai use case IDM/SDGs (lihat `OS-GOV-006` dan
-      `OS-WEB-013`). `/desa/suplemen` masih menunggu backend publik.
+- [x] `/desa/dpt` dan `/desa/kesehatan/*` memakai data; `/desa/idm-sdgs`
+      (publik kanonis; `/idm` dialihkan) dan `/desa/idm` (admin) memakai use
+      case IDM/SDGs (lihat `OS-GOV-006` dan `OS-WEB-013`). `/desa/suplemen`
+      masih menunggu backend publik.
 - [x] `/desa/lapak` memakai data nyata dengan pencarian + filter kategori;
       sisa: entitas pelapak/produk terpisah dan keranjang.
-- [x] `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`
-      (halaman minimal/placeholder, belum ada implementasi fungsional). 
+- [x] `/pengaturan/plugin`, `/pengaturan/sinkronisasi`, dan
+      `/pengaturan/notifikasi` menampilkan status "belum tersedia" tanpa data
+      contoh. Belum ada implementasi fungsional.
 
 ## Fase 5 — Multi-Desa (4–6 minggu)
 
@@ -881,7 +935,12 @@ itu pekerjaan dapat dipecah berdasarkan domain tanpa melewati quality gate.
 
 Diperbarui 29 Oktober 2026 dari audit dokumen vs kode (angka & status
 diselaraskan kembali dengan route, halaman, test, dan E2E yang benar-benar ada).
-Urutan prioritas: web publik → admin berfungsi → paritas OpenSID → multi-desa.
+Audit konsistensi 4 November 2026 mengoreksi URL publik IDM, status halaman
+notifikasi/plugin/sinkronisasi, klaim unggah PDF dokumen, mode adapter TTE, dan
+asumsi akun warga. Tindak lanjut hari yang sama: `/idm` dialihkan permanen ke
+`/desa/idm-sdgs`, halaman status dibuat jujur, dan pelanggaran lapisan domain
+`@/db` dihapus. Urutan prioritas: web publik → admin berfungsi → paritas
+OpenSID → multi-desa.
 
 ---
 
@@ -902,9 +961,11 @@ Paritas harus dihitung dari seluruh ID katalog dan hanya boleh meningkat jika
 status per ID memiliki bukti UI, test, dan quality gate.
 
 **Catatan rute:** `/pengaturan/plugin`, `/pengaturan/notifikasi`, dan
-`/pengaturan/sinkronisasi` tetap belum menjadi modul operasional. `/desa/lapak`
-memakai data nyata (katalog + pencarian/filter); halaman IDM/SDGs juga memakai
-data. Admin pemilihan berada di `/pemerintahan/pemilihan`, sedangkan halaman
+`/pengaturan/sinkronisasi` menampilkan status "belum tersedia" tanpa data contoh;
+ketiganya belum menjadi modul operasional. `/desa/lapak` memakai data nyata
+(katalog + pencarian/filter); halaman IDM/SDGs memakai data (admin `/desa/idm`
+dan `/desa/idm-sdgs`, publik `/desa/idm-sdgs`; rute lama `/idm` dialihkan ke
+sana). Admin pemilihan berada di `/pemerintahan/pemilihan`, sedangkan halaman
 publiknya di `/desa/pemilihan`.
 
 Masalah kritis yang perlu diperbaiki sebelum lanjut:

@@ -111,7 +111,7 @@ Fitur yang sudah dibangun saat ini:
   *use case*, bukan *repository*.
   **Utang teknis terukur (per Nov 2026):** 38 baris impor runtime di 37 berkas
   `src/app/**` dan `src/features/*/presentation/**` masih langsung ke
-  `infrastructure`, ditambah 7 impor `import type`. Terbanyak: aksi & halaman
+  `infrastructure`, ditambah 4 impor `import type`. Terbanyak: aksi & halaman
   `kesehatan` (KIA, ibu hamil, pemantauan anak, posyandu), `media-storage`
   publik, `surat-pdf`/`keluarga-pdf`, `rbac-repository` di layout admin, dan
   `penduduk-repository` di halaman/ekspor. Angka ini harus **turun, bukan
@@ -119,7 +119,10 @@ Fitur yang sudah dibangun saat ini:
   menyalin pola impor baru dari berkas yang masih melanggar.
 - **`domain` tidak mengimpor lapisan atas atau I/O.** Dilarang (dan saat ini 0
   pelanggaran): `application`, `infrastructure`, `presentation`, `@/db`,
-  `server-only`, serta API Node. Yang **diizinkan dan lazim**: domain fitur lain
+  `server-only`, serta API Node. Konstanta lintas lapisan diletakkan di modul
+  murni `src/lib` (mis. `src/lib/resident-mutation.ts`) agar domain dan skema
+  memakai satu sumber tanpa melanggar batas. Yang **diizinkan dan lazim**:
+  domain fitur lain
   (`@/features/*/domain/*`, 46 baris — terbanyak `rbac/domain/resources` 32
   baris, `penduduk/domain` 8, `keuangan` 3, `publik` 3) dan primitif murni
   `src/lib/` (19 baris — `lib/forms` 15, `lib/spreadsheet` 3, `lib/errors` 1),
@@ -387,11 +390,14 @@ slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
 - Login NIK + PIN (6 digit) mengikuti perilaku OpenSID, bukan email/username.
   `username` akun warga = NIK; `email` internal diisi
   `<nik>.<villageId>@warga.desa.local` agar tetap unik lintas desa.
-- Akun warga dibuat operator (tanpa pendaftaran mandiri) lewat aksi baris tabel
-  penduduk. Aturan bisnisnya ada di
+- Akun warga dapat **diajukan mandiri** lewat `/desa/registrasi-warga` (NIK
+  harus cocok penduduk hidup desa, cegah duplikat/akun yang sudah ada) atau
+  dibuat operator lewat aksi baris tabel penduduk. Pengajuan disetujui/ditolak
+  operator di `/penduduk/registrasi`. Aturan bisnisnya ada di
   `features/warga/application/warga-use-cases.ts`: penduduk harus hidup, punya
   NIK 16 digit, dan belum punya akun. PIN 6 digit dibuat acak, ditampilkan
-  **sekali** di `KredensialWargaDialog`, lalu hanya hash yang tersimpan.
+  **sekali** di `KredensialWargaDialog` (termasuk setelah persetujuan
+  registrasi), lalu hanya hash yang tersimpan.
 - `users.resident_id` unik (satu akun per penduduk) + `users.must_change_pin`.
   Akun warga **tidak punya `roleId`**; otorisasinya memakai
   `requireWarga()`/`requireWargaAktif()` di `src/lib/dal.ts`, bukan matriks RBAC.

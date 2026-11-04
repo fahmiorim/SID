@@ -10,22 +10,18 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
+import { RESIDENT_MUTATION_TYPES } from "@/lib/resident-mutation";
+
 import { users } from "./auth";
 import { regions } from "./region";
 import { residents } from "./resident";
 import { villages } from "./village";
 
-export const RESIDENT_MUTATION_TYPES = ["birth", "death", "move_out", "move_in", "change"] as const;
-
-export type ResidentMutationType = (typeof RESIDENT_MUTATION_TYPES)[number];
-
-export const RESIDENT_MUTATION_TYPE_LABELS: Record<ResidentMutationType, string> = {
-  birth: "Kelahiran",
-  death: "Kematian",
-  move_out: "Pindah Keluar",
-  move_in: "Pindah Masuk/Datang",
-  change: "Perubahan Data",
-};
+export {
+  RESIDENT_MUTATION_TYPE_LABELS,
+  RESIDENT_MUTATION_TYPES,
+  type ResidentMutationType,
+} from "@/lib/resident-mutation";
 
 export const residentMutations = mysqlTable(
   "resident_mutations",

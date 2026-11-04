@@ -4,73 +4,55 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const metadata = { title: "Plugin" };
 
-const plugins = [
+/**
+ * Halaman status integrasi pihak ketiga.
+ *
+ * Registri plugin belum diimplementasikan. Jangan menampilkan plugin sebagai
+ * "aktif" di sini: modul bawaan (GIS, lapak, buku tamu, dst.) bukan plugin dan
+ * integrasi yang berjalan dikonfigurasi lewat environment masing-masing.
+ */
+const rencanaIntegrasi = [
   {
     nama: "SMS Gateway",
-    deskripsi: "Integrasi pengiriman SMS notifikasi",
-    status: "nonaktif" as const,
+    deskripsi: "Notifikasi SMS untuk warga dan operator",
   },
   {
     nama: "WhatsApp Gateway",
-    deskripsi: "Integrasi pengiriman WA notifikasi",
-    status: "nonaktif" as const,
+    deskripsi: "Notifikasi WhatsApp untuk warga",
   },
   {
     nama: "Email SMTP",
-    deskripsi: "Konfigurasi server email untuk notifikasi",
-    status: "nonaktif" as const,
-  },
-  { nama: "Peta GIS", deskripsi: "Modul pemetaan dan GIS desa", status: "aktif" as const },
-  { nama: "Lapak UMKM", deskripsi: "Modul jual beli produk warga", status: "aktif" as const },
-  {
-    nama: "Buku Tamu Digital",
-    deskripsi: "Pencatatan tamu desa elektronik",
-    status: "aktif" as const,
-  },
-  {
-    nama: "Anjungan Desa",
-    deskripsi: "Tampilan anjungan mandiri layanan desa",
-    status: "aktif" as const,
-  },
-  {
-    nama: "Kehadiran Perangkat",
-    deskripsi: "Absensi dan daftar hadir perangkat desa",
-    status: "aktif" as const,
+    deskripsi: "Server email kustom (saat ini email pengaduan memakai Resend)",
   },
 ];
 
 export default function PluginPage() {
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Plugin & Modul Tambahan"
-        description="Kelola plugin dan modul tambahan sistem"
-      />
+      <PageHeader title="Plugin & Modul Tambahan" description="Status integrasi pihak ketiga" />
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Plugin</CardTitle>
+          <CardTitle>Registri plugin belum tersedia</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Instalasi, aktivasi, dan konfigurasi plugin belum diimplementasikan. Daftar di bawah
+            hanya rencana integrasi; tidak ada plugin yang dapat diaktifkan dari halaman ini.
+          </p>
           <div className="space-y-3">
-            {plugins.map((plugin) => (
+            {rencanaIntegrasi.map((item) => (
               <div
-                key={plugin.nama}
+                key={item.nama}
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div>
-                  <p className="font-medium">{plugin.nama}</p>
-                  <p className="text-sm text-muted-foreground">{plugin.deskripsi}</p>
+                  <p className="font-medium">{item.nama}</p>
+                  <p className="text-sm text-muted-foreground">{item.deskripsi}</p>
                 </div>
-                <Badge variant={plugin.status === "aktif" ? "default" : "secondary"}>
-                  {plugin.status === "aktif" ? "Aktif" : "Nonaktif"}
-                </Badge>
+                <Badge variant="secondary">Belum tersedia</Badge>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Konfigurasi plugin lanjutan (API key, endpoint, dll) dikelola melalui environment
-            variables dan halaman pengaturan masing-masing modul.
-          </p>
         </CardContent>
       </Card>
     </div>

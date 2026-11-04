@@ -14,7 +14,7 @@ export const PUBLIC_PATHS = [
   // lewat email (`src/lib/auth.ts`).
   "/lupa-sandi",
   "/reset-sandi",
-  // Ringkasan IDM publik (rute lama; kanoniknya `/desa/idm-sdgs`).
+  // Rute lama IDM; dialihkan permanen ke kanonis `/desa/idm-sdgs`.
   "/idm",
   "/jajak-pendapat",
 ] as const;

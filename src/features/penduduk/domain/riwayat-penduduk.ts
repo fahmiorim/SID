@@ -1,11 +1,11 @@
 import { z } from "zod";
 
+import { optionalDigits, optionalIsoDate, optionalSelectId, optionalText } from "@/lib/forms";
 import {
   RESIDENT_MUTATION_TYPE_LABELS,
   RESIDENT_MUTATION_TYPES,
   type ResidentMutationType,
-} from "@/db/schema/resident-mutation";
-import { optionalDigits, optionalIsoDate, optionalSelectId, optionalText } from "@/lib/forms";
+} from "@/lib/resident-mutation";
 
 import { toCsv } from "./laporan-penduduk";
 import { LIFE_STATUSES } from "./penduduk";
