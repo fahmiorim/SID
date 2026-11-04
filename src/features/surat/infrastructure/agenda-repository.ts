@@ -3,7 +3,14 @@ import "server-only";
 import { and, desc, eq, like, max, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
-import { incomingLetters, letterClassifications, outgoingLetters } from "@/db/schema";
+import {
+  incomingLetterDispositions,
+  incomingLetters,
+  letterAgendaLogs,
+  letterClassifications,
+  outgoingLetters,
+  outgoingLetterShipments,
+} from "@/db/schema";
 import type {
   SuratKeluarDTO,
   SuratKeluarInput,
@@ -241,4 +248,119 @@ export async function deleteSuratKeluar(villageId: number, id: number): Promise<
   await db
     .delete(outgoingLetters)
     .where(and(eq(outgoingLetters.villageId, villageId), eq(outgoingLetters.id, id)));
+}
+
+export async function listDisposisiSuratMasuk(villageId: number, incomingLetterId: number) {
+  return db
+    .select()
+    .from(incomingLetterDispositions)
+    .where(
+      and(
+        eq(incomingLetterDispositions.villageId, villageId),
+        eq(incomingLetterDispositions.incomingLetterId, incomingLetterId),
+      ),
+    )
+    .orderBy(desc(incomingLetterDispositions.createdAt));
+}
+
+export async function tambahDisposisiSuratMasuk(
+  villageId: number,
+  incomingLetterId: number,
+  input: {
+    toUserId?: string | null;
+    toRole?: string | null;
+    instruction: string;
+    dueDate?: string | null;
+    note?: string | null;
+    dispatchedBy?: string | null;
+  },
+) {
+  const [row] = await db
+    .insert(incomingLetterDispositions)
+    .values({
+      villageId,
+      incomingLetterId,
+      toUserId: input.toUserId ?? null,
+      toRole: input.toRole ?? null,
+      instruction: input.instruction,
+      dueDate: input.dueDate ?? null,
+      note: input.note ?? null,
+      dispatchedBy: input.dispatchedBy ?? null,
+      status: "pending",
+    })
+    .$returningId();
+  return row?.id;
+}
+
+export async function listEkspedisiSuratKeluar(villageId: number, outgoingLetterId: number) {
+  return db
+    .select()
+    .from(outgoingLetterShipments)
+    .where(
+      and(
+        eq(outgoingLetterShipments.villageId, villageId),
+        eq(outgoingLetterShipments.outgoingLetterId, outgoingLetterId),
+      ),
+    )
+    .orderBy(desc(outgoingLetterShipments.sentDate), desc(outgoingLetterShipments.id));
+}
+
+export async function tambahEkspedisiSuratKeluar(
+  villageId: number,
+  outgoingLetterId: number,
+  input: {
+    sentDate: string;
+    recipient?: string | null;
+    deliveryMethod?: string | null;
+    trackingNo?: string | null;
+    note?: string | null;
+  },
+) {
+  const [row] = await db
+    .insert(outgoingLetterShipments)
+    .values({
+      villageId,
+      outgoingLetterId,
+      sentDate: input.sentDate,
+      recipient: input.recipient ?? null,
+      deliveryMethod: input.deliveryMethod ?? null,
+      trackingNo: input.trackingNo ?? null,
+      note: input.note ?? null,
+    })
+    .$returningId();
+  return row?.id;
+}
+
+export async function catatLogAgenda(
+  villageId: number,
+  input: {
+    type: "masuk" | "keluar";
+    letterId: number;
+    action: string;
+    note?: string | null;
+    actorId?: string | null;
+  },
+) {
+  await db.insert(letterAgendaLogs).values({
+    villageId,
+    type: input.type,
+    letterId: input.letterId,
+    action: input.action,
+    note: input.note ?? null,
+    actorId: input.actorId ?? null,
+  });
+}
+
+export async function listLogAgenda(villageId: number, type: "masuk" | "keluar", letterId: number) {
+  return db
+    .select()
+    .from(letterAgendaLogs)
+    .where(
+      and(
+        eq(letterAgendaLogs.villageId, villageId),
+        eq(letterAgendaLogs.type, type),
+        eq(letterAgendaLogs.letterId, letterId),
+      ),
+    )
+    .orderBy(desc(letterAgendaLogs.createdAt));
 }

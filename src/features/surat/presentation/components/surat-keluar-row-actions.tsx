@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertCircle, Loader2, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { AlertCircle, Loader2, MoreHorizontal, Pencil, Send, Trash2 } from "lucide-react";
+import { useActionState, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,10 +21,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { KlasifikasiSuratDTO, SuratKeluarDTO } from "@/features/surat/domain/surat";
-import { idleActionState } from "@/lib/action-state";
+import { createIdleActionState, idleActionState } from "@/lib/action-state";
 
-import { deleteSuratKeluarAction } from "../agenda-actions";
+import { deleteSuratKeluarAction, tambahEkspedisiSuratKeluarAction } from "../agenda-actions";
 import { SuratKeluarFormDialog } from "./surat-keluar-form-dialog";
 
 interface SuratKeluarRowActionsProps {
@@ -35,8 +37,20 @@ interface SuratKeluarRowActionsProps {
 export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRowActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [ekspedisiOpen, setEkspedisiOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [ekspedisiState, ekspedisiAction, ekspedisiPending] = useActionState(
+    tambahEkspedisiSuratKeluarAction,
+    createIdleActionState(),
+  );
+
+  if (ekspedisiState.status === "success") {
+    toast.success(ekspedisiState.message);
+  }
+  if (ekspedisiState.status === "error") {
+    toast.error(ekspedisiState.message);
+  }
 
   function handleDelete() {
     setError(null);
@@ -68,6 +82,10 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={() => setEkspedisiOpen(true)}>
+            <Send className="size-4" />
+            Ekspedisi
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setEditOpen(true)}>
             <Pencil className="size-4" />
             Ubah
@@ -85,6 +103,52 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
         classifications={classifications}
         surat={surat}
       />
+
+      <AlertDialog open={ekspedisiOpen} onOpenChange={setEkspedisiOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Catat ekspedisi surat keluar</AlertDialogTitle>
+            <AlertDialogDescription>Tambahkan data pengiriman surat keluar.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <form action={ekspedisiAction} className="space-y-3">
+            <input type="hidden" name="outgoingLetterId" value={surat.id} />
+            <div className="space-y-2">
+              <Label htmlFor={`tgl-kirim-${surat.id}`}>Tanggal kirim</Label>
+              <Input id={`tgl-kirim-${surat.id}`} name="sentDate" type="date" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`tujuan-${surat.id}`}>Tujuan/Penerima</Label>
+              <Input id={`tujuan-${surat.id}`} name="recipient" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`cara-${surat.id}`}>Cara kirim</Label>
+              <Input id={`cara-${surat.id}`} name="deliveryMethod" placeholder="Kurir/Pos/Email" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`resi-${surat.id}`}>No. Resi/Referensi</Label>
+              <Input id={`resi-${surat.id}`} name="trackingNo" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`catatan-keluar-${surat.id}`}>Catatan</Label>
+              <Input id={`catatan-keluar-${surat.id}`} name="note" />
+            </div>
+            {ekspedisiState.status === "error" ? (
+              <Alert variant="destructive">
+                <AlertDescription>{ekspedisiState.message}</AlertDescription>
+              </Alert>
+            ) : null}
+            <AlertDialogFooter>
+              <AlertDialogCancel type="button" disabled={ekspedisiPending}>
+                Batal
+              </AlertDialogCancel>
+              <Button type="submit" disabled={ekspedisiPending}>
+                {ekspedisiPending ? <Loader2 className="animate-spin" /> : null}
+                Simpan ekspedisi
+              </Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>

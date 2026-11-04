@@ -60,3 +60,4 @@ export * from "./dokumen-desa";
 export * from "./pelanggan";
 export * from "./anjungan";
 export * from "./buku-tamu";
+export * from "./letter-agenda";

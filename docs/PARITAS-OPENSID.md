@@ -106,10 +106,10 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-SUR-001 | 🟡 Sebagian | Master jenis surat, builder isian dinamis, placeholder/formula, template, RBAC, test `isian.test.ts`. **Gap: E2E dan seluruh variasi keluaran template belum ada.** |
 | OS-SUR-006 | 🟡 Sebagian | Empat mode penomoran, kode desa, nomor otomatis, cek duplikasi lintas agenda, dan arsip nomor persisten pada `/persuratan/surat/arsip` (termasuk backfill surat terbit lama); test integrasi `penomoran-archive.integration.test.ts` membuktikan nomor tetap tercatat dan tidak dipakai ulang setelah surat dihapus. **Ditambah E2E `tests/arsip-nomor-surat.e2e.ts`. Gap: cakupan filter/halaman arsip bisa diperluas.** |
 | OS-SUR-003 | 🟡 Sebagian | Master syarat, aktif/nonaktif, relasi jenis surat, unggahan syarat warga, validasi isian. E2E mengunggah PDF syarat dan menguji unduh hanya oleh pemilik. **Gap: beragam lampiran/validasi file dan konfigurasi syarat belum dicakup E2E.** |
-| OS-SUR-004 | 🟡 Sebagian | CRUD klasifikasi + relasi ke jenis/agenda, RBAC, UI. **Gap: E2E belum ada.** |
-| OS-SUR-005 | ✅ Berfungsi penuh | Permohonan admin `/permohonan-surat` + warga, status berurutan, pemeriksaan, pengembalian, pembatalan, unggahan syarat, riwayat, konsep surat. E2E `surat-konten.e2e.ts` dan alur penuh warga→operator→surat terbit `tests/permohonan-warga.e2e.ts`; test `surat.test.ts`/`verifikasi.test.ts`. |
+| OS-SUR-009 | 🟡 Sebagian | Surat masuk: CRUD, klasifikasi, pencarian, nomor agenda, RBAC. Disposisi detail, log agenda, cetak via browser tersedia. **Gap: lampiran disposisi lanjutan dan E2E khusus disposisi masih bisa diperluas.** |
+| OS-SUR-010 | 🟡 Sebagian | Surat keluar: CRUD, ekspedisi/tanggal kirim, klasifikasi, agenda, pencarian, RBAC. Ekspedisi surat keluar (pengiriman, cara, resi, catatan) dan log agenda tersedia; cetak via browser. **Gap: lampiran dan E2E khusus ekspedisi masih bisa diperluas.** |
 | OS-SUR-006 | 🟡 Sebagian | Empat mode penomoran, kode desa, nomor otomatis, cek duplikasi lintas agenda, dan arsip nomor persisten pada `/persuratan/surat/arsip` (termasuk backfill surat terbit lama); test integrasi `penomoran-archive.integration.test.ts` membuktikan nomor tetap tercatat dan tidak dipakai ulang setelah surat dihapus. **Gap: E2E arsip belum ada.** |
-| OS-SUR-007 | 🟡 Sebagian | Verifikasi berurutan operator → sekretaris → kades, pembatasan role, tolak/kembalikan dengan enforsemen per tahap, test domain. E2E menguji jalur sukses tiga tahap dan skenario penolakan/pengembalian. **Gap: penolakan lintas-role dan kasus tambahan masih bisa diperluas.** |
+| OS-SUR-012 | 🟡 Sebagian | Agenda surat masuk/keluar + nomor agenda. Log agenda untuk surat masuk/keluar, disposisi, dan ekspedisi sudah ditambahkan. **Gap: ekspedisi terpadu lintas modul dan rekam jejak perubahan lebih rinci masih bisa diperluas.** |
 | OS-SUR-008 | 🟡 Sebagian | Cetak HTML/PDF, kop/logo/TTD/stempel, QR, token verifikasi, halaman publik `/desa/verifikasi-surat/[token]`, test `surat-pdf.test.ts`/`verifikasi.test.ts`. E2E `tests/publik-verifikasi.e2e.ts` menguji verifikasi publik via token valid dan unduh PDF surat terbit. **Gap: variasi keluaran belum lengkap.** |
 | OS-SUR-009 | 🟡 Sebagian | Surat masuk: CRUD, klasifikasi, pencarian, nomor agenda, RBAC. **Cetak via browser** tersedia di halaman agenda. **Gap: disposisi, lampiran, log surat, dan E2E belum ada.** |
 | OS-SUR-010 | 🟡 Sebagian | Surat keluar: CRUD, ekspedisi/tanggal kirim, klasifikasi, agenda, pencarian, RBAC. **Cetak via browser** tersedia di halaman agenda. **Gap: lampiran dan E2E belum ada.** |
@@ -183,7 +183,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-OPS-010 | ✅ Berfungsi penuh | Media: Sudah terimplementasi di fitur baru. |
 | OS-OPS-011 | 🟡 Sebagian | API yang ada: auth, media publik, pengaduan lampiran, docs-status, peta, lookup NIK, backup/restore. **Gap: API informasi publik/inventaris/surat yang komprehensif dan E2E belum ada.** |
 | OS-OPS-012 | 🔴 Belum ada | Tidak ada API eksternal (surat/TTE/tanda tangan). `/persuratan/tte` placeholder; adapter TTE hanya mode nonaktif di domain surat. |
-
+| OS-OPS-007 | 🟡 Sebagian | Backup SQL/SQL.GZ dan restore melalui `/pengaturan/database`, use case berizin dan audit; test domain tersedia. **Ditambah E2E `tests/backup-database.e2e.ts`. Gap: E2E restore dan pengujian operasi database besar/pemulihan belum lengkap.** |
 **Catatan lintas-ID (direkonsiliasi 4 Nov 2026):**
 
 - Register ini mencakup seluruh 113 ID katalog tepat satu kali; ringkasan domain

@@ -7,6 +7,8 @@ import {
   createSuratMasukData,
   deleteSuratKeluarData,
   deleteSuratMasukData,
+  tambahDisposisiSuratMasukData,
+  tambahEkspedisiSuratKeluarData,
   updateSuratKeluarData,
   updateSuratMasukData,
 } from "@/features/surat/application/agenda-use-cases";
@@ -127,6 +129,54 @@ export async function deleteSuratKeluarAction(
     await deleteSuratKeluarData(id);
     revalidatePath(KELUAR_PATH);
     return successState("Surat keluar dihapus.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function tambahDisposisiSuratMasukAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const id = parseId(formData.get("incomingLetterId"));
+  if (id === null) return errorState("Data surat masuk tidak valid.");
+  const instruction = text(formData, "instruction");
+  if (!instruction) return errorState("Instruksi disposisi wajib diisi.");
+
+  try {
+    await tambahDisposisiSuratMasukData(id, {
+      toUserId: text(formData, "toUserId") || null,
+      toRole: text(formData, "toRole") || null,
+      instruction,
+      dueDate: text(formData, "dueDate") || null,
+      note: text(formData, "note") || null,
+    });
+    revalidatePath(MASUK_PATH);
+    return successState("Disposisi surat masuk ditambahkan.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+export async function tambahEkspedisiSuratKeluarAction(
+  _previousState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const id = parseId(formData.get("outgoingLetterId"));
+  if (id === null) return errorState("Data surat keluar tidak valid.");
+  const sentDate = text(formData, "sentDate");
+  if (!sentDate) return errorState("Tanggal kirim wajib diisi.");
+
+  try {
+    await tambahEkspedisiSuratKeluarData(id, {
+      sentDate,
+      recipient: text(formData, "recipient") || null,
+      deliveryMethod: text(formData, "deliveryMethod") || null,
+      trackingNo: text(formData, "trackingNo") || null,
+      note: text(formData, "note") || null,
+    });
+    revalidatePath(KELUAR_PATH);
+    return successState("Ekspedisi surat keluar dicatat.");
   } catch (error) {
     return toErrorState(error);
   }
