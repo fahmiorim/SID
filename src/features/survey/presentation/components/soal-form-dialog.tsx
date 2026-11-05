@@ -26,6 +26,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  BOBOT_MAX,
+  BOBOT_MIN,
+  formatSkorPilihanForm,
   PERTANYAAN_MAX,
   PILIHAN_MAX,
   TIPE_SOAL,
@@ -37,12 +40,18 @@ import { createIdleActionState } from "@/lib/action-state";
 
 import { simpanSoalAction } from "../actions";
 
+interface IndikatorPilihan {
+  id: number;
+  nama: string;
+}
+
 interface SoalFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   surveyId: number;
   urutanAwal: number;
   soal?: SoalRow | null;
+  indikator?: readonly IndikatorPilihan[];
 }
 
 function FieldError({ messages }: { messages?: string[] }) {
@@ -65,6 +74,7 @@ export function SoalFormDialog({
   surveyId,
   urutanAwal,
   soal,
+  indikator = [],
 }: SoalFormDialogProps) {
   const router = useRouter();
   const isEdit = Boolean(soal);
@@ -109,7 +119,7 @@ export function SoalFormDialog({
             <FieldError messages={fieldErrors?.pertanyaan} />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="tipe">Tipe jawaban</Label>
               <Select
@@ -136,6 +146,21 @@ export function SoalFormDialog({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="bobot">Bobot</Label>
+              <Input
+                id="bobot"
+                name="bobot"
+                type="number"
+                min={BOBOT_MIN}
+                max={BOBOT_MAX}
+                step={1}
+                defaultValue={soal?.bobot ?? 1}
+                aria-invalid={Boolean(fieldErrors?.bobot)}
+              />
+              <FieldError messages={fieldErrors?.bobot} />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="urutan">Urutan</Label>
               <Input
                 id="urutan"
@@ -150,24 +175,75 @@ export function SoalFormDialog({
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="indikatorId">Indikator analisis</Label>
+            <Select name="indikatorId" defaultValue={String(soal?.indikatorId ?? 0)}>
+              <SelectTrigger
+                id="indikatorId"
+                className="w-full"
+                aria-invalid={Boolean(fieldErrors?.indikatorId)}
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">Tanpa indikator</SelectItem>
+                {indikator.map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Pertanyaan dengan indikator yang sama digabung pada laporan skor.
+            </p>
+            <FieldError messages={fieldErrors?.indikatorId} />
+          </div>
+
           {tipe === "choice" ? (
-            <div className="space-y-2">
-              <Label htmlFor="pilihan">Pilihan jawaban</Label>
-              <Textarea
-                id="pilihan"
-                name="pilihan"
-                rows={5}
-                defaultValue={soal?.pilihan.join("\n") ?? ""}
-                placeholder={"Sangat baik\nBaik\nCukup\nKurang"}
-                aria-invalid={Boolean(fieldErrors?.pilihan)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Satu pilihan per baris, {PILIHAN_MAX} pilihan maksimal.
-              </p>
-              <FieldError messages={fieldErrors?.pilihan} />
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="pilihan">Pilihan jawaban</Label>
+                <Textarea
+                  id="pilihan"
+                  name="pilihan"
+                  rows={5}
+                  defaultValue={soal?.pilihan.join("\n") ?? ""}
+                  placeholder={"Sangat baik\nBaik\nCukup\nKurang"}
+                  aria-invalid={Boolean(fieldErrors?.pilihan)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Satu pilihan per baris, {PILIHAN_MAX} pilihan maksimal.
+                </p>
+                <FieldError messages={fieldErrors?.pilihan} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="skorPilihan">Skor pilihan (0–5)</Label>
+                <Textarea
+                  id="skorPilihan"
+                  name="skorPilihan"
+                  rows={5}
+                  defaultValue={
+                    soal
+                      ? formatSkorPilihanForm(soal.pilihan, soal.skorPilihan)
+                      : "Sangat baik=5\nBaik=4\nCukup=3\nKurang=2"
+                  }
+                  placeholder={"Sangat baik=5\nBaik=4\nCukup=3\nKurang=2"}
+                  aria-invalid={Boolean(fieldErrors?.skorPilihan)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Satu baris <code>Pilihan=skor</code>. Bila kosong, pilihan pertama bernilai 5 dan
+                  menurun satu poin.
+                </p>
+                <FieldError messages={fieldErrors?.skorPilihan} />
+              </div>
+            </>
           ) : (
-            <input type="hidden" name="pilihan" value="" />
+            <>
+              <input type="hidden" name="pilihan" value="" />
+              <input type="hidden" name="skorPilihan" value="" />
+            </>
           )}
 
           {state.status === "error" && !state.fieldErrors ? (

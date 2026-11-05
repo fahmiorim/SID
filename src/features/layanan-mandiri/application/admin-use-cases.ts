@@ -167,6 +167,7 @@ export async function ubahStatusPermohonanData(
       statusLama: sebelum.status,
       statusBaru: status,
       alasan: alasan.trim() || null,
+      noHpAktif: sebelum.noHpAktif,
     });
   }
 }
@@ -191,5 +192,6 @@ export async function kembalikanPermohonanAdminData(id: number, alasan: string):
     statusLama: sebelum.status,
     statusBaru: 0,
     alasan: alasan.trim(),
+    noHpAktif: sebelum.noHpAktif,
   });
 }

@@ -12,6 +12,8 @@ import {
 import { signInSchema } from "@/features/auth/schemas";
 import { errorState, toErrorState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
 import { auth } from "@/lib/auth";
+import { periksaCaptcha } from "@/lib/captcha";
+import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
 /** Validasi tujuan pengalihan agar hanya boleh path internal (cegah open redirect). */
@@ -50,6 +52,21 @@ export async function signInAction(
 
   if (!parsed.success) {
     return errorState("Periksa kembali isian Anda.", zodToFieldErrors(parsed.error));
+  }
+
+  // Anti-abuse: honeypot + captcha aritmetika bertanda tangan (OS-WGA-002).
+  const honeypot = formData.get("website");
+  const captchaToken = formData.get("captchaToken");
+  const jawaban = formData.get("jawaban");
+  if (
+    (typeof honeypot === "string" && honeypot.trim() !== "") ||
+    typeof captchaToken !== "string" ||
+    typeof jawaban !== "string" ||
+    !periksaCaptcha(env.BETTER_AUTH_SECRET, jawaban, captchaToken)
+  ) {
+    return errorState("Jawaban verifikasi salah. Muat ulang halaman lalu coba lagi.", {
+      jawaban: ["Jawaban verifikasi salah atau sudah kedaluwarsa."],
+    });
   }
 
   const requestHeaders = await headers();

@@ -10,6 +10,9 @@ export const AUDIT_EVENTS = {
   externalTteSign: "api.eksternal.tte.sign",
   externalSuratGet: "api.eksternal.surat.get",
   externalSuratVerifikasi: "api.eksternal.surat.verifikasi",
+  registrasiWargaDiajukan: "registrasi-warga.diajukan",
+  registrasiWargaDisetujui: "registrasi-warga.disetujui",
+  registrasiWargaDitolak: "registrasi-warga.ditolak",
 } as const;
 
 export type AuditEvent = (typeof AUDIT_EVENTS)[keyof typeof AUDIT_EVENTS];
@@ -26,6 +29,9 @@ export const AUDIT_EVENT_LABELS: Record<AuditEvent, string> = {
   [AUDIT_EVENTS.externalTteSign]: "Tanda tangan TTE via API eksternal",
   [AUDIT_EVENTS.externalSuratGet]: "Baca surat via API eksternal",
   [AUDIT_EVENTS.externalSuratVerifikasi]: "Verifikasi surat via API eksternal",
+  [AUDIT_EVENTS.registrasiWargaDiajukan]: "Pengajuan akun warga",
+  [AUDIT_EVENTS.registrasiWargaDisetujui]: "Persetujuan akun warga",
+  [AUDIT_EVENTS.registrasiWargaDitolak]: "Penolakan akun warga",
 };
 
 export interface AuditEventInput {

@@ -4,6 +4,7 @@ import { and, desc, eq, like, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { lapak, type Lapak, type NewLapak } from "@/db/schema/lapak";
+import { residents } from "@/db/schema/resident";
 
 export async function listLapak(
   villageId: number,
@@ -47,6 +48,60 @@ export async function updateLapak(
 
 export async function deleteLapak(id: number, villageId: number): Promise<void> {
   await db.delete(lapak).where(and(eq(lapak.id, id), eq(lapak.villageId, villageId)));
+}
+
+/** Lapak milik satu warga (OS-WGA-010). */
+export async function listLapakWarga(villageId: number, residentId: number): Promise<Lapak[]> {
+  return db
+    .select()
+    .from(lapak)
+    .where(and(eq(lapak.villageId, villageId), eq(lapak.residentId, residentId)))
+    .orderBy(desc(lapak.id));
+}
+
+export async function findLapakWarga(
+  villageId: number,
+  residentId: number,
+  id: number,
+): Promise<Lapak | null> {
+  const [row] = await db
+    .select()
+    .from(lapak)
+    .where(and(eq(lapak.villageId, villageId), eq(lapak.residentId, residentId), eq(lapak.id, id)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function updateLapakWarga(
+  id: number,
+  villageId: number,
+  residentId: number,
+  data: Partial<NewLapak>,
+): Promise<void> {
+  await db
+    .update(lapak)
+    .set(data)
+    .where(and(eq(lapak.id, id), eq(lapak.villageId, villageId), eq(lapak.residentId, residentId)));
+}
+
+export async function deleteLapakWarga(
+  id: number,
+  villageId: number,
+  residentId: number,
+): Promise<void> {
+  await db
+    .delete(lapak)
+    .where(and(eq(lapak.id, id), eq(lapak.villageId, villageId), eq(lapak.residentId, residentId)));
+}
+
+/** Nama penduduk untuk kolom pemilik lapak. */
+export async function namaPenduduk(villageId: number, residentId: number): Promise<string | null> {
+  const [row] = await db
+    .select({ nama: residents.name })
+    .from(residents)
+    .where(and(eq(residents.villageId, villageId), eq(residents.id, residentId)))
+    .limit(1);
+  return row?.nama ?? null;
 }
 
 export async function listKategoriLapak(villageId: number): Promise<string[]> {

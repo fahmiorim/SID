@@ -74,6 +74,7 @@ export async function simpanIndikatorAnalisis(villageId: number, input: unknown,
       kategoriId: parsed.kategoriId,
       kode: parsed.kode,
       nama: parsed.nama,
+      bobot: parsed.bobot,
       keterangan: parsed.keterangan ?? null,
     });
     return id;
@@ -84,6 +85,7 @@ export async function simpanIndikatorAnalisis(villageId: number, input: unknown,
     kategoriId: parsed.kategoriId,
     kode: parsed.kode,
     nama: parsed.nama,
+    bobot: parsed.bobot,
     keterangan: parsed.keterangan ?? null,
   });
 }

@@ -11,6 +11,8 @@ export const analisisIndikator = mysqlTable("analisis_indikator", {
   kategoriId: int("kategori_id").references(() => analisisKategori.id, { onDelete: "set null" }),
   kode: varchar("kode", { length: 20 }).notNull(),
   nama: varchar("nama", { length: 200 }).notNull(),
+  /** Bobot indikator dalam perhitungan skor (1–100). */
+  bobot: int("bobot").notNull().default(1),
   keterangan: text("keterangan"),
 });
 

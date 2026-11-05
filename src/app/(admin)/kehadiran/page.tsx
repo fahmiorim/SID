@@ -1,5 +1,9 @@
+import { CalendarPlus } from "lucide-react";
+import Link from "next/link";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Button } from "@/components/ui/button";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { daftarKehadiran } from "@/features/kehadiran/application/kehadiran-use-cases";
 import { KEHADIRAN_RESOURCE } from "@/features/kehadiran/domain/kehadiran";
@@ -25,6 +29,14 @@ export default async function KehadiranPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Kehadiran Perangkat" description="Daftar kehadiran perangkat desa" />
+      <div className="flex justify-end">
+        <Button asChild size="sm" variant="outline">
+          <Link href="/kehadiran/izin">
+            <CalendarPlus className="size-4" />
+            Izin & Cuti Warga
+          </Link>
+        </Button>
+      </div>
       <KehadiranTable items={items} />
     </div>
   );

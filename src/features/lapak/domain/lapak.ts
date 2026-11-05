@@ -29,9 +29,20 @@ export const lapakFormSchema = z.object({
 export type LapakFormInput = z.input<typeof lapakFormSchema>;
 export type LapakFormValues = z.infer<typeof lapakFormSchema>;
 
+/** Form lapak warga (OS-WGA-010); pemilik diisi dari sesi, bukan input. */
+export const lapakWargaSchema = z.object({
+  nama: z.string().trim().min(1, "Nama wajib diisi.").max(200, "Nama maksimal 200 karakter."),
+  kategori: z.string().trim().max(100).optional().default(""),
+  alamat: z.string().trim().max(500).optional().default(""),
+  keterangan: z.string().trim().max(1000).optional().default(""),
+});
+
+export type LapakWargaInput = z.infer<typeof lapakWargaSchema>;
+
 export interface LapakDTO {
   id: number;
   villageId: number;
+  residentId: number | null;
   nama: string;
   pemilik: string | null;
   kategori: string | null;

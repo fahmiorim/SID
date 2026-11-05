@@ -18,6 +18,9 @@ const SOAL: SoalRow[] = [
     pertanyaan: "Nama program",
     tipe: "text",
     pilihan: [],
+    bobot: 1,
+    skorPilihan: {},
+    indikatorId: null,
     urutan: 1,
   },
   {
@@ -26,6 +29,9 @@ const SOAL: SoalRow[] = [
     pertanyaan: "Jumlah penerima",
     tipe: "number",
     pilihan: [],
+    bobot: 1,
+    skorPilihan: {},
+    indikatorId: null,
     urutan: 2,
   },
   {
@@ -34,6 +40,9 @@ const SOAL: SoalRow[] = [
     pertanyaan: "Kepuasan",
     tipe: "choice",
     pilihan: ["Puas", "Tidak Puas"],
+    bobot: 1,
+    skorPilihan: { Puas: 5, "Tidak Puas": 0 },
+    indikatorId: null,
     urutan: 3,
   },
 ];

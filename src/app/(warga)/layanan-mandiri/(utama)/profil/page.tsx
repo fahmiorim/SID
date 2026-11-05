@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GENDER_LABELS } from "@/features/penduduk/domain/penduduk";
+import { statusVerifikasiKontakData } from "@/features/warga/application/verifikasi-kontak-use-cases";
 import { getProfilWargaData } from "@/features/warga/application/warga-use-cases";
+import { VerifikasiKontakCard } from "@/features/warga/presentation/components/verifikasi-kontak-card";
 import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Profil Warga" };
@@ -22,7 +24,7 @@ function tanggal(value: string | null): string {
 
 export default async function ProfilWargaPage() {
   const user = await verifyWargaPage();
-  const profile = await getProfilWargaData();
+  const [profile, kontak] = await Promise.all([getProfilWargaData(), statusVerifikasiKontakData()]);
 
   const baris = [
     ["Nama lengkap", profile.name],
@@ -74,6 +76,12 @@ export default async function ProfilWargaPage() {
           </dl>
         </CardContent>
       </Card>
+
+      <VerifikasiKontakCard
+        target={kontak.target}
+        terverifikasi={kontak.terverifikasi}
+        teleponAwal={profile.phone}
+      />
     </div>
   );
 }

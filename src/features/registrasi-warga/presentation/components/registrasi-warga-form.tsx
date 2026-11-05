@@ -12,7 +12,13 @@ import { createIdleActionState } from "@/lib/action-state";
 
 import { kirimRegistrasiWargaAction } from "../registrasi-warga-actions";
 
-export function RegistrasiWargaForm() {
+export function RegistrasiWargaForm({
+  captchaPertanyaan,
+  captchaToken,
+}: {
+  captchaPertanyaan: string;
+  captchaToken: string;
+}) {
   const [state, formAction, isPending] = useActionState(
     kirimRegistrasiWargaAction,
     createIdleActionState<null>(),
@@ -63,6 +69,31 @@ export function RegistrasiWargaForm() {
             <Input id="noHp" name="noHp" maxLength={20} placeholder="08xxxxxxxxxx" />
             {fieldErrors?.noHp ? (
               <p className="text-sm text-destructive">{fieldErrors.noHp[0]}</p>
+            ) : null}
+          </div>
+
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            className="hidden"
+            aria-hidden="true"
+          />
+          <input type="hidden" name="captcha" value={captchaToken} />
+
+          <div className="space-y-2">
+            <Label htmlFor="jawaban">Verifikasi: {captchaPertanyaan}</Label>
+            <Input
+              id="jawaban"
+              name="jawaban"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="Jawaban"
+              required
+            />
+            {fieldErrors?.jawaban ? (
+              <p className="text-sm text-destructive">{fieldErrors.jawaban[0]}</p>
             ) : null}
           </div>
 

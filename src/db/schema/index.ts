@@ -69,3 +69,8 @@ export * from "./letter-agenda";
 export * from "./komentar";
 export * from "./pengunjung-log";
 export * from "./bukti-pengiriman-notifikasi";
+export * from "./warga-pesan";
+export * from "./dokumen-warga";
+export * from "./notifikasi-terkirim";
+export * from "./kehadiran-izin";
+export * from "./verifikasi-kontak";

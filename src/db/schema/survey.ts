@@ -1,5 +1,6 @@
-import { int, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { date, int, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
+import { analisisIndikator } from "./analisis-indikator";
 import { villages } from "./village";
 
 export const survey = mysqlTable("survey", {
@@ -9,6 +10,11 @@ export const survey = mysqlTable("survey", {
     .references(() => villages.id, { onDelete: "cascade" }),
   judul: varchar("judul", { length: 200 }).notNull(),
   deskripsi: text("deskripsi"),
+  /** Sasaran responden, mis. "Warga usia produktif". */
+  sasaran: varchar("sasaran", { length: 200 }),
+  /** Periode pengisian publik (inklusif); null = tanpa batas. */
+  mulai: date("mulai", { mode: "string" }),
+  selesai: date("selesai", { mode: "string" }),
   aktif: int("aktif").default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -23,6 +29,14 @@ export const surveySoal = mysqlTable("survey_soal", {
   tipe: varchar("tipe", { length: 20 }).default("text"),
   /** Daftar pilihan (JSON array string) untuk soal bertipe `choice`. */
   pilihan: text("pilihan"),
+  /** Bobot pertanyaan dalam skor (1–100). */
+  bobot: int("bobot").notNull().default(1),
+  /** Peta pilihan → skor 0–5 (JSON) untuk soal pilihan ganda. */
+  skorPilihan: text("skor_pilihan"),
+  /** Indikator analisis yang diukur pertanyaan ini. */
+  indikatorId: int("indikator_id").references(() => analisisIndikator.id, {
+    onDelete: "set null",
+  }),
   urutan: int("urutan").default(0),
 });
 

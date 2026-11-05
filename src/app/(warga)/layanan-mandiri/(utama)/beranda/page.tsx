@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listPermohonanWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
 import { labelPermohonanStatus } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import { hitungPesanBelumDibacaWargaData } from "@/features/pesan-warga/application/pesan-warga-use-cases";
 import { getProfilWargaData } from "@/features/warga/application/warga-use-cases";
 import { verifyWargaPage } from "@/lib/dal";
 
@@ -21,7 +22,11 @@ function badgeVariant(status: number): "default" | "secondary" | "outline" | "de
 
 export default async function BerandaWargaPage() {
   await verifyWargaPage();
-  const [profil, permohonan] = await Promise.all([getProfilWargaData(), listPermohonanWargaData()]);
+  const [profil, permohonan, belumDibacaPesan] = await Promise.all([
+    getProfilWargaData(),
+    listPermohonanWargaData(),
+    hitungPesanBelumDibacaWargaData(),
+  ]);
 
   const terbaru = permohonan.slice(0, 3);
   const selesai = permohonan.filter((item) => item.status === 3 || item.status === 4).length;
@@ -100,10 +105,15 @@ export default async function BerandaWargaPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { href: "/layanan-mandiri/surat", label: "Ajukan Surat", icon: FileText },
-          { href: "/layanan-mandiri/dokumen", label: "Dokumen Saya", icon: FolderOpen },
-          { href: "/layanan-mandiri/pesan", label: "Pesan", icon: MessageSquare },
-          { href: "/layanan-mandiri/profil", label: "Profil", icon: UserRound },
+          { href: "/layanan-mandiri/surat", label: "Ajukan Surat", icon: FileText, badge: 0 },
+          { href: "/layanan-mandiri/dokumen", label: "Dokumen Saya", icon: FolderOpen, badge: 0 },
+          {
+            href: "/layanan-mandiri/pesan",
+            label: "Pesan",
+            icon: MessageSquare,
+            badge: belumDibacaPesan,
+          },
+          { href: "/layanan-mandiri/profil", label: "Profil", icon: UserRound, badge: 0 },
         ].map((item) => (
           <Link
             key={item.href}
@@ -114,6 +124,7 @@ export default async function BerandaWargaPage() {
               <item.icon className="size-4" />
             </span>
             <span className="flex-1 text-sm font-medium">{item.label}</span>
+            {item.badge > 0 ? <Badge variant="destructive">{item.badge}</Badge> : null}
             <ArrowRight className="size-4 text-muted-foreground" />
           </Link>
         ))}

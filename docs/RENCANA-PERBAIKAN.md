@@ -187,6 +187,30 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
   `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
 - Seluruh ID Batch 5 tersisa 🟡 dengan `Gap: E2E` karena uji browser untuk keluaran baru belum ditambahkan (sesuai aturan batch: E2E ditunda).
 
+**Batch 6 — Layanan warga (progres 5 Nov 2026):**
+
+- **OS-WGA-006** ✅ non-E2E: percakapan dua arah warga ↔ operator. Tabel
+  `warga_pesan` (migrasi `0075`) menyimpan pesan, pengirim, serta penanda dibaca
+  terpisah per sisi. Halaman warga `/layanan-mandiri/pesan` menampilkan riwayat
+  percakapan + form kirim (`residentId` dari sesi, PIN sementara wajib diganti
+  lebih dulu) dan lencana pesan belum dibaca di beranda warga. Halaman operator
+  `/pesan-warga` menampilkan daftar percakapan dengan hitungan belum dibaca,
+  riwayat per warga, dan form balasan; modul + RBAC `pesan-warga` di-seed
+  (operator `manage`, sekdes/kades `read`). Test domain `pesan-warga.test.ts`
+  (6 kasus) mencakup validasi isi dan penyusunan percakapan. Gap: E2E.
+- **OS-WGA-007** ✅ non-E2E: halaman verifikasi di area warga
+  `/layanan-mandiri/verifikasi-surat` (form token, hasil status/tahap/catatan,
+  daftar token surat milik warga). Tautan "Verifikasi" di Dokumen Saya diarahkan
+  ke area warga. Gap: E2E.
+- **OS-WGA-001** ✅ non-E2E untuk anti-abuse: form registrasi mandiri kini memakai
+  captcha aritmetika stateless bertanda tangan HMAC (`src/lib/captcha.ts`,
+  kedaluwarsa 10 menit, `timingSafeEqual`) + honeypot, dan pengajuan/persetujuan/
+  penolakan dicatat ke audit (`registrasi-warga.diajukan`/`disetujui`/`ditolak`).
+  Test `captcha.test.ts`. Gap: verifikasi HP/email, notifikasi otomatis, E2E.
+- ID Batch 6 lainnya (`OS-WGA-002`/`004`/`005`/`009`/`010`/`011`)
+  belum dikerjakan pada batch ini; gap non-E2E-nya tetap seperti tercatat di
+  `PARITAS-OPENSID.md`.
+
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
 Bagian ini menjelaskan masalah pada awal audit, bukan klaim kondisi working tree
@@ -596,8 +620,33 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 - [x] E2E alur inti surat warga (`tests/permohonan-warga.e2e.ts`; OS-WGA-004/005,
       OS-SUR-002/003/005/007/008/014): unggah syarat, kontrol unduhan lintas
       warga, pemeriksaan operator, verifikasi tiga tahap, terbit, dan unduh PDF
-      privat oleh pemilik. Pembatalan/pengembalian dan variasi form belum
-      tercakup dalam E2E.
+      privat oleh pemilik. Skenario pembatalan/pengembalian, variasi isian
+      dinamis (teks, teks panjang, angka, tanggal, pilihan, centang), dan arsip
+      dokumen pribadi sudah ditulis; **belum dijalankan pada sesi ini**.
+- [x] Arsip dokumen pribadi warga (OS-WGA-005): tabel `dokumen_warga` (migrasi
+      `0076`), katalog jenis baku, unggah ke media privat kategori `permohonan`,
+      ubah/hapus hanya unggahan sendiri, dan unduh ber-otorisasi pemilik lewat
+      `/layanan-mandiri/dokumen/[id]/berkas`; UI di Dokumen Saya, test domain
+      `dokumen-warga.test.ts`. **Gap: E2E belum dijalankan.**
+- [x] Anti-abuse login (OS-WGA-002): captcha aritmetika bertanda tangan HMAC +
+      honeypot pada `/masuk`, diverifikasi di server sebelum kredensial.
+      **Gap: OTP/2FA saat login.**
+- [x] Verifikasi HP warga (OS-WGA-001): tabel `verifikasi_kontak` (migrasi
+      `0080`), OTP 6 digit dikirim via WhatsApp, di-hash, berlaku 10 menit; kartu
+      verifikasi di Profil Warga. Notifikasi WhatsApp otomatis saat registrasi
+      disetujui/ditolak. **Gap: verifikasi email dan E2E.**
+- [x] Notifier terpusat (OS-WGA-009): `kirimNotifikasi` mengirim email/WhatsApp
+      dan mencatat bukti ke `notifikasi_terkirim` (migrasi `0077`); dipakai untuk
+      status permohonan surat dan keputusan registrasi warga. **Gap: bukti ke
+      provider nyata dan E2E.**
+- [x] Lapak warga (OS-WGA-010): `lapak.resident_id` (migrasi `0078`), CRUD
+      `/layanan-mandiri/lapak` dengan kepemilikan dari sesi, tampil di katalog
+      publik. **Gap: E2E.**
+- [x] Izin warga & rekap (OS-WGA-011): tabel `kehadiran_izin` dan
+      `kehadiran_pengaturan` (migrasi `0079`), pengajuan di
+      `/layanan-mandiri/izin`, keputusan + rekap bulanan di `/kehadiran/izin`,
+      pengaturan jam kerja/hari libur. **Gap: E2E dan integrasi otomatis ke
+      rekap kehadiran perangkat.**
 - [x] Pendaftaran mandiri akun warga (OS-WGA-001): `/desa/registrasi-warga`
       memvalidasi NIK terhadap penduduk hidup desa, menolak duplikat/akun yang
       sudah ada; operator menyetujui/menolak di `/penduduk/registrasi`, dan

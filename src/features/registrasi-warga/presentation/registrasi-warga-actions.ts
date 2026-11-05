@@ -6,6 +6,8 @@ import type { ZodError } from "zod";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import type { KredensialWarga } from "@/features/warga/domain/warga";
 import { errorState, successState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
+import { periksaCaptcha } from "@/lib/captcha";
+import { env } from "@/lib/env";
 import { isAppError } from "@/lib/errors";
 
 import {
@@ -28,6 +30,23 @@ export async function kirimRegistrasiWargaAction(
   try {
     const identitas = await getIdentitasFromRequest();
     if (!identitas?.id) return errorState("Desa tidak ditemukan.");
+
+    // Honeypot: kolom tersembunyi yang hanya diisi bot.
+    if (String(formData.get("website") ?? "").trim() !== "") {
+      return errorState("Permohonan tidak dapat diproses.");
+    }
+
+    const captchaValid = periksaCaptcha(
+      env.BETTER_AUTH_SECRET,
+      String(formData.get("jawaban") ?? ""),
+      String(formData.get("captcha") ?? ""),
+    );
+    if (!captchaValid) {
+      return errorState(
+        "Jawaban verifikasi salah atau sudah kedaluwarsa. Muat ulang halaman lalu coba lagi.",
+        { jawaban: ["Jawaban verifikasi tidak sesuai."] },
+      );
+    }
 
     await kirimRegistrasiWarga(identitas.id, {
       nik: formData.get("nik"),

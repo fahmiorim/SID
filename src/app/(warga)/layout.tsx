@@ -1,4 +1,5 @@
 import {
+  CalendarDays,
   FileText,
   FolderOpen,
   HandCoins,
@@ -6,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
+  Store,
   UserRound,
 } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +22,8 @@ const NAV = [
   { href: "/layanan-mandiri/surat", label: "Ajukan Surat", icon: FileText },
   { href: "/layanan-mandiri/dokumen", label: "Dokumen", icon: FolderOpen },
   { href: "/layanan-mandiri/bantuan", label: "Bantuan", icon: HandCoins },
+  { href: "/layanan-mandiri/izin", label: "Izin", icon: CalendarDays },
+  { href: "/layanan-mandiri/lapak", label: "Lapak", icon: Store },
   { href: "/layanan-mandiri/pesan", label: "Pesan", icon: MessageSquare },
   { href: "/layanan-mandiri/profil", label: "Profil", icon: UserRound },
 ] as const;

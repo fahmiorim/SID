@@ -503,8 +503,57 @@
     {
       "idx": 74,
       "version": "5",
-      "when": 1730822400000,
+      "when": 1794435700000,
       "tag": "0074_add_komentar_pengunjung_bukti_notifikasi",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "5",
+      "when": 1794435710000,
+      "tag": "0075_create_warga_pesan",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "5",
+      "when": 1794435720000,
+      "tag": "0076_create_dokumen_warga",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "5",
+      "when": 1794435730000,
+      "tag": "0077_create_notifikasi_terkirim",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "5",
+      "when": 1794435740000,
+      "tag": "0078_add_lapak_resident",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "5",
+      "when": 1794435750000,
+      "tag": "0079_create_kehadiran_izin",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "5",
+      "when": 1794435760000,
+      "tag": "0080_create_verifikasi_kontak",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "5",
+      "when": 1794435770000,
+      "tag": "0081_add_analisis_skoring",
       "breakpoints": true
     }
   ]

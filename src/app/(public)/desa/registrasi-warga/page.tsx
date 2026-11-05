@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { RegistrasiWargaForm } from "@/features/registrasi-warga/presentation/components/registrasi-warga-form";
+import { buatCaptcha } from "@/lib/captcha";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +18,8 @@ export default async function RegistrasiWargaPublikPage() {
   const identitas = await getIdentitasFromRequest();
   if (!identitas?.id) notFound();
 
+  const captcha = buatCaptcha(env.BETTER_AUTH_SECRET);
+
   return (
     <div className="mx-auto max-w-xl px-4 py-8">
       <header className="mb-6">
@@ -26,7 +30,7 @@ export default async function RegistrasiWargaPublikPage() {
         </p>
       </header>
 
-      <RegistrasiWargaForm />
+      <RegistrasiWargaForm captchaPertanyaan={captcha.pertanyaan} captchaToken={captcha.token} />
 
       <p className="mt-6 text-sm text-muted-foreground">
         Sudah memiliki akun?{" "}

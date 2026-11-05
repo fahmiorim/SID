@@ -6,7 +6,9 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { APP_NAME } from "@/lib/app-config";
+import { buatCaptcha } from "@/lib/captcha";
 import { getCurrentUser } from "@/lib/dal";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Masuk",
@@ -25,6 +27,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/masuk">) {
   const params = await searchParams;
   const next =
     typeof params.next === "string" && params.next.startsWith("/") ? params.next : "/beranda";
+  const captcha = buatCaptcha(env.BETTER_AUTH_SECRET);
 
   return (
     <Card>
@@ -39,7 +42,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/masuk">) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <LoginForm next={next} />
+        <LoginForm
+          next={next}
+          captchaPertanyaan={captcha.pertanyaan}
+          captchaToken={captcha.token}
+        />
         <p className="text-center text-sm text-muted-foreground">
           Belum punya akun layanan mandiri?{" "}
           <Link

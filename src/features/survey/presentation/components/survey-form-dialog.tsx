@@ -19,7 +19,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { DESKRIPSI_MAX, JUDUL_MAX, type SurveyRow } from "@/features/survey/domain/survey";
+import {
+  DESKRIPSI_MAX,
+  JUDUL_MAX,
+  SASARAN_MAX,
+  type SurveyRow,
+} from "@/features/survey/domain/survey";
 import { createIdleActionState } from "@/lib/action-state";
 
 import { simpanSurveyAction } from "../actions";
@@ -101,6 +106,47 @@ export function SurveyFormDialog({ open, onOpenChange, survey }: SurveyFormDialo
             />
             <FieldError messages={fieldErrors?.deskripsi} />
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sasaran">Sasaran responden</Label>
+            <Input
+              id="sasaran"
+              name="sasaran"
+              maxLength={SASARAN_MAX}
+              defaultValue={survey?.sasaran ?? ""}
+              placeholder="Contoh: Warga usia produktif"
+              aria-invalid={Boolean(fieldErrors?.sasaran)}
+            />
+            <FieldError messages={fieldErrors?.sasaran} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="mulai">Mulai pengisian</Label>
+              <Input
+                id="mulai"
+                name="mulai"
+                type="date"
+                defaultValue={survey?.mulai ?? ""}
+                aria-invalid={Boolean(fieldErrors?.mulai)}
+              />
+              <FieldError messages={fieldErrors?.mulai} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="selesai">Akhir pengisian</Label>
+              <Input
+                id="selesai"
+                name="selesai"
+                type="date"
+                defaultValue={survey?.selesai ?? ""}
+                aria-invalid={Boolean(fieldErrors?.selesai)}
+              />
+              <FieldError messages={fieldErrors?.selesai} />
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Kosongkan tanggal untuk membuka pengisian tanpa batas periode.
+          </p>
 
           <div className="flex items-start gap-3 rounded-md border p-3">
             <Checkbox

@@ -7,6 +7,7 @@ import { survey, surveyJawaban, surveyResponden, surveySoal } from "@/db/schema"
 import {
   normalizeTipeSoal,
   parsePilihanSoal,
+  parseSkorPilihanSoal,
   type JawabanRow,
   type RespondenRow,
   type SoalRow,
@@ -38,6 +39,9 @@ export async function listSurvey(villageId: number): Promise<SurveyRow[]> {
       id: survey.id,
       judul: survey.judul,
       deskripsi: survey.deskripsi,
+      sasaran: survey.sasaran,
+      mulai: survey.mulai,
+      selesai: survey.selesai,
       aktif: survey.aktif,
       createdAt: survey.createdAt,
       jumlahSoal: jumlahSoalQuery,
@@ -51,6 +55,9 @@ export async function listSurvey(villageId: number): Promise<SurveyRow[]> {
     id: row.id,
     judul: row.judul,
     deskripsi: row.deskripsi,
+    sasaran: row.sasaran,
+    mulai: row.mulai,
+    selesai: row.selesai,
     aktif: row.aktif === 1,
     jumlahSoal: Number(row.jumlahSoal ?? 0),
     jumlahResponden: Number(row.jumlahResponden ?? 0),
@@ -65,6 +72,9 @@ export async function getSurvey(villageId: number, id: number): Promise<SurveyRo
       id: survey.id,
       judul: survey.judul,
       deskripsi: survey.deskripsi,
+      sasaran: survey.sasaran,
+      mulai: survey.mulai,
+      selesai: survey.selesai,
       aktif: survey.aktif,
       createdAt: survey.createdAt,
       jumlahSoal: jumlahSoalQuery,
@@ -80,6 +90,9 @@ export async function getSurvey(villageId: number, id: number): Promise<SurveyRo
     id: row.id,
     judul: row.judul,
     deskripsi: row.deskripsi,
+    sasaran: row.sasaran,
+    mulai: row.mulai,
+    selesai: row.selesai,
     aktif: row.aktif === 1,
     jumlahSoal: Number(row.jumlahSoal ?? 0),
     jumlahResponden: Number(row.jumlahResponden ?? 0),
@@ -87,10 +100,16 @@ export async function getSurvey(villageId: number, id: number): Promise<SurveyRo
   };
 }
 
-export async function insertSurvey(
-  villageId: number,
-  input: { judul: string; deskripsi: string | null; aktif: boolean },
-): Promise<number> {
+export interface SurveyValues {
+  judul: string;
+  deskripsi: string | null;
+  sasaran: string | null;
+  mulai: string | null;
+  selesai: string | null;
+  aktif: boolean;
+}
+
+export async function insertSurvey(villageId: number, input: SurveyValues): Promise<number> {
   const [row] = await db
     .insert(survey)
     .values({ villageId, ...input, aktif: input.aktif ? 1 : 0 })
@@ -103,7 +122,7 @@ export async function insertSurvey(
 export async function updateSurvey(
   villageId: number,
   id: number,
-  input: { judul: string; deskripsi: string | null; aktif: boolean },
+  input: SurveyValues,
 ): Promise<boolean> {
   const [result] = await db
     .update(survey)
@@ -130,6 +149,9 @@ export async function listSoal(surveyId: number): Promise<SoalRow[]> {
       pertanyaan: surveySoal.pertanyaan,
       tipe: surveySoal.tipe,
       pilihan: surveySoal.pilihan,
+      bobot: surveySoal.bobot,
+      skorPilihan: surveySoal.skorPilihan,
+      indikatorId: surveySoal.indikatorId,
       urutan: surveySoal.urutan,
     })
     .from(surveySoal)
@@ -142,6 +164,9 @@ export async function listSoal(surveyId: number): Promise<SoalRow[]> {
     pertanyaan: row.pertanyaan,
     tipe: normalizeTipeSoal(row.tipe),
     pilihan: parsePilihanSoal(row.pilihan),
+    bobot: row.bobot ?? 1,
+    skorPilihan: parseSkorPilihanSoal(row.skorPilihan),
+    indikatorId: row.indikatorId ?? null,
     urutan: row.urutan ?? 0,
   }));
 }
@@ -155,6 +180,9 @@ export async function getSoal(surveyId: number, soalId: number): Promise<SoalRow
       pertanyaan: surveySoal.pertanyaan,
       tipe: surveySoal.tipe,
       pilihan: surveySoal.pilihan,
+      bobot: surveySoal.bobot,
+      skorPilihan: surveySoal.skorPilihan,
+      indikatorId: surveySoal.indikatorId,
       urutan: surveySoal.urutan,
     })
     .from(surveySoal)
@@ -169,6 +197,9 @@ export async function getSoal(surveyId: number, soalId: number): Promise<SoalRow
     pertanyaan: row.pertanyaan,
     tipe: normalizeTipeSoal(row.tipe),
     pilihan: parsePilihanSoal(row.pilihan),
+    bobot: row.bobot ?? 1,
+    skorPilihan: parseSkorPilihanSoal(row.skorPilihan),
+    indikatorId: row.indikatorId ?? null,
     urutan: row.urutan ?? 0,
   };
 }
@@ -177,6 +208,9 @@ interface SoalValues {
   pertanyaan: string;
   tipe: string;
   pilihan: string | null;
+  bobot: number;
+  skorPilihan: string | null;
+  indikatorId: number | null;
   urutan: number;
 }
 

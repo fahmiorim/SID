@@ -4,21 +4,47 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPermohonanWargaData } from "@/features/layanan-mandiri/application/warga-use-cases";
+import {
+  daftarDokumenWargaData,
+  listPermohonanWargaData,
+} from "@/features/layanan-mandiri/application/warga-use-cases";
 import { labelPermohonanStatus } from "@/features/layanan-mandiri/domain/layanan-mandiri";
+import { DokumenWargaManager } from "@/features/layanan-mandiri/presentation/components/dokumen-warga-manager";
 import { verifyWargaPage } from "@/lib/dal";
 
 export const metadata: Metadata = { title: "Dokumen Saya" };
 
 export default async function DokumenWargaPage() {
   await verifyWargaPage();
-  const permohonan = await listPermohonanWargaData();
+  const [permohonan, dokumen] = await Promise.all([
+    listPermohonanWargaData(),
+    daftarDokumenWargaData(),
+  ]);
   const surat = permohonan.filter((item) => item.letterId !== null);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Dokumen Saya</h1>
+        <p className="text-sm text-muted-foreground">
+          Arsip dokumen pribadi dan surat yang diterbitkan untuk Anda.
+        </p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Arsip Dokumen Pribadi</CardTitle>
+          <CardDescription>
+            Dokumen hanya dapat diunduh oleh akun Anda dan tidak tampil di situs publik.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <DokumenWargaManager dokumen={dokumen} />
+        </CardContent>
+      </Card>
+
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight">Surat Saya</h2>
         <p className="text-sm text-muted-foreground">
           Surat yang sudah dibuat operator dari permohonan Anda.
         </p>
@@ -61,7 +87,9 @@ export default async function DokumenWargaPage() {
 
                 {item.verificationToken ? (
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/desa/verifikasi-surat/${item.verificationToken}`} target="_blank">
+                    <Link
+                      href={`/layanan-mandiri/verifikasi-surat?token=${encodeURIComponent(item.verificationToken)}`}
+                    >
                       <ShieldCheck className="size-4" />
                       Verifikasi
                     </Link>

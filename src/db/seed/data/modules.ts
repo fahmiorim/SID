@@ -542,6 +542,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "layanan-desa",
   },
+  {
+    slug: "pesan-warga",
+    name: "Pesan Warga",
+    url: "/pesan-warga",
+    icon: "message-square-warning",
+    sortOrder: 4,
+    isGroup: false,
+    parentSlug: "layanan-desa",
+  },
 
   {
     slug: "konten",

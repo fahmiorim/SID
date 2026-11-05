@@ -10,9 +10,11 @@ import { SoalFormDialog } from "./soal-form-dialog";
 export function SoalCreateButton({
   surveyId,
   urutanAwal,
+  indikator,
 }: {
   surveyId: number;
   urutanAwal: number;
+  indikator?: readonly { id: number; nama: string }[];
 }) {
   const [open, setOpen] = useState(false);
 
@@ -28,6 +30,7 @@ export function SoalCreateButton({
         onOpenChange={setOpen}
         surveyId={surveyId}
         urutanAwal={urutanAwal}
+        indikator={indikator}
       />
     </>
   );

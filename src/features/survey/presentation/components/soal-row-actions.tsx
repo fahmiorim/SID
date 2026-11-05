@@ -32,9 +32,10 @@ interface SoalRowActionsProps {
   soal: SoalRow;
   urutanAwal: number;
   canDelete: boolean;
+  indikator?: readonly { id: number; nama: string }[];
 }
 
-export function SoalRowActions({ soal, urutanAwal, canDelete }: SoalRowActionsProps) {
+export function SoalRowActions({ soal, urutanAwal, canDelete, indikator }: SoalRowActionsProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -88,6 +89,7 @@ export function SoalRowActions({ soal, urutanAwal, canDelete }: SoalRowActionsPr
         surveyId={soal.surveyId}
         urutanAwal={urutanAwal}
         soal={soal}
+        indikator={indikator}
       />
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

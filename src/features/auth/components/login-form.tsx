@@ -18,7 +18,15 @@ import { signInAction } from "../actions";
  * server (Zod), pesan galat per-field tersedia, dan formulir tetap berfungsi
  * tanpa JavaScript.
  */
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({
+  next,
+  captchaPertanyaan,
+  captchaToken,
+}: {
+  next: string;
+  captchaPertanyaan: string;
+  captchaToken: string;
+}) {
   const [state, formAction, isPending] = useActionState(signInAction, idleActionState);
 
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
@@ -26,6 +34,12 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="next" value={next} />
+      <input type="hidden" name="captchaToken" value={captchaToken} />
+      {/* Honeypot: pengisi otomatis biasanya mengisi kolom tersembunyi ini. */}
+      <div className="hidden" aria-hidden="true">
+        <label htmlFor="website">Website</label>
+        <input id="website" name="website" tabIndex={-1} autoComplete="off" />
+      </div>
 
       {state.status === "error" ? (
         <Alert variant="destructive">
@@ -75,6 +89,23 @@ export function LoginForm({ next }: { next: string }) {
           </p>
         ))}
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="jawaban">Verifikasi: {captchaPertanyaan}</Label>
+        <Input
+          id="jawaban"
+          name="jawaban"
+          inputMode="numeric"
+          autoComplete="off"
+          required
+          aria-invalid={Boolean(fieldErrors?.jawaban)}
+        />
+        {fieldErrors?.jawaban?.map((message) => (
+          <p key={message} className="text-xs text-destructive">
+            {message}
+          </p>
+        ))}
+      </div>
+
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? <Loader2 className="animate-spin" /> : null}
         {isPending ? "Memproses…" : "Masuk"}

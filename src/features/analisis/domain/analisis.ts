@@ -20,6 +20,10 @@ export const indikatorAnalisisSchema = z.object({
   ),
   kode: z.string().trim().min(1, "Kode wajib diisi").max(20),
   nama: z.string().trim().min(1, "Nama wajib diisi").max(200),
+  bobot: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? 1 : value),
+    z.coerce.number().int().min(1, "Bobot minimal 1.").max(100, "Bobot maksimal 100."),
+  ),
   keterangan: z
     .string()
     .transform((v) => (v === "" ? null : v))
@@ -43,5 +47,7 @@ export interface AnalisisIndikatorDTO {
   kategoriId: number | null;
   kode: string;
   nama: string;
+  /** Bobot indikator untuk perhitungan skor (1–100). */
+  bobot: number;
   keterangan: string | null;
 }

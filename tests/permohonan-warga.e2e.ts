@@ -170,3 +170,110 @@ test(
     await expect(screen.getByText("Permohonan Dibatalkan")).toBeVisible();
   },
 );
+
+test(
+  "form permohonan mendukung variasi isian teks, angka, tanggal, pilihan, dan centang",
+  { timeout: 180_000 },
+  async ({ app, screen, browser, alur }) => {
+    await app.clearState();
+    await app.open("/masuk");
+    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
+    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
+    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+
+    await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisVariasiId}`);
+    await expect(
+      screen.getByRole("heading", { name: `Ajukan ${alur.namaJenisVariasi}` }),
+    ).toBeVisible();
+    await expect(screen.getByText("Jenis surat ini tidak memerlukan berkas syarat.")).toBeVisible();
+
+    // Kontrol dirender sesuai tipe isian, dan isian wajib ditandai required.
+    expect(await screen.getByLabel("Nama Kegiatan").getAttribute("type")).toBe("text");
+    expect(await screen.getByLabel("Jumlah Peserta").getAttribute("type")).toBe("number");
+    expect(await screen.getByLabel("Tanggal Kegiatan").getAttribute("type")).toBe("date");
+    expect(await screen.getByLabel("Nama Kegiatan").getAttribute("required")).not.toBeNull();
+    expect(await screen.getByLabel("Butuh Transport").getAttribute("type")).toBe("checkbox");
+
+    await screen.getByLabel("Nama Kegiatan").fill("Musyawarah Desa");
+    await screen.getByLabel("Alamat Kegiatan").fill("Balai Desa");
+    await screen.getByLabel("Jumlah Peserta").fill("25");
+    await screen.getByLabel("Tanggal Kegiatan").fill("2026-11-20");
+    await screen.getByLabel("Kategori Kegiatan").selectOption("Sosial");
+    await screen.getByLabel("Perlu transport").check();
+    await screen.getByRole("button", { name: "Kirim permohonan" }).tap();
+
+    await expect(screen.getByText("Permohonan berhasil dikirim")).toBeVisible();
+    await expect(screen.getByText(/Nomor antrian Anda:/)).toBeVisible();
+
+    // Nilai semua tipe isian tersimpan, termasuk normalisasi centang ke "Ya".
+    expect(await alur.ambilIsianPermohonan()).toEqual({
+      nama_kegiatan: "Musyawarah Desa",
+      alamat_kegiatan: "Balai Desa",
+      jumlah_peserta: "25",
+      tanggal_kegiatan: "2026-11-20",
+      kategori_kegiatan: "Sosial",
+      butuh_transport: "Ya",
+    });
+
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText(alur.namaJenisVariasi)).toBeVisible();
+  },
+);
+
+test(
+  "warga mengelola arsip dokumen pribadi dan unduhan hanya untuk pemilik",
+  { timeout: 180_000 },
+  async ({ app, screen, browser, alur }) => {
+    const masuk = async (nik: string, bersihkan = true) => {
+      if (bersihkan) await app.clearState();
+      await app.open("/masuk");
+      await screen.getByLabel("Username atau NIK").fill(nik);
+      await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
+      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    };
+    const unduh = async (url: string) =>
+      browser.evaluate(async (href: string) => {
+        const response = await fetch(href);
+        const payload = await response.arrayBuffer();
+        return {
+          status: response.status,
+          contentType: response.headers.get("content-type"),
+          signature: new TextDecoder().decode(payload.slice(0, 5)),
+        };
+      }, url);
+
+    await masuk(alur.warga.nik, false);
+    await app.open("/layanan-mandiri/dokumen");
+    await screen.getByRole("button", { name: "Unggah dokumen" }).tap();
+    await screen.getByLabel("Jenis dokumen").selectOption("KTP");
+    await screen.getByLabel("Nama dokumen").fill("KTP Uji E2E");
+    await screen.getByLabel(/Berkas/).setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
+    await screen.getByRole("button", { name: "Simpan" }).tap();
+    await expect(screen.getByText("KTP Uji E2E")).toBeVisible();
+
+    const href = await screen.getByRole("link", { name: "Unduh KTP Uji E2E" }).getAttribute("href");
+    if (!href) throw new Error("Tautan dokumen tidak ditemukan.");
+
+    const milikSendiri = await unduh(href);
+    expect(milikSendiri.status).toBe(200);
+    expect(milikSendiri.contentType).toContain("application/pdf");
+    expect(milikSendiri.signature).toBe("%PDF-");
+
+    await masuk(alur.wargaLain.nik);
+    const milikOrangLain = await unduh(href);
+    expect(milikOrangLain.status).toBe(404);
+
+    await masuk(alur.warga.nik);
+    await app.open("/layanan-mandiri/dokumen");
+    await screen.getByRole("button", { name: "Ubah KTP Uji E2E" }).tap();
+    await screen.getByLabel("Nama dokumen").fill("KTP Diperbarui");
+    await screen.getByRole("button", { name: "Simpan" }).tap();
+    await expect(screen.getByText("KTP Diperbarui")).toBeVisible();
+
+    await screen.getByRole("button", { name: "Hapus KTP Diperbarui" }).tap();
+    await screen.getByRole("button", { name: "Hapus" }).tap();
+    await expect(screen.getByText("Belum ada dokumen. Unggah dokumen pertama Anda.")).toBeVisible();
+  },
+);

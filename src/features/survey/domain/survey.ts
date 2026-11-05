@@ -18,6 +18,9 @@ export const PERTANYAAN_MAX = 500;
 export const PILIHAN_MIN = 2;
 export const PILIHAN_MAX = 10;
 export const NAMA_RESPONDEN_MAX = 150;
+export const SASARAN_MAX = 200;
+export const BOBOT_MIN = 1;
+export const BOBOT_MAX = 100;
 
 /** Tipe dari DB bisa berupa teks bebas; nilai tak dikenal jatuh ke `text`. */
 export function normalizeTipeSoal(value: string | null | undefined): TipeSoal {
@@ -62,20 +65,92 @@ export function serializePilihan(pilihan: readonly string[]): string | null {
   return pilihan.length === 0 ? null : JSON.stringify(pilihan);
 }
 
-/** Formulir survei (tambah/ubah). */
-export const surveyFormSchema = z.object({
-  judul: z.string().trim().min(1, "Judul wajib diisi.").max(JUDUL_MAX),
-  deskripsi: z
-    .string()
-    .trim()
-    .max(DESKRIPSI_MAX, `Deskripsi maksimal ${DESKRIPSI_MAX} karakter.`)
-    .optional()
-    .or(z.literal("")),
-  aktif: z.preprocess(
-    (value) => value === "1" || value === "on" || value === "true" || value === true,
-    z.boolean(),
-  ),
-});
+/** Baca peta pilihan → skor 0–5 dari kolom `survey_soal.skor_pilihan`. */
+export function parseSkorPilihanSoal(raw: string | null | undefined): Record<string, number> {
+  if (!raw || raw.trim() === "") return {};
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return {};
+
+    const hasil: Record<string, number> = {};
+    for (const [label, nilai] of Object.entries(parsed)) {
+      if (typeof nilai === "number" && Number.isFinite(nilai)) {
+        hasil[label] = Math.min(5, Math.max(0, nilai));
+      }
+    }
+    return hasil;
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Baca isian skor (satu baris `Pilihan=skor`) berdasarkan daftar pilihan soal.
+ * Baris untuk pilihan yang tidak ada diabaikan; kosong berarti tanpa skor.
+ */
+export function parseSkorPilihanForm(
+  raw: string,
+  pilihan: readonly string[],
+): Record<string, number> {
+  const hasil: Record<string, number> = {};
+
+  for (const baris of raw.split(/\r?\n/)) {
+    const [label, nilai] = baris.split("=");
+    const nama = label?.trim() ?? "";
+    if (!nama || !pilihan.includes(nama)) continue;
+
+    const angka = Number(nilai?.trim());
+    if (!Number.isFinite(angka)) continue;
+    hasil[nama] = Math.min(5, Math.max(0, angka));
+  }
+
+  return hasil;
+}
+
+/** Serialisasi peta skor pilihan untuk kolom `survey_soal.skor_pilihan`. */
+export function serializeSkorPilihan(peta: Readonly<Record<string, number>>): string | null {
+  return Object.keys(peta).length === 0 ? null : JSON.stringify(peta);
+}
+
+/** Isian teks skor untuk formulir, satu baris per pilihan. */
+export function formatSkorPilihanForm(
+  pilihan: readonly string[],
+  peta: Readonly<Record<string, number>>,
+): string {
+  return pilihan.map((label) => `${label}=${peta[label] ?? 0}`).join("\n");
+}
+
+/** Tanggal opsional berformat `YYYY-MM-DD`. */
+const tanggalOpsional = z
+  .string()
+  .trim()
+  .optional()
+  .or(z.literal(""))
+  .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), "Format tanggal tidak valid.");
+
+/** Formulir survei (tambah/ubah), termasuk sasaran dan periode pengisian. */
+export const surveyFormSchema = z
+  .object({
+    judul: z.string().trim().min(1, "Judul wajib diisi.").max(JUDUL_MAX),
+    deskripsi: z
+      .string()
+      .trim()
+      .max(DESKRIPSI_MAX, `Deskripsi maksimal ${DESKRIPSI_MAX} karakter.`)
+      .optional()
+      .or(z.literal("")),
+    sasaran: z.string().trim().max(SASARAN_MAX).optional().or(z.literal("")),
+    mulai: tanggalOpsional,
+    selesai: tanggalOpsional,
+    aktif: z.preprocess(
+      (value) => value === "1" || value === "on" || value === "true" || value === true,
+      z.boolean(),
+    ),
+  })
+  .refine((value) => !value.mulai || !value.selesai || value.mulai <= value.selesai, {
+    message: "Tanggal selesai tidak boleh sebelum tanggal mulai.",
+    path: ["selesai"],
+  });
 
 export type SurveyInput = z.infer<typeof surveyFormSchema>;
 
@@ -86,6 +161,16 @@ export const soalFormSchema = z
     pertanyaan: z.string().trim().min(1, "Pertanyaan wajib diisi.").max(PERTANYAAN_MAX),
     tipe: z.enum(TIPE_SOAL),
     pilihan: z.string().trim().max(4000).optional().or(z.literal("")),
+    bobot: z.preprocess(
+      (value) => (value === "" || value === null || value === undefined ? 1 : value),
+      z.coerce.number().int().min(BOBOT_MIN).max(BOBOT_MAX),
+    ),
+    skorPilihan: z.string().trim().max(4000).optional().or(z.literal("")),
+    indikatorId: z.preprocess(
+      (value) =>
+        value === "" || value === "0" || value === null || value === undefined ? null : value,
+      z.coerce.number().int().positive().nullable(),
+    ),
     urutan: z.coerce.number().int().min(0).max(9999),
   })
   .superRefine((value, ctx) => {
@@ -124,6 +209,9 @@ export interface SurveyRow {
   id: number;
   judul: string;
   deskripsi: string | null;
+  sasaran: string | null;
+  mulai: string | null;
+  selesai: string | null;
   aktif: boolean;
   jumlahSoal: number;
   jumlahResponden: number;
@@ -137,6 +225,10 @@ export interface SoalRow {
   pertanyaan: string;
   tipe: TipeSoal;
   pilihan: string[];
+  bobot: number;
+  /** Peta pilihan → skor 0–5 (kosong untuk soal isian/angka). */
+  skorPilihan: Record<string, number>;
+  indikatorId: number | null;
   urutan: number;
 }
 

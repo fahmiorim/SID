@@ -1,11 +1,25 @@
 import "server-only";
 
+import {
+  hitungSkorResponden,
+  KLASIFIKASI_SKOR,
+  klasifikasiSkor,
+  rekapPerIndikator,
+  type RekapIndikatorSkor,
+  type SkorResponden,
+} from "@/features/analisis/domain/skor";
+import {
+  listAnalisisIndikator,
+  listAnalisisKategori,
+} from "@/features/analisis/infrastructure/analisis-repository";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import {
   parsePilihanForm,
+  parseSkorPilihanForm,
   rekapSoal,
   serializePilihan,
+  serializeSkorPilihan,
   validasiJawaban,
   type RekapSoal,
   type RespondenInput,
@@ -75,10 +89,11 @@ export async function getSurveyDetailData(surveyId: number) {
   const survei = await getSurvey(villageId, surveyId);
   if (!survei) return null;
 
-  const [soal, responden, jawaban] = await Promise.all([
+  const [soal, responden, jawaban, indikator] = await Promise.all([
     listSoal(surveyId),
     listResponden(surveyId),
     listJawaban(surveyId),
+    listAnalisisIndikator(villageId),
   ]);
 
   const jawabanPerSoal = new Map<number, string[]>();
@@ -95,6 +110,7 @@ export async function getSurveyDetailData(surveyId: number) {
     soal,
     responden,
     rekap,
+    indikator: indikator.map((item) => ({ id: item.id, nama: item.nama, kode: item.kode })),
     urutanBerikutnya: await nextUrutanSoal(surveyId),
   };
 }
@@ -110,6 +126,9 @@ export async function simpanSurveyData(
   const values = {
     judul: input.judul,
     deskripsi: input.deskripsi?.trim() ? input.deskripsi.trim() : null,
+    sasaran: input.sasaran?.trim() ? input.sasaran.trim() : null,
+    mulai: input.mulai?.trim() ? input.mulai.trim() : null,
+    selesai: input.selesai?.trim() ? input.selesai.trim() : null,
     aktif: input.aktif,
   };
 
@@ -149,10 +168,31 @@ export async function simpanSoalData(
 
   const pilihan = input.tipe === "choice" ? parsePilihanForm(input.pilihan ?? "") : [];
 
+  if (input.indikatorId !== null) {
+    const indikator = await listAnalisisIndikator(villageId);
+    if (!indikator.some((item) => item.id === input.indikatorId)) {
+      throw validationError("Indikator analisis tidak ditemukan.", {
+        indikatorId: ["Pilih indikator yang terdaftar di desa ini."],
+      });
+    }
+  }
+
+  // Tanpa peta skor eksplisit, pilihan pertama bernilai tertinggi (5) dan
+  // menurun satu poin per pilihan berikutnya.
+  const skorPilihan = parseSkorPilihanForm(input.skorPilihan ?? "", pilihan);
+  if (pilihan.length > 0 && Object.keys(skorPilihan).length === 0) {
+    pilihan.forEach((label, index) => {
+      skorPilihan[label] = Math.max(0, 5 - index);
+    });
+  }
+
   const values = {
     pertanyaan: input.pertanyaan,
     tipe: input.tipe,
     pilihan: serializePilihan(pilihan),
+    bobot: input.bobot,
+    skorPilihan: serializeSkorPilihan(skorPilihan),
+    indikatorId: input.indikatorId,
     urutan: input.urutan,
   };
 
@@ -314,6 +354,151 @@ export async function importSurveyCsvData(
   }
 
   return { surveyId, diimpor, ditolak: kesalahan.length, kesalahan };
+}
+
+/**
+ * Simpan respons dari halaman publik.
+ *
+ * Tidak memakai izin sesi: desa ditentukan pemanggil dari host permintaan.
+ * Hanya survei aktif dan berada dalam periode pengisian yang menerima respons.
+ */
+export async function simpanResponsPublikData(
+  villageId: number,
+  surveyId: number,
+  input: { nama: string; nik: string | null },
+  jawaban: Readonly<Record<string, string>>,
+): Promise<{ id: number }> {
+  const survei = await getSurvey(villageId, surveyId);
+  if (!survei || !survei.aktif) throw notFound("Survei tidak ditemukan atau tidak aktif.");
+
+  const hariIni = new Date().toISOString().slice(0, 10);
+  if (survei.mulai && hariIni < survei.mulai) {
+    throw validationError("Periode pengisian survei belum dibuka.");
+  }
+  if (survei.selesai && hariIni > survei.selesai) {
+    throw validationError("Periode pengisian survei sudah berakhir.");
+  }
+
+  const soal = await listSoal(surveyId);
+  if (soal.length === 0) throw validationError("Survei belum memiliki pertanyaan.");
+
+  const errors = validasiJawaban(soal, jawaban);
+  if (Object.keys(errors).length > 0) {
+    throw validationError(
+      "Lengkapi jawaban survei.",
+      Object.fromEntries(
+        Object.entries(errors).map(([soalId, pesan]) => [`jawaban.${soalId}`, [pesan]]),
+      ),
+    );
+  }
+
+  const id = await insertResponden(
+    surveyId,
+    input,
+    soal.map((item) => ({
+      soalId: item.id,
+      jawaban: (jawaban[String(item.id)] ?? "").trim(),
+    })),
+  );
+
+  return { id };
+}
+
+/** Hasil perhitungan skor satu survei untuk laporan formal. */
+export interface LaporanSkorData {
+  survei: Awaited<ReturnType<typeof pastikanSurvei>>;
+  jumlahResponden: number;
+  rataRata: number;
+  klasifikasiDominan: string;
+  perResponden: SkorResponden[];
+  distribusi: { label: string; jumlah: number; persentase: number }[];
+  perIndikator: (RekapIndikatorSkor & { nama: string; kategori: string | null })[];
+}
+
+/**
+ * Laporan skor survei: skor per responden, rata-rata, distribusi klasifikasi,
+ * dan rata-rata per indikator analisis.
+ */
+export async function getLaporanSkorData(surveyId: number): Promise<LaporanSkorData> {
+  const user = await requirePermission(RESOURCES.analisisSurvei, "read");
+  const villageId = await resolveVillageId(user);
+  const survei = await pastikanSurvei(villageId, surveyId);
+
+  const [soal, responden, jawaban, indikator, kategori] = await Promise.all([
+    listSoal(surveyId),
+    listResponden(surveyId),
+    listJawaban(surveyId),
+    listAnalisisIndikator(villageId),
+    listAnalisisKategori(villageId),
+  ]);
+
+  const jawabanPerResponden = new Map<number, Map<number, string>>(
+    responden.map((item) => [item.id, new Map<number, string>()]),
+  );
+  for (const item of jawaban) {
+    jawabanPerResponden.get(item.respondenId)?.set(item.soalId, item.jawaban);
+  }
+
+  const soalSkor = soal.map((item) => ({
+    id: item.id,
+    tipe: item.tipe,
+    bobot: item.bobot,
+    skorPilihan: item.skorPilihan,
+    indikatorId: item.indikatorId,
+  }));
+
+  const perResponden = responden.map((item) =>
+    hitungSkorResponden(soalSkor, {
+      respondenId: item.id,
+      nama: item.nama,
+      jawaban: jawabanPerResponden.get(item.id) ?? new Map<number, string>(),
+    }),
+  );
+
+  const rataRata =
+    perResponden.length === 0
+      ? 0
+      : Math.round(
+          (perResponden.reduce((sum, item) => sum + item.skor, 0) / perResponden.length) * 10,
+        ) / 10;
+
+  const distribusi = KLASIFIKASI_SKOR.map((item) => {
+    const jumlah = perResponden.filter((row) => row.klasifikasi === item.label).length;
+    return {
+      label: item.label,
+      jumlah,
+      persentase:
+        perResponden.length === 0 ? 0 : Math.round((jumlah / perResponden.length) * 1000) / 10,
+    };
+  });
+
+  const kategoriNama = new Map(kategori.map((item) => [item.id, item.nama]));
+  const indikatorNama = new Map(indikator.map((item) => [item.id, item]));
+
+  const perIndikator = rekapPerIndikator(
+    soalSkor,
+    responden.map((item) => ({
+      respondenId: item.id,
+      jawaban: jawabanPerResponden.get(item.id) ?? new Map<number, string>(),
+    })),
+  ).map((item) => {
+    const info = item.indikatorId === null ? null : indikatorNama.get(item.indikatorId);
+    return {
+      ...item,
+      nama: info?.nama ?? "Tanpa indikator",
+      kategori: info?.kategoriId == null ? null : (kategoriNama.get(info.kategoriId) ?? null),
+    };
+  });
+
+  return {
+    survei,
+    jumlahResponden: responden.length,
+    rataRata,
+    klasifikasiDominan: klasifikasiSkor(rataRata),
+    perResponden,
+    distribusi,
+    perIndikator,
+  };
 }
 
 /** Rincian jawaban satu responden untuk dialog. */

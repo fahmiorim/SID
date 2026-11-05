@@ -15,10 +15,16 @@ interface LetterRow extends RowDataPacket {
   verification_token: string | null;
 }
 
+interface IsianRow extends RowDataPacket {
+  isian_form: string | null;
+}
+
 export interface PermohonanWargaFixture {
   namaJenis: string;
+  namaJenisVariasi: string;
   syaratNama: string;
   jenisId: number;
+  jenisVariasiId: number;
   desaId: number;
   operatorUsername: string;
   warga: { nama: string; nik: string };
@@ -28,6 +34,8 @@ export interface PermohonanWargaFixture {
     number: string | null;
     verificationToken: string | null;
   } | null>;
+  /** Nilai isian dinamis permohonan terakhir pada jenis variasi. */
+  ambilIsianPermohonan(): Promise<Record<string, string> | null>;
   hapus(): Promise<void>;
 }
 
@@ -43,7 +51,35 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
   const pool = createPool(dsn);
   const run = randomUUID().slice(0, 8);
   const namaJenis = `Surat Uji E2E ${run}`;
+  const namaJenisVariasi = `Surat Variasi E2E ${run}`;
   const syaratNama = `Berkas Uji E2E ${run}`;
+  // Semua tipe isian dinamis (OS-WGA-004), sengaja tanpa berkas syarat.
+  const formIsianVariasi = [
+    { kode: "nama_kegiatan", label: "Nama Kegiatan", tipe: "text", required: true },
+    {
+      kode: "alamat_kegiatan",
+      label: "Alamat Kegiatan",
+      tipe: "textarea",
+      required: false,
+      placeholder: "Alamat lengkap kegiatan",
+    },
+    { kode: "jumlah_peserta", label: "Jumlah Peserta", tipe: "number", required: true },
+    { kode: "tanggal_kegiatan", label: "Tanggal Kegiatan", tipe: "date", required: true },
+    {
+      kode: "kategori_kegiatan",
+      label: "Kategori Kegiatan",
+      tipe: "select",
+      required: true,
+      opsi: ["Sosial", "Ekonomi"],
+    },
+    {
+      kode: "butuh_transport",
+      label: "Butuh Transport",
+      tipe: "checkbox",
+      required: false,
+      placeholder: "Perlu transport",
+    },
+  ];
   const warga = { nama: `Warga Uji ${run}`, nik: nikUji() };
   const wargaLain = { nik: nikUji() };
   const userIds = [randomUUID(), randomUUID(), randomUUID()];
@@ -52,6 +88,7 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
   let desaId: number | null = null;
   let syaratId: number | null = null;
   let jenisId: number | null = null;
+  let jenisVariasiId: number | null = null;
   let sudahDihapus = false;
 
   async function hapus(): Promise<void> {
@@ -67,6 +104,9 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
         await pool.execute("DELETE FROM users WHERE id IN (?, ?, ?)", userIds);
         if (jenisId !== null) {
           await pool.execute("DELETE FROM letters WHERE type_id = ?", [jenisId]);
+        }
+        if (jenisVariasiId !== null) {
+          await pool.execute("DELETE FROM letters WHERE type_id = ?", [jenisVariasiId]);
         }
         await pool.execute("DELETE FROM villages WHERE id = ?", [desaId]);
       }
@@ -97,6 +137,20 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
       verificationToken: row.verification_token,
     };
   }
+  async function ambilIsianPermohonan(): Promise<Record<string, string> | null> {
+    if (desaId === null || jenisVariasiId === null) return null;
+    const [rows] = await pool.execute<IsianRow[]>(
+      `SELECT isian_form FROM permohonan_surat
+       WHERE village_id = ? AND letter_type_id = ?
+       ORDER BY id DESC
+       LIMIT 1`,
+      [desaId, jenisVariasiId],
+    );
+    const raw = rows[0]?.isian_form;
+    if (!raw) return null;
+    return JSON.parse(raw) as Record<string, string>;
+  }
+
   try {
     const [adminRows] = await pool.execute<AdminRoleRow[]>(
       "SELECT role_id FROM users WHERE username = ? LIMIT 1",
@@ -194,15 +248,32 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
     );
     jenisId = jenisResult.insertId;
 
+    const [variasiResult] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO letter_types
+        (village_id, code, name, template_body, form_isian, syarat_surat, requires_resident, is_active)
+       VALUES (?, ?, ?, ?, ?, '[]', 1, 1)`,
+      [
+        desaId,
+        `E2V${run.slice(0, 5)}`,
+        namaJenisVariasi,
+        `<p>Surat variasi isian untuk ${warga.nama}.</p>`,
+        JSON.stringify(formIsianVariasi),
+      ],
+    );
+    jenisVariasiId = variasiResult.insertId;
+
     return {
       namaJenis,
+      namaJenisVariasi,
       syaratNama,
       jenisId,
+      jenisVariasiId,
       operatorUsername,
       desaId,
       warga,
       wargaLain,
       ambilSuratTerbit,
+      ambilIsianPermohonan,
       hapus,
     };
   } catch (error) {

@@ -243,6 +243,25 @@ function IndikatorDialog({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="bobot-indikator">Bobot (1–100)</Label>
+            <Input
+              id="bobot-indikator"
+              name="bobot"
+              type="number"
+              min={1}
+              max={100}
+              step={1}
+              defaultValue={item?.bobot ?? 1}
+            />
+            <p className="text-xs text-muted-foreground">
+              Bobot menentukan pengaruh indikator pada skor survei.
+            </p>
+            {fieldErrors?.bobot ? (
+              <p className="text-sm text-destructive">{fieldErrors.bobot[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="keterangan-indikator">Keterangan</Label>
             <Textarea
               id="keterangan-indikator"
@@ -406,6 +425,9 @@ export function AnalisisManager({
                       Kategori
                     </th>
                     <th className="p-3 text-left text-sm font-medium text-muted-foreground">
+                      Bobot
+                    </th>
+                    <th className="p-3 text-left text-sm font-medium text-muted-foreground">
                       Keterangan
                     </th>
                     {canWrite || canManage ? (
@@ -423,6 +445,7 @@ export function AnalisisManager({
                       <td className="p-3 text-sm text-muted-foreground">
                         {item.kategoriId ? (namaKategori.get(item.kategoriId) ?? "—") : "—"}
                       </td>
+                      <td className="p-3 text-sm tabular-nums">{item.bobot}</td>
                       <td className="p-3 text-sm text-muted-foreground">
                         {item.keterangan || "—"}
                       </td>
