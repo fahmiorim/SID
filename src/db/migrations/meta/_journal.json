@@ -618,6 +618,13 @@
       "when": 1794435833000,
       "tag": "0091_create_login_otp",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "5",
+      "when": 1794435840000,
+      "tag": "0092_create_totp",
+      "breakpoints": true
     }
   ]
 }

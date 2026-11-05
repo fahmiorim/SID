@@ -39,13 +39,6 @@ export function ShortcutPicker({
     if (state.status === "error") toast.error(state.message);
   }, [state]);
 
-  // Gunakan key pada DialogContent untuk reset ordered saat terpilih berubah
-  // Hindari useEffect setState yang memicu cascading renders
-  function handleDragStart(e: React.DragEvent, href: string) {
-    e.dataTransfer.setData("text/plain", href);
-    e.dataTransfer.effectAllowed = "move";
-  }
-
   function handleDragStart(e: React.DragEvent, href: string) {
     e.dataTransfer.setData("text/plain", href);
     e.dataTransfer.effectAllowed = "move";
@@ -70,16 +63,6 @@ export function ShortcutPicker({
       next.splice(idx, 1);
       next.splice(targetIdx, 0, draggedHref);
       return next;
-    });
-  }
-
-  function handleCheckboxChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const href = e.target.value;
-    setOrdered((prev) => {
-      if (e.target.checked) {
-        return [...prev, href];
-      }
-      return prev.filter((h) => h !== href);
     });
   }
 
@@ -134,7 +117,14 @@ export function ShortcutPicker({
                     name="href"
                     value={item.href}
                     checked={isSelected}
-                    onChange={handleCheckboxChange}
+                    onCheckedChange={(checked) => {
+                      setOrdered((prev) => {
+                        if (checked) {
+                          return [...prev, item.href];
+                        }
+                        return prev.filter((h) => h !== item.href);
+                      });
+                    }}
                   />
                   <Label
                     htmlFor={`shortcut-${item.href}`}

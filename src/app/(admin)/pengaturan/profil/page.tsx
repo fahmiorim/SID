@@ -144,6 +144,34 @@ export default async function ProfilPage({ searchParams }: PageProps<"/pengatura
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="size-5" />
+            TOTP (Authenticator App)
+          </CardTitle>
+          <CardDescription>
+            Gunakan aplikasi authenticator (Google Authenticator, Authy, dll.) untuk generate kode 6
+            digit yang tersinkronisasi dengan perangkat Anda.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm">
+            Status: <Badge variant="secondary">Belum dikonfigurasi</Badge>
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Tambahkan aplikasi authenticator ke perangkat, lalu pindai QR code atau masukkan secret
+            yang ditampilkan setelah mengklik tombol di bawah.
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm">Setup TOTP</Button>
+            <Button size="sm" variant="outline" disabled>
+              Verifikasi
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

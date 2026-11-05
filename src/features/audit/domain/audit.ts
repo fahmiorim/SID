@@ -37,6 +37,8 @@ export const AUDIT_EVENTS = {
   suratKeluarCreate: "surat-keluar.create",
   suratKeluarUpdate: "surat-keluar.update",
   suratKeluarDelete: "surat-keluar.delete",
+  totpAktifkan: "totp.aktifkan",
+  totpNonaktifkan: "totp.nonaktifkan",
 } as const;
 
 export type AuditEvent = (typeof AUDIT_EVENTS)[keyof typeof AUDIT_EVENTS];
@@ -80,6 +82,8 @@ export const AUDIT_EVENT_LABELS: Record<AuditEvent, string> = {
   [AUDIT_EVENTS.suratKeluarCreate]: "Tambah surat keluar",
   [AUDIT_EVENTS.suratKeluarUpdate]: "Ubah surat keluar",
   [AUDIT_EVENTS.suratKeluarDelete]: "Hapus surat keluar",
+  [AUDIT_EVENTS.totpAktifkan]: "Aktifkan TOTP",
+  [AUDIT_EVENTS.totpNonaktifkan]: "Nonaktifkan TOTP",
 };
 
 export interface AuditEventInput {
