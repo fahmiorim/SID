@@ -11,7 +11,7 @@ import { KontenHtml } from "@/themes/ui";
  * berita dalam kartu berbayang. Susunan tetap mengikuti `opsi.beranda`.
  */
 export function NatraHome(props: HomeProps) {
-  const { ctx, slider, statistik, berita, surat } = props;
+  const { ctx, slider, statistik, berita, surat, agenda: _agenda } = props;
   const widgetTampil = props.widget.filter((item) => item.judul || item.isi);
 
   const bagian: Record<string, ReactNode> = {
@@ -128,6 +128,34 @@ export function NatraHome(props: HomeProps) {
                 </div>
                 <time className="shrink-0 text-xs text-muted-foreground">
                   {item.tanggalLabel ?? ""}
+                </time>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    ),
+    agenda: (
+      <section key="agenda" className="space-y-4">
+        <h2 className="text-2xl font-bold tracking-tight">Agenda Desa</h2>
+        {props.agenda.length === 0 ? (
+          <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+            Belum ada agenda kegiatan.
+          </p>
+        ) : (
+          <ul className="tema-natra-card divide-y rounded-2xl border bg-card">
+            {props.agenda.map((item) => (
+              <li key={item.id} className="flex items-start justify-between gap-4 p-4">
+                <div className="min-w-0 flex-1">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {item.perihal}
+                  </span>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {item.asalTujuan ?? "—"}
+                  </p>
+                </div>
+                <time className="shrink-0 text-xs text-muted-foreground">
+                  {formatTanggal(item.tanggal)}
                 </time>
               </li>
             ))}

@@ -72,6 +72,7 @@ export const HOME_SECTION_IDS = [
   "widget",
   "berita",
   "surat",
+  "agenda",
   "kontak",
 ] as const;
 
@@ -84,6 +85,7 @@ export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
   widget: "Widget informasi",
   berita: "Berita terbaru",
   surat: "Surat layanan terbaru",
+  agenda: "Agenda desa",
   kontak: "Kontak desa",
 };
 
@@ -101,7 +103,15 @@ export const FONT_LABELS: Record<FontChoice, string> = {
 export const HEADER_VARIANTS = ["terang", "berwarna"] as const;
 
 /** Maksimal jumlah bagian beranda yang boleh diatur sekaligus. */
-const DEFAULT_HOME_SECTIONS: HomeSectionId[] = ["hero", "statistik", "widget", "berita", "kontak"];
+const DEFAULT_HOME_SECTIONS: HomeSectionId[] = [
+  "hero",
+  "statistik",
+  "widget",
+  "berita",
+  "surat",
+  "agenda",
+  "kontak",
+];
 
 /**
  * Opsi tema yang boleh diatur operator. Divalidasi sebelum disimpan dan saat

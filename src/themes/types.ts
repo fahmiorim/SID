@@ -9,6 +9,7 @@ import type { DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
 import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
+  AgendaPublikRingkas,
   BeritaDetail,
   BeritaRingkas,
 } from "@/features/publik/infrastructure/content-repository";
@@ -51,6 +52,7 @@ export interface HomeProps {
   widget: { id: number; judul: string | null; isi: string | null; jenis: number }[];
   berita: BeritaRingkas[];
   surat: SuratPublikRow[];
+  agenda: AgendaPublikRingkas[];
 }
 
 export interface ProfilProps {

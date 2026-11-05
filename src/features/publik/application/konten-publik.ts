@@ -1,6 +1,7 @@
 import "server-only";
 
 import {
+  daftarAgendaPublik,
   getAlbumBySlug,
   getBeritaBySlug,
   getHalamanBySlug,
@@ -70,6 +71,10 @@ export async function halamanStatisPublik(villageId: number, slug: string) {
 
 export async function daftarSliderBeranda(villageId: number) {
   return listSliderBeranda(villageId);
+}
+
+export async function daftarAgendaBeranda(villageId: number, limit = 5) {
+  return daftarAgendaPublik(villageId, limit);
 }
 
 export async function daftarWidgetPublik(villageId: number) {

@@ -6,6 +6,7 @@ import { db } from "@/db";
 import {
   berita,
   beritaKategori,
+  bumindesAgenda,
   dokumenPublik,
   galeriAlbum,
   galeriFoto,
@@ -289,7 +290,42 @@ export async function listSliderBeranda(villageId: number): Promise<FotoRingkas[
     .orderBy(asc(galeriFoto.urut), desc(galeriFoto.id));
 }
 
-/* ------------------------------------------------------------------ profil */
+/* ------------------------------------------------------------------ agenda */
+
+export interface AgendaPublikRingkas {
+  id: number;
+  tanggal: string;
+  jenis: string;
+  nomorSurat: string | null;
+  asalTujuan: string | null;
+  perihal: string;
+}
+
+/**
+ * Agenda surat masuk/keluar desa yang dapat dipublikasikan.
+ *
+ * Menampilkan ringkasan agenda terbaru sesuai `limit` tanpa identitas pelapor.
+ */
+export async function daftarAgendaPublik(
+  villageId: number,
+  limit = 5,
+): Promise<AgendaPublikRingkas[]> {
+  return db
+    .select({
+      id: bumindesAgenda.id,
+      tanggal: bumindesAgenda.tanggal,
+      jenis: bumindesAgenda.jenis,
+      nomorSurat: bumindesAgenda.nomorSurat,
+      asalTujuan: bumindesAgenda.asalTujuan,
+      perihal: bumindesAgenda.perihal,
+    })
+    .from(bumindesAgenda)
+    .where(eq(bumindesAgenda.villageId, villageId))
+    .orderBy(desc(bumindesAgenda.tanggal), desc(bumindesAgenda.id))
+    .limit(limit);
+}
+
+/* ---------------------------------------------------------------- widget */
 
 export interface ProfilRingkas {
   visi: string | null;

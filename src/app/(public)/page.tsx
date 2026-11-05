@@ -6,6 +6,7 @@ import {
   listSuratTerbitTerbaru,
 } from "@/features/desa/application/statistik-desa";
 import {
+  daftarAgendaBeranda,
   daftarBerita,
   daftarSliderBeranda,
   daftarWidgetPublik,
@@ -28,13 +29,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BerandaPage() {
   const { ctx, tema, desa } = await siapkanTema();
 
-  const [statistik, surat, slider, berita, profil, widget] = await Promise.all([
+  const [statistik, surat, slider, berita, profil, widget, agenda] = await Promise.all([
     getStatistikDesa(desa.id),
     listSuratTerbitTerbaru(desa.id, 5),
     daftarSliderBeranda(desa.id),
     daftarBerita(desa.id, { limit: 3 }),
     profilDesaPublik(desa.id),
     daftarWidgetPublik(desa.id),
+    daftarAgendaBeranda(desa.id, 5),
   ]);
 
   const Home = tema.home;
@@ -48,6 +50,7 @@ export default async function BerandaPage() {
       widget={widget}
       berita={berita}
       surat={surat}
+      agenda={agenda}
     />
   );
 }

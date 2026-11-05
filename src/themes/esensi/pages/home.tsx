@@ -13,7 +13,7 @@ import { KontenHtml, ThemeCard, ThemeEmpty, ThemeStatGrid } from "@/themes/ui";
  * sehingga operator dapat menyembunyikan atau mengurutkan ulang sorotan.
  */
 export function EsensiHome(props: HomeProps) {
-  const { ctx, slider, statistik, berita, surat } = props;
+  const { ctx, slider, statistik, berita, surat, agenda: _agenda } = props;
   const nama = ctx.desa.namaDesa ?? "Desa";
   const widgetTampil = props.widget.filter((item) => item.judul || item.isi);
 
@@ -130,6 +130,34 @@ export function EsensiHome(props: HomeProps) {
                   </div>
                   <time className="shrink-0 text-xs text-muted-foreground">
                     {item.tanggalLabel ?? ""}
+                  </time>
+                </li>
+              ))}
+            </ul>
+          </ThemeCard>
+        )}
+      </section>
+    ),
+    agenda: (
+      <section key="agenda" className="space-y-4">
+        <SectionTitle title="Agenda Desa" description={`Rekam jejak kegiatan desa.`} />
+        {props.agenda.length === 0 ? (
+          <ThemeEmpty>Belum ada agenda kegiatan.</ThemeEmpty>
+        ) : (
+          <ThemeCard className="divide-y">
+            <ul>
+              {props.agenda.map((item) => (
+                <li key={item.id} className="flex items-start justify-between gap-4 p-4">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      {item.perihal}
+                    </span>
+                    <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                      {item.asalTujuan ?? "—"}
+                    </p>
+                  </div>
+                  <time className="shrink-0 text-xs text-muted-foreground">
+                    {formatTanggal(item.tanggal)}
                   </time>
                 </li>
               ))}

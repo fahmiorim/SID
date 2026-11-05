@@ -157,6 +157,7 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 
 **Batch 5 — Web publik (progres 5 Nov 2026):**
 
+- **OS-WEB-001** ✅ gap agenda beranda: menambahkan `daftarAgendaBeranda()` use case + `daftarAgendaPublik()` repository dari tabel `bumindes_agenda`; komponen tema esensi & natra menampilkan bagian "Agenda Desa" di beranda; `HOME_SECTION_IDS` + `DEFAULT_HOME_SECTIONS` + `HOME_SECTION_LABELS` diperbarui termasuk "agenda"; test `theme.test.ts` disesuaikan.
 - **OS-WEB-002** ✅ gap pencarian berita: menambahkan `cari` pada
   `listBerita()` + use case `daftarBerita()`, form pencarian di tema
   `berita.tsx`, domain `pencarian.ts` berisi `normalisasiKataKunci` +

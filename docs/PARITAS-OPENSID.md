@@ -135,7 +135,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-FIN-011 | ✅ Berfungsi penuh | Domain & tabel `bumindes_tanah_kas` + `bumindes_tanah_kas_mutasi`, CRUD/UI `/bumindes/tanah-kas`, keluaran buku E1 resmi (cetak + CSV) beserta rekap mutasi. |
 | OS-FIN-012 | ✅ Berfungsi penuh | Domain & tabel `bumindes_pembangunan` + `bumindes_kader`, CRUD/UI `/bumindes/pembangunan` (dan buku kader), keluaran buku resmi (cetak + CSV). |
 | OS-FIN-013 | ✅ Berfungsi penuh | Domain & tabel `bumindes_peraturan`, `bumindes_aparat`, `bumindes_agenda`, CRUD/UI `/bumindes/sekretariat` (peraturan/aparat/agenda/ekspedisi), keluaran buku resmi (cetak + CSV). |
-| OS-WEB-001 | 🟡 Sebagian | Beranda publik: sambutan, slider, statistik ringkas, widget, berita, surat terbaru lewat tema. **Gap: agenda dan E2E beranda belum ada.** |
+| OS-WEB-001 | 🟡 Sebagian | Beranda publik: sambutan, slider, statistik ringkas, widget, berita, surat, agenda melalui tema. **Gap: E2E beranda belum ada.** |
 | OS-WEB-002 | 🟡 Sebagian | Berita: CRUD admin, kategori, status terbit, detail publik, arsip berbasis daftar, hit, test `berita.test.ts`, pencarian khusus dengan escaping wildcard LIKE. **Gap: E2E belum ada.** |
 | OS-WEB-003 | 🟡 Sebagian | Profil, pemerintahan/perangkat, lembaga di route publik. **Gap: bagan SOTK lengkap dan E2E belum ada.** |
 | OS-WEB-004 | 🟡 Sebagian | Galeri: admin album/foto + publik `/desa/galeri` + detail, test `galeri.test.ts`, pencarian album dengan escaping wildcard LIKE. **Gap: cetak dan E2E belum ada.** |
