@@ -16,6 +16,17 @@ test.setup(
     await app.open("/masuk");
     await screen.getByLabel("Username atau NIK").fill(admin.username);
     await screen.getByLabel("Kata sandi / PIN").fill(admin.password);
+
+    // Formulir masuk memakai captcha aritmetika (OS-WGA-001); hitung jawabannya
+    // dari label yang tampil, bukan dari nilai tetap.
+    const labelCaptcha = await browser.locator('label[for="jawaban"]').innerText();
+    const cocok = labelCaptcha.match(/(\d+)\s*([+\u2212-])\s*(\d+)/);
+    if (!cocok) throw new Error(`Label captcha tidak dikenali: ${labelCaptcha}`);
+    const kiri = Number(cocok[1]);
+    const kanan = Number(cocok[3]);
+    const jawaban = cocok[2] === "+" ? kiri + kanan : kiri - kanan;
+    await browser.locator('input[name="jawaban"]').fill(String(jawaban));
+
     await screen.getByRole("button", { name: "Masuk" }).tap();
     await expect(browser).toHaveURL("/beranda");
     await session.save("admin");

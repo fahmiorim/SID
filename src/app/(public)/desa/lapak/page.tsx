@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { daftarLapakPublik } from "@/features/lapak/application/lapak-publik";
+import { listProdukPublik } from "@/features/lapak/infrastructure/lapak-produk-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +40,16 @@ export default async function LapakPublicPage({
     kategori: kategori || undefined,
     q: q || undefined,
   });
+
+  // Fetch products for each lapak in parallel
+  const itemsWithProducts = await Promise.all(
+    items.map(async (item) => {
+      const products = await listProdukPublik(villageId, item.id, {
+        q: q || undefined,
+      });
+      return { ...item, produkCount: products.length };
+    }),
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
@@ -103,7 +115,7 @@ export default async function LapakPublicPage({
       )}
 
       <p className="mb-3 text-sm text-muted-foreground">
-        {items.length} lapak ditemukan{kategori ? ` pada kategori “${kategori}”` : ""}.
+        {items.length} lapak ditemukan{kategori ? ` pada kategori "${kategori}"` : ""}.
       </p>
 
       {items.length === 0 ? (
@@ -114,7 +126,7 @@ export default async function LapakPublicPage({
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((item) => (
+          {itemsWithProducts.map((item) => (
             <Card key={item.id} className="flex flex-col">
               <CardContent className="flex flex-1 flex-col p-4">
                 <h3 className="truncate font-semibold">{item.nama}</h3>
@@ -134,6 +146,19 @@ export default async function LapakPublicPage({
                     {item.keterangan}
                   </p>
                 )}
+                {item.produkCount > 0 && (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    {item.produkCount} produk tersedia
+                  </div>
+                )}
+                <div className="mt-4 flex gap-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/desa/lapak/${item.id}/produk`}>Lihat Produk</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href="/desa/lapak/peta">Peta</Link>
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}

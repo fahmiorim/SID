@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   buildKelompokSlug,
@@ -179,6 +181,16 @@ export async function createKelompok(input: KelompokFormInput): Promise<{ id: nu
 
   const slug = await slugUnik(villageId, input.nama, null);
   const id = await insertKelompok(villageId, slug, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.kelompokCreate,
+    resource: KELOMPOK_RESOURCE,
+    resourceId: String(id),
+    details: { nama: input.nama },
+  });
+
   return { id };
 }
 
@@ -197,6 +209,14 @@ export async function updateKelompok(id: number, input: KelompokFormInput): Prom
 
   const slug = await slugUnik(villageId, input.nama, id);
   await updateKelompokRow(id, slug, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.kelompokUpdate,
+    resource: KELOMPOK_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function deleteKelompok(id: number): Promise<void> {
@@ -214,6 +234,14 @@ export async function deleteKelompok(id: number): Promise<void> {
   }
 
   await deleteKelompokRow(id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.kelompokDelete,
+    resource: KELOMPOK_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 /**

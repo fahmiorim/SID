@@ -5,6 +5,7 @@ import {
   daftarKomentarPublik,
   kirimKomentarPublik,
 } from "@/features/kontak/application/kontak-use-cases";
+import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 
 /** GET /api/publik/kontak/komentar — Daftar commentaires publics actifs */
 export async function GET(request: Request) {
@@ -33,6 +34,11 @@ export async function POST(request: Request) {
     desa = await getIdentitasFromRequest();
   } catch {
     return NextResponse.json({ error: "Desa tidak valid" }, { status: 400 });
+  }
+
+  const pengaturan = await bacaPengaturan(desa.id);
+  if (!pengaturan.komentarAktif) {
+    return NextResponse.json({ error: "Komentar dinonaktifkan oleh desa" }, { status: 403 });
   }
 
   let body: { nama: string; isi: string };

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   AKUN_LAPORAN,
@@ -234,6 +236,15 @@ export async function saveKeuanganTriwulanData(tahun: number, inputs: unknown[])
     })),
   );
 
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.keuanganSave,
+    resource: KEUANGAN_RESOURCE,
+    resourceId: String(tahun),
+    details: { jenis: "triwulan", baris: rows.length },
+  });
+
   return { tahun };
 }
 
@@ -267,5 +278,15 @@ export async function saveKeuanganData(tahun: number, inputs: unknown[]) {
       realisasi: numberToMoney(row.realisasi),
     })),
   );
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.keuanganSave,
+    resource: KEUANGAN_RESOURCE,
+    resourceId: String(tahun),
+    details: { jenis: "anggaran-realisasi", baris: rows.length },
+  });
+
   return { tahun };
 }

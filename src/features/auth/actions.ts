@@ -1,18 +1,27 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import {
+  mintaKodeLogin,
+  siapkanOtpLogin,
+  verifikasiKodeLogin,
+} from "@/features/auth/application/login-otp-use-cases";
+import {
   getAccountLoginContext,
+  getLoginOtpContext,
+  setOtpLoginAktif,
   touchLastLogin,
 } from "@/features/auth/infrastructure/auth-repository";
 import { signInSchema } from "@/features/auth/schemas";
 import { errorState, toErrorState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
 import { auth } from "@/lib/auth";
 import { periksaCaptcha } from "@/lib/captcha";
+import { requireUser } from "@/lib/dal";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
@@ -67,6 +76,27 @@ export async function signInAction(
     return errorState("Jawaban verifikasi salah. Muat ulang halaman lalu coba lagi.", {
       jawaban: ["Jawaban verifikasi salah atau sudah kedaluwarsa."],
     });
+  }
+
+  // Faktor kedua OTP (OS-OPS-004): verifikasi sebelum sesi better-auth dibuat.
+  const otpContext = await getLoginOtpContext(parsed.data.username);
+  if (otpContext?.active && otpContext.otpLoginAktif) {
+    const kode = formData.get("otp");
+
+    if (typeof kode !== "string" || kode.trim() === "") {
+      const hasil = await mintaKodeLogin(parsed.data.username);
+      return errorState(hasil.pesan, {
+        otp: ["Masukkan kode OTP yang dikirim untuk melanjutkan."],
+      });
+    }
+
+    try {
+      await verifikasiKodeLogin(otpContext.id, kode);
+    } catch (error) {
+      return errorState(error instanceof Error ? error.message : "Kode OTP tidak sah.", {
+        otp: ["Kode OTP tidak sah atau sudah kedaluwarsa."],
+      });
+    }
   }
 
   const requestHeaders = await headers();
@@ -140,6 +170,21 @@ export async function signInAction(
 
   // `redirect` harus dipanggil di luar try/catch (ia melempar sinyal khusus).
   redirect(redirectTo);
+}
+
+/** Aktifkan/nonaktifkan OTP login untuk akun sendiri. */
+export async function setOtpLoginAktifAction(formData: FormData): Promise<void> {
+  const user = await requireUser();
+  const aktif = String(formData.get("aktif") ?? "") === "true";
+
+  if (aktif) {
+    const siap = await siapkanOtpLogin(user.id);
+    if (!siap.bisa) redirect("/pengaturan/profil?otp=gagal");
+  }
+
+  await setOtpLoginAktif(user.id, aktif);
+  revalidatePath("/pengaturan/profil");
+  redirect(`/pengaturan/profil?otp=${aktif ? "aktif" : "nonaktif"}`);
 }
 
 /** Keluar dari sesi saat ini lalu kembali ke halaman masuk. */

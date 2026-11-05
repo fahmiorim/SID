@@ -1,6 +1,7 @@
 "use client";
 
-import { Filter, Plus, Search } from "lucide-react";
+import { Filter, Plus, Search, Settings } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,15 @@ export function LapakTable({ items, kategoriList }: LapakTableProps) {
   const [selected, setSelected] = useState<LapakDTO | null>(null);
   const [filterKategori, setFilterKategori] = useState("");
   const [search, setSearch] = useState("");
+
+  const filtered = items.filter((item) => {
+    const matchKategori = !filterKategori || item.kategori === filterKategori;
+    const matchSearch =
+      !search ||
+      item.nama.toLowerCase().includes(search.toLowerCase()) ||
+      (item.pemilik && item.pemilik.toLowerCase().includes(search.toLowerCase()));
+    return matchKategori && matchSearch;
+  });
 
   return (
     <Card>
@@ -84,23 +94,33 @@ export function LapakTable({ items, kategoriList }: LapakTableProps) {
               <TableHead>Pemilik</TableHead>
               <TableHead>Kategori</TableHead>
               <TableHead>Alamat</TableHead>
+              <TableHead>Produk</TableHead>
               <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {items.length === 0 ? (
+            {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
+                <TableCell colSpan={6} className="text-center text-muted-foreground">
                   Belum ada data lapak.
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((item) => (
+              filtered.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{item.nama}</TableCell>
                   <TableCell>{item.pemilik ?? "-"}</TableCell>
                   <TableCell>{item.kategori ?? "-"}</TableCell>
                   <TableCell className="max-w-xs truncate">{item.alamat ?? "-"}</TableCell>
+                  <TableCell>
+                    <Link
+                      href={`/lapak/${item.id}/produk`}
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    >
+                      <Settings className="h-3 w-3" />
+                      Kelola produk
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"

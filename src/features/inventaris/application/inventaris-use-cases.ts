@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   hitungPerubahanAset,
@@ -171,10 +173,28 @@ export async function saveInventaris(input: InventarisInput, id?: number) {
     const existing = await getInventaris(villageId, id);
     if (!existing) throw notFound("Data inventaris tidak ditemukan.");
     await updateInventaris(villageId, id, input);
+    await recordAuditEvent({
+      villageId,
+      actorId: user.id,
+      event: AUDIT_EVENTS.inventarisSave,
+      resource: INVENTARIS_RESOURCE,
+      resourceId: String(id),
+      details: { aksi: "ubah" },
+    });
     return;
   }
   const newId = await createInventaris(villageId, input);
   if (!newId) throw conflict("Gagal menyimpan inventaris");
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.inventarisSave,
+    resource: INVENTARIS_RESOURCE,
+    resourceId: String(newId),
+    details: { aksi: "tambah" },
+  });
+
   return { id: newId };
 }
 
@@ -184,6 +204,14 @@ export async function hapusInventaris(id: number) {
   const item = await getInventaris(villageId, id);
   if (!item) throw notFound("Data inventaris tidak ditemukan");
   await softDeleteInventaris(villageId, id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.inventarisDelete,
+    resource: INVENTARIS_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function ajukanMutasi(input: InventarisMutasiInput) {

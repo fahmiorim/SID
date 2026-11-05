@@ -2,6 +2,8 @@ import "server-only";
 
 import { cache } from "react";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { requirePermission } from "@/lib/dal";
 import { getDefaultTheme, getThemeManifest, listThemeManifests } from "@/themes/registry";
@@ -113,4 +115,12 @@ export async function gantiTemaAktif(slug: string): Promise<void> {
   const user = await requirePermission(TEMA_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   await setActiveTheme(villageId, slug);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.temaActivate,
+    resource: TEMA_RESOURCE,
+    resourceId: slug,
+  });
 }

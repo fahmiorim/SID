@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { catatPerubahanAnggotaKk } from "@/features/keluarga/application/catat-anggota-kk";
 import {
@@ -77,6 +79,15 @@ export async function createPenduduk(input: PendudukFormInput): Promise<{ id: nu
 
   const id = await insertPenduduk(villageId, input);
 
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.pendudukCreate,
+    resource: PENDUDUK_RESOURCE,
+    resourceId: String(id),
+    details: { nama: input.name },
+  });
+
   await catatPerubahanAnggotaKk({
     villageId,
     residentId: id,
@@ -104,6 +115,14 @@ export async function updatePenduduk(id: number, input: PendudukFormInput): Prom
 
   await updatePendudukRow(id, input);
 
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.pendudukUpdate,
+    resource: PENDUDUK_RESOURCE,
+    resourceId: String(id),
+  });
+
   await catatPerubahanAnggotaKk({
     villageId,
     residentId: id,
@@ -122,6 +141,15 @@ export async function deletePenduduk(id: number): Promise<void> {
   if (!existing) throw notFound("Data penduduk tidak ditemukan.");
 
   await deletePendudukRow(id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.pendudukDelete,
+    resource: PENDUDUK_RESOURCE,
+    resourceId: String(id),
+    details: { nama: existing.name },
+  });
 
   await catatPerubahanAnggotaKk({
     villageId,

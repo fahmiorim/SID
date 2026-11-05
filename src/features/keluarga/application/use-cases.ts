@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
@@ -156,6 +158,16 @@ export async function createKeluarga(input: KeluargaFormInput): Promise<{ id: nu
   }
 
   const id = await insertKeluarga(villageId, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.keluargaCreate,
+    resource: KELUARGA_RESOURCE,
+    resourceId: String(id),
+    details: { nomor: input.number },
+  });
+
   return { id };
 }
 
@@ -171,6 +183,14 @@ export async function updateKeluarga(id: number, input: KeluargaFormInput): Prom
   }
 
   await updateKeluargaRow(id, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.keluargaUpdate,
+    resource: KELUARGA_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function deleteKeluarga(id: number): Promise<void> {
@@ -181,4 +201,13 @@ export async function deleteKeluarga(id: number): Promise<void> {
   if (!existing) throw notFound("Kartu Keluarga tidak ditemukan.");
 
   await deleteKeluargaRow(id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.keluargaDelete,
+    resource: KELUARGA_RESOURCE,
+    resourceId: String(id),
+    details: { nomor: existing.number },
+  });
 }

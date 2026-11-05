@@ -1,5 +1,7 @@
 import "server-only";
 
+import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
+import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { getMediaSettings } from "@/features/kebijakan-berkas/domain/pengaturan-berkas";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
@@ -63,6 +65,16 @@ export async function createSuratMasukData(input: SuratMasukInput): Promise<{ id
   const agendaNumber =
     input.agendaNumber > 0 ? input.agendaNumber : await nextAgendaNumberMasuk(villageId);
   const id = await createSuratMasuk(villageId, { ...input, agendaNumber });
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratMasukCreate,
+    resource: SURAT_MASUK_RESOURCE,
+    resourceId: String(id),
+    details: { nomorAgenda: agendaNumber },
+  });
+
   return { id };
 }
 
@@ -73,6 +85,14 @@ export async function updateSuratMasukData(id: number, input: SuratMasukInput): 
   if (!(await getSuratMasuk(villageId, id))) throw notFound("Surat masuk tidak ditemukan.");
   await ensureKlasifikasi(villageId, input.classificationId);
   await updateSuratMasuk(villageId, id, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratMasukUpdate,
+    resource: SURAT_MASUK_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function deleteSuratMasukData(id: number): Promise<void> {
@@ -81,6 +101,14 @@ export async function deleteSuratMasukData(id: number): Promise<void> {
 
   if (!(await getSuratMasuk(villageId, id))) throw notFound("Surat masuk tidak ditemukan.");
   await deleteSuratMasuk(villageId, id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratMasukDelete,
+    resource: SURAT_MASUK_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 // --- Surat keluar ----------------------------------------------------------
@@ -105,6 +133,16 @@ export async function createSuratKeluarData(input: SuratKeluarInput): Promise<{ 
   const agendaNumber =
     input.agendaNumber > 0 ? input.agendaNumber : await nextAgendaNumberKeluar(villageId);
   const id = await createSuratKeluar(villageId, { ...input, agendaNumber });
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratKeluarCreate,
+    resource: SURAT_KELUAR_RESOURCE,
+    resourceId: String(id),
+    details: { nomorAgenda: agendaNumber },
+  });
+
   return { id };
 }
 
@@ -115,6 +153,14 @@ export async function updateSuratKeluarData(id: number, input: SuratKeluarInput)
   if (!(await getSuratKeluar(villageId, id))) throw notFound("Surat keluar tidak ditemukan.");
   await ensureKlasifikasi(villageId, input.classificationId);
   await updateSuratKeluar(villageId, id, input);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratKeluarUpdate,
+    resource: SURAT_KELUAR_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function deleteSuratKeluarData(id: number): Promise<void> {
@@ -123,6 +169,14 @@ export async function deleteSuratKeluarData(id: number): Promise<void> {
 
   if (!(await getSuratKeluar(villageId, id))) throw notFound("Surat keluar tidak ditemukan.");
   await deleteSuratKeluar(villageId, id);
+
+  await recordAuditEvent({
+    villageId,
+    actorId: user.id,
+    event: AUDIT_EVENTS.suratKeluarDelete,
+    resource: SURAT_KELUAR_RESOURCE,
+    resourceId: String(id),
+  });
 }
 
 export async function listDisposisiSuratMasukData(incomingLetterId: number) {

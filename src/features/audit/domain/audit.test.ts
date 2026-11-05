@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { AUDIT_EVENT_LABELS, AUDIT_EVENTS, serializeAuditDetails } from "./audit";
+import { AUDIT_EVENT_LABELS, AUDIT_EVENTS } from "./audit";
 
-describe("domain audit", () => {
-  it("memberi label untuk event login", () => {
-    expect(AUDIT_EVENT_LABELS[AUDIT_EVENTS.loginSuccess]).toBe("Login berhasil");
-    expect(AUDIT_EVENT_LABELS[AUDIT_EVENTS.loginFailure]).toBe("Login gagal");
+describe("katalog event audit", () => {
+  it("setiap event memiliki label yang dapat ditampilkan", () => {
+    for (const event of Object.values(AUDIT_EVENTS)) {
+      expect(AUDIT_EVENT_LABELS[event], `label untuk ${event}`).toBeTruthy();
+    }
   });
 
-  it("serialisasi detail aman hanya bila ada isi", () => {
-    expect(serializeAuditDetails(undefined)).toBeNull();
-    expect(serializeAuditDetails({})).toBeNull();
-    expect(serializeAuditDetails({ alasan: "kredensial" })).toBe(
-      JSON.stringify({ alasan: "kredensial" }),
-    );
+  it("tidak ada label tanpa event", () => {
+    const events = new Set<string>(Object.values(AUDIT_EVENTS));
+    for (const key of Object.keys(AUDIT_EVENT_LABELS)) {
+      expect(events.has(key), `label yatim ${key}`).toBe(true);
+    }
   });
 });

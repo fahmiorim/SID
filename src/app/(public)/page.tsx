@@ -5,6 +5,7 @@ import {
   getStatistikDesa,
   listSuratTerbitTerbaru,
 } from "@/features/desa/application/statistik-desa";
+import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 import {
   daftarAgendaBeranda,
   daftarBerita,
@@ -29,11 +30,13 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function BerandaPage() {
   const { ctx, tema, desa } = await siapkanTema();
 
+  const pengaturan = await bacaPengaturan(desa.id);
+
   const [statistik, surat, slider, berita, profil, widget, agenda] = await Promise.all([
     getStatistikDesa(desa.id),
     listSuratTerbitTerbaru(desa.id, 5),
     daftarSliderBeranda(desa.id),
-    daftarBerita(desa.id, { limit: 3 }),
+    daftarBerita(desa.id, { limit: pengaturan.beritaBeranda }),
     profilDesaPublik(desa.id),
     daftarWidgetPublik(desa.id),
     daftarAgendaBeranda(desa.id, 5),

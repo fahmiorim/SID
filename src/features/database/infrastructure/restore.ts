@@ -6,7 +6,7 @@ import { createGunzip } from "node:zlib";
 
 import { env } from "@/lib/env";
 
-function parseDatabaseUrl(url: string) {
+export function parseDatabaseUrl(url: string) {
   const parsed = new URL(url);
   const username = decodeURIComponent(parsed.username);
   const password = decodeURIComponent(parsed.password);
@@ -18,13 +18,13 @@ function parseDatabaseUrl(url: string) {
 
 export async function restoreSqlDump(
   buffer: Buffer,
-  options: { gzip?: boolean } = {},
+  options: { gzip?: boolean; mysqlBin?: string } = {},
 ): Promise<void> {
   const { username, password, host, port, database } = parseDatabaseUrl(env.DATABASE_URL);
   const args = [`--host=${host}`, `--port=${port}`, `--user=${username}`, database];
 
   return new Promise((resolve, reject) => {
-    const child = spawn("mysql", args, {
+    const child = spawn(options.mysqlBin ?? "mysql", args, {
       env: { ...process.env, MYSQL_PWD: password },
     });
     let error = "";

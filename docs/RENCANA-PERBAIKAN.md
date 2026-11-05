@@ -246,7 +246,74 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 
 - **OS-MOD-003** ✅ non-E2E: rekap kehadiran bulanan admin `/kehadiran/rekap` tersedia dengan ringkasan total hadir/izin/sakit/alpa, tabel per perangkat, dan unduh CSV `/kehadiran/rekap/ekspor`. Use case `getRekapKehadiranData` expose fungsi repository yang sudah ada. Rekap menggabungkan data kehadiran perangkat + izin warga disetujui. Gap: E2E.
 - **OS-MOD-001** ✅ non-E2E: field kiosk device ditambahkan ke skema `anjungan` (migrasi `0082`): `uuid`, `ip_address`, `mac_address`, `ip_address_port_printer`, `keyboard`, `orientasi_layar`, `permohonan_surat_tanpa_akun`, `status`. Form admin `/anjungan` kini menerima seluruh field tersebut dan menyimpannya lewat use case. Halaman publik `/desa/anjungan` menampilkan layanan aktif. Gap: E2E alur kiosk.
-- ID Batch 8 lainnya (`OS-MOD-004`/`005`; `OS-OPS-002`/`005`/`008`/`009`/`011`) belum dikerjakan pada batch ini; gap non-E2E-nya tetap seperti tercatat di `PARITAS-OPENSID.md`.
+- **OS-MOD-004** ✅ non-E2E: entitas produk terpisah (`lapak_produk` migrasi `0083`), keranjang (`keranjang` migrasi `0084` + sessionKey), peta produk `/desa/lapak/peta` (Leaflet), cetak faktur `/desa/lapak/keranjang/cetak`. CRUD produk admin `/lapak/[id]/produk`, katalog produk publik `/desa/lapak/[id]/produk`, keranjang `/desa/lapak/keranjang`. Keranjang kini di-scope tenant (produk divalidasi milik desa & lapak dari host, bukan input klien). Gap: E2E.
+- **OS-MOD-005** 🟡: kolom langganan `status_langganan`/`tanggal_mulai`/`tanggal_selesai`/`no_kerjasama`/`keterangan_langganan` (migrasi `0086`) + kolom dokumen `dokumen_kerjasama`/`dokumen_nama`/`dokumen_mime` (migrasi `0087`). Form admin + halaman `/pelanggan/kerja-sama`, badge status dan dropdown ubah status, unggah PDF/JPG/PNG ≤ 5 MB dengan validasi domain, dan unduhan berizin `/pelanggan/[id]/dokumen`. Test domain `pelanggan.test.ts` + test use case `pelanggan-use-cases.test.ts`. Gap: E2E.
+- **OS-OPS-011** 🟡: API data publik `/api/publik/informasi`, `/api/publik/dokumen`, `/api/publik/inventaris`, `/api/publik/surat` (tenant dari `Host`), kontrak OpenAPI 3.1 di `/api/publik/openapi`, rate limit 60 permintaan/menit per IP per endpoint, dan audit `api.publik.akses`. Test `rate-limit.test.ts`, `openapi.test.ts`, `public-api.test.ts`. Gap: E2E.
+
+## Rencana Penutupan Gap Non-E2E per ID (6 November 2026)
+
+Tujuan: setiap ID hanya menyisakan **gap E2E**; uji browser tetap ditunda
+sampai seluruh gelombang di bawah selesai (permintaan pemilik proyek).
+
+**Definisi "non-E2E tertutup" untuk satu ID:** rute/UI yang dipakai, aksi atau
+use case dengan otorisasi + scoping `villageId`, keluaran yang diminta katalog
+(CSV/PDF/cetak bila relevan), serta test non-E2E untuk logika baru. Status naik
+ke ✅ setelah semua itu ada; ID yang menunggu kredensial pihak ketiga tetap 🟡
+dengan blocker tertulis.
+
+| Gel. | ID | Gap non-E2E saat ini | Pekerjaan | Bukti yang harus ada |
+|---|---|---|---|---|
+| A | `OS-OPS-002` | Dashboard masih 3 kartu statis; belum ada shortcut & navigasi personal | Tabel preferensi pengguna (shortcut + urutan menu), UI pengaturan shortcut di `/beranda`, use case berizin | Migrasi + use case + test preferensi/otorisasi |
+| A | `OS-OPS-003` | Pengaturan tersebar di banyak rute | Tabel `pengaturan_desa` (key/value bertipe) + halaman `/pengaturan/aplikasi` untuk web, mandiri, surat, lampiran, tema; menu + RBAC | Migrasi, skema validasi, aksi berizin, test |
+| A | `OS-OPS-004` | OTP/2FA belum ada; test domain auth kurang | TOTP untuk staf (secret per pengguna, aktivasi + verifikasi login) dan OTP WhatsApp untuk warga opsional; captcha & rate limit dipertahankan | Domain + use case + test aktivasi/verifikasi/kegagalan |
+| A | `OS-OPS-005` | Pusat notifikasi/mailbox/SMS belum ada (halaman menyatakan belum tersedia) | Tabel outbox + halaman `/pengaturan/notifikasi` (daftar, filter kanal/status, broadcast), memakai `kirimNotifikasi` yang sudah ada | Migrasi, use case, UI, test status kirim/gagal |
+| A | `OS-OPS-006` | Cakupan audit belum seluruh domain | Event audit untuk CRUD inti (penduduk, keluarga, surat, keuangan, inventaris, kelompok, tema, plugin, sinkronisasi) + filter di `/pengaturan/log-aktivitas` | Daftar event + pemanggilan di use case + test cakupan |
+| A | `OS-OPS-007` | Restore belum diuji untuk basis data besar | Uji integrasi restore pada skema sementara, guard ukuran/tipe, verifikasi pasca-restore, dan dokumentasi prosedur | Test integrasi + test guard |
+| A | `OS-OPS-008` | Registri/instalasi plugin belum ada | Registri manifest (build-time) + tabel status aktif/nonaktif + halaman `/pengaturan/plugin`; tanpa eksekusi kode runtime | Migrasi, use case aktivasi berizin, UI, test |
+| A | `OS-OPS-009` | Sinkronisasi pusat/OpenDK belum ada | **Di luar scope**: keputusan produk 6 November 2026 — instalasi tidak memakai OpenDK; halaman hanya menjelaskan status | Baris PARITAS ⚪ + catatan keputusan |
+| B | `OS-WEB-005` | Peraturan/embed/arsip belum lengkap | Jenis dokumen peraturan, pengelompokan arsip per tahun/jenis, penyajian embed aman di tema | Domain + use case + test + UI publik |
+| B | `OS-WEB-008` | Dokumentasi publik proyek belum lengkap | Foto progres + linimasa + cetak dokumentasi per proyek | Use case + test + tema |
+| B | `OS-WEB-010` | Kontrol publikasi per anggota + cetak belum ada | Kolom `tampil_publik` pada anggota kelompok, toggle admin, filter publik, cetak daftar anggota | Migrasi + aksi + test + UI |
+| B | `OS-WEB-011` | Filter/publikasi granular + laporan publik belum ada | Filter kategori/kondisi/lokasi/tahun, rekap, dan ekspor CSV publik inventaris | Domain + use case + test + UI |
+| B | `OS-WEB-012` | Suplemen publik belum ada | Rute `/desa/suplemen` + detail + menu publik + use case | Use case + test + tema |
+| B | `OS-WEB-013` | Analisis hasil pendataan publik belum ada | Rekap agregat survei (tanpa data pribadi) + filter periode di `/desa/analisis-survei` | Domain agregasi + test + tema |
+| B | `OS-WEB-015` | Umpan balik belum ada | Tabel `umpan_balik`, form publik (honeypot + captcha), daftar/tindak lanjut admin | Migrasi + aksi + test + UI |
+| B | `OS-WEB-016` | Teks berjalan & konfigurasi sosial media belum ada | Opsi tema `teksBerjalan` + `sosmed[]`, form admin, render di tema | Skema + aksi + test + tema |
+| B | `OS-WEB-017` | Pemindaian/aktivasi tema runtime belum ada | Pemindaian manifest dari registry build (validasi slot/versi) + aktivasi berizin dari admin | Use case + test + UI |
+| C | `OS-WGA-001` | Verifikasi email belum ada | Token verifikasi email (kanal email pada tabel verifikasi kontak), kirim via Resend, status terverifikasi di profil warga | Migrasi/kanal + use case + test |
+| C | `OS-WGA-002` | OTP/2FA login belum ada | OTP WhatsApp warga (opsional) dan TOTP staf; captcha + honeypot + rate limit tetap | Domain + use case + test |
+| C | `OS-WGA-009` | Bukti pengiriman ke provider nyata | **Blocker kredensial.** Siapkan mode dry-run + uji adapter dengan server tiruan; status 🟡 sampai kredensial tersedia | Adapter test + dokumentasi env |
+| C | `OS-WGA-011` | Izin disetujui belum memengaruhi rekap kehadiran perangkat | Gabungkan izin disetujui ke rekap bulanan per perangkat + ekspor | Query + test rekap |
+| D | `OS-OPS-012` | Kontrak OpenAPI + endpoint tulis surat belum ada | `GET /api/eksternal/openapi`, `POST /api/eksternal/surat` (API key, scope, rate limit, audit) | Route + test + kontrak |
+| D | `OS-SUR-013` | Verifikasi provider BSrE nyata | **Blocker kredensial.** Uji kontrak adapter terhadap sandbox/server tiruan; status 🟡 sampai kredensial ada | Test adapter + dokumentasi |
+| D | `OS-ANA-001` | Kategori belum dipakai di laporan skor | Kelompokkan skor per kategori indikator + kolom/ringkasan kategori di laporan & CSV | Domain + test + laporan |
+| D | `OS-ANA-005` | Integrasi formulir eksternal belum ada | Endpoint publik bertoken untuk kirim respons + embed iframe + validasi | Route + domain + test |
+| E | `OS-POP-010` | Ekspor PDF statistik hanya diuji domain/repo | Test rute ekspor PDF (mock repository, header/tipe/isi), plus test filter | Test route/handler |
+
+**Urutan eksekusi:** A → B → C → D → E. Gelombang A didahulukan karena
+menyediakan pengaturan, notifikasi, audit, dan adapter yang dipakai gelombang
+lain. Setiap gelombang selesai dengan `npm run check` + `npm run build` dan
+pembaruan `PARITAS-OPENSID.md` pada perubahan yang sama.
+
+**Keputusan (dikonfirmasi 6 November 2026):**
+
+1. **Plugin (A/`OS-OPS-008`)** — registri manifest build-time (tanpa unggah/
+eksekusi kode) karena Next.js tidak aman memuat kode saat runtime. **Disetujui.**
+2. **Sinkronisasi (A/`OS-OPS-009`)** — **tidak memakai OpenDK**; ID dipindah ke
+⚪ di luar scope dan halaman hanya menjelaskan status.
+3. **2FA (A/`OS-OPS-004`, C/`OS-WGA-002`)** — **satu metode**: OTP 6 digit via
+WhatsApp memakai `verifikasi_kontak` + `kirimNotifikasi`; TOTP tidak dipakai.
+4. **Provider (C/`OS-WGA-009`, D/`OS-SUR-013`)** — status tetap 🟡 sampai
+kredensial Resend/WhatsApp/BSrE tersedia; adapter dibangun + diuji dengan server
+tiruan.
+
+**Status pelaksanaan gelombang:** Gelombang A tuntas non-E2E — `OS-OPS-002`,
+`OS-OPS-003`, `OS-OPS-004`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
+`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID
+adalah E2E. Gelombang B dimulai: `OS-WEB-012` (suplemen publik) selesai
+non-E2E; delapan ID Gelombang B lainnya belum dikerjakan.
+
+## Kondisi Awal (snapshot historis sebelum Fase 0)
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
 Bagian ini menjelaskan masalah pada awal audit, bukan klaim kondisi working tree
@@ -940,11 +1007,13 @@ tidak ada kategori yang dikeluarkan dari target akhir.
       `src/features/buku-tamu/`.
 - [ ] `OS-MOD-003`: Kehadiran perangkat. Admin `/kehadiran` sudah CRUD + modul;
       sisa: jam kerja, hari libur, izin, rekap bulanan otomatis, dan E2E.
-- [ ] `OS-MOD-004`: Lapak dan produk warga. Admin `/lapak` + publik
-      `/desa/lapak` sudah berdata dan berfilter; sisa: pelapak/produk terpisah,
-      keranjang, peta produk, dan cetak.
-- [ ] `OS-MOD-005`: Pelanggan/layanan kerja sama. `/pelanggan` sudah CRUD +
-      modul; sisa: alur pendaftaran kerja sama, status langganan, dan test/E2E.
+- [x] `OS-MOD-004`: Lapak dan produk warga. Admin `/lapak` + publik
+      `/desa/lapak`, entitas produk terpisah, keranjang, peta produk, dan cetak
+      faktur. Gap: E2E.
+- [x] `OS-MOD-005`: Pelanggan/layanan kerja sama. `/pelanggan` CRUD + status
+      langganan (badge, dropdown ubah status), dan halaman pendaftaran
+      `/pelanggan/kerja-sama`. Gap: unggah dokumen kerja sama, test use
+      case/action, dan E2E.
 
 ### 3J. Integrasi, API, dan kompatibilitas keluaran
 

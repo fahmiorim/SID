@@ -90,6 +90,27 @@ export function LoginForm({
         ))}
       </div>
       <div className="space-y-2">
+        <Label htmlFor="otp">Kode OTP (bila aktif)</Label>
+        <Input
+          id="otp"
+          name="otp"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          aria-invalid={Boolean(fieldErrors?.otp)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Kosongkan bila akun Anda tidak memakai OTP. Bila wajib, kode dikirim ke WhatsApp/email
+          terdaftar saat Anda menekan Masuk.
+        </p>
+        {fieldErrors?.otp?.map((message) => (
+          <p key={message} className="text-xs text-destructive">
+            {message}
+          </p>
+        ))}
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="jawaban">Verifikasi: {captchaPertanyaan}</Label>
         <Input
           id="jawaban"

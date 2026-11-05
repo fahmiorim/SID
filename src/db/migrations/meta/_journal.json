@@ -562,6 +562,62 @@
       "when": 1794435780000,
       "tag": "0082_add_anjungan_kiosk_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "5",
+      "when": 1794435790000,
+      "tag": "0083_add_lapak_produk",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "5",
+      "when": 1794435800000,
+      "tag": "0084_add_keranjang",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "5",
+      "when": 1794435810000,
+      "tag": "0086_add_pelanggan_langganan",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "5",
+      "when": 1794435820000,
+      "tag": "0087_add_pelanggan_dokumen",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "5",
+      "when": 1794435830000,
+      "tag": "0088_create_pengaturan_desa",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "5",
+      "when": 1794435831000,
+      "tag": "0089_create_pengguna_shortcut",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "5",
+      "when": 1794435832000,
+      "tag": "0090_create_plugin_registry",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "5",
+      "when": 1794435833000,
+      "tag": "0091_create_login_otp",
+      "breakpoints": true
     }
   ]
 }

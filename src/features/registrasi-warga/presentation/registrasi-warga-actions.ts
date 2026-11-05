@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import type { ZodError } from "zod";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 import type { KredensialWarga } from "@/features/warga/domain/warga";
 import { errorState, successState, zodToFieldErrors, type ActionState } from "@/lib/action-state";
 import { periksaCaptcha } from "@/lib/captcha";
@@ -34,6 +35,11 @@ export async function kirimRegistrasiWargaAction(
     // Honeypot: kolom tersembunyi yang hanya diisi bot.
     if (String(formData.get("website") ?? "").trim() !== "") {
       return errorState("Permohonan tidak dapat diproses.");
+    }
+
+    const pengaturan = await bacaPengaturan(identitas.id);
+    if (!pengaturan.pendaftaranWargaAktif) {
+      return errorState("Pendaftaran akun layanan mandiri sedang ditutup.");
     }
 
     const captchaValid = periksaCaptcha(

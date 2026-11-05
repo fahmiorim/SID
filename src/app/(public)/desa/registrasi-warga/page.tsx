@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 import { RegistrasiWargaForm } from "@/features/registrasi-warga/presentation/components/registrasi-warga-form";
 import { buatCaptcha } from "@/lib/captcha";
 import { env } from "@/lib/env";
@@ -17,6 +18,26 @@ export const metadata: Metadata = {
 export default async function RegistrasiWargaPublikPage() {
   const identitas = await getIdentitasFromRequest();
   if (!identitas?.id) notFound();
+
+  const pengaturan = await bacaPengaturan(identitas.id);
+
+  if (!pengaturan.pendaftaranWargaAktif) {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-8">
+        <h1 className="text-2xl font-bold">Pendaftaran Akun Ditutup</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Pengajuan akun layanan mandiri Desa {identitas.namaDesa} sedang ditutup. Silakan
+          menghubungi kantor desa untuk informasi lebih lanjut.
+        </p>
+        <Link
+          href="/"
+          className="mt-6 inline-block text-sm text-primary underline-offset-4 hover:underline"
+        >
+          Kembali ke beranda
+        </Link>
+      </div>
+    );
+  }
 
   const captcha = buatCaptcha(env.BETTER_AUTH_SECRET);
 

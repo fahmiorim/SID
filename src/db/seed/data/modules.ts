@@ -731,6 +731,33 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "pengaturan",
   },
+  {
+    slug: "pengaturan-aplikasi",
+    name: "Aplikasi & Web",
+    url: "/pengaturan/aplikasi",
+    icon: "settings",
+    sortOrder: 8,
+    isGroup: false,
+    parentSlug: "pengaturan",
+  },
+  {
+    slug: "notifikasi",
+    name: "Notifikasi",
+    url: "/pengaturan/notifikasi",
+    icon: "settings",
+    sortOrder: 9,
+    isGroup: false,
+    parentSlug: "pengaturan",
+  },
+  {
+    slug: "plugin",
+    name: "Plugin",
+    url: "/pengaturan/plugin",
+    icon: "blocks",
+    sortOrder: 10,
+    isGroup: false,
+    parentSlug: "pengaturan",
+  },
 
   {
     slug: "pemerintahan-desa",

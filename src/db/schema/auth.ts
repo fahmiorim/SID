@@ -40,6 +40,7 @@ export const users = mysqlTable(
     active: boolean("active").notNull().default(true),
     lastLoginAt: timestamp("last_login_at"),
     mustChangePin: boolean("must_change_pin").notNull().default(true),
+    otpLoginAktif: boolean("otp_login_aktif").notNull().default(false),
     residentId: int("resident_id").references(() => residents.id, { onDelete: "set null" }),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
