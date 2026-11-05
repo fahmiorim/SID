@@ -3,7 +3,7 @@ import type { StatistikProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader, ThemeStatGrid } from "@/themes/ui";
 
 /** Statistik kependudukan, bantuan, dan ringkasan keuangan desa. */
-export function EsensiStatistik({ ctx, statistik }: StatistikProps) {
+export function EsensiStatistik({ ctx, statistik, periode }: StatistikProps) {
   return (
     <div className="space-y-10">
       <ThemePageHeader
@@ -71,6 +71,25 @@ export function EsensiStatistik({ ctx, statistik }: StatistikProps) {
               </tbody>
             </table>
           </ThemeCard>
+        )}
+      </section>
+      {/* OS-WEB-006: Periodisasi Triwulan */}
+      <section className="space-y-4">
+        <h2 className="text-xl font-semibold tracking-tight">Realisasi APBDes Per Triwulan</h2>
+        {periode.length === 0 ? (
+          <ThemeCard className="p-5 text-sm text-muted-foreground">
+            Data realisasi triwulan belum tersedia.
+          </ThemeCard>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {periode.map((p) => (
+              <ThemeCard key={p.triwulan} className="p-4 text-center">
+                <p className="text-xs text-muted-foreground">{p.label}</p>
+                <p className="mt-1 text-lg font-bold tabular-nums">{formatRupiah(p.realisasi)}</p>
+                <p className="text-xs text-muted-foreground">{p.persen.toFixed(1)}%</p>
+              </ThemeCard>
+            ))}
+          </div>
         )}
       </section>
     </div>

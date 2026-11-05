@@ -1,3 +1,4 @@
+import { susunBaganSotk } from "@/features/konten/domain/sotk";
 import { urlMedia } from "@/features/publik/domain/format";
 import type { PerangkatProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
@@ -20,6 +21,45 @@ export function EsensiPerangkat({ ctx, perangkat }: PerangkatProps) {
           <p className="text-sm text-muted-foreground">NIP {desa.nipKepalaDesa}</p>
         ) : null}
       </ThemeCard>
+
+      {(() => {
+        const mapped = perangkat.map((p) => ({
+          ...p,
+          status: "aktif" as const,
+          nik: null,
+          jenisKelamin: null,
+          tempatLahir: null,
+          tanggalLahir: null,
+          penandaTangan: false,
+          jabatanId: null,
+        }));
+        const { kepala, sekretaris, staf } = susunBaganSotk(mapped);
+        if (kepala === null) return null;
+        return (
+          <details className="rounded-lg border p-4" open>
+            <summary className="cursor-pointer font-semibold">Bagan SOTK</summary>
+            <div className="mt-4 space-y-4">
+              <TreeNode node={kepala} isRoot />
+              {sekretaris !== null ? (
+                <ul className="ml-8 space-y-2 border-l-2 border-muted pl-6">
+                  <li>
+                    <TreeNode node={sekretaris} />
+                  </li>
+                </ul>
+              ) : null}
+              {staf.length > 0 ? (
+                <ul className="ml-8 space-y-2 border-l-2 border-muted pl-6">
+                  {staf.map((s) => (
+                    <li key={s.id}>
+                      <TreeNode node={s} />
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          </details>
+        );
+      })()}
 
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Perangkat Desa</h2>
@@ -59,6 +99,22 @@ export function EsensiPerangkat({ ctx, perangkat }: PerangkatProps) {
           </ul>
         )}
       </section>
+    </div>
+  );
+}
+
+function TreeNode({
+  node,
+  isRoot,
+}: {
+  node: { id: number; nama: string; jabatan: string | null };
+  isRoot?: boolean;
+}) {
+  return (
+    <div className="rounded-md border p-3">
+      <p className="font-medium">{node.nama}</p>
+      <p className="text-sm text-muted-foreground">{node.jabatan ?? "—"}</p>
+      {isRoot ? <p className="mt-1 text-xs text-muted-foreground">(Kepala Desa)</p> : null}
     </div>
   );
 }

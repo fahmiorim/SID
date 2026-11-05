@@ -171,8 +171,21 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
   `peta`, `peta/cetak`, `verifikasi-surat`) dan menghapus `/bantuan` serta
   `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
 - Seluruh ID Batch 5 lainnya masih 🟡 dengan gap masing-masing; E2E ditunda
-  sesuai aturan batch.
 ---
+**Batch 5 — Web publik (selesai non-E2E 5 Nov 2026):**
+- **OS-WEB-001** ✅ gap agenda beranda: menambahkan `daftarAgendaBeranda()` use case + `daftarAgendaPublik()` repository dari tabel `bumindes_agenda`; komponen tema esensi & natra menampilkan bagian "Agenda Desa" di beranda; `HOME_SECTION_IDS` + `DEFAULT_HOME_SECTIONS` + `HOME_SECTION_LABELS` diperbarui termasuk "agenda"; test `theme.test.ts` disesuaikan.
+- **OS-WEB-002** ✅ gap pencarian berita: menambahkan `cari` pada
+  `listBerita()` + use case `daftarBerita()`, form pencarian di tema
+  `berita.tsx`, domain `pencarian.ts` berisi `normalisasiKataKunci` +
+  `polaLike` untuk escaping `%`/`_` wildcard SQL, test `pencarian.test.ts`
+  (5 test).
+- **OS-WEB-003** ✅ gap bagan SOTK publik: menambahkan SOTK ke `EsensiPerangkat` (`perangkat.tsx`) via `susunBaganSotk`, menampilkan Kepala Desa → Sekretaris → Staf dalam `details` + `TreeNode`; test `theme.test.ts` disesuaikan.
+- **OS-WEB-004** ✅ gap cetak album galeri: menambahkan `ThemePrintButton` (`themes/ui.tsx`) + tombol "Cetak Album" di `EsensiGaleriDetail` (`galeri-detail.tsx`).
+- **OS-WEB-018** ✅ gap cakupan URL sitemap: menambahkan 12 URL publik ke
+  `sitemap.ts` (`pengaduan`, `lapak`, `kontak`, `kesehatan/*`, `pertanahan`,
+  `peta`, `peta/cetak`, `verifikasi-surat`) dan menghapus `/bantuan` serta
+  `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
+- Seluruh ID Batch 5 tersisa 🟡 dengan `Gap: E2E` karena uji browser untuk keluaran baru belum ditambahkan (sesuai aturan batch: E2E ditunda).
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 

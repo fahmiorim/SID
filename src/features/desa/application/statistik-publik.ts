@@ -18,6 +18,8 @@ export interface StatistikPublik extends StatistikDesa {
     belanja: string;
     realisasiBelanja: string;
   };
+  /** Realisasi per triwulan (OS-WEB-006: Periodisasi). */
+  periode: { triwulan: number; label: string; realisasi: string; persen: number }[];
 }
 
 export async function getStatistikPublik(villageId: number): Promise<StatistikPublik> {
@@ -39,5 +41,6 @@ export async function getStatistikPublik(villageId: number): Promise<StatistikPu
       belanja: belanja?.anggaran ?? "0.00",
       realisasiBelanja: belanja?.realisasi ?? "0.00",
     },
+    periode: laporan.periode ?? [],
   };
 }

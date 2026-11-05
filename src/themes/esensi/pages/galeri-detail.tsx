@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { urlMedia } from "@/features/publik/domain/format";
 import type { GaleriDetailProps } from "@/themes/types";
-import { ThemeEmpty, ThemePageHeader } from "@/themes/ui";
+import { ThemeEmpty, ThemePageHeader, ThemePrintButton } from "@/themes/ui";
 
 /** Detail album galeri beserta foto-fotonya. */
 export function EsensiGaleriDetail({ album, foto }: GaleriDetailProps) {
@@ -19,6 +19,7 @@ export function EsensiGaleriDetail({ album, foto }: GaleriDetailProps) {
 
       <ThemePageHeader title={album.nama} description={album.keterangan} />
       <p className="text-sm text-muted-foreground">{foto.length} foto</p>
+      <ThemePrintButton label="Cetak Album" />
 
       {foto.length === 0 ? (
         <ThemeEmpty>Belum ada foto pada album ini.</ThemeEmpty>

@@ -49,7 +49,9 @@ const envSchema = z
     /** Passphrase BSrE — JANGAN disimpan di basis data atau log. */
     TTE_PASSWORD: z.string().optional(),
     TTE_SSL: z.string().trim().optional(),
-
+    /** Endpoint URL dan Token untuk WhatsApp Provider (Fase 5 - OS-WEB-009). */
+    WHATSAPP_API_URL: z.string().url().optional(),
+    WHATSAPP_TOKEN: z.string().optional(),
     /** Kunci API untuk endpoint `/api/eksternal/*` (minimal 16 karakter). */
     EKSTERNAL_API_KEY: z
       .string()

@@ -71,10 +71,13 @@ export interface PerangkatProps {
   perangkat: {
     id: number;
     nama: string;
+    gelarDepan: string | null;
+    gelarBelakang: string | null;
     jabatan: string | null;
     nip: string | null;
     foto: string | null;
     periode: string | null;
+    urut: number;
   }[];
 }
 
@@ -135,6 +138,8 @@ export interface DokumenProps {
 export interface StatistikProps {
   ctx: ThemeContext;
   statistik: StatistikPublik;
+  /** Realisasi per triwulan (OS-WEB-006). */
+  periode: { triwulan: number; label: string; realisasi: string; persen: number }[];
 }
 
 export interface KelompokProps {

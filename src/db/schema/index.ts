@@ -66,3 +66,6 @@ export * from "./anjungan";
 export * from "./buku-tamu";
 export * from "./media-settings";
 export * from "./letter-agenda";
+export * from "./komentar";
+export * from "./pengunjung-log";
+export * from "./bukti-pengiriman-notifikasi";

@@ -499,5 +499,13 @@
       "tag": "0073_add_cdesa_created_at",
       "breakpoints": true
     }
+    ,
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1730822400000,
+      "tag": "0074_add_komentar_pengunjung_bukti_notifikasi",
+      "breakpoints": true
+    }
   ]
 }
