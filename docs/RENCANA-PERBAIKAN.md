@@ -245,7 +245,8 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 **Batch 8 — Modul tambahan & sistem (progres 5 Nov 2026):**
 
 - **OS-MOD-003** ✅ non-E2E: rekap kehadiran bulanan admin `/kehadiran/rekap` tersedia dengan ringkasan total hadir/izin/sakit/alpa, tabel per perangkat, dan unduh CSV `/kehadiran/rekap/ekspor`. Use case `getRekapKehadiranData` expose fungsi repository yang sudah ada. Rekap menggabungkan data kehadiran perangkat + izin warga disetujui. Gap: E2E.
-- ID Batch 8 lainnya (`OS-MOD-001`/`004`/`005`; `OS-OPS-002`/`005`/`008`/`009`/`011`) belum dikerjakan pada batch ini; gap non-E2E-nya tetap seperti tercatat di `PARITAS-OPENSID.md`.
+- **OS-MOD-001** ✅ non-E2E: field kiosk device ditambahkan ke skema `anjungan` (migrasi `0082`): `uuid`, `ip_address`, `mac_address`, `ip_address_port_printer`, `keyboard`, `orientasi_layar`, `permohonan_surat_tanpa_akun`, `status`. Form admin `/anjungan` kini menerima seluruh field tersebut dan menyimpannya lewat use case. Halaman publik `/desa/anjungan` menampilkan layanan aktif. Gap: E2E alur kiosk.
+- ID Batch 8 lainnya (`OS-MOD-004`/`005`; `OS-OPS-002`/`005`/`008`/`009`/`011`) belum dikerjakan pada batch ini; gap non-E2E-nya tetap seperti tercatat di `PARITAS-OPENSID.md`.
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
 Bagian ini menjelaskan masalah pada awal audit, bukan klaim kondisi working tree

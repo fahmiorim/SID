@@ -32,6 +32,14 @@ export async function createAnjunganAction(
       deskripsi: formData.get("deskripsi"),
       aktif: formData.get("aktif"),
       urutan: formData.get("urutan"),
+      uuid: formData.get("uuid"),
+      ipAddress: formData.get("ipAddress"),
+      macAddress: formData.get("macAddress"),
+      ipAddressPortPrinter: formData.get("ipAddressPortPrinter"),
+      keyboard: formData.get("keyboard"),
+      orientasiLayar: formData.get("orientasiLayar"),
+      permohonanSuratTanpaAkun: formData.get("permohonanSuratTanpaAkun"),
+      status: formData.get("status"),
     };
     const result = await tambahAnjungan(user.villageId, input);
     revalidatePath("/anjungan");
@@ -58,6 +66,14 @@ export async function updateAnjunganAction(
       deskripsi: formData.get("deskripsi"),
       aktif: formData.get("aktif"),
       urutan: formData.get("urutan"),
+      uuid: formData.get("uuid"),
+      ipAddress: formData.get("ipAddress"),
+      macAddress: formData.get("macAddress"),
+      ipAddressPortPrinter: formData.get("ipAddressPortPrinter"),
+      keyboard: formData.get("keyboard"),
+      orientasiLayar: formData.get("orientasiLayar"),
+      permohonanSuratTanpaAkun: formData.get("permohonanSuratTanpaAkun"),
+      status: formData.get("status"),
     };
     await ubahAnjungan(user.villageId, id, input);
     revalidatePath("/anjungan");

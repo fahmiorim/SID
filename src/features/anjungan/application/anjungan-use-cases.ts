@@ -30,6 +30,14 @@ export async function tambahAnjungan(villageId: number, input: unknown) {
     deskripsi: parsed.deskripsi ?? null,
     aktif: parsed.aktif,
     urutan: parsed.urutan,
+    uuid: parsed.uuid ?? null,
+    ipAddress: parsed.ipAddress ?? null,
+    macAddress: parsed.macAddress ?? null,
+    ipAddressPortPrinter: parsed.ipAddressPortPrinter ?? null,
+    keyboard: parsed.keyboard ?? 1,
+    orientasiLayar: parsed.orientasiLayar ?? 1,
+    permohonanSuratTanpaAkun: parsed.permohonanSuratTanpaAkun ?? 0,
+    status: parsed.status ?? "aktif",
   });
   return { id };
 }
@@ -42,6 +50,14 @@ export async function ubahAnjungan(villageId: number, id: number, input: unknown
     deskripsi: parsed.deskripsi ?? null,
     aktif: parsed.aktif,
     urutan: parsed.urutan,
+    uuid: parsed.uuid ?? null,
+    ipAddress: parsed.ipAddress ?? null,
+    macAddress: parsed.macAddress ?? null,
+    ipAddressPortPrinter: parsed.ipAddressPortPrinter ?? null,
+    keyboard: parsed.keyboard ?? 1,
+    orientasiLayar: parsed.orientasiLayar ?? 1,
+    permohonanSuratTanpaAkun: parsed.permohonanSuratTanpaAkun ?? 0,
+    status: parsed.status ?? "aktif",
   });
 }
 

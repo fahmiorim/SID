@@ -18,6 +18,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createIdleActionState } from "@/lib/action-state";
 
@@ -148,6 +155,127 @@ function AnjunganFormDialog({
               className="h-4 w-4 rounded border"
             />
             <Label htmlFor="aktif">Tampilkan di anjungan publik</Label>
+          </div>
+
+          <hr className="my-4" />
+
+          <h3 className="text-sm font-medium">Pengaturan Kiosk (Opsional)</h3>
+
+          <div className="space-y-2">
+            <Label htmlFor="uuid">UUID (auto-generate bila kosong)</Label>
+            <Input
+              id="uuid"
+              name="uuid"
+              defaultValue={item?.uuid ?? ""}
+              placeholder="Contoh: 550e8400-e29b-41d4-a716-446655440000"
+            />
+            {fieldErrors?.uuid ? (
+              <p className="text-sm text-destructive">{fieldErrors.uuid[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ipAddress">IP Address</Label>
+            <Input
+              id="ipAddress"
+              name="ipAddress"
+              defaultValue={item?.ipAddress ?? ""}
+              placeholder="Contoh: 192.168.1.100"
+            />
+            {fieldErrors?.ipAddress ? (
+              <p className="text-sm text-destructive">{fieldErrors.ipAddress[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="macAddress">MAC Address</Label>
+            <Input
+              id="macAddress"
+              name="macAddress"
+              defaultValue={item?.macAddress ?? ""}
+              placeholder="Contoh: 00:1A:2B:3C:4D:5E"
+            />
+            {fieldErrors?.macAddress ? (
+              <p className="text-sm text-destructive">{fieldErrors.macAddress[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="ipAddressPortPrinter">IP Address Printer & Port</Label>
+            <Input
+              id="ipAddressPortPrinter"
+              name="ipAddressPortPrinter"
+              defaultValue={item?.ipAddressPortPrinter ?? ""}
+              placeholder="Contoh: 192.168.1.200:9100"
+            />
+            {fieldErrors?.ipAddressPortPrinter ? (
+              <p className="text-sm text-destructive">{fieldErrors.ipAddressPortPrinter[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="keyboard">Virtual Keyboard</Label>
+            <Input
+              id="keyboard"
+              name="keyboard"
+              type="number"
+              min={0}
+              max={1}
+              defaultValue={item?.keyboard ?? 1}
+            />
+            <p className="text-xs text-muted-foreground">0 = Nonaktif, 1 = Aktif</p>
+            {fieldErrors?.keyboard ? (
+              <p className="text-sm text-destructive">{fieldErrors.keyboard[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="orientasiLayar">Orientasi Layar</Label>
+            <Input
+              id="orientasiLayar"
+              name="orientasiLayar"
+              type="number"
+              min={0}
+              max={1}
+              defaultValue={item?.orientasiLayar ?? 1}
+            />
+            <p className="text-xs text-muted-foreground">0 = Potrait, 1 = Landscape</p>
+            {fieldErrors?.orientasiLayar ? (
+              <p className="text-sm text-destructive">{fieldErrors.orientasiLayar[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="permohonanSuratTanpaAkun">Surat Tanpa Akun</Label>
+            <Input
+              id="permohonanSuratTanpaAkun"
+              name="permohonanSuratTanpaAkun"
+              type="number"
+              min={0}
+              max={1}
+              defaultValue={item?.permohonanSuratTanpaAkun ?? 0}
+            />
+            <p className="text-xs text-muted-foreground">0 = Nonaktif, 1 = Aktif</p>
+            {fieldErrors?.permohonanSuratTanpaAkun ? (
+              <p className="text-sm text-destructive">{fieldErrors.permohonanSuratTanpaAkun[0]}</p>
+            ) : null}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select defaultValue={item?.status ?? "aktif"} name="status">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="aktif">Aktif</SelectItem>
+                <SelectItem value="nonaktif">Nonaktif</SelectItem>
+                <SelectItem value="perbaikan">Perbaikan</SelectItem>
+              </SelectContent>
+            </Select>
+            {fieldErrors?.status ? (
+              <p className="text-sm text-destructive">{fieldErrors.status[0]}</p>
+            ) : null}
           </div>
 
           <DialogFooter>

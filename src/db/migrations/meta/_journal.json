@@ -555,6 +555,13 @@
       "when": 1794435770000,
       "tag": "0081_add_analisis_skoring",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "5",
+      "when": 1794435780000,
+      "tag": "0082_add_anjungan_kiosk_fields",
+      "breakpoints": true
     }
   ]
 }
