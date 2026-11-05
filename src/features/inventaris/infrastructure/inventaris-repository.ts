@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, isNull, like, ne, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, isNotNull, isNull, like, ne, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { inventaris, inventarisKategori, inventarisMutasi } from "@/db/schema";
@@ -15,6 +15,10 @@ import {
   type MutasiRow,
   type MutasiStep,
 } from "@/features/inventaris/domain/inventaris";
+import type {
+  InventarisFilter,
+  OpsiInventarisPublik,
+} from "@/features/inventaris/domain/inventaris-publik";
 import { conflict, notFound } from "@/lib/errors";
 
 export async function listInventarisKategori(villageId: number): Promise<InventarisKategoriRow[]> {
@@ -154,6 +158,84 @@ export async function listInventaris(
   ]);
 
   return { rows, total: total[0]?.value ?? 0 };
+}
+
+/** WHERE inventaris publik: desa, belum dihapus, dan filter aktif (OS-WEB-011). */
+function whereInventarisPublik(villageId: number, filter: InventarisFilter) {
+  const filters = [eq(inventaris.villageId, villageId), eq(inventaris.isDeleted, false)];
+  if (filter.kategoriId !== null) filters.push(eq(inventaris.kategoriId, filter.kategoriId));
+  if (filter.kondisi !== null) filters.push(eq(inventaris.kondisi, filter.kondisi));
+  if (filter.lokasi !== null) filters.push(eq(inventaris.lokasi, filter.lokasi));
+  if (filter.tahun !== null) filters.push(eq(inventaris.tahunPembelian, filter.tahun));
+  return and(...filters);
+}
+
+/** Daftar inventaris publik yang sudah disaring filter kategori/kondisi/lokasi/tahun. */
+export async function listInventarisPublik(
+  villageId: number,
+  filter: InventarisFilter,
+): Promise<(InventarisRow & { kategoriNama: string | null; kategoriKode: string | null })[]> {
+  return db
+    .select({
+      id: inventaris.id,
+      kategoriId: inventaris.kategoriId,
+      nomorInventaris: inventaris.nomorInventaris,
+      namaBarang: inventaris.namaBarang,
+      kodeBarang: inventaris.kodeBarang,
+      merk: inventaris.merk,
+      tipe: inventaris.tipe,
+      spesifikasi: inventaris.spesifikasi,
+      jumlah: inventaris.jumlah,
+      satuan: inventaris.satuan,
+      hargaSatuan: inventaris.hargaSatuan,
+      nilaiAkhir: inventaris.nilaiAkhir,
+      tahunPembelian: inventaris.tahunPembelian,
+      tanggalPembelian: inventaris.tanggalPembelian,
+      asal: inventaris.asal,
+      donatur: inventaris.donatur,
+      kondisi: inventaris.kondisi,
+      lokasi: inventaris.lokasi,
+      keterangan: inventaris.keterangan,
+      kategoriNama: inventarisKategori.nama,
+      kategoriKode: inventarisKategori.kode,
+    })
+    .from(inventaris)
+    .leftJoin(inventarisKategori, eq(inventaris.kategoriId, inventarisKategori.id))
+    .where(whereInventarisPublik(villageId, filter))
+    .orderBy(desc(inventaris.createdAt));
+}
+
+/** Pilihan filter publik: kategori, lokasi, dan tahun yang benar-benar ada. */
+export async function listOpsiInventarisPublik(villageId: number): Promise<OpsiInventarisPublik> {
+  const dasar = and(eq(inventaris.villageId, villageId), eq(inventaris.isDeleted, false));
+
+  const [kategori, lokasiRows, tahunRows] = await Promise.all([
+    db
+      .select({ id: inventarisKategori.id, nama: inventarisKategori.nama })
+      .from(inventarisKategori)
+      .where(eq(inventarisKategori.villageId, villageId))
+      .orderBy(asc(inventarisKategori.nama)),
+    db
+      .selectDistinct({ lokasi: inventaris.lokasi })
+      .from(inventaris)
+      .where(and(dasar, isNotNull(inventaris.lokasi)))
+      .orderBy(asc(inventaris.lokasi)),
+    db
+      .selectDistinct({ tahun: inventaris.tahunPembelian })
+      .from(inventaris)
+      .where(and(dasar, isNotNull(inventaris.tahunPembelian)))
+      .orderBy(desc(inventaris.tahunPembelian)),
+  ]);
+
+  return {
+    kategori,
+    lokasi: lokasiRows
+      .map((row) => row.lokasi)
+      .filter((value): value is string => typeof value === "string" && value.trim() !== ""),
+    tahun: tahunRows
+      .map((row) => row.tahun)
+      .filter((value): value is number => typeof value === "number"),
+  };
 }
 
 export async function getInventaris(villageId: number, id: number) {
