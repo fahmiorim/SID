@@ -263,13 +263,13 @@ dengan blocker tertulis.
 
 | Gel. | ID | Gap non-E2E saat ini | Pekerjaan | Bukti yang harus ada |
 |---|---|---|---|---|
-| A | `OS-OPS-002` | Dashboard masih 3 kartu statis; belum ada shortcut & navigasi personal | Tabel preferensi pengguna (shortcut + urutan menu), UI pengaturan shortcut di `/beranda`, use case berizin | Migrasi + use case + test preferensi/otorisasi |
-| A | `OS-OPS-003` | Pengaturan tersebar di banyak rute | Tabel `pengaturan_desa` (key/value bertipe) + halaman `/pengaturan/aplikasi` untuk web, mandiri, surat, lampiran, tema; menu + RBAC | Migrasi, skema validasi, aksi berizin, test |
+| A | `OS-OPS-002` | Urutan menu sidebar personal tersimpan (drag-drop, validasi izin); sisa E2E | Tabel preferensi pengguna (shortcut + urutan menu), UI pengaturan shortcut di `/beranda`, use case berizin | Migrasi + use case + test preferensi/otorisasi |
+| A | `OS-OPS-003` | Pengaturan web/mandiri/surat sudah terpusat; lampiran & tema tetap di rute masing-masing | Tabel `pengaturan_desa` (key/value bertipe) + halaman `/pengaturan/aplikasi` untuk web, mandiri, surat, lampiran, tema; menu + RBAC | Migrasi, skema validasi, aksi berizin, test |
 | A | `OS-OPS-004` | OTP/2FA belum ada; test domain auth kurang | TOTP untuk staf (secret per pengguna, aktivasi + verifikasi login) dan OTP WhatsApp untuk warga opsional; captcha & rate limit dipertahankan | Domain + use case + test aktivasi/verifikasi/kegagalan |
-| A | `OS-OPS-005` | Pusat notifikasi/mailbox/SMS belum ada (halaman menyatakan belum tersedia) | Tabel outbox + halaman `/pengaturan/notifikasi` (daftar, filter kanal/status, broadcast), memakai `kirimNotifikasi` yang sudah ada | Migrasi, use case, UI, test status kirim/gagal |
+| A | `OS-OPS-005` | Kotak masuk email + SMS dua arah (webhook, balasan, riwayat) tersedia; sisa E2E | Tabel outbox + halaman `/pengaturan/notifikasi` (daftar, filter kanal/status, broadcast), memakai `kirimNotifikasi` yang sudah ada | Migrasi, use case, UI, test status kirim/gagal |
 | A | `OS-OPS-006` | Cakupan audit belum seluruh domain | Event audit untuk CRUD inti (penduduk, keluarga, surat, keuangan, inventaris, kelompok, tema, plugin, sinkronisasi) + filter di `/pengaturan/log-aktivitas` | Daftar event + pemanggilan di use case + test cakupan |
-| A | `OS-OPS-007` | Restore belum diuji untuk basis data besar | Uji integrasi restore pada skema sementara, guard ukuran/tipe, verifikasi pasca-restore, dan dokumentasi prosedur | Test integrasi + test guard |
-| A | `OS-OPS-008` | Registri/instalasi plugin belum ada | Registri manifest (build-time) + tabel status aktif/nonaktif + halaman `/pengaturan/plugin`; tanpa eksekusi kode runtime | Migrasi, use case aktivasi berizin, UI, test |
+| A | `OS-OPS-007` | Guard + verifikasi tabel pasca-restore + runbook tersedia; sisa E2E | Uji integrasi restore pada skema sementara, guard ukuran/tipe, verifikasi pasca-restore, dan dokumentasi prosedur | Test integrasi + test guard |
+| A | `OS-OPS-008` | Registri manifest build-time sudah ada; unggahan/eksekusi runtime di luar keputusan produk | Registri manifest (build-time) + tabel status aktif/nonaktif + halaman `/pengaturan/plugin`; tanpa eksekusi kode runtime | Migrasi, use case aktivasi berizin, UI, test |
 | A | `OS-OPS-009` | Sinkronisasi pusat/OpenDK belum ada | **Di luar scope**: keputusan produk 6 November 2026 — instalasi tidak memakai OpenDK; halaman hanya menjelaskan status | Baris PARITAS ⚪ + catatan keputusan |
 | B | `OS-WEB-005` | Peraturan/embed/arsip belum lengkap | Jenis dokumen peraturan, pengelompokan arsip per tahun/jenis, penyajian embed aman di tema | Domain + use case + test + UI publik |
 | B | `OS-WEB-008` | Dokumentasi publik proyek belum lengkap | Foto progres + linimasa + cetak dokumentasi per proyek | Use case + test + tema |
@@ -278,7 +278,7 @@ dengan blocker tertulis.
 | B | `OS-WEB-012` | Suplemen publik belum ada | Rute `/desa/suplemen` + detail + menu publik + use case | Use case + test + tema |
 | B | `OS-WEB-013` | Analisis hasil pendataan publik belum ada | Rekap agregat survei (tanpa data pribadi) + filter periode di `/desa/analisis-survei` | Domain agregasi + test + tema |
 | B | `OS-WEB-015` | Umpan balik belum ada | Tabel `umpan_balik`, form publik (honeypot + captcha), daftar/tindak lanjut admin | Migrasi + aksi + test + UI |
-| B | `OS-WEB-016` | Teks berjalan & konfigurasi sosial media belum ada | Opsi tema `teksBerjalan` + `sosmed[]`, form admin, render di tema | Skema + aksi + test + tema |
+| B | `OS-WEB-016` | **Selesai non-E2E (6 Nov 2026):** teks berjalan & konfigurasi sosial media tersedia; sisa E2E | Opsi tema `teksBerjalan` + `sosmed[]`, form admin, render di tema | Skema + aksi + test + tema |
 | B | `OS-WEB-017` | Pemindaian/aktivasi tema runtime belum ada | Pemindaian manifest dari registry build (validasi slot/versi) + aktivasi berizin dari admin | Use case + test + UI |
 | C | `OS-WGA-001` | Verifikasi email belum ada | Token verifikasi email (kanal email pada tabel verifikasi kontak), kirim via Resend, status terverifikasi di profil warga | Migrasi/kanal + use case + test |
 | C | `OS-WGA-002` | OTP/2FA login belum ada | OTP WhatsApp warga (opsional) dan TOTP staf; captcha + honeypot + rate limit tetap | Domain + use case + test |
@@ -307,11 +307,18 @@ WhatsApp memakai `verifikasi_kontak` + `kirimNotifikasi`; TOTP tidak dipakai.
 kredensial Resend/WhatsApp/BSrE tersedia; adapter dibangun + diuji dengan server
 tiruan.
 
-**Status pelaksanaan gelombang:** Gelombang A tuntas non-E2E — `OS-OPS-002`,
-`OS-OPS-003`, `OS-OPS-004`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
-`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID
-adalah E2E. Gelombang B dimulai: `OS-WEB-012` (suplemen publik) selesai
-non-E2E; delapan ID Gelombang B lainnya belum dikerjakan.
+**Status pelaksanaan gelombang (disinkronkan 6 November 2026):** Gelombang A
+tuntas non-E2E. Seluruh ID hanya menyisakan E2E: `OS-OPS-002` (urutan menu
+sidebar personal), `OS-OPS-003` (pengaturan web/mandiri/surat terpusat; lampiran
+dan tema tetap di rute masing-masing), `OS-OPS-004`, `OS-OPS-005` (kotak masuk
+email + SMS dua arah), `OS-OPS-006` (cakupan inti), `OS-OPS-007` (verifikasi
+tabel pasca-restore + runbook), dan `OS-OPS-008` (manifest build-time;
+unggahan/eksekusi runtime di luar keputusan). `OS-OPS-009` di luar scope (⚪).
+
+Gelombang B: `OS-WEB-010` (publikasi anggota kelompok + filter
++cetak), `OS-WEB-011` (filter + rekap + CSV publik inventaris), `OS-WEB-012`
+(suplemen publik), dan `OS-WEB-013` (rekap agregat hasil pendataan publik +
+filter periode) selesai non-E2E; lima ID Gelombang B lainnya belum dikerjakan.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
@@ -991,7 +998,7 @@ tidak ada kategori yang dikeluarkan dari target akhir.
   - [x] `OS-OPS-007`: backup/restore database SQL/SQL.GZ (mysqldump/mysql), halaman `/pengaturan/database`, RBAC `database`, izin `delete` untuk restore + konfirmasi, audit log. **Tersedia/berfungsi** saat ini; optimasi (backup folder/inkremental, penanganan besar) masih menyusul. |
  - [x] `OS-OPS-006`: audit log aktivitas (login berhasil/gagal, halaman `/pengaturan/log-aktivitas`, RBAC `audit-log`, migrasi `0027`). |
  - [x] `OS-OPS-004`: lupa sandi mandiri (email/token), perkuatan rate limit login/reset, audit login/reset, link lupa sandi di halaman masuk. OTP/2FA/captcha menyusul. |
-- [ ] `OS-OPS-005`: notifikasi internal, mailbox, dan SMS/WA gateway.
+- [ ] `OS-OPS-005`: mailbox masuk dan SMS dua arah (pusat notifikasi dan broadcast satu arah sudah ada).
 
 ### 3I. Modul tambahan OpenSID
 
