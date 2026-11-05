@@ -140,7 +140,8 @@ describe("template & sel CSV", () => {
 });
 
 describe("bacaTabelXlsx", () => {
-  it("membaca sheet pertama beserta sel kosong di tengah", async () => {
+  // Impor exceljs lambat; beri ruang agar tidak timeout saat seluruh suite jalan paralel.
+  it("membaca sheet pertama beserta sel kosong di tengah", { timeout: 30_000 }, async () => {
     const { default: ExcelJS } = await import("exceljs");
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Data");
@@ -156,7 +157,7 @@ describe("bacaTabelXlsx", () => {
     expect(tabel[2]).toEqual(["320102", "Budi", "0812"]);
   });
 
-  it("mengubah sel tanggal menjadi ISO YYYY-MM-DD", async () => {
+  it("mengubah sel tanggal menjadi ISO YYYY-MM-DD", { timeout: 30_000 }, async () => {
     const { default: ExcelJS } = await import("exceljs");
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Data");

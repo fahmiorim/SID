@@ -60,14 +60,14 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    impor/unggah/laporan yang diminta katalog ada; baris PARITAS tidak lagi
    menyebut gap selain E2E.
 
-Saat ini ada **91 ID** dengan gap (91 🟡 + 0 🔴). Dua ID sudah E2E-only dan
+Saat ini ada **77 ID** dengan gap (77 🟡 + 0 🔴). Dua ID sudah E2E-only dan
 tidak masuk batch: `OS-SUR-011` dan `OS-WGA-003`.
 
 | Batch | ID | Fokus non-E2E | Kriteria selesai |
 |---|---|---|---|
 | 0 — Fondasi & kejujuran | Lintas-ID: `OS-GOV-006`, `OS-WEB-013`, `OS-OPS-005`, `OS-OPS-008`, `OS-OPS-009` | Rute IDM kanonis (`/idm` dialihkan), halaman status tanpa data contoh, pelanggaran lapisan domain | **Selesai 4 Nov 2026** untuk bagian yang tercantum; ID tetap 🟡 karena gap fungsional/E2E lain |
 | 1 — Persuratan & TTE | `OS-SUR-001`–`OS-SUR-010`, `OS-SUR-012`–`OS-SUR-014`; `OS-OPS-012` | Varian template/PDF, QR/stempel, syarat, klasifikasi, disposisi/ekspedisi, verifikasi per peran, TTE client, API eksternal | Semua alur/keluaran ada + test non-E2E |
-| 2 — Keuangan, aset, bumindes | `OS-FIN-001`–`OS-FIN-004`, `OS-FIN-006`–`OS-FIN-013` | Impor/template APBDes, varian laporan, pembukuan manual, impor dokumen, laporan aset, format buku resmi | Keluaran dan impor ada + test |
+| 2 — Keuangan, aset, bumindes | `OS-FIN-001`–`OS-FIN-004`, `OS-FIN-006`–`OS-FIN-013` | Impor/template APBDes, varian laporan, pembukuan manual, impor dokumen, laporan aset, format buku resmi | **Non-E2E selesai 5 Nov 2026**; sisa `OS-FIN-004`/`OS-FIN-006` hanya E2E |
 | 3 — Pemerintahan & kependudukan | `OS-GOV-003`–`OS-GOV-007`, `OS-GOV-009`; `OS-POP-006`, `OS-POP-010`–`OS-POP-013` | SOTK/cetak, laporan lembaga, keluaran IDM/SDGs, kandidat/hasil pemilihan, buku pembangunan, impor DTKS, PDF statistik, kartu/impor peserta | Laporan/keluaran ada + test |
 | 4 — GIS & pertanahan | `OS-WIL-002`–`OS-WIL-008` | Test use case/repository, CRUD admin pertanahan, cetak peta/layer | Test non-E2E ada; CRUD lengkap |
 | 5 — Web publik | `OS-WEB-001`–`OS-WEB-013`, `OS-WEB-015`–`OS-WEB-018` | Agenda, pencarian berita/galeri, SOTK, publikasi anggota, laporan, komentar/pengunjung, sosmed, teks berjalan, URL sitemap dinamis | Keluaran/UI ada + test |
@@ -91,6 +91,23 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
   `OS-SUR-013` (konfigurasi TTE per desa, klien BSrE, penyimpanan PDF TTE),
   `OS-SUR-014` (pengaturan lampiran terpusat), `OS-OPS-012` (API eksternal TTE + metadata surat ber-API key).
 - Batch 1 **selesai** — semua ID non-E2E terpenuhi; sisa gap hanya E2E (`OS-SUR-011`).
+
+**Batch 2 — Keuangan, aset, bumindes (berjalan 5 Nov 2026):**
+
+- `OS-FIN-001` ✅: impor CSV/XLSX + unduh template XLSX sudah ada
+  (`apbdes-import.ts` + test); ditambah **laporan realisasi format resmi**
+  `/keuangan/laporan/realisasi` dengan hierarki akun, JUMLAH per akun,
+  SURPLUS/(DEFISIT), PEMBIAYAAN NETTO, dan SiLPA. Domain murni
+  `laporan-realisasi.ts` + `laporan-realisasi.test.ts` (12 test), ekspor CSV
+  `/keuangan/laporan/realisasi/ekspor`.
+- `OS-FIN-002` ✅: laporan RP APBDes + per bidang + grafik tetap; rincian
+  realisasi resmi menjadi keluaran tambahan dengan CSV.
+- `OS-FIN-003` ✅: pembukuan manual kas `/keuangan/pembukuan` (CRUD, saldo
+  berjalan, izin `update`/`delete`, scoping tenant) sudah tersedia; saldo
+  rekening koran bank tetap di luar cakupan.
+- `OS-FIN-004` 🟡 (E2E impor) dan `OS-FIN-006` 🟡 (E2E periode publik):
+  gap non-E2E tidak tersisa.
+- `OS-FIN-007`–`OS-FIN-013` sudah ✅ (inventaris, neraca, bumindes).
 ---
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
@@ -630,9 +647,10 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
 
 **Status Fase 2:** sebagian besar fitur sudah berjalan, tetapi fase belum penuh.
 Fitur utama yang sudah jadi termasuk layanan mandiri warga, Bumindes
-(sinkronisasi data penduduk), persuratan, keuangan, inventaris, dan CMS.
-Yang masih tersisa adalah pembukuan manual keuangan (P2) dan notifikasi status
-pengaduan.
+(sinkronisasi data penduduk), persuratan, keuangan (termasuk pembukuan manual
+kas dan laporan realisasi resmi), inventaris, dan CMS.
+Yang masih tersisa adalah notifikasi status pengaduan (WhatsApp) dan beberapa
+keluaran lanjutan.
 
 ---
 
@@ -734,8 +752,10 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3G. Bumindes lengkap (1 minggu)
 
-- [ ] `OS-FIN-011`–`OS-FIN-013`: buku rencana/kegiatan/hasil pembangunan,
-      kader, arsip, tanah kas, dan keluaran Bumindes yang belum ada.
+- [x] `OS-FIN-011`–`OS-FIN-013`: buku tanah kas, rencana/kegiatan/hasil
+      pembangunan, kader, arsip, peraturan/aparat/agenda sekretariat — CRUD/UI
+      `/bumindes/{tanah-kas,pembangunan,sekretariat}` dengan keluaran buku resmi
+      (cetak + CSV). Status ✅ di `PARITAS-OPENSID.md`.
 
 ### 3H. Operasional & keamanan (2 minggu)
 
@@ -956,14 +976,14 @@ OpenSID → multi-desa.
 
 ---
 
-## Status Akhir (diperbarui 4 November 2026)
+## Status Akhir (diperbarui 5 November 2026)
 
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ✅ **Terverifikasi pada snapshot 31 Okt** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Itu bukti historis; jalankan quality gate ulang sebelum menutup milestone baru. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan memakai data. `/desa/lapak` memakai katalog + pencarian/filter nyata; IDM/SDGs sudah memakai data nyata. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; pembukuan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 21 berfungsi penuh, 91 sebagian, 0 belum ada; `OS-POP-009` di luar scope. Batch 1 masih menyisakan gap keluaran/lampiran. Register diverifikasi `src/db/paritas-register.test.ts`. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 35 berfungsi penuh, 77 sebagian, 0 belum ada; `OS-POP-009` di luar scope. Batch 2 menaikkan `OS-FIN-001`/`002`/`003`; sisa gap Batch 2 hanya E2E. Register diverifikasi `src/db/paritas-register.test.ts`. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, IDM/SDGs, lapak, widget/CMS, manifest, dan OG sudah tersambung; sisa gap ada di keluaran analisis dan entitas pelapak. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik tersedia; provisioning, super-admin, domain kustom, dan uji penuh belum. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan menyeluruh, dan runbook belum lengkap; workflow CI telah dikonfigurasi untuk menjalankan suite browser E2E. |

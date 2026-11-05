@@ -1,4 +1,4 @@
-import { FileDown, FileSpreadsheet } from "lucide-react";
+import { FileDown, FileSpreadsheet, Table2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -114,6 +114,12 @@ export default async function LaporanKeuanganPage({
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" asChild>
+              <Link href={`/keuangan/laporan/realisasi?tahun=${laporan.tahun}`}>
+                <Table2 className="size-4" />
+                Rincian Realisasi
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <a
                 href={`/keuangan/laporan/ekspor-excel?tahun=${laporan.tahun}${bidangParam ? `&bidang=${bidangParam}` : ""}`}

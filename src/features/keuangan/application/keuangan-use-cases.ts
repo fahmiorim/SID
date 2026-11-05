@@ -15,6 +15,7 @@ import {
   totalLaporan,
   type KeuanganBarisInput,
 } from "@/features/keuangan/domain/keuangan";
+import { susunLaporanRealisasi } from "@/features/keuangan/domain/laporan-realisasi";
 import {
   buildTriwulanRows,
   totalTriwulan,
@@ -95,6 +96,17 @@ export async function getLaporanKeuangan(tahunParam?: number, bidangKode?: strin
     totalBidang: totalLaporan(bidang),
     grafik: seriGrafik(baris),
   };
+}
+
+/**
+ * Rincian realisasi format resmi: hierarki akun → bidang → rincian beserta
+ * JUMLAH per akun, SURPLUS/(DEFISIT), PEMBIAYAAN NETTO, dan SiLPA tahun
+ * berjalan (OS-FIN-001/OS-FIN-002).
+ */
+export async function getLaporanRealisasiResmi(tahunParam?: number) {
+  const { tahun, tersedia, rows } = await listKeuangan(tahunParam);
+
+  return { tahun, tersedia, laporan: susunLaporanRealisasi(rows) };
 }
 
 /**

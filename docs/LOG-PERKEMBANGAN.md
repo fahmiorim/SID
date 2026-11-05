@@ -3,6 +3,30 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-05 — Batch 2 keuangan: laporan realisasi format resmi
+
+- Laporan realisasi APBDes format resmi `/keuangan/laporan/realisasi`:
+  hierarki akun → bidang → rincian, baris JUMLAH per akun,
+  SURPLUS/(DEFISIT), PEMBIAYAAN NETTO, dan SiLPA tahun berjalan. Tautan
+  "Rincian Realisasi" ditambahkan di `/keuangan/laporan`.
+- Domain murni `src/features/keuangan/domain/laporan-realisasi.ts` memakai
+  aritmetika sen (`bigint`), mengosongkan persentase pembiayaan seperti format
+  rujukan, dan menyusun CSV; ekspor di
+  `/keuangan/laporan/realisasi/ekspor`. Test `laporan-realisasi.test.ts`
+  (12 case: hierarki, total, surplus/SiLPA, selisih negatif, CSV).
+- Konfirmasi gap lama: impor/template APBDes (`apbdes-import.ts`) dan
+  pembukuan manual kas (`/keuangan/pembukuan`) sudah ada, sehingga
+  `OS-FIN-001`/`002`/`003` dinaikkan ke ✅. Sisa Batch 2 hanya E2E
+  (`OS-FIN-004`, `OS-FIN-006`).
+- Perbaikan quality gate: timeout eksplisit 30 dtk untuk dua test impor
+  `exceljs` (gagal saat 104 worker paralel) dan `ApbdesTemplateButton` menjadi
+  tautan biasa tanpa `window.location.href` (menghapus warning lint).
+- Dokumen diperbarui: `PARITAS-OPENSID.md` (register 35 ✅ / 77 🟡 / 0 🔴 / 1 ⚪,
+  tabel domain menambah baris GOV dan FIN), `RENCANA-PERBAIKAN.md` (progres
+  Batch 2, status Fase 2, 3G).
+- Verifikasi: `npm run check` lulus (typecheck, lint tanpa warning,
+  format, 997 test) dan `npm run build` lulus. E2E tidak dijalankan.
+
 ## 2026-11-04 — Batch 1 persuratan: TTE, API eksternal, arsip, permohonan
 
 - TTE operasional: konfigurasi non-rahasia per desa (`tte_config`, resource dan
