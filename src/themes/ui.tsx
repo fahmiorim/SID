@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { SOCIAL_PLATFORM_LABELS, type SosmedItem } from "@/features/publik/domain/theme";
 import { sanitasiHtml } from "@/lib/sanitize";
 
 /**
@@ -138,4 +139,49 @@ export function ThemePrintButton({ label = "Cetak" }: { label?: string }) {
 
 export function ThemeProse({ html, className }: { html: string; className?: string }) {
   return <KontenHtml html={html} className={className} />;
+}
+
+/** Teks berjalan di bawah header; disembunyikan bila teks kosong. */
+export function TemaTeksBerjalan({ teks }: { teks: string }) {
+  const isi = teks.trim();
+  if (!isi) return null;
+
+  return (
+    <div
+      className="tema-teks-berjalan border-b"
+      style={{
+        backgroundColor: "var(--pub-primary)",
+        color: "var(--pub-primary-foreground)",
+      }}
+    >
+      <p className="sr-only">{isi}</p>
+      <div className="mx-auto w-full max-w-6xl overflow-hidden px-4 sm:px-6" aria-hidden="true">
+        <div className="tema-teks-berjalan-track flex w-max py-2 text-sm font-medium">
+          <span className="shrink-0 px-8">{isi}</span>
+          <span className="shrink-0 px-8">{isi}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Daftar tautan sosial media untuk footer tema. */
+export function TemaSosmed({ items }: { items: readonly SosmedItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      {items.map((item, index) => (
+        <a
+          key={`${item.platform}-${index}`}
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+          className="underline-offset-4 hover:underline"
+        >
+          {SOCIAL_PLATFORM_LABELS[item.platform]}
+        </a>
+      ))}
+    </div>
+  );
 }

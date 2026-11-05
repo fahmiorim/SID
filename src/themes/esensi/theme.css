@@ -39,3 +39,27 @@
 [data-theme="esensi"] .tema-link-primary {
   color: var(--pub-primary);
 }
+
+/** Teks berjalan: dua salinan identik digeser -50% agar mulus tanpa jeda. */
+@keyframes tema-teks-berjalan {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+[data-theme="esensi"] .tema-teks-berjalan-track {
+  animation: tema-teks-berjalan 28s linear infinite;
+}
+
+[data-theme="esensi"] .tema-teks-berjalan:hover .tema-teks-berjalan-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="esensi"] .tema-teks-berjalan-track {
+    animation: none;
+  }
+}

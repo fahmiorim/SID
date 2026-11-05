@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
-import { getMenuForUser } from "@/features/navigation/application/get-menu";
+import { getMenuSidebarForUser } from "@/features/navigation/application/urutan-menu-use-cases";
 import { findRoleById } from "@/features/rbac/infrastructure/rbac-repository";
 import { verifySession } from "@/lib/dal";
 
@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const user = await verifySession();
 
   const [menu, desa, role] = await Promise.all([
-    getMenuForUser(user),
+    getMenuSidebarForUser(user),
     getIdentitas(),
     user.roleId !== null ? findRoleById(user.roleId) : Promise.resolve(null),
   ]);

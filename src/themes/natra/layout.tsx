@@ -2,6 +2,7 @@ import { Mail, MapPin, Menu, Phone } from "lucide-react";
 import Link from "next/link";
 
 import type { LayoutProps } from "@/themes/types";
+import { TemaSosmed, TemaTeksBerjalan } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `natra`: header berwarna penuh dan footer
@@ -81,6 +82,8 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
         </div>
       </header>
 
+      <TemaTeksBerjalan teks={opsi.teksBerjalan} />
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
 
       <footer className="mt-auto bg-neutral-950 text-neutral-300">
@@ -135,6 +138,7 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
                   <span>{desa.emailDesa ?? "Email belum diatur"}</span>
                 </li>
               </ul>
+              <TemaSosmed items={opsi.sosmed} />
             </div>
           ) : null}
         </div>

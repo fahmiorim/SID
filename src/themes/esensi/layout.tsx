@@ -2,7 +2,7 @@ import { Mail, MapPin, Menu, Phone } from "lucide-react";
 import Link from "next/link";
 
 import type { LayoutProps } from "@/themes/types";
-import { ThemeButton } from "@/themes/ui";
+import { TemaSosmed, TemaTeksBerjalan, ThemeButton } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `esensi`.
@@ -71,6 +71,8 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
         </div>
       </header>
 
+      <TemaTeksBerjalan teks={opsi.teksBerjalan} />
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
 
       <footer className="tema-esensi-footer mt-auto border-t">
@@ -104,6 +106,7 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
               Masuk Pengelola
             </Link>
           )}
+          <TemaSosmed items={opsi.sosmed} />
         </div>
       </footer>
     </div>
