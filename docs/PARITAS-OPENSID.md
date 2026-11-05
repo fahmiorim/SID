@@ -41,11 +41,11 @@ Legenda:
 
 
 | Scope | Total ID/modul | ✅ | 🟡 | 🔴 | ⚪ |
-|---|---:|---:|---:|---:|---:|---:|
-| **Katalog per-ID — register direkonsiliasi (5 Nov 2026)** | **113** | **35** | **77** | **0** | **1** |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| **Katalog per-ID — register direkonsiliasi (5 Nov 2026)** | **113** | **36** | **76** | **0** | **1** |
 | Baseline kelompok lama (92 modul) — **historis, bukan status delivery** | 92 | 42 | 12 | 38 | — |
 
-Dari 112 ID dalam scope: **35 ✅ (31,3%)**, **77 🟡 (68,8%)**,
+Dari 112 ID dalam scope: **36 ✅ (32,1%)**, **76 🟡 (67,9%)**,
 **0 🔴 (0%)**. Satu ID (`OS-POP-009`) resmi di luar scope. Semua 113 ID
 katalog kini memiliki tepat satu baris status; status penuh tetap memerlukan
 bukti UI, aksi, otorisasi, keluaran, dan pengujian sesuai Definition of Done.
@@ -173,7 +173,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-ANA-006 | 🟡 Sebagian | Survei aktif + daftar pertanyaan dipublikasikan di `/desa/analisis-survei`. **Ditambah pengisian mandiri publik**: halaman `/desa/analisis-survei/[id]/isi` menampilkan form (nama/NIK opsional + isian sesuai tipe soal: teks → textarea, angka → input number, pilihan → radio) + honeypot + validasi server via `kirimSurveiPublikAction` + `simpanResponsPublikData`. Tema esensi menampilkan tautan "Isi Survei". Test domain `analisis.test.ts` (21 kasus). **Gap: E2E.** |
 | OS-MOD-001 | 🟡 Sebagian | Anjungan: modul + RBAC `anjungan`, CRUD admin lengkap (tambah/ubah/hapus, status, urutan, dialog). **Gap: alur kiosk/anjungan publik yang benar-benar berfungsi dan test/E2E belum ada.** |
 | OS-MOD-002 | ✅ Berfungsi penuh | Buku Tamu: CRUD admin `/buku-tamu`, laporan, modul + RBAC `buku-tamu`. Test `buku-tamu.test.ts` + isolasi tenant `isolasi-village.integration.test.ts`. |
-| OS-MOD-003 | 🟡 Sebagian | Kehadiran: CRUD perangkat, rekap dasar. Kekurangan: Otomasi rekap bulanan, integrasi perangkat desa lebih dalam. |
+| OS-MOD-003 | ✅ non-E2E: CRUD kehadiran perangkat + izin/sakit/cuti warga (`/kehadiran`, `/kehadiran/izin`) sudah lengkap dengan rekap per bulan (`getRekapKehadiran` di repository). **Ditambah halaman rekap admin** `/kehadiran/rekap` dengan ringkasan total hadir/izin/sakit/alpa + tabel per perangkat + tombol unduh CSV (`/kehadiran/rekap/ekspor`). Rekap menggabungkan data kehadiran perangkat + izin warga disetujui. **Gap: E2E.** |
 | OS-MOD-004 | 🟡 Sebagian | Lapak admin `/lapak` (modul + RBAC) dan publik `/desa/lapak` dengan data nyata, pencarian, filter kategori, serta menu bawaan. **Gap: entitas pelapak/produk terpisah, keranjang, peta produk, dan cetak belum ada.** |
 | OS-MOD-005 | 🟡 Sebagian | Pelanggan `/pelanggan`: CRUD (nama, kontak, alamat, keterangan), modul + RBAC `pelanggan`. **Gap: pendaftaran kerja sama/langganan, status berlangganan, dan test/E2E belum ada.** |
 | OS-OPS-001 | ✅ Berfungsi penuh | Pengguna, grup/role, modul, resource izin, menu efektif, pewarisan parent module. Test `pengguna.test.ts`, `modul.test.ts`, `permission.test.ts`, `build-menu.test.ts`; E2E `ops.e2e.ts` (grup/pengguna/modul). |

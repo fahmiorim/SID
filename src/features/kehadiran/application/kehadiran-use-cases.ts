@@ -15,6 +15,7 @@ import {
 import {
   createKehadiran,
   deleteKehadiran,
+  getRekapKehadiran,
   listKehadiran,
   listPerangkatDesa,
   updateKehadiran,
@@ -41,6 +42,20 @@ export async function daftarKehadiran(
       status: kehadiranStatusSchema.catch("hadir").parse(item.status),
     };
   });
+}
+export interface RekapKehadiranDTO {
+  perangkatId: number;
+  nama: string;
+  jabatan: string;
+  hadir: number;
+  izin: number;
+  sakit: number;
+  alpa: number;
+}
+
+export async function getRekapKehadiranData(villageId: number, tahun: number, bulan?: number) {
+  await requirePermission(KEHADIRAN_RESOURCE, "read");
+  return await getRekapKehadiran(villageId, tahun, bulan);
 }
 
 export async function tambahKehadiran(villageId: number, input: unknown) {
