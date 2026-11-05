@@ -14,6 +14,8 @@ describe("themeOptionsSchema", () => {
     expect(opsi.warnaPrimer).toBe("#1a7f4b");
     expect(opsi.font).toBe("system");
     expect(opsi.tampilMenu).toBe(true);
+    expect(opsi.teksBerjalan).toBe("");
+    expect(opsi.sosmed).toEqual([]);
     expect(opsi.beranda).toEqual([
       "hero",
       "statistik",
@@ -32,6 +34,23 @@ describe("themeOptionsSchema", () => {
 
   it("menolak bagian beranda selain yang dikenal", () => {
     const hasil = themeOptionsSchema.safeParse({ beranda: ["hero", "tidak-ada"] });
+    expect(hasil.success).toBe(false);
+  });
+
+  it("menerima tautan sosial media http/https", () => {
+    const opsi = themeOptionsSchema.parse({
+      teksBerjalan: "  Selamat datang  ",
+      sosmed: [{ platform: "instagram", url: "https://instagram.com/desa" }],
+    });
+    expect(opsi.teksBerjalan).toBe("Selamat datang");
+    expect(opsi.sosmed).toHaveLength(1);
+    expect(opsi.sosmed[0]?.platform).toBe("instagram");
+  });
+
+  it("menolak tautan sosial media selain http/https", () => {
+    const hasil = themeOptionsSchema.safeParse({
+      sosmed: [{ platform: "facebook", url: "javascript:alert(1)" }],
+    });
     expect(hasil.success).toBe(false);
   });
 });
@@ -65,6 +84,19 @@ describe("parseThemeOptions", () => {
   it("memakai susunan bawaan saat daftar beranda kosong", () => {
     const opsi = parseThemeOptions({ beranda: [] });
     expect(opsi.beranda).toEqual(THEME_DEFAULT_OPTIONS.beranda);
+  });
+
+  it("membuang entri sosial media tidak valid tanpa menghapus opsi lain", () => {
+    const opsi = parseThemeOptions({
+      warnaPrimer: "#123456",
+      sosmed: [
+        { platform: "instagram", url: "https://instagram.com/desa" },
+        { platform: "facebook", url: "javascript:alert(1)" },
+        { platform: "tidak-ada", url: "https://example.com" },
+      ],
+    });
+    expect(opsi.warnaPrimer).toBe("#123456");
+    expect(opsi.sosmed).toEqual([{ platform: "instagram", url: "https://instagram.com/desa" }]);
   });
 });
 
