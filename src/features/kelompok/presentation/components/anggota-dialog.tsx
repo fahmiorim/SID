@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Loader2, Plus, UserMinus } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, Plus, UserMinus } from "lucide-react";
 import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -42,6 +42,7 @@ import {
   addAnggotaAction,
   loadKelompokMembersAction,
   removeAnggotaAction,
+  setAnggotaPublikAction,
 } from "@/features/kelompok/presentation/actions";
 import { idleActionState } from "@/lib/action-state";
 import type { LabelOption } from "@/lib/forms";
@@ -57,8 +58,16 @@ type AnggotaState =
   | { status: "ready"; members: KelompokMember[]; kandidat: LabelOption[] }
   | { status: "error"; message: string };
 
-/** Satu baris anggota dengan tombol keluarkan (aksi mandiri). */
-function AnggotaRow({ kelompokId, member }: { kelompokId: number; member: KelompokMember }) {
+/** Satu baris anggota: toggle publikasi dan tombol keluarkan. */
+function AnggotaRow({
+  kelompokId,
+  member,
+  onChanged,
+}: {
+  kelompokId: number;
+  member: KelompokMember;
+  onChanged: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleRemove() {
@@ -70,6 +79,19 @@ function AnggotaRow({ kelompokId, member }: { kelompokId: number; member: Kelomp
       const state = await removeAnggotaAction(idleActionState, formData);
       if (state.status === "success") {
         toast.success(state.message);
+        onChanged();
+      } else if (state.status === "error") {
+        toast.error(state.message);
+      }
+    });
+  }
+
+  function handleTogglePublik() {
+    startTransition(async () => {
+      const state = await setAnggotaPublikAction(kelompokId, member.id, !member.tampilPublik);
+      if (state.status === "success") {
+        toast.success(state.message);
+        onChanged();
       } else if (state.status === "error") {
         toast.error(state.message);
       }
@@ -86,6 +108,24 @@ function AnggotaRow({ kelompokId, member }: { kelompokId: number; member: Kelomp
         <Badge variant={member.position === 1 ? "default" : "secondary"} className="text-xs">
           {jabatanLabel(member.position)}
         </Badge>
+      </TableCell>
+      <TableCell>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleTogglePublik}
+          disabled={isPending}
+          aria-pressed={member.tampilPublik}
+          aria-label={
+            member.tampilPublik
+              ? `Sembunyikan ${member.name} dari situs publik`
+              : `Tampilkan ${member.name} di situs publik`
+          }
+        >
+          {member.tampilPublik ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
+          {member.tampilPublik ? "Tampil" : "Sembunyi"}
+        </Button>
       </TableCell>
       <TableCell className="text-right">
         <Button
@@ -225,6 +265,8 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
     };
   }, [kelompok.id, reloadKey]);
 
+  const muatUlang = () => setReloadKey((key) => key + 1);
+
   if (state.status === "loading") {
     return (
       <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
@@ -245,6 +287,11 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
 
   return (
     <div className="space-y-4">
+      <p className="text-xs text-muted-foreground">
+        Anggota hanya tampil di situs publik bila ditandai “Tampil”. NIK tidak pernah
+        dipublikasikan.
+      </p>
+
       {state.members.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">
           Belum ada anggota pada kelompok ini.
@@ -257,23 +304,25 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
                 <TableHead>Nama</TableHead>
                 <TableHead className="w-44">NIK</TableHead>
                 <TableHead className="w-32">Jabatan</TableHead>
+                <TableHead className="w-28">Publik</TableHead>
                 <TableHead className="w-32 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {state.members.map((member) => (
-                <AnggotaRow key={member.id} kelompokId={kelompok.id} member={member} />
+                <AnggotaRow
+                  key={member.id}
+                  kelompokId={kelompok.id}
+                  member={member}
+                  onChanged={muatUlang}
+                />
               ))}
             </TableBody>
           </Table>
         </div>
       )}
 
-      <AddForm
-        kelompokId={kelompok.id}
-        kandidat={state.kandidat}
-        onAdded={() => setReloadKey((key) => key + 1)}
-      />
+      <AddForm kelompokId={kelompok.id} kandidat={state.kandidat} onAdded={muatUlang} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Palette } from "lucide-react";
-import { useActionState } from "react";
+import { Loader2, Palette, Plus, Trash2 } from "lucide-react";
+import { useActionState, useState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TemaFormValues } from "@/features/publik/domain/tema";
-import { FONT_CHOICES, FONT_LABELS, HEADER_VARIANTS } from "@/features/publik/domain/theme";
+import {
+  FONT_CHOICES,
+  FONT_LABELS,
+  HEADER_VARIANTS,
+  SOCIAL_PLATFORM_LABELS,
+  SOCIAL_PLATFORMS,
+  type SocialPlatform,
+  type SosmedItem,
+} from "@/features/publik/domain/theme";
 import { idleActionState } from "@/lib/action-state";
 
 import { simpanTemaAction } from "../tema-actions";
@@ -48,6 +56,25 @@ export function TemaForm({
 }) {
   const [state, formAction, pending] = useActionState(simpanTemaAction, idleActionState);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
+  const [sosmed, setSosmed] = useState<SosmedItem[]>(() =>
+    nilai.sosmed.map((item) => ({ ...item })),
+  );
+
+  function ubahSosmed(index: number, patch: Partial<SosmedItem>) {
+    setSosmed((sebelumnya) =>
+      sebelumnya.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    );
+  }
+
+  function hapusSosmed(index: number) {
+    setSosmed((sebelumnya) => sebelumnya.filter((_, i) => i !== index));
+  }
+
+  function tambahSosmed() {
+    setSosmed((sebelumnya) =>
+      sebelumnya.length >= 10 ? sebelumnya : [...sebelumnya, { platform: "facebook", url: "" }],
+    );
+  }
 
   return (
     <Card>
@@ -205,6 +232,93 @@ export function TemaForm({
               <FieldError messages={fieldErrors?.heroTombolUrl} />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="teksBerjalan">Teks berjalan</Label>
+            <Input
+              id="teksBerjalan"
+              name="teksBerjalan"
+              defaultValue={nilai.teksBerjalan}
+              maxLength={240}
+              placeholder="Contoh: Selamat datang di situs resmi desa"
+              disabled={!canManage}
+            />
+            <p className="text-xs text-muted-foreground">
+              Tampil bergerak di bawah header situs publik. Kosongkan untuk menyembunyikannya.
+            </p>
+            <FieldError messages={fieldErrors?.teksBerjalan} />
+          </div>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">Sosial media</legend>
+            <p className="text-xs text-muted-foreground">
+              Tautan tampil di footer situs publik. Maksimal 10 tautan dengan alamat http/https.
+            </p>
+
+            {sosmed.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Belum ada tautan sosial media.</p>
+            ) : (
+              <div className="space-y-2">
+                {sosmed.map((item, index) => (
+                  <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Select
+                      name="sosmedPlatform"
+                      value={item.platform}
+                      onValueChange={(value) =>
+                        ubahSosmed(index, { platform: value as SocialPlatform })
+                      }
+                      disabled={!canManage}
+                    >
+                      <SelectTrigger
+                        className="sm:w-44"
+                        aria-label={`Platform sosial media ${index + 1}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SOCIAL_PLATFORMS.map((platform) => (
+                          <SelectItem key={platform} value={platform}>
+                            {SOCIAL_PLATFORM_LABELS[platform]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      name="sosmedUrl"
+                      value={item.url}
+                      onChange={(event) => ubahSosmed(index, { url: event.target.value })}
+                      placeholder="https://instagram.com/desa"
+                      aria-label={`Tautan sosial media ${index + 1}`}
+                      disabled={!canManage}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => hapusSosmed(index)}
+                      disabled={!canManage}
+                      aria-label={`Hapus sosial media ${index + 1}`}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={tambahSosmed}
+              disabled={!canManage || sosmed.length >= 10}
+            >
+              <Plus className="size-4" />
+              Tambah sosial media
+            </Button>
+            <FieldError messages={fieldErrors?.sosmed} />
+          </fieldset>
 
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium">Bagian beranda</legend>

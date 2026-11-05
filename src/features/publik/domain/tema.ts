@@ -2,7 +2,14 @@ import { z } from "zod";
 
 import { RESOURCES } from "@/features/rbac/domain/resources";
 
-import { FONT_CHOICES, HEADER_VARIANTS, HOME_SECTION_IDS } from "./theme";
+import {
+  FONT_CHOICES,
+  HEADER_VARIANTS,
+  HOME_SECTION_IDS,
+  sosmedListSchema,
+  type SosmedItem,
+  type ThemeOptions,
+} from "./theme";
 
 /**
  * Kontrak administratif tema (Fase 1D.7): resource RBAC + skema form.
@@ -29,6 +36,8 @@ export const pengaturanTemaSchema = z.object({
   beranda: z.array(z.enum(HOME_SECTION_IDS)).default([]),
   tampilMenu: z.boolean().default(true),
   tampilKontakFooter: z.boolean().default(true),
+  teksBerjalan: z.string().trim().max(240).default(""),
+  sosmed: sosmedListSchema,
 });
 
 export type PengaturanTemaForm = z.infer<typeof pengaturanTemaSchema>;
@@ -51,22 +60,12 @@ export interface TemaFormValues {
   beranda: string[];
   tampilMenu: boolean;
   tampilKontakFooter: boolean;
+  teksBerjalan: string;
+  sosmed: SosmedItem[];
 }
 
 /** Ubah opsi tema tersimpan menjadi nilai awal form admin. */
-export function opsiKeForm(opsi: {
-  warnaPrimer: string;
-  warnaSekunder: string;
-  font: (typeof FONT_CHOICES)[number];
-  kelengkungan: number;
-  heroJudul: string;
-  heroTombol: string;
-  heroTombolUrl: string;
-  headerVarian: (typeof HEADER_VARIANTS)[number];
-  beranda: readonly (typeof HOME_SECTION_IDS)[number][];
-  tampilMenu: boolean;
-  tampilKontakFooter: boolean;
-}): TemaFormValues {
+export function opsiKeForm(opsi: ThemeOptions): TemaFormValues {
   return {
     warnaPrimer: opsi.warnaPrimer,
     warnaSekunder: opsi.warnaSekunder,
@@ -79,5 +78,7 @@ export function opsiKeForm(opsi: {
     beranda: [...opsi.beranda],
     tampilMenu: opsi.tampilMenu,
     tampilKontakFooter: opsi.tampilKontakFooter,
+    teksBerjalan: opsi.teksBerjalan,
+    sosmed: opsi.sosmed.map((item) => ({ ...item })),
   };
 }

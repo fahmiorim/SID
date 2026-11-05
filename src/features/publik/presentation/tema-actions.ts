@@ -36,6 +36,16 @@ export async function simpanTemaAction(
       .filter((value): value is string => typeof value === "string")
       .filter((value) => (HOME_SECTION_IDS as readonly string[]).includes(value));
 
+    const platformSosmed = formData
+      .getAll("sosmedPlatform")
+      .filter((value): value is string => typeof value === "string");
+    const urlSosmed = formData
+      .getAll("sosmedUrl")
+      .filter((value): value is string => typeof value === "string");
+    const sosmed = platformSosmed
+      .map((platform, index) => ({ platform, url: urlSosmed[index] ?? "" }))
+      .filter((item) => item.url.trim() !== "");
+
     const parsed = pengaturanTemaSchema.safeParse({
       warnaPrimer: text(formData, "warnaPrimer"),
       warnaSekunder: text(formData, "warnaSekunder"),
@@ -48,6 +58,8 @@ export async function simpanTemaAction(
       beranda,
       tampilMenu: formData.get("tampilMenu") === "on",
       tampilKontakFooter: formData.get("tampilKontakFooter") === "on",
+      teksBerjalan: text(formData, "teksBerjalan"),
+      sosmed,
     });
 
     if (!parsed.success) {

@@ -165,6 +165,8 @@ export interface KelompokMember {
   position: number;
   memberNumber: string | null;
   decreeNumber: string | null;
+  /** Tampil di daftar anggota publik (OS-WEB-010). */
+  tampilPublik: boolean;
 }
 
 /** Bentuk data kategori kelompok yang dikirim ke UI. */

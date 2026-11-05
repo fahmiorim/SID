@@ -13,6 +13,7 @@ import {
   listAnggotaKandidat,
   listKategoriKelompok,
   removeAnggotaKelompok,
+  setAnggotaPublik,
   updateKategori,
   updateKelompok,
 } from "@/features/kelompok/application/use-cases";
@@ -192,6 +193,33 @@ export async function removeAnggotaAction(
     await removeAnggotaKelompok(kelompokId, memberId);
     revalidatePath(KELOMPOK_PATH);
     return successState("Anggota dikeluarkan dari kelompok.");
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/** Ubah penanda tampil publik anggota (OS-WEB-010). */
+export async function setAnggotaPublikAction(
+  kelompokId: number,
+  memberId: number,
+  tampil: boolean,
+): Promise<ActionState> {
+  if (
+    !Number.isInteger(kelompokId) ||
+    kelompokId <= 0 ||
+    !Number.isInteger(memberId) ||
+    memberId <= 0
+  ) {
+    return errorState("Data anggota tidak valid.");
+  }
+
+  try {
+    await setAnggotaPublik(kelompokId, memberId, tampil);
+    revalidatePath(KELOMPOK_PATH);
+    revalidatePath("/desa/kelompok");
+    return successState(
+      tampil ? "Anggota ditampilkan di situs publik." : "Anggota disembunyikan dari situs publik.",
+    );
   } catch (error) {
     return toErrorState(error);
   }

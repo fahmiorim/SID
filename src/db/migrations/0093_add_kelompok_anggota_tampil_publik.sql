@@ -1,0 +1,1 @@
+ALTER TABLE `kelompok_anggota` ADD `tampil_publik` int DEFAULT 0 NOT NULL;

@@ -100,6 +100,8 @@ export async function simpanPengaturanTema(input: PengaturanTemaForm): Promise<{
     beranda: input.beranda.length > 0 ? input.beranda : [...THEME_DEFAULT_OPTIONS.beranda],
     tampilMenu: input.tampilMenu,
     tampilKontakFooter: input.tampilKontakFooter,
+    teksBerjalan: input.teksBerjalan,
+    sosmed: input.sosmed,
   };
 
   const tervalidasi = themeOptionsSchema.safeParse(opsi);

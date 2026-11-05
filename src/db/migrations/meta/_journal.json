@@ -498,8 +498,7 @@
       "when": 1794435690000,
       "tag": "0073_add_cdesa_created_at",
       "breakpoints": true
-    }
-    ,
+    },
     {
       "idx": 74,
       "version": "5",
@@ -624,6 +623,27 @@
       "version": "5",
       "when": 1794435840000,
       "tag": "0092_create_totp",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "5",
+      "when": 1794435850000,
+      "tag": "0093_add_kelompok_anggota_tampil_publik",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "5",
+      "when": 1794435860000,
+      "tag": "0094_create_pengguna_menu_urutan",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "5",
+      "when": 1794435870000,
+      "tag": "0095_create_mailbox_sms",
       "breakpoints": true
     }
   ]

@@ -9,6 +9,7 @@ import {
 } from "@/features/database/domain/database";
 import { createSqlBackup } from "@/features/database/infrastructure/backup";
 import { restoreSqlDump } from "@/features/database/infrastructure/restore";
+import { verifikasiPascaRestore } from "@/features/database/infrastructure/verifikasi-restore";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { requirePermission } from "@/lib/dal";
@@ -56,6 +57,7 @@ export async function pulihkanBackupSql(input: {
   const villageId = await resolveVillageId(user);
   const lower = input.filename.toLowerCase();
   await restoreSqlDump(input.buffer, { gzip: lower.endsWith(".sql.gz") });
+  await verifikasiPascaRestore();
   await recordAuditEvent({
     villageId,
     actorId: user.id,
