@@ -13,11 +13,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function GaleriPage() {
+export default async function GaleriPage({ searchParams }: PageProps<"/desa/galeri">) {
+  const params = await searchParams;
+  const cari = typeof params.q === "string" ? params.q.trim() : "";
+
   const { ctx, tema, desa } = await siapkanTema();
-  const album = await daftarAlbumGaleri(desa.id);
+  const album = await daftarAlbumGaleri(desa.id, cari || undefined);
 
   const Galeri = tema.galeri;
 
-  return <Galeri ctx={ctx} album={album} />;
+  return <Galeri ctx={ctx} album={album} cari={cari} />;
 }

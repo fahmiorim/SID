@@ -5,7 +5,7 @@ import type { BeritaListProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
 
 /** Daftar berita dengan filter kategori. */
-export function EsensiBerita({ berita, kategori, kategoriAktif }: BeritaListProps) {
+export function EsensiBerita({ berita, kategori, kategoriAktif, cari }: BeritaListProps) {
   return (
     <div className="space-y-8">
       <ThemePageHeader
@@ -13,10 +13,30 @@ export function EsensiBerita({ berita, kategori, kategoriAktif }: BeritaListProp
         description="Kabar terbaru, pengumuman, dan kegiatan desa."
       />
 
+      <form method="get" action="/desa/berita" className="flex gap-2" aria-label="Cari berita">
+        <label htmlFor="berita-search" className="sr-only">
+          Cari berita
+        </label>
+        <input
+          id="berita-search"
+          type="search"
+          name="q"
+          defaultValue={cari}
+          placeholder="Cari judul, ringkasan, atau isi berita"
+          className="min-h-10 flex-1 border px-3 text-sm"
+        />
+        <button
+          type="submit"
+          className="tema-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-medium"
+        >
+          Cari
+        </button>
+      </form>
+
       {kategori.length > 0 ? (
         <nav className="flex flex-wrap gap-2" aria-label="Filter kategori">
           <Link
-            href="/desa/berita"
+            href={cari ? `/desa/berita?q=${encodeURIComponent(cari)}` : "/desa/berita"}
             className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
             style={
               kategoriAktif
@@ -32,7 +52,9 @@ export function EsensiBerita({ berita, kategori, kategoriAktif }: BeritaListProp
           {kategori.map((item) => (
             <Link
               key={item.id}
-              href={`/desa/berita?kategori=${encodeURIComponent(item.slug)}`}
+              href={`/desa/berita?kategori=${encodeURIComponent(item.slug)}${
+                cari ? `&q=${encodeURIComponent(cari)}` : ""
+              }`}
               className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
               style={
                 kategoriAktif === item.slug
@@ -50,7 +72,11 @@ export function EsensiBerita({ berita, kategori, kategoriAktif }: BeritaListProp
       ) : null}
 
       {berita.length === 0 ? (
-        <ThemeEmpty>Belum ada berita yang dipublikasikan.</ThemeEmpty>
+        <ThemeEmpty>
+          {cari
+            ? "Tidak ada berita yang cocok dengan kata kunci tersebut."
+            : "Belum ada berita yang dipublikasikan."}
+        </ThemeEmpty>
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {berita.map((item) => {

@@ -27,7 +27,7 @@ import {
 
 export async function daftarBerita(
   villageId: number,
-  opsi: { limit?: number; kategoriSlug?: string; headlineSaja?: boolean } = {},
+  opsi: { limit?: number; kategoriSlug?: string; headlineSaja?: boolean; cari?: string } = {},
 ) {
   return listBerita(villageId, opsi);
 }
@@ -44,8 +44,8 @@ export async function daftarKategoriBerita(villageId: number) {
   return listKategoriBerita(villageId);
 }
 
-export async function daftarAlbumGaleri(villageId: number) {
-  return listAlbumGaleri(villageId);
+export async function daftarAlbumGaleri(villageId: number, cari?: string) {
+  return listAlbumGaleri(villageId, cari);
 }
 
 export async function detailAlbumGaleri(villageId: number, slug: string) {

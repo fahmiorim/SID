@@ -5,13 +5,37 @@ import type { GaleriListProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
 
 /** Daftar album galeri. */
-export function EsensiGaleri({ album }: GaleriListProps) {
+export function EsensiGaleri({ album, cari }: GaleriListProps) {
   return (
     <div className="space-y-8">
       <ThemePageHeader title="Galeri Desa" description="Dokumentasi kegiatan dan potret desa." />
 
+      <form method="get" action="/desa/galeri" className="flex gap-2" aria-label="Cari album">
+        <label htmlFor="galeri-search" className="sr-only">
+          Cari album
+        </label>
+        <input
+          id="galeri-search"
+          type="search"
+          name="q"
+          defaultValue={cari}
+          placeholder="Cari nama atau keterangan album"
+          className="min-h-10 flex-1 border px-3 text-sm"
+        />
+        <button
+          type="submit"
+          className="tema-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-medium"
+        >
+          Cari
+        </button>
+      </form>
+
       {album.length === 0 ? (
-        <ThemeEmpty>Belum ada album galeri.</ThemeEmpty>
+        <ThemeEmpty>
+          {cari
+            ? "Tidak ada album yang cocok dengan kata kunci tersebut."
+            : "Belum ada album galeri."}
+        </ThemeEmpty>
       ) : (
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {album.map((item) => {

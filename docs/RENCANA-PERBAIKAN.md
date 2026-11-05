@@ -155,6 +155,24 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
   sampai uji browser untuk keluaran baru tersedia.
 ---
 
+**Batch 5 — Web publik (progres 5 Nov 2026):**
+
+- **OS-WEB-002** ✅ gap pencarian berita: menambahkan `cari` pada
+  `listBerita()` + use case `daftarBerita()`, form pencarian di tema
+  `berita.tsx`, domain `pencarian.ts` berisi `normalisasiKataKunci` +
+  `polaLike` untuk escaping `%`/`_` wildcard SQL, test `pencarian.test.ts`
+  (5 test).
+- **OS-WEB-004** ✅ gap pencarian galeri: menambahkan parameter `cari` pada
+  `listAlbumGaleri()` + use case `daftarAlbumGaleri()`, form pencarian di tema
+  `galeri.tsx`.
+- **OS-WEB-018** ✅ gap cakupan URL sitemap: menambahkan 12 URL publik ke
+  `sitemap.ts` (`pengaduan`, `lapak`, `kontak`, `kesehatan/*`, `pertanahan`,
+  `peta`, `peta/cetak`, `verifikasi-surat`) dan menghapus `/bantuan` serta
+  `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
+- Seluruh ID Batch 5 lainnya masih 🟡 dengan gap masing-masing; E2E ditunda
+  sesuai aturan batch.
+---
+
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
 Bagian ini menjelaskan masalah pada awal audit, bukan klaim kondisi working tree

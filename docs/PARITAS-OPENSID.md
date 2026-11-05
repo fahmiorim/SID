@@ -136,9 +136,9 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-FIN-012 | ✅ Berfungsi penuh | Domain & tabel `bumindes_pembangunan` + `bumindes_kader`, CRUD/UI `/bumindes/pembangunan` (dan buku kader), keluaran buku resmi (cetak + CSV). |
 | OS-FIN-013 | ✅ Berfungsi penuh | Domain & tabel `bumindes_peraturan`, `bumindes_aparat`, `bumindes_agenda`, CRUD/UI `/bumindes/sekretariat` (peraturan/aparat/agenda/ekspedisi), keluaran buku resmi (cetak + CSV). |
 | OS-WEB-001 | 🟡 Sebagian | Beranda publik: sambutan, slider, statistik ringkas, widget, berita, surat terbaru lewat tema. **Gap: agenda dan E2E beranda belum ada.** |
-| OS-WEB-002 | 🟡 Sebagian | Berita: CRUD admin, kategori, status terbit, detail publik, arsip berbasis daftar, hit, test `berita.test.ts`. **Gap: pencarian khusus dan E2E belum ada.** |
+| OS-WEB-002 | 🟡 Sebagian | Berita: CRUD admin, kategori, status terbit, detail publik, arsip berbasis daftar, hit, test `berita.test.ts`, pencarian khusus dengan escaping wildcard LIKE. **Gap: E2E belum ada.** |
 | OS-WEB-003 | 🟡 Sebagian | Profil, pemerintahan/perangkat, lembaga di route publik. **Gap: bagan SOTK lengkap dan E2E belum ada.** |
-| OS-WEB-004 | 🟡 Sebagian | Galeri: admin album/foto + publik `/desa/galeri` + detail, test `galeri.test.ts`. **Gap: cetak, pencarian galeri, dan E2E belum ada.** |
+| OS-WEB-004 | 🟡 Sebagian | Galeri: admin album/foto + publik `/desa/galeri` + detail, test `galeri.test.ts`, pencarian album dengan escaping wildcard LIKE. **Gap: cetak dan E2E belum ada.** |
 | OS-WEB-005 | 🟡 Sebagian | Dokumen publik/produk hukum: admin CRUD + publik `/desa/dokumen`. **Gap: peraturan/embed/arsip lengkap dan E2E publik belum ada.** |
 | OS-WEB-006 | 🟡 Sebagian | `/desa/statistik` menyediakan statistik kependudukan, bantuan, dan desa. **Gap: periodisasi dan E2E belum ada.** |
 | OS-WEB-007 | 🟡 Sebagian | `/desa/peta` menampilkan peta Leaflet nyata (area/garis/titik/polygon) + `/api/peta`. **Gap: E2E hanya memuat halaman; coverage layer belum diperluas.** |
@@ -152,7 +152,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-WEB-015 | 🟡 Sebagian | Kontak publik `/desa/kontak` tersedia. **Gap: komentar, statistik pengunjung, dan umpan balik belum ada.** |
 | OS-WEB-016 | 🟡 Sebagian | Admin menu/widget/slider + navigasi tema, E2E. **Gap: teks berjalan dan konfigurasi sosial media belum ada.** |
 | OS-WEB-017 | 🟡 Sebagian | Konfigurasi tema, form opsi, registry tema, test `theme.test.ts`. **Gap: pemindaian/aktivasi tema runtime dan E2E belum ada.** |
-| OS-WEB-018 | 🟡 Sebagian | Sitemap, robots, metadata per route, OG image per host. **Gap: cakupan URL dinamis lengkap dan E2E belum ada.** |
+| OS-WEB-018 | 🟡 Sebagian | Sitemap dinamis per host, robots.txt, metadata per route, OG image per host. **Gap: cakupan URL dinamis ditambah (pengaduan, lapak, kesehatan, pertanahan, peta, kontak, verifikasi surat); E2E belum ada.** |
 | OS-WEB-019 | ✅ Berfungsi penuh | Token/QR dan halaman publik `/desa/verifikasi-surat/[token]` + form token, test `verifikasi.test.ts`. E2E `publik-verifikasi.e2e.ts` menjalankan alur warga → verifikasi berjenjang → token publik, ditambah smoke halaman token. |
 | OS-WGA-001 | 🟡 Sebagian | Pendaftaran mandiri `/desa/registrasi-warga` (NIK harus cocok penduduk hidup desa, cegah duplikat/akun yang sudah ada) + admin `/penduduk/registrasi` untuk menyetujui/menolak; persetujuan membuat akun NIK + PIN yang ditampilkan sekali. **Gap: captcha/anti-abuse, verifikasi via HP/email, notifikasi otomatis, audit khusus, dan test/E2E belum ada.** |
 | OS-WGA-002 | 🟡 Sebagian | Login bersama `/masuk`, sesi warga, ubah PIN, reset PIN operator, lupa sandi mandiri, rate limit login username (5/menit), test `warga.test.ts` + `integrasi-warga.test.ts`; login warga sukses dipakai dalam `tests/permohonan-warga.e2e.ts`. **Gap: captcha/anti-abuse, OTP/2FA, serta E2E khusus kegagalan login/rate limit belum ada.** |

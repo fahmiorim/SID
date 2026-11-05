@@ -38,6 +38,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${base}/desa/surat`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/desa/analisis-survei`, changeFrequency: "monthly", priority: 0.5 },
     { url: `${base}/desa/idm-sdgs`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/kontak`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/lapak`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/pengaduan`, changeFrequency: "weekly", priority: 0.5 },
+    { url: `${base}/desa/pengaduan/lacak`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/desa/kesehatan/ibu-hamil`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/desa/kesehatan/kia`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/desa/kesehatan/pemantauan-anak`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/desa/pertanahan`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/peta`, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/desa/peta/cetak`, changeFrequency: "monthly", priority: 0.4 },
+    { url: `${base}/desa/verifikasi-surat`, changeFrequency: "monthly", priority: 0.4 },
     { url: `${base}/layanan-mandiri`, changeFrequency: "monthly", priority: 0.5 },
   ];
 

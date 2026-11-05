@@ -18,6 +18,7 @@ import {
   widget,
 } from "@/db/schema";
 import { DOKUMEN_PAGE_SIZE, type DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
+import { polaLike } from "@/features/publik/domain/pencarian";
 
 /**
  * Query konten situs publik (Fase 1C).
@@ -51,7 +52,7 @@ export interface BeritaRingkas {
 
 export async function listBerita(
   villageId: number,
-  opsi: { limit?: number; kategoriSlug?: string; headlineSaja?: boolean } = {},
+  opsi: { limit?: number; kategoriSlug?: string; headlineSaja?: boolean; cari?: string } = {},
 ): Promise<BeritaRingkas[]> {
   const kondisi = [beritaLayakTayang(villageId)];
 
@@ -60,6 +61,12 @@ export async function listBerita(
   }
   if (opsi.headlineSaja) {
     kondisi.push(eq(berita.headline, true));
+  }
+  if (opsi.cari) {
+    const pola = polaLike(opsi.cari);
+    kondisi.push(
+      or(like(berita.judul, pola), like(berita.ringkasan, pola), like(berita.isi, pola)),
+    );
   }
 
   const rows = await db
@@ -163,7 +170,14 @@ export interface AlbumRingkas {
   jumlahFoto: number;
 }
 
-export async function listAlbumGaleri(villageId: number): Promise<AlbumRingkas[]> {
+export async function listAlbumGaleri(villageId: number, cari?: string): Promise<AlbumRingkas[]> {
+  const kondisi = [eq(galeriAlbum.villageId, villageId), eq(galeriAlbum.aktif, true)];
+  if (cari) {
+    const pola = polaLike(cari);
+    const cocok = or(like(galeriAlbum.nama, pola), like(galeriAlbum.keterangan, pola));
+    if (cocok) kondisi.push(cocok);
+  }
+
   const rows = await db
     .select({
       id: galeriAlbum.id,
@@ -178,7 +192,7 @@ export async function listAlbumGaleri(villageId: number): Promise<AlbumRingkas[]
       )`,
     })
     .from(galeriAlbum)
-    .where(and(eq(galeriAlbum.villageId, villageId), eq(galeriAlbum.aktif, true)))
+    .where(and(...kondisi))
     .orderBy(asc(galeriAlbum.urut), desc(galeriAlbum.id));
 
   return rows.map(({ urut: _urut, ...album }) => album);
@@ -421,7 +435,7 @@ export async function cariDokumenPublik(
   }
   const query = filter.search.trim().slice(0, 100);
   if (query) {
-    const search = `%${query}%`;
+    const search = polaLike(query);
     const textFilter = or(
       like(dokumenPublik.nama, search),
       like(dokumenPublik.jenis, search),

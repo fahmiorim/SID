@@ -81,6 +81,7 @@ export interface BeritaListProps {
   berita: BeritaRingkas[];
   kategori: { id: number; nama: string; slug: string }[];
   kategoriAktif: string | null;
+  cari: string;
 }
 
 export interface BeritaDetailProps {
@@ -99,6 +100,7 @@ export interface GaleriListProps {
     sampul: string | null;
     jumlahFoto: number;
   }[];
+  cari: string;
 }
 
 export interface GaleriDetailProps {
