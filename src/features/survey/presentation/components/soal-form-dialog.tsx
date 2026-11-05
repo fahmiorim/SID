@@ -42,6 +42,7 @@ import { simpanSoalAction } from "../actions";
 
 interface IndikatorPilihan {
   id: number;
+  kode: string;
   nama: string;
 }
 

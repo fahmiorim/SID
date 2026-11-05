@@ -210,6 +210,37 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 - ID Batch 6 lainnya (`OS-WGA-002`/`004`/`005`/`009`/`010`/`011`)
   belum dikerjakan pada batch ini; gap non-E2E-nya tetap seperti tercatat di
   `PARITAS-OPENSID.md`.
+**Batch 7 — Analisis & survei (selesai non-E2E 5 Nov 2026):**
+
+- **OS-ANA-001** ✅ non-E2E: test domain `analisis.test.ts` (7 kasus) menutupi
+  validasi `kategoriAnalisisSchema` (nama wajib, trim, max 100 karakter,
+  keterangan opsional) dan `indikatorAnalisisSchema`. Gap: pemakaian kategori
+  pada laporan skor belum ada; E2E.
+- **OS-ANA-002** ✅ non-E2E: field `bobot` (1–100) + selector indikator analisis
+  tersedia di form soal (`SoalFormDialog`) serta tersimpan di DB melalui
+  repository + use case. `soalFormSchema` divalidasi zod dengan default bobot 1.
+  Gap: E2E.
+- **OS-ANA-003** ✅ non-E2E: **sasaran survei** (`survey.sasaran`) dan **periode**
+  (`mulai`/`selesai`) sudah tersedia di schema, form, dan use case
+  `simpanSurveyData`. Test `survey.test.ts` sudah mencakup validasi periode.
+  Gap: E2E.
+- **OS-ANA-004** ✅ non-E2E: **laporan skor formal** `/analisis-survei/[id]/laporan`
+  menampilkan rata-rata skor, distribusi klasifikasi (badge), tabel skor per
+  responden (nama/NIK/skor/klasifikasi), dan rata-rata per indikator. Ekspor CSV
+  `/analisis-survei/[id]/laporan/ekspor` dengan format `Nama,NIK,Skor,Klasifikasi`
+  + baris indikator, BOM UTF-8. Domain `skor.ts` + test `skor.test.ts` (4 kasus)
+  menguji `nilaiJawaban`, `hitungSkor`, `klasifikasiSkor`, dan
+  `rekapPerIndikator`. Gap: E2E.
+- **OS-ANA-005** tetap 🟡: **impres/ekspor respons CSV** dan proteksi formula
+  sudah ada (`survey-csv.test.ts`); gap integrasi formulir eksternal tidak
+  berubah.
+- **OS-ANA-006** ✅ non-E2E: **pengisian mandiri publik** tersedia lewat halaman
+  `/desa/analisis-survei/[id]/isi` — form klien dengan honeypot `website`,
+  input nama/NIK opsional, dan isian jawaban sesuai tipe soal (teks →
+  `textarea`, angka → `input[type=number]`, pilihan → radio). Data dikirim
+  ke `kirimSurveiPublikAction` (`publik-actions.ts`) lalu disimpan via
+  `simpanResponsPublikData`. Tema esensi menampilkan tautan "Isi Survei" di
+  halaman `/desa/analisis-survei`. Gap: E2E.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 

@@ -93,6 +93,9 @@ export async function simpanSoalAction(
     pertanyaan: text(formData, "pertanyaan"),
     tipe: text(formData, "tipe"),
     pilihan: text(formData, "pilihan"),
+    bobot: formData.get("bobot"),
+    skorPilihan: text(formData, "skorPilihan"),
+    indikatorId: formData.get("indikatorId"),
     urutan: text(formData, "urutan"),
   });
 

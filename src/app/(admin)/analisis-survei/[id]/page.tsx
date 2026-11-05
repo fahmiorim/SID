@@ -161,7 +161,11 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
               <CardDescription>Urutan pertanyaan saat diisi responden.</CardDescription>
             </div>
             {canWrite ? (
-              <SoalCreateButton surveyId={survei.id} urutanAwal={urutanBerikutnya} />
+              <SoalCreateButton
+                surveyId={survei.id}
+                urutanAwal={urutanBerikutnya}
+                indikator={detail.indikator}
+              />
             ) : null}
           </CardHeader>
           <CardContent>
@@ -180,6 +184,13 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
                       <p className="text-sm font-medium">{item.pertanyaan}</p>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline">{TIPE_SOAL_LABELS[item.tipe]}</Badge>
+                        <Badge variant="secondary">Bobot {item.bobot}</Badge>
+                        {item.indikatorId ? (
+                          <Badge variant="outline">
+                            {detail.indikator.find((i) => i.id === item.indikatorId)?.nama ??
+                              "Indikator"}
+                          </Badge>
+                        ) : null}
                         {item.tipe === "choice" ? (
                           <span className="text-xs text-muted-foreground">
                             {item.pilihan.join(" · ")}
@@ -192,6 +203,7 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
                         soal={item}
                         urutanAwal={urutanBerikutnya}
                         canDelete={canDelete}
+                        indikator={detail.indikator}
                       />
                     ) : null}
                   </li>

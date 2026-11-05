@@ -1,5 +1,5 @@
 import type { SurveiProps } from "@/themes/types";
-import { ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
+import { ThemeButton, ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
 
 /** Survei aktif yang dikelola desa. */
 export function EsensiSurvei({ ctx, survei }: SurveiProps) {
@@ -44,15 +44,13 @@ export function EsensiSurvei({ ctx, survei }: SurveiProps) {
               ) : (
                 <p className="text-sm text-muted-foreground">Pertanyaan survei belum diisi.</p>
               )}
+              <div className="mt-4">
+                <ThemeButton href={`/desa/analisis-survei/${item.id}/isi`}>Isi Survei</ThemeButton>
+              </div>
             </ThemeCard>
           ))}
         </ul>
       )}
-
-      <p className="text-sm text-muted-foreground">
-        Pengisian survei secara mandiri belum tersedia. Hasil agregat ditampilkan setelah data
-        responden diolah oleh petugas desa.
-      </p>
     </div>
   );
 }

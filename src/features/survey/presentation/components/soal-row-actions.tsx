@@ -32,7 +32,7 @@ interface SoalRowActionsProps {
   soal: SoalRow;
   urutanAwal: number;
   canDelete: boolean;
-  indikator?: readonly { id: number; nama: string }[];
+  indikator?: readonly { id: number; kode: string; nama: string }[];
 }
 
 export function SoalRowActions({ soal, urutanAwal, canDelete, indikator }: SoalRowActionsProps) {

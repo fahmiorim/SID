@@ -14,7 +14,7 @@ export function SoalCreateButton({
 }: {
   surveyId: number;
   urutanAwal: number;
-  indikator?: readonly { id: number; nama: string }[];
+  indikator?: readonly { id: number; kode: string; nama: string }[];
 }) {
   const [open, setOpen] = useState(false);
 
