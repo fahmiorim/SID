@@ -1,10 +1,11 @@
-import { FileDown } from "lucide-react";
+import { FileDown, FileText } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { PrintButton } from "@/components/layout/page-header-actions";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SASARAN_BANTUAN, SASARAN_LABELS } from "@/features/bantuan/domain/bantuan";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
@@ -29,6 +30,7 @@ export default async function StatistikBantuanPage({
   searchParams: Promise<{
     kind?: StatistikBantuanKind;
     programSlug?: string;
+    sasaran?: string;
     dusun?: string;
     rw?: string;
     rt?: string;
@@ -55,11 +57,17 @@ export default async function StatistikBantuanPage({
   const rt = typeof params.rt === "string" ? params.rt : "";
   const periodeMulai = typeof params.periodeMulai === "string" ? params.periodeMulai : "";
   const periodeAkhir = typeof params.periodeAkhir === "string" ? params.periodeAkhir : "";
+  const sasaranAngka = Number(params.sasaran);
+  const sasaran =
+    Number.isInteger(sasaranAngka) && sasaranAngka >= 1 && sasaranAngka <= 4
+      ? sasaranAngka
+      : undefined;
 
   const [result, wilayah] = await Promise.all([
     getStatistikBantuanUseCase(villageId, {
       kind,
       programSlug: programSlug || undefined,
+      sasaran,
       dusun: dusun || undefined,
       rw: rw || undefined,
       rt: rt || undefined,
@@ -86,7 +94,9 @@ export default async function StatistikBantuanPage({
   if (rt) query.set("rt", rt);
   if (periodeMulai) query.set("periodeMulai", periodeMulai);
   if (periodeAkhir) query.set("periodeAkhir", periodeAkhir);
+  if (sasaran) query.set("sasaran", String(sasaran));
   const exportHref = `/statistik/bantuan/ekspor?${query.toString()}`;
+  const pdfHref = `/statistik/bantuan/ekspor/pdf?${query.toString()}`;
 
   return (
     <div className="space-y-6 p-6">
@@ -99,6 +109,12 @@ export default async function StatistikBantuanPage({
               <a href={exportHref}>
                 <FileDown className="size-4" />
                 Ekspor CSV
+              </a>
+            </Button>
+            <Button variant="outline" asChild>
+              <a href={pdfHref}>
+                <FileText className="size-4" />
+                Unduh PDF
               </a>
             </Button>
             <PrintButton />
@@ -118,6 +134,21 @@ export default async function StatistikBantuanPage({
             </option>
           ))}
         </select>
+        {kind === "sasaran" ? (
+          <select
+            name="sasaran"
+            defaultValue={sasaran ? String(sasaran) : ""}
+            aria-label="Saring jenis sasaran"
+            className={SELECT_CLASS}
+          >
+            <option value="">Semua sasaran</option>
+            {SASARAN_BANTUAN.map((value) => (
+              <option key={value} value={value}>
+                {SASARAN_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        ) : null}
         <select
           name="dusun"
           defaultValue={dusun}

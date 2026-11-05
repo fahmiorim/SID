@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { getPetaPublik } from "@/features/gis/application/use-cases";
 import PetaMap from "@/features/gis/presentation/components/peta-map";
@@ -33,7 +35,12 @@ export default async function PetaPage() {
 
   return (
     <div className="mx-auto max-w-5xl py-12">
-      <h1 className="mb-6 text-2xl font-bold">Peta Desa {namaDesa}</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Peta Desa {namaDesa}</h1>
+        <Button variant="outline" asChild>
+          <Link href="/desa/peta/cetak">Cetak Peta</Link>
+        </Button>
+      </div>
       <PetaMap
         areas={areas}
         garises={garises}

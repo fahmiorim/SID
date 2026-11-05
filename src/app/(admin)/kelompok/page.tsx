@@ -1,9 +1,10 @@
-import { Printer, Search, UsersRound } from "lucide-react";
+import { FileDown, FileText, Search, UsersRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { PrintButton } from "@/components/shared/print-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,10 +88,19 @@ export default async function KelompokPage({ searchParams }: PageProps<"/kelompo
         description="Master kelompok masyarakat dan lembaga desa."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <Button type="button" variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" />
-              Cetak
+            <Button asChild variant="outline">
+              <Link href={tipe ? `/kelompok/laporan?tipe=${tipe}` : "/kelompok/laporan"}>
+                <FileText className="size-4" />
+                Laporan anggota
+              </Link>
             </Button>
+            <Button asChild variant="outline">
+              <a href={tipe ? `/kelompok/ekspor?tipe=${tipe}` : "/kelompok/ekspor"}>
+                <FileDown className="size-4" />
+                Ekspor CSV
+              </a>
+            </Button>
+            <PrintButton />
             {canManage ? (
               <KelompokCreateButton defaultTipe={(tipe as KelompokTipe) || "kelompok"} />
             ) : null}

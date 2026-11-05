@@ -26,10 +26,16 @@ export async function GET(request: Request, _context: RouteContext<"/statistik/b
   const rt = url.searchParams.get("rt") || undefined;
   const periodeMulai = url.searchParams.get("periodeMulai") || undefined;
   const periodeAkhir = url.searchParams.get("periodeAkhir") || undefined;
+  const sasaranAngka = Number(url.searchParams.get("sasaran"));
+  const sasaran =
+    Number.isInteger(sasaranAngka) && sasaranAngka >= 1 && sasaranAngka <= 4
+      ? sasaranAngka
+      : undefined;
   const villageId = await resolveVillageId(user);
   const result = await getStatistikBantuanUseCase(villageId, {
     kind,
     programSlug,
+    sasaran,
     dusun,
     rw,
     rt,

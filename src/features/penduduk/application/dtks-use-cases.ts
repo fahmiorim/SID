@@ -19,6 +19,7 @@ import {
   dtksFilename,
   dtksRekapFilename,
   hitungRekapDtks,
+  rencanaImporDtks,
   type BarisImporDtks,
   type DtksRekap,
 } from "@/features/penduduk/domain/dtks-berkas";
@@ -129,19 +130,13 @@ export async function imporDtksUseCase(
     villageId,
     rows.map((row) => row.noRtm),
   );
+  const rencana = rencanaImporDtks(rows, peta);
 
   let dibuat = 0;
-  let dilewati = 0;
-  const tidakDitemukan: string[] = [];
+  let dilewati = rencana.ganda.length;
 
-  for (const row of rows) {
-    const rtmId = peta.get(row.noRtm);
-    if (!rtmId) {
-      tidakDitemukan.push(row.noRtm);
-      continue;
-    }
-
-    const dtksId = await createOrGetDtks(villageId, rtmId);
+  for (const row of rencana.siap) {
+    const dtksId = await createOrGetDtks(villageId, row.rtmId);
     const detail = await getDtksDetail(villageId, dtksId);
     const sudahAdaMetadata =
       detail !== null && (detail.namaResponden !== null || detail.namaPetugasPencacahan !== null);
@@ -162,7 +157,7 @@ export async function imporDtksUseCase(
     dibuat += 1;
   }
 
-  return { dibuat, dilewati, tidakDitemukan };
+  return { dibuat, dilewati, tidakDitemukan: rencana.tidakDitemukan };
 }
 
 /** Rekapitulasi DTKS mengikuti filter daftar. */

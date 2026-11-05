@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, Users } from "lucide-react";
 import { startTransition, useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ import { createIdleActionState } from "@/lib/action-state";
 
 import type { PemilihanDTO } from "../../domain/pemilihan";
 import { hapusPemilihanAction, simpanPemilihanAction } from "../pemilihan-actions";
+import { KandidatDialog } from "./kandidat-dialog";
 
 function formatTanggal(value: string | null) {
   if (!value) return "—";
@@ -67,6 +68,7 @@ export function PemilihanManager({
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<PemilihanDTO | null>(null);
+  const [kandidatItem, setKandidatItem] = useState<PemilihanDTO | null>(null);
   const [state, formAction, isPending] = useActionState(
     simpanPemilihanAction,
     createIdleActionState<{ id: number } | null>(),
@@ -122,11 +124,7 @@ export function PemilihanManager({
                   <th className="p-3 text-left text-sm font-medium text-muted-foreground">
                     Keterangan
                   </th>
-                  {canWrite || canManage ? (
-                    <th className="p-3 text-right text-sm font-medium text-muted-foreground">
-                      Aksi
-                    </th>
-                  ) : null}
+                  <th className="p-3 text-right text-sm font-medium text-muted-foreground">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -136,23 +134,30 @@ export function PemilihanManager({
                     <td className="p-3">{item.jenis}</td>
                     <td className="p-3">{formatTanggal(item.tanggal)}</td>
                     <td className="p-3 text-sm text-muted-foreground">{item.keterangan || "—"}</td>
-                    {canWrite || canManage ? (
-                      <td className="p-3">
-                        <div className="flex justify-end gap-1">
-                          {canWrite ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => bukaUbah(item)}
-                              aria-label={`Ubah pemilihan ${item.jenis} ${item.tahun}`}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          ) : null}
-                          {canManage ? <HapusPemilihanButton item={item} /> : null}
-                        </div>
-                      </td>
-                    ) : null}
+                    <td className="p-3">
+                      <div className="flex flex-wrap justify-end gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setKandidatItem(item)}
+                          aria-label={`Kandidat pemilihan ${item.jenis} ${item.tahun}`}
+                        >
+                          <Users className="h-4 w-4" />
+                          Kandidat
+                        </Button>
+                        {canWrite ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => bukaUbah(item)}
+                            aria-label={`Ubah pemilihan ${item.jenis} ${item.tahun}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        ) : null}
+                        {canManage ? <HapusPemilihanButton item={item} /> : null}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -160,6 +165,16 @@ export function PemilihanManager({
           </div>
         )}
       </CardContent>
+
+      <KandidatDialog
+        open={kandidatItem !== null}
+        onOpenChange={(next) => {
+          if (!next) setKandidatItem(null);
+        }}
+        pemilihan={kandidatItem}
+        canWrite={canWrite}
+        canManage={canManage}
+      />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-md">

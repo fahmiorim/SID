@@ -1,11 +1,15 @@
-import { CircleDot } from "lucide-react";
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
-import { Card, CardContent } from "@/components/ui/card";
 import { listSimbolUseCases } from "@/features/gis/application/use-cases";
 import { SIMBOL_RESOURCE } from "@/features/gis/domain/gis";
+import {
+  createSimbolAction,
+  deleteSimbolAction,
+  updateSimbolAction,
+} from "@/features/gis/presentation/actions";
+import { EntityManager } from "@/features/gis/presentation/components/entity-manager";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -21,35 +25,43 @@ export default async function SimbolPage() {
   }
 
   const simbols = await listSimbolUseCases();
+  const rows = simbols.map((simbol) => ({
+    id: simbol.id,
+    simbol: simbol.simbol,
+    desk: simbol.desk,
+    sortOrder: simbol.sortOrder,
+  }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Simbol Peta"
         description="Katalog simbol/ikon yang digunakan pada layer peta."
-        actions={null}
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          {simbols.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">Belum ada simbol peta.</p>
-          ) : (
-            <div className="space-y-3">
-              {simbols.map((s) => (
-                <div key={s.id} className="flex items-center gap-4 rounded-lg border p-4">
-                  <CircleDot className="size-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="font-medium">{s.simbol}</p>
-                    {s.desk && <p className="text-sm text-muted-foreground">{s.desk}</p>}
-                  </div>
-                  <span className="text-xs text-muted-foreground">Urut: {s.sortOrder}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <EntityManager
+        entityName="Simbol Peta"
+        addLabel="Tambah Simbol"
+        rows={rows}
+        columns={[
+          { key: "simbol", label: "Simbol" },
+          { key: "desk", label: "Keterangan" },
+          { key: "sortOrder", label: "Urutan", format: "number" },
+        ]}
+        fields={[
+          { name: "simbol", label: "Nama Simbol", required: true, maxLength: 40 },
+          { name: "desk", label: "Keterangan", type: "textarea" },
+          { name: "sortOrder", label: "Urutan", type: "number" },
+        ]}
+        emptyText="Belum ada simbol peta."
+        actions={{
+          create: createSimbolAction,
+          update: updateSimbolAction,
+          remove: deleteSimbolAction,
+        }}
+        canWrite={hasPermission(user.permissions, SIMBOL_RESOURCE, "update")}
+        canDelete={hasPermission(user.permissions, SIMBOL_RESOURCE, "delete")}
+      />
     </div>
   );
 }

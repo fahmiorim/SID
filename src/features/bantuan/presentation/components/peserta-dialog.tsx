@@ -37,6 +37,7 @@ import {
   type PesertaReferenceData,
 } from "@/features/bantuan/domain/bantuan";
 import { EditPesertaCard } from "@/features/bantuan/presentation/components/edit-peserta-card";
+import { PesertaImportDialog } from "@/features/bantuan/presentation/components/peserta-import-dialog";
 import { idleActionState } from "@/lib/action-state";
 
 import {
@@ -296,23 +297,29 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
             <p className="text-xs text-muted-foreground">
               {state.peserta.length} peserta terdaftar.
             </p>
-            <form
-              action={async (formData) => {
-                const res = await deleteAllPesertaAction(idleActionState, formData);
-                if (res.status === "success") {
-                  toast.success(res.message);
-                  setReloadKey((key) => key + 1);
-                } else if (res.status === "error") {
-                  toast.error(res.message);
-                }
-              }}
-            >
-              <input type="hidden" name="programId" value={program.id} />
-              <Button type="submit" variant="destructive" size="sm">
-                <Trash2 className="size-4" />
-                Hapus semua peserta
-              </Button>
-            </form>
+            <div className="flex flex-wrap items-center gap-2">
+              <PesertaImportDialog
+                program={program}
+                onImported={() => setReloadKey((key) => key + 1)}
+              />
+              <form
+                action={async (formData) => {
+                  const res = await deleteAllPesertaAction(idleActionState, formData);
+                  if (res.status === "success") {
+                    toast.success(res.message);
+                    setReloadKey((key) => key + 1);
+                  } else if (res.status === "error") {
+                    toast.error(res.message);
+                  }
+                }}
+              >
+                <input type="hidden" name="programId" value={program.id} />
+                <Button type="submit" variant="destructive" size="sm">
+                  <Trash2 className="size-4" />
+                  Hapus semua peserta
+                </Button>
+              </form>
+            </div>
           </div>
           <Table>
             <TableHeader>

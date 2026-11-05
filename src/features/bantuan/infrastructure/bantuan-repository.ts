@@ -658,6 +658,82 @@ export async function listKelompokSasaran(
     }));
 }
 
+/**
+ * Semua sasaran desa beserta kodenya, untuk mencocokkan berkas impor.
+ *
+ * Berbeda dari `list*Sasaran` (hanya kandidat), fungsi ini memuat seluruh
+ * sasaran agar kode yang sudah terdaftar dapat dilaporkan terpisah sebagai
+ * "sudah menjadi peserta".
+ */
+export async function listSasaranImpor(
+  villageId: number,
+  sasaran: number,
+): Promise<Array<{ id: number; kode: string; nama: string }>> {
+  if (sasaran === SASARAN_KELUARGA) {
+    const rows = await db
+      .select({ id: families.id, kode: families.number, nama: families.address })
+      .from(families)
+      .where(eq(families.villageId, villageId))
+      .orderBy(asc(families.number));
+
+    return rows
+      .filter((row) => row.kode.trim() !== "")
+      .map((row) => ({ id: row.id, kode: row.kode, nama: row.nama || `KK ${row.kode}` }));
+  }
+
+  if (sasaran === SASARAN_RUMAH_TANGGA) {
+    const rows = await db
+      .select({ id: rumahTangga.id, kode: rumahTangga.number, nama: rumahTangga.address })
+      .from(rumahTangga)
+      .where(eq(rumahTangga.villageId, villageId))
+      .orderBy(asc(rumahTangga.number));
+
+    return rows
+      .filter((row) => row.kode.trim() !== "")
+      .map((row) => ({ id: row.id, kode: row.kode, nama: row.nama || `RTM ${row.kode}` }));
+  }
+
+  if (sasaran === SASARAN_KELOMPOK) {
+    const rows = await db
+      .select({ id: kelompok.id, kode: kelompok.code, nama: kelompok.name })
+      .from(kelompok)
+      .where(eq(kelompok.villageId, villageId))
+      .orderBy(asc(kelompok.name));
+
+    return rows
+      .filter((row): row is { id: number; kode: string; nama: string } => Boolean(row.kode))
+      .map((row) => ({ id: row.id, kode: row.kode, nama: row.nama }));
+  }
+
+  const rows = await db
+    .select({ id: residents.id, kode: residents.nationalId, nama: residents.name })
+    .from(residents)
+    .where(eq(residents.villageId, villageId))
+    .orderBy(asc(residents.name), asc(residents.id));
+
+  return rows
+    .filter((row): row is { id: number; kode: string; nama: string } => Boolean(row.kode))
+    .map((row) => ({ id: row.id, kode: row.kode, nama: row.nama }));
+}
+
+/** Id sasaran yang sudah terdaftar sebagai peserta program (semua jenis). */
+export async function listPesertaSasaranIds(
+  villageId: number,
+  programId: number,
+  sasaran: number,
+): Promise<number[]> {
+  const column =
+    sasaran === SASARAN_KELUARGA
+      ? "familyId"
+      : sasaran === SASARAN_RUMAH_TANGGA
+        ? "rtmId"
+        : sasaran === SASARAN_KELOMPOK
+          ? "kelompokId"
+          : "residentId";
+
+  return [...(await listTakenIds(villageId, programId, column))];
+}
+
 /** Id sasaran yang sudah terdaftar sebagai peserta sebuah program. */
 async function listTakenIds(
   villageId: number,

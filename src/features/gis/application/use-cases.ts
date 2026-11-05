@@ -39,7 +39,9 @@ import {
   deleteSimbol as repoDeleteSimbol,
   findAreaById as repoFindAreaById,
   findCdesaById as repoFindCdesaById,
+  findCdesaMutasiById as repoFindCdesaMutasiById,
   findGarisById as repoFindGarisById,
+  findPersilById as repoFindPersilById,
   findPolygonById as repoFindPolygonById,
   insertArea as repoInsertArea,
   insertCdesa as repoInsertCdesa,
@@ -59,6 +61,8 @@ import {
   listPolygons as repoListPolygons,
   listSimbol as repoListSimbol,
   updateArea as repoUpdateArea,
+  updateCdesa as repoUpdateCdesa,
+  updateCdesaMutasi as repoUpdateCdesaMutasi,
   updateGaris as repoUpdateGaris,
   updatePersil as repoUpdatePersil,
   updatePoint as repoUpdatePoint,
@@ -101,7 +105,7 @@ export async function createPolygon(input: PolygonFormInput): Promise<{ id: numb
   const resolvedVillageId = await resolveVillageId(user);
   if (input.parrent !== null && input.parrent !== undefined) {
     const parent = await repoFindPolygonById(resolvedVillageId, input.parrent);
-    if (!parent) notFound("Layer polygon induk tidak ditemukan.");
+    if (!parent) throw notFound("Layer polygon induk tidak ditemukan.");
   }
   const id = await repoInsertPolygon(resolvedVillageId, input);
   return { id };
@@ -111,11 +115,12 @@ export async function updatePolygon(id: number, input: PolygonFormInput): Promis
   const user = await requirePermission(POLYGON_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const polygon = await repoFindPolygonById(villageId, id);
-  if (!polygon) notFound();
+  if (!polygon) throw notFound();
   if (input.parrent !== null && input.parrent !== undefined) {
-    if (input.parrent === id) notFound("Layer polygon tidak dapat menjadi induk dirinya sendiri.");
+    if (input.parrent === id)
+      throw notFound("Layer polygon tidak dapat menjadi induk dirinya sendiri.");
     const parent = await repoFindPolygonById(villageId, input.parrent);
-    if (!parent) notFound("Layer polygon induk tidak ditemukan.");
+    if (!parent) throw notFound("Layer polygon induk tidak ditemukan.");
   }
   await repoUpdatePolygon(villageId, id, input);
 }
@@ -124,7 +129,7 @@ export async function deletePolygon(id: number): Promise<void> {
   const user = await requirePermission(POLYGON_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const polygon = await repoFindPolygonById(villageId, id);
-  if (!polygon) notFound();
+  if (!polygon) throw notFound();
   await repoDeletePolygon(villageId, id);
 }
 
@@ -142,7 +147,7 @@ export async function createArea(input: AreaFormInput): Promise<{ id: number }> 
   await requirePermission(AREA_RESOURCE, "update");
   if (input.refPolygon !== null && input.refPolygon !== undefined) {
     const polygon = await repoFindPolygonById(resolvedVillageId, input.refPolygon);
-    if (!polygon) notFound("Kategori polygon tidak ditemukan.");
+    if (!polygon) throw notFound("Kategori polygon tidak ditemukan.");
   }
   const id = await repoInsertArea(resolvedVillageId, input);
   return { id };
@@ -153,10 +158,10 @@ export async function updateArea(id: number, input: AreaFormInput): Promise<void
   await requirePermission(AREA_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const area = await repoFindAreaById(villageId, id);
-  if (!area) notFound();
+  if (!area) throw notFound();
   if (input.refPolygon !== null && input.refPolygon !== undefined) {
     const polygon = await repoFindPolygonById(villageId, input.refPolygon);
-    if (!polygon) notFound("Kategori polygon tidak ditemukan.");
+    if (!polygon) throw notFound("Kategori polygon tidak ditemukan.");
   }
   await repoUpdateArea(villageId, id, input);
 }
@@ -165,7 +170,7 @@ export async function deleteArea(id: number): Promise<void> {
   const user = await requireUser();
   await requirePermission(AREA_RESOURCE, "update");
   const area = await repoFindAreaById(await resolveVillageId(user), id);
-  if (!area) notFound();
+  if (!area) throw notFound();
   await repoDeleteArea(await resolveVillageId(user), id);
 }
 
@@ -182,7 +187,7 @@ export async function createGaris(input: GarisFormInput): Promise<{ id: number }
   const resolvedVillageId = await resolveVillageId(user);
   if (input.refLine !== null && input.refLine !== undefined) {
     const parent = await repoFindGarisById(resolvedVillageId, input.refLine);
-    if (!parent) notFound("Garis induk tidak ditemukan.");
+    if (!parent) throw notFound("Garis induk tidak ditemukan.");
   }
   const id = await repoInsertGaris(resolvedVillageId, input);
   return { id };
@@ -192,11 +197,11 @@ export async function updateGaris(id: number, input: GarisFormInput): Promise<vo
   const user = await requirePermission(GARIS_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const garis = await repoFindGarisById(villageId, id);
-  if (!garis) notFound();
+  if (!garis) throw notFound();
   if (input.refLine !== null && input.refLine !== undefined) {
-    if (input.refLine === id) notFound("Garis tidak dapat menjadi induk dirinya sendiri.");
+    if (input.refLine === id) throw notFound("Garis tidak dapat menjadi induk dirinya sendiri.");
     const parent = await repoFindGarisById(villageId, input.refLine);
-    if (!parent) notFound("Garis induk tidak ditemukan.");
+    if (!parent) throw notFound("Garis induk tidak ditemukan.");
   }
   await repoUpdateGaris(villageId, id, input);
 }
@@ -205,7 +210,7 @@ export async function deleteGaris(id: number): Promise<void> {
   const user = await requirePermission(GARIS_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const garis = await repoFindGarisById(villageId, id);
-  if (!garis) notFound();
+  if (!garis) throw notFound();
   await repoDeleteGaris(villageId, id);
 }
 
@@ -222,7 +227,7 @@ export async function createPoint(input: PointFormInput): Promise<{ id: number }
   const resolvedVillageId = await resolveVillageId(user);
   if (input.parrent !== null && input.parrent !== undefined) {
     const parent = await repoFindPolygonById(resolvedVillageId, input.parrent);
-    if (!parent) notFound("Layer polygon tidak ditemukan.");
+    if (!parent) throw notFound("Layer polygon tidak ditemukan.");
   }
   const id = await repoInsertPoint(resolvedVillageId, input);
   return { id };
@@ -232,10 +237,10 @@ export async function updatePoint(id: number, input: PointFormInput): Promise<vo
   const user = await requirePermission(POINT_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const existing = (await repoListPoints(villageId)).find((point) => point.id === id);
-  if (!existing) notFound();
+  if (!existing) throw notFound();
   if (input.parrent !== null && input.parrent !== undefined) {
     const parent = await repoFindPolygonById(villageId, input.parrent);
-    if (!parent) notFound("Layer polygon tidak ditemukan.");
+    if (!parent) throw notFound("Layer polygon tidak ditemukan.");
   }
   await repoUpdatePoint(villageId, id, input);
 }
@@ -244,7 +249,7 @@ export async function deletePoint(id: number): Promise<void> {
   const user = await requirePermission(POINT_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const existing = (await repoListPoints(villageId)).find((point) => point.id === id);
-  if (!existing) notFound();
+  if (!existing) throw notFound();
   await repoDeletePoint(villageId, id);
 }
 
@@ -293,16 +298,16 @@ export async function createPersil(input: PersilFormInput): Promise<{ id: number
 export async function updatePersil(id: number, input: PersilFormInput): Promise<void> {
   const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const persil = (await repoListPersil(villageId)).find((item) => item.id === id);
-  if (!persil) notFound();
+  const persil = await repoFindPersilById(villageId, id);
+  if (!persil) throw notFound();
   await repoUpdatePersil(villageId, id, input);
 }
 
 export async function deletePersil(id: number): Promise<void> {
   const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const persil = (await repoListPersil(villageId)).find((item) => item.id === id);
-  if (!persil) notFound();
+  const persil = await repoFindPersilById(villageId, id);
+  if (!persil) throw notFound();
   await repoDeletePersil(villageId, id);
 }
 
@@ -333,11 +338,31 @@ export async function createCdesa(input: unknown): Promise<{ id: number }> {
   return { id };
 }
 
+export async function updateCdesa(id: number, input: unknown): Promise<void> {
+  const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+  const existing = await repoFindCdesaById(villageId, id);
+  if (!existing) throw notFound();
+
+  const parsed = cdesaSchema.parse(input);
+  const updated = await repoUpdateCdesa(villageId, id, {
+    nomor: parsed.nomor,
+    nomorPersil: parsed.nomorPersil ?? null,
+    nomorSertifikat: parsed.nomorSertifikat ?? null,
+    tanggal: parsed.tanggal ?? null,
+    namaPemegang: parsed.namaPemegang ?? null,
+    luas: parsed.luas,
+    keterangan: parsed.keterangan ?? null,
+    sortOrder: parsed.sortOrder,
+  });
+  if (!updated) throw notFound();
+}
+
 export async function deleteCdesa(id: number): Promise<void> {
   const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
   const cdesa = await repoFindCdesaById(villageId, id);
-  if (!cdesa) notFound();
+  if (!cdesa) throw notFound();
   await repoDeleteCdesa(villageId, id);
 }
 
@@ -354,12 +379,36 @@ export async function createCdesaMutasi(input: unknown): Promise<{ id: number }>
   const villageId = await resolveVillageId(user);
   const parsed = cdesaMutasiSchema.parse(input);
   const cdesa = await repoFindCdesaById(villageId, parsed.cdesaId);
-  if (!cdesa) notFound("Data Cdesa tidak ditemukan.");
+  if (!cdesa) throw notFound("Data Cdesa tidak ditemukan.");
   const id = await repoInsertCdesaMutasi({ ...parsed, villageId });
   return { id };
 }
 
+export async function updateCdesaMutasi(id: number, input: unknown): Promise<void> {
+  const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+  const existing = await repoFindCdesaMutasiById(villageId, id);
+  if (!existing) throw notFound();
+
+  const parsed = cdesaMutasiSchema.parse(input);
+  const cdesa = await repoFindCdesaById(villageId, parsed.cdesaId);
+  if (!cdesa) throw notFound("Data Cdesa tidak ditemukan.");
+
+  const updated = await repoUpdateCdesaMutasi(villageId, id, {
+    cdesaId: parsed.cdesaId,
+    nomor: parsed.nomor,
+    tanggal: parsed.tanggal,
+    tipe: parsed.tipe,
+    keterangan: parsed.keterangan ?? null,
+    sortOrder: parsed.sortOrder,
+  });
+  if (!updated) throw notFound();
+}
+
 export async function deleteCdesaMutasi(id: number): Promise<void> {
   const user = await requirePermission(PERTANAHAN_RESOURCE, "update");
-  await repoDeleteCdesaMutasi(await resolveVillageId(user), id);
+  const villageId = await resolveVillageId(user);
+  const existing = await repoFindCdesaMutasiById(villageId, id);
+  if (!existing) throw notFound();
+  await repoDeleteCdesaMutasi(villageId, id);
 }

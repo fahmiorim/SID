@@ -18,7 +18,7 @@ import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { getLaporanRealisasiResmi } from "@/features/keuangan/application/keuangan-use-cases";
 import {
   formatRupiah,
-  KEUANGAN_RESOURCE,
+  LAPORAN_KEUANGAN_RESOURCE,
   type RpApbdTotal,
 } from "@/features/keuangan/domain/keuangan";
 import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
@@ -50,7 +50,7 @@ export default async function RincianRealisasiPage({
 }) {
   const user = await verifySession();
 
-  if (!hasPermission(user.permissions, KEUANGAN_RESOURCE, "read")) {
+  if (!hasPermission(user.permissions, LAPORAN_KEUANGAN_RESOURCE, "read")) {
     return (
       <NoAccess
         title="Rincian Realisasi APBDes"

@@ -1,4 +1,4 @@
-import { HardHat, Search } from "lucide-react";
+import { BookOpen, HardHat, Search } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -94,7 +94,17 @@ export default async function PembangunanPage({ searchParams }: PageProps<"/pemb
       <PageHeader
         title="Pembangunan Desa"
         description="Daftar proyek pembangunan beserta anggaran, progres, dan dokumentasinya."
-        actions={canManage ? <PembangunanCreateButton /> : null}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="outline">
+              <Link href="/pembangunan/buku">
+                <BookOpen className="size-4" />
+                Buku pembangunan
+              </Link>
+            </Button>
+            {canManage ? <PembangunanCreateButton /> : null}
+          </div>
+        }
       />
 
       <Card>

@@ -13,6 +13,7 @@ import {
   type KelompokMember,
   type KelompokReferenceData,
 } from "@/features/kelompok/domain/kelompok";
+import type { AnggotaLaporanRow } from "@/features/kelompok/domain/laporan-anggota";
 import {
   addKelompokMember,
   countKelompokAnggota,
@@ -32,6 +33,7 @@ import {
   listKategoriKelompok as listKategoriKelompokRows,
   listKelompokMembers,
   listKelompok as listKelompokRows,
+  listLaporanAnggota,
   removeKelompokMember,
   residentExists,
   updateKategori as updateKategoriRow,
@@ -73,6 +75,19 @@ export async function getKelompokDetail(id: number): Promise<KelompokDTO> {
   const row = await findKelompokById(villageId, id);
   if (!row) throw notFound("Kelompok tidak ditemukan.");
   return row;
+}
+
+/**
+ * Laporan terperinci seluruh anggota (dipakai halaman cetak & ekspor CSV).
+ *
+ * `tipe` kosong berarti seluruh kelompok & lembaga; nilai tak dikenal juga
+ * diperlakukan sebagai "semua" agar tautan lama tidak menjadi laporan kosong.
+ */
+export async function getLaporanAnggota(tipe: string): Promise<AnggotaLaporanRow[]> {
+  const user = await requirePermission(KELOMPOK_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  return listLaporanAnggota(villageId, tipe);
 }
 
 /** Anggota sebuah kelompok; dipakai dialog rincian pada UI. */

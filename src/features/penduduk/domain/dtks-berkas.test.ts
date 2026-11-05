@@ -10,7 +10,9 @@ import {
   dtksRekapFilename,
   hitungRekapDtks,
   KOLOM_IMPOR_DTKS,
+  rencanaImporDtks,
   templateImporDtks,
+  type BarisImporDtks,
   type DtksEksporRow,
 } from "./dtks-berkas";
 
@@ -139,5 +141,64 @@ describe("hitungRekapDtks", () => {
     expect(csv).toContain("Menurut Status");
     expect(csv).toContain("Menurut Dusun");
     expect(dtksRekapFilename("Sukamaju")).toBe("rekap-dtks-sukamaju.csv");
+  });
+});
+
+describe("rencana impor DTKS", () => {
+  const peta = new Map([
+    ["32010100001", 11],
+    ["32010100002", 12],
+  ]);
+
+  function impor(overrides: Partial<BarisImporDtks> = {}): BarisImporDtks {
+    return {
+      noRtm: "32010100001",
+      namaResponden: "Budi",
+      namaPetugas: "Petugas A",
+      tanggalPencacahan: "2026-01-15",
+      ...overrides,
+    };
+  }
+
+  it("memetakan nomor RTM yang ada dan melaporkan yang tidak ditemukan", () => {
+    const rencana = rencanaImporDtks(
+      [impor(), impor({ noRtm: "999", namaResponden: "Ani" })],
+      peta,
+    );
+
+    expect(rencana.siap).toEqual([
+      {
+        noRtm: "32010100001",
+        rtmId: 11,
+        namaResponden: "Budi",
+        namaPetugas: "Petugas A",
+        tanggalPencacahan: "2026-01-15",
+      },
+    ]);
+    expect(rencana.tidakDitemukan).toEqual(["999"]);
+    expect(rencana.ganda).toEqual([]);
+  });
+
+  it("hanya memakai kemunculan pertama untuk nomor RTM ganda", () => {
+    const rencana = rencanaImporDtks(
+      [impor({ namaResponden: "Budi" }), impor({ namaResponden: "Ani" })],
+      peta,
+    );
+
+    expect(rencana.siap).toHaveLength(1);
+    expect(rencana.siap[0]?.namaResponden).toBe("Budi");
+    expect(rencana.ganda).toEqual(["32010100001"]);
+  });
+
+  it("menormalkan spasi di sekitar nomor RTM sebelum dicocokkan", () => {
+    const rencana = rencanaImporDtks([impor({ noRtm: " 32010100002 " })], peta);
+
+    expect(rencana.siap[0]?.rtmId).toBe(12);
+    expect(rencana.siap[0]?.noRtm).toBe("32010100002");
+    expect(rencana.tidakDitemukan).toEqual([]);
+  });
+
+  it("mengembalikan rencana kosong tanpa baris", () => {
+    expect(rencanaImporDtks([], peta)).toEqual({ siap: [], tidakDitemukan: [], ganda: [] });
   });
 });

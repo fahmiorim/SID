@@ -2,6 +2,10 @@ import "server-only";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
+  getMediaSettings,
+  validasiMediaDenganPengaturan,
+} from "@/features/kebijakan-berkas/domain/pengaturan-berkas";
+import {
   parseBerkasSyarat,
   serializeBerkasSyarat,
   type BerkasSyarat,
@@ -16,7 +20,7 @@ import {
   listSuratUntukWarga,
 } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
 import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-media";
-import { validasiBerkasSyarat, type BerkasUnggahan } from "@/features/publik/domain/media";
+import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import {
   buildIsianValues,
   isianErrorsToFieldErrors,
@@ -95,7 +99,11 @@ export async function ajukanSuratWargaData(
     });
   }
 
-  // Wajib mengunggah semua syarat yang tercantum pada jenis surat.
+  // Wajib mengunggah semua syarat yang tercantum pada jenis surat. Batas
+  // MIME/ukuran mengikuti pengaturan lampiran terpusat kategori "permohonan"
+  // sehingga operator dapat menyesuaikannya tanpa mengubah kode.
+  const pengaturanBerkas = await getMediaSettings(villageId, "permohonan");
+
   for (const syarat of jenis.syarat) {
     const berkas = input.berkas.get(syarat.id);
     if (!berkas || berkas.ukuran === 0) {
@@ -104,10 +112,10 @@ export async function ajukanSuratWargaData(
       });
     }
 
-    const valid = validasiBerkasSyarat(berkas.mime, berkas.ukuran);
-    if (!valid.ok) {
-      throw validationError(`Berkas syarat "${syarat.nama}" tidak valid: ${valid.pesan}`, {
-        [`syarat.${syarat.id}`]: [valid.pesan],
+    const pesan = validasiMediaDenganPengaturan(pengaturanBerkas, berkas.mime, berkas.ukuran);
+    if (pesan) {
+      throw validationError(`Berkas syarat "${syarat.nama}" tidak valid: ${pesan}`, {
+        [`syarat.${syarat.id}`]: [pesan],
       });
     }
   }

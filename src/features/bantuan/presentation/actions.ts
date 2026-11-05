@@ -8,6 +8,8 @@ import {
   deleteAllPeserta,
   deleteBantuan,
   getPesertaReference,
+  getSasaranProgram,
+  imporPesertaBantuan,
   listPesertaBantuan,
   removePeserta,
   updateBantuan,
@@ -19,6 +21,7 @@ import {
   type PesertaBantuanRow,
   type PesertaReferenceData,
 } from "@/features/bantuan/domain/bantuan";
+import { kolomImporPeserta, type KunciImporPeserta } from "@/features/bantuan/domain/impor-peserta";
 import {
   errorState,
   successState,
@@ -26,6 +29,7 @@ import {
   zodToFieldErrors,
   type ActionState,
 } from "@/lib/action-state";
+import { bacaImporDariFormData } from "@/lib/impor-berkas";
 
 const BANTUAN_PATH = "/bantuan";
 
@@ -237,6 +241,58 @@ export async function deleteAllPesertaAction(
     return successState(
       dihapus === 0 ? "Tidak ada peserta yang dihapus." : `${dihapus} peserta dihapus.`,
     );
+  } catch (error) {
+    return toErrorState(error);
+  }
+}
+
+/**
+ * Impor peserta dari berkas CSV/XLSX.
+ *
+ * Kolom identitas mengikuti sasaran program (NIK, No. KK, No. RTM, atau kode
+ * kelompok), sehingga berkas tidak mungkin menautkan sasaran berjenis lain.
+ */
+export async function imporPesertaAction(formData: FormData): Promise<ActionState> {
+  const programId = parseId(formData.get("programId"));
+  if (programId === null) {
+    return errorState("Data program bantuan tidak valid.");
+  }
+
+  try {
+    const sasaran = await getSasaranProgram(programId);
+    const hasil = await bacaImporDariFormData<KunciImporPeserta>(
+      formData.get("berkas"),
+      kolomImporPeserta(sasaran),
+    );
+
+    if (!hasil.ok) return errorState(hasil.pesan);
+    if (hasil.hasil.baris.length === 0) {
+      return errorState(hasil.hasil.galat[0]?.pesan ?? "Tidak ada baris data pada berkas.");
+    }
+
+    const rows = hasil.hasil.baris.map((baris) => ({
+      kode: baris.nilai.sasaran,
+      nomorKartu: baris.nilai.nomorKartu,
+      namaKartu: baris.nilai.namaKartu,
+    }));
+
+    const ringkasan = await imporPesertaBantuan(programId, rows);
+    revalidatePath(BANTUAN_PATH);
+    revalidatePath(`/bantuan/${programId}`);
+
+    const bagian = [`${ringkasan.diimpor} peserta ditambahkan`];
+    if (ringkasan.sudahTerdaftar > 0) bagian.push(`${ringkasan.sudahTerdaftar} sudah terdaftar`);
+    if (ringkasan.ganda > 0) bagian.push(`${ringkasan.ganda} baris ganda/kosong`);
+    if (ringkasan.tidakDitemukan.length > 0) {
+      bagian.push(
+        `${ringkasan.tidakDitemukan.length} kode tidak ditemukan (${ringkasan.tidakDitemukan
+          .slice(0, 5)
+          .join(", ")}${ringkasan.tidakDitemukan.length > 5 ? ", …" : ""})`,
+      );
+    }
+
+    const message = `Impor selesai: ${bagian.join("; ")}.`;
+    return ringkasan.diimpor > 0 ? successState(message) : errorState(message);
   } catch (error) {
     return toErrorState(error);
   }

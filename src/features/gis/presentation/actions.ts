@@ -21,6 +21,8 @@ import {
   deletePolygon,
   deleteSimbol,
   updateArea,
+  updateCdesa,
+  updateCdesaMutasi,
   updateGaris,
   updatePersil,
   updatePoint,
@@ -80,7 +82,9 @@ export async function createPolygonAction(
       color: formText(formData, "color"),
       tipe: formNumber(formData, "tipe"),
       parrent: nullableFormNumber(formData, "parrent"),
-      enabled: formData.get("enabled") === "on",
+      // Formulir tanpa checkbox berarti layer baru aktif; jangan simpan nonaktif
+      // hanya karena field tidak dikirim.
+      enabled: formData.has("enabled") ? formData.get("enabled") === "on" : true,
       sortOrder: formNumber(formData, "sortOrder"),
     });
     const newPolygon = await createPolygon(input);
@@ -108,7 +112,7 @@ export async function updatePolygonAction(
       color: formText(formData, "color"),
       tipe: formNumber(formData, "tipe"),
       parrent: nullableFormNumber(formData, "parrent"),
-      enabled: formData.get("enabled") === "on",
+      enabled: formData.has("enabled") ? formData.get("enabled") === "on" : true,
       sortOrder: formNumber(formData, "sortOrder"),
     });
     await updatePolygon(id, input);
@@ -515,6 +519,26 @@ export async function createCdesaAction(
   }
 }
 
+export async function updateCdesaAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  const id = readId(formData);
+  if (id === null) return errorState("ID tidak valid.");
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    const input = cdesaSchema.parse(cdesaInput(formData));
+    await updateCdesa(id, input);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Cdesa berhasil diperbarui.");
+  } catch (error) {
+    if (error instanceof Error && error.name === "ZodError") {
+      return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
+    }
+    return errorState(isAppError(error) ? error.message : "Gagal memperbarui cdesa.");
+  }
+}
+
 export async function deleteCdesaAction(
   _previousState: ActionState<{ id: number } | null>,
   formData: FormData,
@@ -559,6 +583,26 @@ export async function createCdesaMutasiAction(
       return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
     }
     return errorState(isAppError(error) ? error.message : "Gagal membuat mutasi.");
+  }
+}
+
+export async function updateCdesaMutasiAction(
+  _previousState: ActionState<{ id: number } | null>,
+  formData: FormData,
+): Promise<ActionState<{ id: number } | null>> {
+  const id = readId(formData);
+  if (id === null) return errorState("ID tidak valid.");
+  try {
+    await requirePermission(PERTANAHAN_RESOURCE, "update");
+    const input = cdesaMutasiSchema.parse(cdesaMutasiInput(formData));
+    await updateCdesaMutasi(id, input);
+    revalidatePath("/pemetaan/pertanahan");
+    return successState("Mutasi berhasil diperbarui.");
+  } catch (error) {
+    if (error instanceof Error && error.name === "ZodError") {
+      return errorState("Validasi gagal.", zodToFieldErrors(error as ZodError));
+    }
+    return errorState(isAppError(error) ? error.message : "Gagal memperbarui mutasi.");
   }
 }
 

@@ -65,6 +65,29 @@ export async function listTahunAnggaran(): Promise<number[]> {
   return listTahunRows(villageId);
 }
 
+/**
+ * Seluruh proyek (atau satu tahun anggaran) untuk buku pembangunan.
+ *
+ * `pageSize` besar dipakai karena buku memerlukan seluruh baris untuk rekap;
+ * batas tetap ada agar satu tahun dengan data sangat banyak tidak membebani
+ * memori tanpa kendali.
+ */
+export async function getBukuPembangunan(tahun: number | null): Promise<PembangunanProyekDTO[]> {
+  const user = await requirePermission(PEMBANGUNAN_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const result = await listPembangunanRows({
+    villageId,
+    search: "",
+    tahun,
+    status: "",
+    page: 1,
+    pageSize: 1000,
+  });
+
+  return result.rows;
+}
+
 /** Slug bebas untuk desa ini; akhiran angka bila sudah dipakai. */
 async function slugBebas(
   villageId: number,

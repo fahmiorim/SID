@@ -1,4 +1,4 @@
-import { Mail } from "lucide-react";
+import { Mail, Settings } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -68,6 +68,12 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" asChild>
               <Link href="/persuratan/surat/arsip">Arsip nomor</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/pengaturan/lampiran">
+                <Settings className="size-4" aria-hidden />
+                Pengaturan lampiran
+              </Link>
             </Button>
             {canManage ? <SuratCreateButton jenis={jenis} penduduk={penduduk} /> : null}
           </div>

@@ -1,11 +1,15 @@
-import { Map as MapIcon } from "lucide-react";
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
-import { Card, CardContent } from "@/components/ui/card";
 import { listGarisUseCases } from "@/features/gis/application/use-cases";
 import { GARIS_RESOURCE } from "@/features/gis/domain/gis";
+import {
+  createGarisAction,
+  deleteGarisAction,
+  updateGarisAction,
+} from "@/features/gis/presentation/actions";
+import { EntityManager } from "@/features/gis/presentation/components/entity-manager";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -17,55 +21,66 @@ export default async function GarisPage() {
   const user = await verifySession();
 
   if (!hasPermission(user.permissions, GARIS_RESOURCE, "read")) {
-    return <NoAccess title="Garis Peta" description="Kelola garis/batas peta desa." />;
+    return <NoAccess title="Garis Peta" description="Kelola garis/jalan pada peta desa." />;
   }
 
-  const garis = await listGarisUseCases();
+  const garisList = await listGarisUseCases();
+  const rows = garisList.map((garis) => ({
+    id: garis.id,
+    nama: garis.nama,
+    refLine: garis.refLine,
+    refNama: garisList.find((item) => item.id === garis.refLine)?.nama ?? "—",
+    desk: garis.desk,
+    sortOrder: garis.sortOrder,
+  }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Garis Peta"
-        description="Garis/batas peta desa (GeoJSON LineString)."
-        actions={null}
+        description="Garis/jalan peta dalam format GeoJSON LineString."
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          {garis.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">Belum ada garis peta.</p>
-          ) : (
-            <div className="space-y-3">
-              {garis.map((g) => {
-                const segments = g.path
-                  ? (() => {
-                      try {
-                        const parsed = JSON.parse(g.path);
-                        if (parsed?.type === "LineString" && Array.isArray(parsed.coordinates)) {
-                          return parsed.coordinates.length;
-                        }
-                      } catch {
-                        // ignore
-                      }
-                      return 0;
-                    })()
-                  : 0;
-                return (
-                  <div key={g.id} className="flex items-center gap-4 rounded-lg border p-4">
-                    <MapIcon className="size-5 text-muted-foreground" />
-                    <div className="flex-1">
-                      <p className="font-medium">{g.nama}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {segments > 0 ? `${segments} segmen` : "Tanpa path"}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <EntityManager
+        entityName="Garis Peta"
+        addLabel="Tambah Garis"
+        rows={rows}
+        columns={[
+          { key: "nama", label: "Nama Garis" },
+          { key: "refNama", label: "Garis Induk" },
+          { key: "desk", label: "Keterangan" },
+        ]}
+        fields={[
+          { name: "nama", label: "Nama Garis", required: true, maxLength: 50 },
+          {
+            name: "refLine",
+            label: "Garis Induk",
+            type: "select",
+            options: garisList.map((garis) => ({
+              value: String(garis.id),
+              label: garis.nama,
+            })),
+            placeholder: "— Tanpa induk —",
+          },
+          {
+            name: "path",
+            label: "Path GeoJSON (LineString)",
+            type: "textarea",
+            placeholder: '{"type":"LineString","coordinates":[[110,-7],[111,-8]]}',
+          },
+          { name: "foto", label: "Foto", maxLength: 100 },
+          { name: "desk", label: "Keterangan", type: "textarea" },
+          { name: "sortOrder", label: "Urutan", type: "number" },
+        ]}
+        emptyText="Belum ada garis peta."
+        actions={{
+          create: createGarisAction,
+          update: updateGarisAction,
+          remove: deleteGarisAction,
+        }}
+        canWrite={hasPermission(user.permissions, GARIS_RESOURCE, "update")}
+        canDelete={hasPermission(user.permissions, GARIS_RESOURCE, "delete")}
+      />
     </div>
   );
 }

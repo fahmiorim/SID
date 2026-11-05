@@ -496,9 +496,9 @@ export async function getStatistikBantuan(
       counts = await db
         .select({
           programId: bantuanPeserta.programId,
-          total: count(),
-          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
-          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+          total: sql<number>`COUNT(${bantuanPeserta.id})`,
+          male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' AND ${residents.lifeStatus} = 'alive' THEN 1 END)`,
+          female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' AND ${residents.lifeStatus} = 'alive' THEN 1 END)`,
         })
         .from(bantuanPeserta)
         .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
@@ -506,7 +506,7 @@ export async function getStatistikBantuan(
         .where(
           and(
             inArray(bantuanPeserta.programId, programIds),
-            eq(residents.lifeStatus, "alive"),
+            eq(bantuanPeserta.villageId, villageId),
             params.dusun ? eq(regions.dusun, params.dusun) : undefined,
             params.rw ? eq(regions.rw, params.rw) : undefined,
             params.rt ? eq(regions.rt, params.rt) : undefined,
@@ -540,16 +540,24 @@ export async function getStatistikBantuan(
       })
       .sort((a, b) => b.total - a.total);
   } else {
-    // sasaran: aggregate per sasaran value (1=penduduk, 2=keluarga)
+    // sasaran: hitung peserta per jenis sasaran (1=penduduk, 2=keluarga, …).
+    // `COUNT(bantuan_peserta.id)` penting agar program tanpa peserta tidak ikut
+    // terhitung sebagai satu baris (left join tetap menghasilkan satu baris).
     const sasaranRows = await db
       .select({
         sasaran: bantuanProgram.sasaran,
-        total: count(),
-        male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' THEN 1 END)`,
-        female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' THEN 1 END)`,
+        total: sql<number>`COUNT(${bantuanPeserta.id})`,
+        male: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'male' AND ${residents.lifeStatus} = 'alive' THEN 1 END)`,
+        female: sql<number>`COUNT(CASE WHEN ${residents.gender} = 'female' AND ${residents.lifeStatus} = 'alive' THEN 1 END)`,
       })
       .from(bantuanProgram)
-      .leftJoin(bantuanPeserta, eq(bantuanPeserta.programId, bantuanProgram.id))
+      .leftJoin(
+        bantuanPeserta,
+        and(
+          eq(bantuanPeserta.programId, bantuanProgram.id),
+          eq(bantuanPeserta.villageId, villageId),
+        ),
+      )
       .leftJoin(residents, eq(bantuanPeserta.residentId, residents.id))
       .leftJoin(regions, eq(residents.regionId, regions.id))
       .where(

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { daftarPemilihanPublik } from "@/features/pemilihan/application/pemilihan-publik";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Pemilihan Desa",
-  description: "Jadwal dan riwayat pemilihan desa",
+  description: "Jadwal, kandidat, dan hasil pemilihan desa",
 };
 
 function formatTanggal(value: string | null) {
@@ -25,11 +25,11 @@ export default async function PemilihanPublikPage() {
   const items = await daftarPemilihanPublik(identitas.id);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <header className="mb-6">
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
+      <header>
         <h1 className="text-2xl font-bold">Pemilihan Desa {identitas.namaDesa}</h1>
         <p className="text-sm text-muted-foreground">
-          Jadwal dan riwayat penyelenggaraan pemilihan desa.
+          Jadwal, kandidat, dan rekapitulasi perolehan suara pemilihan desa.
         </p>
       </header>
 
@@ -40,42 +40,71 @@ export default async function PemilihanPublikPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full caption-bottom">
-                <thead>
-                  <tr className="border-b">
-                    <th className="p-3 text-left text-sm font-medium text-muted-foreground">
-                      Tahun
-                    </th>
-                    <th className="p-3 text-left text-sm font-medium text-muted-foreground">
-                      Jenis
-                    </th>
-                    <th className="p-3 text-left text-sm font-medium text-muted-foreground">
-                      Tanggal
-                    </th>
-                    <th className="p-3 text-left text-sm font-medium text-muted-foreground">
-                      Keterangan
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id} className="border-b last:border-0">
-                      <td className="p-3 font-medium">{item.tahun}</td>
-                      <td className="p-3">{item.jenis}</td>
-                      <td className="p-3">{formatTanggal(item.tanggal)}</td>
-                      <td className="p-3 text-sm text-muted-foreground">
-                        {item.keterangan || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        items.map((item) => (
+          <Card key={item.id}>
+            <CardHeader>
+              <CardTitle>
+                {item.jenis} {item.tahun}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {formatTanggal(item.tanggal)} · {item.keterangan || "Tanpa keterangan"}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {item.kandidat.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Belum ada kandidat yang didaftarkan.
+                </p>
+              ) : (
+                <>
+                  <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full caption-bottom">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="w-14 p-3 text-left text-sm font-medium text-muted-foreground">
+                            No
+                          </th>
+                          <th className="p-3 text-left text-sm font-medium text-muted-foreground">
+                            Kandidat
+                          </th>
+                          <th className="p-3 text-right text-sm font-medium text-muted-foreground">
+                            Suara
+                          </th>
+                          <th className="w-20 p-3 text-right text-sm font-medium text-muted-foreground">
+                            %
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {item.rekap.rows.map((kandidat) => (
+                          <tr key={kandidat.id} className="border-b last:border-0">
+                            <td className="p-3 tabular-nums">{kandidat.nomorUrut}</td>
+                            <td className="p-3">
+                              <p className="font-medium">{kandidat.nama}</p>
+                              {kandidat.keterangan ? (
+                                <p className="text-xs text-muted-foreground">
+                                  {kandidat.keterangan}
+                                </p>
+                              ) : null}
+                            </td>
+                            <td className="p-3 text-right tabular-nums">
+                              {kandidat.jumlahSuara.toLocaleString("id-ID")}
+                            </td>
+                            <td className="p-3 text-right tabular-nums">{kandidat.percentage}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Total suara sah: {item.rekap.totalSuara.toLocaleString("id-ID")} · Pemenang:{" "}
+                    {item.rekap.pemenang ?? "belum ditetapkan"}
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        ))
       )}
     </div>
   );

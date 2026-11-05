@@ -1,6 +1,6 @@
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { getLaporanKeuangan } from "@/features/keuangan/application/keuangan-use-cases";
-import { KEUANGAN_RESOURCE } from "@/features/keuangan/domain/keuangan";
+import { LAPORAN_KEUANGAN_RESOURCE } from "@/features/keuangan/domain/keuangan";
 import {
   buildLaporanExcel,
   laporanExcelFilename,
@@ -22,7 +22,7 @@ export async function GET(
   if (!user) {
     return new Response("Sesi Anda telah berakhir.", { status: 401 });
   }
-  if (!hasPermission(user.permissions, KEUANGAN_RESOURCE, "read")) {
+  if (!hasPermission(user.permissions, LAPORAN_KEUANGAN_RESOURCE, "read")) {
     return new Response("Anda tidak memiliki hak akses.", { status: 403 });
   }
 

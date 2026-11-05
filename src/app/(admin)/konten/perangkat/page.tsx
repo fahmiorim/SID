@@ -1,7 +1,10 @@
+import { Network } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   listJabatan,
@@ -42,6 +45,14 @@ export default async function PerangkatDesaPage() {
       <PageHeader
         title="Perangkat Desa"
         description="Susun SOTK desa: jabatan, aparatur, foto, dan penanda tangan surat."
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/konten/perangkat/sotk">
+              <Network className="size-4" />
+              Bagan SOTK
+            </Link>
+          </Button>
+        }
       />
 
       <Card>

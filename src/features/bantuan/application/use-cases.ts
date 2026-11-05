@@ -4,6 +4,7 @@ import {
   BANTUAN_PESERTA_RESOURCE,
   BANTUAN_RESOURCE,
   buildProgramSlug,
+  pesertaFormSchema,
   SASARAN_KELOMPOK,
   SASARAN_KELUARGA,
   SASARAN_PENDUDUK,
@@ -16,6 +17,11 @@ import {
   type PesertaReferenceData,
   type SasaranOption,
 } from "@/features/bantuan/domain/bantuan";
+import {
+  normalisasiKode,
+  rencanaImporPeserta,
+  type BarisImporPeserta,
+} from "@/features/bantuan/domain/impor-peserta";
 import {
   bantuanSlugExists,
   countPesertaByProgram,
@@ -34,7 +40,9 @@ import {
   listKeluargaSasaran,
   listPendudukSasaran,
   listPesertaProgram,
+  listPesertaSasaranIds,
   listRumahTanggaSasaran,
+  listSasaranImpor,
   listSebaranWilayah,
   updateBantuan as updateBantuanRow,
   updatePeserta as updatePesertaRow,
@@ -365,3 +373,70 @@ export async function deleteAllPeserta(programId: number): Promise<number> {
   await getScopedProgram(villageId, programId);
   return deleteAllPesertaByProgram(villageId, programId);
 }
+
+/** Jenis sasaran sebuah program (dipakai untuk memilih kolom template impor). */
+export async function getSasaranProgram(programId: number): Promise<number> {
+  const user = await requirePermission(BANTUAN_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+  return (await getScopedProgram(villageId, programId)).sasaran;
+}
+
+/** Ringkasan hasil impor peserta untuk umpan balik ke pengguna. */
+export interface ImporPesertaResult {
+  diimpor: number;
+  sudahTerdaftar: number;
+  ganda: number;
+  ditolak: number;
+  tidakDitemukan: string[];
+}
+
+/**
+ * Impor peserta ke sebuah program dari baris berkas.
+ *
+ * Setiap baris dicocokkan dengan sasaran desa menurut kode identitasnya
+ * (NIK / No. KK / No. RTM / kode kelompok). Baris yang tidak dikenal atau sudah
+ * terdaftar dilaporkan tanpa menggagalkan baris lain, dan snapshot kartu diisi
+ * dari data master seperti penambahan peserta manual.
+ */
+export async function imporPesertaBantuan(
+  programId: number,
+  rows: readonly BarisImporPeserta[],
+): Promise<ImporPesertaResult> {
+  const user = await requirePermission(BANTUAN_PESERTA_RESOURCE, "update");
+  const villageId = await resolveVillageId(user);
+
+  const program = await getScopedProgram(villageId, programId);
+  const [sasaran, terdaftar] = await Promise.all([
+    listSasaranImpor(villageId, program.sasaran),
+    listPesertaSasaranIds(villageId, programId, program.sasaran),
+  ]);
+
+  const rencana = rencanaImporPeserta(rows, sasaran, new Set(terdaftar));
+
+  let diimpor = 0;
+  for (const item of rencana.siap) {
+    // Dilewatkan skema yang sama dengan formulir agar nilai kosong dinormalisasi
+    // (mis. tanggal kosong → null) sebelum snapshot kartu dilengkapi.
+    const input = pesertaFormSchema.parse({
+      programId: String(programId),
+      sasaranId: String(item.id),
+      nomorKartu: item.nomorKartu,
+      kartuNama: item.namaKartu,
+    });
+
+    const lengkap = await lengkapiKartu(villageId, program.sasaran, item.id, input);
+    await insertPeserta(villageId, programId, program.sasaran, item.id, lengkap);
+    diimpor += 1;
+  }
+
+  return {
+    diimpor,
+    sudahTerdaftar: rencana.sudahTerdaftar.length,
+    ganda: rencana.ditolak.length,
+    ditolak: rencana.ditolak.length,
+    tidakDitemukan: rencana.tidakDitemukan,
+  };
+}
+
+/** Kode sasaran pada berkas yang sudah dinormalisasi (dipakai test/UI). */
+export { normalisasiKode };

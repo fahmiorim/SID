@@ -3,6 +3,33 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-05 — Audit Batch 1–2: RBAC laporan, validasi syarat, dan tautan pengaturan lampiran
+
+- Audit ulang Batch 1 & 2 terhadap kode (bukan hanya klaim dokumen). Dua cacat
+  nyata diperbaiki:
+  - Halaman `/keuangan/laporan` beserta ekspor CSV/Excel dan laporan realisasi
+    memeriksa resource `keuangan`, padahal sekretaris desa dan kepala desa hanya
+    diberi `laporan-keuangan: read`; akibatnya menu Laporan tampil tetapi
+    halaman menolak akses. Use case kini memisahkan `bacaKeuangan` (APBDes,
+    resource `keuangan`) dan pembacaan laporan (resource `laporan-keuangan`).
+  - Unggah syarat permohonan warga memakai validasi hardcoded, bukan pengaturan
+    lampiran terpusat. Kini memakai `getMediaSettings(villageId, "permohonan")`
+    dan `validasiMediaDenganPengaturan`, sehingga batas MIME/ukuran dapat
+    diubah operator.
+- Halaman `/pengaturan/lampiran` sebelumnya yatim (tidak ada tautan/menu).
+  Tombol "Pengaturan lampiran" ditambahkan pada aksi `/persuratan/surat`.
+- Dokumen diperbarui: `PARITAS-OPENSID.md` — `OS-SUR-003` (kategori
+  "permohonan"), `OS-SUR-008` (varian selesai, gap E2E cetak per varian),
+  `OS-OPS-012` (endpoint `[token]` + `/verifikasi`, rate limit sudah ada);
+  jumlah register tetap 35 ✅ / 77 🟡 / 0 🔴 / 1 ⚪.
+- Regresi dijaga `keuangan-use-cases.test.ts` (3 case): APBDes memakai resource
+  `keuangan`, laporan dan rincian realisasi memakai `laporan-keuangan`.
+- Sisa non-E2E yang masih terbuka: `OS-OPS-012` (kontrak OpenAPI dan endpoint
+  tulis surat) dan `OS-SUR-013` (verifikasi terhadap provider BSrE nyata, butuh
+  kredensial). Gap Batch 2 hanya E2E (`OS-FIN-004`, `OS-FIN-006`).
+- Verifikasi: `npm run check` lulus (1000 test) dan `npm run build` lulus. E2E
+  tidak dijalankan.
+
 ## 2026-11-05 — Batch 2 keuangan: laporan realisasi format resmi
 
 - Laporan realisasi APBDes format resmi `/keuangan/laporan/realisasi`:
@@ -35,9 +62,9 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
   URL/base64). Surat terbit menyimpan PDF bertanda tangan di media privat
   `surat-tte`, disajikan lewat route PDF admin/warga berizin; kegagalan TTE
   tidak memblokir penerbitan. Migrasi `0066_add_tte_file_and_config_unique`.
-- API eksternal ber-API key: `POST /api/eksternal/tte/tanda-tangan` dan
-  `GET /api/eksternal/surat/[nomor]`, tenant dari host, audit
-  `api.eksternal.tte.sign`.
+- API eksternal ber-API key: `POST /api/eksternal/tte/tanda-tangan`,
+  `GET /api/eksternal/surat/[token]`, dan `POST /api/eksternal/surat/verifikasi`,
+  tenant dari host, audit `api.eksternal.*`.
 - Klasifikasi: impor CSV/XLSX kode lama dengan upsert transaksional + dialog
   template; test `klasifikasi-berkas.test.ts`.
 - Arsip nomor: filter tahun/jenis/klasifikasi, pagination 25 baris, ekspor CSV

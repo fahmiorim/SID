@@ -1,4 +1,4 @@
-import { Printer } from "lucide-react";
+import { FileText, Printer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -69,6 +69,12 @@ export default async function BantuanDetailPage({ params }: { params: Promise<{ 
             <Button type="button" variant="outline" onClick={() => window.print()}>
               <Printer className="size-4" />
               Cetak
+            </Button>
+            <Button asChild variant="outline">
+              <Link href={`/bantuan/${program.id}/cetak`}>
+                <FileText className="size-4" />
+                Laporan resmi
+              </Link>
             </Button>
             {canManage ? (
               <Button asChild variant="outline">

@@ -32,7 +32,7 @@ import {
   AKUN_LAPORAN,
   formatRupiah,
   KEUANGAN_AKUN,
-  KEUANGAN_RESOURCE,
+  LAPORAN_KEUANGAN_RESOURCE,
 } from "@/features/keuangan/domain/keuangan";
 import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
 import { RpApbdChart } from "@/features/keuangan/presentation/components/rp-apbd-chart";
@@ -54,7 +54,7 @@ export default async function LaporanKeuanganPage({
 }) {
   const user = await verifySession();
 
-  if (!hasPermission(user.permissions, KEUANGAN_RESOURCE, "read")) {
+  if (!hasPermission(user.permissions, LAPORAN_KEUANGAN_RESOURCE, "read")) {
     return <NoAccess title="Laporan Keuangan" description="Laporan RP APBDes desa." />;
   }
 

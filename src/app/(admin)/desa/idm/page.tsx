@@ -1,3 +1,4 @@
+import { FileDown } from "lucide-react";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -65,6 +66,13 @@ export default async function IdmPage({
               className="rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent/40"
             >
               Capaian SDGs
+            </Link>
+            <Link
+              href={`/desa/idm/ekspor?tahun=${tahun}`}
+              className="inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors hover:bg-accent/40"
+            >
+              <FileDown className="size-4" />
+              Ekspor laporan
             </Link>
           </div>
         }

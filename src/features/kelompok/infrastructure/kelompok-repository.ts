@@ -15,6 +15,7 @@ import {
   type KelompokMember,
   type KelompokReferenceData,
 } from "@/features/kelompok/domain/kelompok";
+import type { AnggotaLaporanRow } from "@/features/kelompok/domain/laporan-anggota";
 import type { LabelOption } from "@/lib/forms";
 
 export interface ListKelompokParams {
@@ -415,6 +416,51 @@ export async function listAnggotaKandidat(
   return rows.map((row) => ({
     id: row.id,
     label: row.nationalId ? `${row.name} — ${row.nationalId}` : row.name,
+  }));
+}
+
+/**
+ * Seluruh keanggotaan kelompok untuk laporan terperinci (OS-GOV-004/005).
+ *
+ * Satu query dengan join ke penduduk, kelompok, kategori, dan filter tenant di
+ * kedua tabel keanggotaan & kelompok. Anggota yang sudah dihapus tidak muncul
+ * karena baris keanggotaan ikut terhapus (cascade).
+ */
+export async function listLaporanAnggota(
+  villageId: number,
+  tipe: string,
+): Promise<AnggotaLaporanRow[]> {
+  const filters: SQL[] = [eq(kelompok.villageId, villageId)];
+  if (isKelompokTipe(tipe)) filters.push(eq(kelompok.type, tipe));
+
+  const rows = await db
+    .select({
+      kelompokId: kelompok.id,
+      kelompokNama: kelompok.name,
+      kelompokTipe: kelompok.type,
+      kategoriNama: kelompokMaster.name,
+      nama: residents.name,
+      nationalId: residents.nationalId,
+      position: kelompokAnggota.position,
+      memberNumber: kelompokAnggota.memberNumber,
+      decreeNumber: kelompokAnggota.decreeNumber,
+    })
+    .from(kelompokAnggota)
+    .innerJoin(kelompok, eq(kelompokAnggota.kelompokId, kelompok.id))
+    .innerJoin(residents, eq(kelompokAnggota.residentId, residents.id))
+    .leftJoin(kelompokMaster, eq(kelompok.categoryId, kelompokMaster.id))
+    .where(and(eq(kelompokAnggota.villageId, villageId), ...filters));
+
+  return rows.map((row) => ({
+    kelompokId: row.kelompokId,
+    kelompokNama: row.kelompokNama,
+    kelompokTipe: row.kelompokTipe,
+    kategoriNama: row.kategoriNama ?? null,
+    nama: row.nama,
+    nationalId: row.nationalId ?? null,
+    position: row.position,
+    memberNumber: row.memberNumber ?? null,
+    decreeNumber: row.decreeNumber ?? null,
   }));
 }
 

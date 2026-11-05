@@ -439,7 +439,7 @@
     {
       "idx": 65,
       "version": "5",
-      "when": 1793791809720,
+      "when": 1794435615000,
       "tag": "0066_add_tte_file_and_config_unique",
       "breakpoints": true
     },
@@ -483,6 +483,20 @@
       "version": "5",
       "when": 1794435670000,
       "tag": "0072_create_unified_shipments_and_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "5",
+      "when": 1794435680000,
+      "tag": "0072_pemilihan_kandidat",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "5",
+      "when": 1794435690000,
+      "tag": "0073_add_cdesa_created_at",
       "breakpoints": true
     }
   ]

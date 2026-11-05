@@ -84,15 +84,21 @@ menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
 domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 
 - Selesai non-E2E: `OS-SUR-001`/`002`/`008` (varian keluaran template/PDF),
-  `OS-SUR-003` (validasi lampiran komprehensif), `OS-SUR-004` (impor klasifikasi + test),
+  `OS-SUR-003` (validasi lampiran syarat warga via pengaturan kategori
+  "permohonan" + validasi isian), `OS-SUR-004` (impor klasifikasi + test),
   `OS-SUR-005` (rekap/filter/ekspor permohonan + notifikasi email), `OS-SUR-006` (filter,
   pagination, ekspor CSV arsip nomor), `OS-SUR-007` (verifikasi per peran),
   `OS-SUR-009`/`010`/`012` (lampiran disposisi/ekspedisi + log ekspedisi),
   `OS-SUR-013` (konfigurasi TTE per desa, klien BSrE, penyimpanan PDF TTE),
-  `OS-SUR-014` (pengaturan lampiran terpusat), `OS-OPS-012` (API eksternal TTE + metadata surat ber-API key).
-- Batch 1 **selesai** — semua ID non-E2E terpenuhi; sisa gap hanya E2E (`OS-SUR-011`).
+  `OS-SUR-014` (pengaturan lampiran terpusat, tertaut dari `/persuratan/surat`),
+  `OS-OPS-012` (API eksternal TTE + metadata/verifikasi surat ber-API key + rate limit).
+- Batch 1 **selesai sebagian** — audit ulang 5 Nov mengonfirmasi seluruh gap
+  fungsional lain tertutup. Sisa non-E2E: `OS-OPS-012` (kontrak OpenAPI +
+  endpoint tulis surat) dan `OS-SUR-013` (verifikasi provider BSrE nyata,
+  bergantung kredensial). Gap E2E: `OS-SUR-011` (E2E-only, di luar batch) serta
+  `OS-SUR-002`/`003`/`007`/`008` (E2E lanjutan).
 
-**Batch 2 — Keuangan, aset, bumindes (berjalan 5 Nov 2026):**
+**Batch 2 — Keuangan, aset, bumindes (selesai non-E2E 5 Nov 2026):**
 
 - `OS-FIN-001` ✅: impor CSV/XLSX + unduh template XLSX sudah ada
   (`apbdes-import.ts` + test); ditambah **laporan realisasi format resmi**
@@ -108,6 +114,45 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 - `OS-FIN-004` 🟡 (E2E impor) dan `OS-FIN-006` 🟡 (E2E periode publik):
   gap non-E2E tidak tersisa.
 - `OS-FIN-007`–`OS-FIN-013` sudah ✅ (inventaris, neraca, bumindes).
+- Audit 5 Nov: halaman `/keuangan/laporan`, laporan realisasi, dan ekspor
+  CSV/Excel kini memeriksa resource `laporan-keuangan` (bukan `keuangan`),
+  sehingga sekretaris desa dan kepala desa dapat membuka menu Laporan sesuai
+  izin baca yang diberikan.
+
+**Batch 3 — Pemerintahan & kependudukan (progres 5 Nov 2026):**
+
+- Selesai non-E2E: `OS-GOV-003` (bagan SOTK `/konten/perangkat/sotk` + cetak +
+  test), `OS-GOV-004`/`005` (laporan anggota terperinci `/kelompok/laporan` +
+  ekspor CSV `/kelompok/ekspor` + test), `OS-GOV-006` (ekspor laporan IDM & SDGs
+  `/desa/idm/ekspor` + test), `OS-GOV-009` (buku pembangunan `/pembangunan/buku`
+  + ekspor CSV + test), `OS-POP-011` (laporan resmi program bantuan
+  `/bantuan/[id]/cetak`).
+- Ditutup 5 Nov 2026: `OS-GOV-007` (tabel `pemilihan_kandidat`, CRUD kandidat
+  + perolehan suara, rekap & pemenang di admin dan publik, jumlah DPT),
+  `OS-POP-006` (pemetaan impor DTKS di domain `rencanaImporDtks` + test baris
+  ganda/tidak ditemukan), `OS-POP-012` (impor peserta per sasaran + template +
+  test), `OS-POP-013` (filter kategori sasaran pada halaman & ekspor CSV/PDF,
+  tautan unduh PDF, dan hitungan peserta per sasaran yang tidak lagi menghitung
+  program kosong).
+- Seluruh ID Batch 3 tetap 🟡 dengan `Gap: E2E` karena uji browser untuk
+  keluaran baru belum ditambahkan (sesuai aturan batch: E2E ditunda).
+
+**Batch 4 — GIS & pertanahan (non-E2E selesai 5 Nov 2026):**
+
+- CRUD layer peta diaktifkan lewat komponen bersama `EntityManager`:
+  `/pemetaan/area`, `/pemetaan/garis`, `/pemetaan/point`, `/pemetaan/polygon`
+  (tautan `/pemetaan/polygon/form` yang 404 dihapus), dan `/pemetaan/simbol`.
+- `/pemetaan/pertanahan` kini CRUD persil, Cdesa, dan mutasi (tambah/ubah/hapus
+  berizin, scoped desa); use case `updateCdesa`/`updateCdesaMutasi` dan aksi
+  barunya ditambahkan.
+- Keluaran **cetak peta** publik `/desa/peta/cetak`: SVG area/garis/titik +
+  legenda, tanpa tile daring, memakai domain murni `peta-cetak.ts` + test.
+- Test baru: domain `pertanahan.test.ts` dan `peta-cetak.test.ts`, perluasan
+  `gis/application/use-cases.test.ts` (area/garis/point/simbol/persil/Cdesa/
+  mutasi), serta `gis-repository.integration.test.ts` untuk isolasi tenant,
+  penyaringan layer nonaktif, dan penolakan ubah/hapus lintas desa.
+- Seluruh ID Batch 4 (`OS-WIL-002`–`OS-WIL-008`) tetap 🟡 dengan `Gap: E2E`
+  sampai uji browser untuk keluaran baru tersedia.
 ---
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
@@ -663,16 +708,16 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3A. Kependudukan lanjutan (2 minggu)
 
-  - [x] `OS-POP-006`: DTKS (Data Terpadu Kesejahteraan Sosial) — CRUD dari RTM di `/penduduk/dtks`, status/agregasi/anggota, lampiran, pengaturan program, laporan, ekspor CSV, dan **impor CSV/XLSX** via `DtksImportDialog` + `imporDtksAction` (menghubungkan RTM ke formulir DTKS). RBAC `penduduk`. E2E `/penduduk/dtks`. Test `dtks.test.ts`, `dtks-berkas.test.ts`. **Gap: test alur impor perlu diperluas.** 
+  - [x] `OS-POP-006`: DTKS (Data Terpadu Kesejahteraan Sosial) — CRUD dari RTM di `/penduduk/dtks`, status/agregasi/anggota, lampiran, pengaturan program, laporan, ekspor CSV, dan **impor CSV/XLSX** via `DtksImportDialog` + `imporDtksAction` (menghubungkan RTM ke formulir DTKS). RBAC `penduduk`. E2E `/penduduk/dtks`. Test `dtks.test.ts`, `dtks-berkas.test.ts` (termasuk `rencanaImporDtks`: RTM tidak ditemukan, baris ganda, normalisasi). **Gap: E2E.**
   - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
        status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
        catat perubahan, cetak, ekspor CSV `/penduduk/riwayat/ekspor`, E2E (`tests/penduduk.e2e.ts`). Gap: —.
 - [x] `OS-POP-001`: Data penduduk dasar — CRUD, pencarian, filter status, pagination, RBAC di `/penduduk`, halaman detail biodata `/penduduk/[id]`, cetak biodata per penduduk `/penduduk/[id]/cetak`, dan ekspor CSV daftar `/penduduk/ekspor`. Filter lanjutan (agama, pendidikan, pekerjaan, wilayah, umur) sudah terpasang di UI. E2E (`tests/penduduk.e2e.ts`) sudah ada. Tidak ada gap kritis.
 - [x] `OS-POP-005`: DPT (Daftar Pemilih Tetap) — `/penduduk/dpt`, migrasi `elections` (`0029`), CRUD pemilihan (draf/aktif/selesai), filter lengkap, pagination, ekspor CSV, logika umur ≥17 atau sudah kawin pada tanggal pemilihan aktif, RBAC `penduduk`, tombol cetak, halaman rekap `/penduduk/dpt/rekap` + `/penduduk/dpt/rekap/ekspor`, dan halaman publik `/desa/dpt`. Test domain `dpt.test.ts` (7 case: buildDptCsv, hitungRekapDpt, buildDptRekapCsv, nama berkas) dan E2E smoke `/penduduk/dpt` (`tests/rtm-dpt.e2e.ts`). Tidak ada gap kritis.
 - [x] `OS-POP-007`: Data suplemen. `/penduduk/suplemen` dengan CRUD (nama, slug, sasaran), pelacakan sasaran (penduduk/keluarga), dan agregasi jumlah terdata. Dialog `suplemen-terdata-dialog` sudah mengelola terdata penduduk/keluarga. Halaman detail `/[id]`, ekspor per suplemen, serta laporan + ekspornya tersedia. Isian dinamis (`dataFormIsian`) sudah disajikan di form terdata, dan cetak tersedia. Test domain `suplemen.test.ts` (18 case) dan `suplemen-berkas.test.ts` (10 case) tersedia; E2E smoke `/penduduk/suplemen`, `/penduduk/suplemen/1` ada. Gap: —.
-  - [x] `OS-POP-010`, `OS-POP-013`: Statistik penduduk (`/statistik/penduduk` dengan gender, umur, agama, pendidikan, pekerjaan, status kawin, dusun) dan statistik bantuan (`/statistik/bantuan` per program/sasaran) tersedia dengan tabel L/P/total/% dan ringkasan. Ekspor CSV penduduk lewat `/statistik/penduduk/ekspor`. CRUD rentang umur `/statistik/rentang-umur` + ekspor dan pemilih `kind` + ekspor statistik bantuan sudah tersedia. Filter wilayah (dusun/RW/RT) dan periode (umur min/max) di statistik penduduk; filter wilayah (dusun/RW/RT) dan periode (mulai/akhir) di statistik bantuan; tombol Cetak (window.print) di keduanya sudah tersedia. E2E smoke tersedia. Gap statistik penduduk: rute `/statistik/penduduk/ekspor/pdf` belum diimplementasikan (tombol PDF dihapus agar tidak mengarah 404); saat ini hanya ekspor CSV yang tersedia. Gap statistik bantuan: dimensi kategori (sasaran) dan rute `/statistik/bantuan/ekspor/pdf` belum diimplementasikan (tombol PDF dihapus); saat ini hanya ekspor CSV yang tersedia. 
+  - [x] `OS-POP-010`, `OS-POP-013`: Statistik penduduk (`/statistik/penduduk` dengan gender, umur, agama, pendidikan, pekerjaan, status kawin, dusun) dan statistik bantuan (`/statistik/bantuan` per program/sasaran) tersedia dengan tabel L/P/total/% dan ringkasan. Ekspor CSV penduduk lewat `/statistik/penduduk/ekspor`. CRUD rentang umur `/statistik/rentang-umur` + ekspor dan pemilih `kind` + ekspor statistik bantuan sudah tersedia. Filter wilayah (dusun/RW/RT) dan periode (umur min/max) di statistik penduduk; filter wilayah (dusun/RW/RT) dan periode (mulai/akhir) di statistik bantuan; tombol Cetak (window.print) di keduanya sudah tersedia. E2E smoke tersedia. Gap statistik penduduk: rute `/statistik/penduduk/ekspor/pdf` belum diimplementasikan (tombol PDF dihapus agar tidak mengarah 404); saat ini hanya ekspor CSV yang tersedia. Statistik bantuan kini punya filter kategori sasaran yang diteruskan ke ekspor CSV dan PDF, tombol Unduh PDF tertaut ke `/statistik/bantuan/ekspor/pdf`, dan hitungan per sasaran memakai jumlah peserta (bukan baris program). **Gap: E2E ekspor PDF.**
   - [x] `OS-POP-011`: Program bantuan: CRUD, detail, peserta, ekspor CSV, RBAC. **Cetak via browser** tersedia di detail program (`/bantuan/[id]`). **Gap: cetak/PDF format resmi belum ada.** Test `bantuan.test.ts`; E2E `statistik-bantuan.e2e`.
-  - [x] `OS-POP-012`: Peserta bantuan: kandidat sasaran tenant-aware, snapshot kartu, ubah kartu, ekspor CSV, pembersihan massal, cetak kartu via `window.print()`. **Gap: impor peserta belum ada.** Test `bantuan.test.ts`; E2E detail `/bantuan/999999`.
+  - [x] `OS-POP-012`: Peserta bantuan: kandidat sasaran tenant-aware, snapshot kartu, ubah kartu, ekspor CSV, pembersihan massal, cetak kartu via `window.print()`. **Impor peserta** CSV/XLSX via `PesertaImportDialog` + `imporPesertaAction` (kolom identitas per sasaran, unduh template, domain `impor-peserta.ts` + test). **Gap: E2E.** Test `bantuan.test.ts`; E2E detail `/bantuan/999999`.
 - [x] `OS-POP-008`: Modul KIA/Stunting lengkap (migrasi `0032`, schema/domain/repo/actions, RBAC resource `kesehatan`). Halaman admin `/kesehatan/{posyandu,kia,pemantauan-ibu-hamil,pemantauan-anak}` dengan CRUD + filter posyandu client-side di tiga tabel. Halaman publik `/desa/kesehatan/{kia,ibu-hamil,pemantauan-anak}` dengan tabel baca-only + route CSV export publik. Skorcard konvergensi desa `buildSkorcardKonvergensi` (Tabel 1-4) sesuai OpenSID. Test: domain `kesehatan.test.ts` 31 case, repository `kesehatan-repository.test.ts` 4 case, application `export-use-cases.test.ts` 4 case = 39 total. E2E `tests/kesehatan.e2e.ts`.
 - [x] `OS-POP-014`: Pendapat warga/jajak pendapat — migrasi `0032`, schema/domain/repo/actions, RBAC resource `pendapat`, halaman admin `/pendapat` (rekap + daftar + pagination + filter), halaman publik `/jajak-pendapat`. Rute publik `/jajak-pendapat` sudah masuk `PUBLIC_PATHS` di `src/proxy.ts` dan tautan menu publik di `PUBLIC_NAV`. Test domain `pendapat.test.ts` sudah tersedia. Ekspor CSV `/pendapat/ekspor`, hapus dari UI (`PendapatRowActions` + toast), pagination, umpan balik sukses/gagal, tautan menu publik sudah tersedia. **Pembatasan suara per warga/session via `sessionKey` (hash residentId + IP) dengan unique constraint sudah diimplementasikan (migrasi `0037`)**. Gap: filter lanjutan opsional (belum blocker).
 - [x] `OS-POP-015`: Direktori kontak (daftar kontak eksternal + grup kontak) — migrasi `0032`, schema/domain/repo/actions, RBAC resource `daftar-kontak`/`grup-kontak`, halaman `/hubung-warga/daftar-kontak`, `/hubung-warga/grup-kontak`. Impor CSV (`KontakImporDialog`), ekspor CSV daftar & grup kontak, pengiriman pesan (mailto/tel/tg links di tabel), kolom `residentId` di skema (FK ke residents), form input NIK, lookup NIK `/api/penduduk/nik`, dan test domain `kontak.test.ts` (22 case). E2E smoke tersedia. (*OS-POP-009* dikeluarkan dari scope karena tidak relevan.)
@@ -768,9 +813,11 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 - [ ] `OS-MOD-001`: Anjungan mandiri. Admin `/anjungan` sudah CRUD penuh
       (modul + RBAC); sisa: alur kiosk publik dan test/E2E.
-- [ ] `OS-GOV-007`: Pemilihan desa. Admin `/pemerintahan/pemilihan` sudah CRUD
-      (tahun, jenis, tanggal, keterangan) + publik `/desa/pemilihan`; sisa:
-      kandidat, daftar pemilih, perolehan suara, rekap, dan E2E.
+- [x] `OS-GOV-007`: Pemilihan desa. Admin `/pemerintahan/pemilihan` (CRUD
+      pemilihan + dialog kandidat/suara) dan publik `/desa/pemilihan` (kandidat,
+      rekap, pemenang). Kandidat disimpan di `pemilihan_kandidat` dengan nomor
+      urut unik; rekap memakai domain `hitungRekapSuara` + test. Jumlah DPT
+      ditampilkan dari modul DPT aktif. Gap: E2E pemilihan.
 - [x] `OS-MOD-002`: Buku tamu — CRUD admin dan laporan; domain/application
       test tersedia. Bukti route `/buku-tamu`, modul + RBAC `buku-tamu`, dan fitur
       `src/features/buku-tamu/`.

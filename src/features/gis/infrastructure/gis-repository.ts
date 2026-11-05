@@ -444,6 +444,26 @@ export async function deletePersil(villageId: number, id: number): Promise<void>
   await db.delete(persil).where(and(eq(persil.id, id), eq(persil.villageId, villageId)));
 }
 
+export async function findPersilById(villageId: number, id: number): Promise<PersilDTO | null> {
+  const [row] = await db
+    .select()
+    .from(persil)
+    .where(and(eq(persil.id, id), eq(persil.villageId, villageId)))
+    .limit(1);
+  if (!row) return null;
+  return {
+    id: row.id,
+    villageId: row.villageId,
+    nomor: row.nomor,
+    nomorCdesa: row.nomorCdesa,
+    luas: Number(row.luas),
+    status: row.status,
+    path: row.path,
+    keterangan: row.keterangan,
+    sortOrder: row.sortOrder,
+  };
+}
+
 // --- CDesa (Laporan Pertanahan) -------------------------------------------
 
 export async function listCdesa(villageId: number): Promise<CdesaDTO[]> {
@@ -483,6 +503,28 @@ export async function insertCdesa(villageId: number, input: CdesaDTO): Promise<n
     .$returningId();
   if (!row) throw new Error("Gagal menyimpan cdesa.");
   return row.id;
+}
+
+export async function updateCdesa(
+  villageId: number,
+  id: number,
+  input: Omit<CdesaDTO, "id" | "villageId">,
+): Promise<boolean> {
+  const [result] = await db
+    .update(cdesa)
+    .set({
+      nomor: input.nomor,
+      nomorPersil: input.nomorPersil ?? null,
+      nomorSertifikat: input.nomorSertifikat ?? null,
+      tanggal: input.tanggal ?? null,
+      namaPemegang: input.namaPemegang ?? null,
+      luas: input.luas.toFixed(2),
+      keterangan: input.keterangan ?? null,
+      sortOrder: input.sortOrder,
+    })
+    .where(and(eq(cdesa.id, id), eq(cdesa.villageId, villageId)));
+
+  return result.affectedRows > 0;
 }
 
 export async function deleteCdesa(villageId: number, id: number): Promise<void> {
@@ -584,6 +626,48 @@ export async function insertCdesaMutasi(input: CdesaMutasiInput): Promise<number
     .$returningId();
   if (!row) throw new Error("Gagal menyimpan mutasi.");
   return row.id;
+}
+
+export async function findCdesaMutasiById(
+  villageId: number,
+  id: number,
+): Promise<CdesaMutasiDTO | null> {
+  const [row] = await db
+    .select()
+    .from(cdesaMutasi)
+    .where(and(eq(cdesaMutasi.id, id), eq(cdesaMutasi.villageId, villageId)))
+    .limit(1);
+  if (!row) return null;
+  return {
+    id: row.id,
+    villageId: row.villageId,
+    cdesaId: row.cdesaId,
+    nomor: row.nomor,
+    tanggal: row.tanggal,
+    tipe: row.tipe,
+    keterangan: row.keterangan,
+    sortOrder: row.sortOrder,
+  };
+}
+
+export async function updateCdesaMutasi(
+  villageId: number,
+  id: number,
+  input: Omit<CdesaMutasiInput, "villageId">,
+): Promise<boolean> {
+  const [result] = await db
+    .update(cdesaMutasi)
+    .set({
+      cdesaId: input.cdesaId,
+      nomor: input.nomor,
+      tanggal: input.tanggal,
+      tipe: input.tipe,
+      keterangan: input.keterangan ?? null,
+      sortOrder: input.sortOrder,
+    })
+    .where(and(eq(cdesaMutasi.id, id), eq(cdesaMutasi.villageId, villageId)));
+
+  return result.affectedRows > 0;
 }
 
 export async function deleteCdesaMutasi(villageId: number, id: number): Promise<void> {

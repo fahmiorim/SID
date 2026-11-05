@@ -1,13 +1,15 @@
-import { Map as MapIcon } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { listPolygonUseCases } from "@/features/gis/application/use-cases";
+import { listAllPolygonUseCases, listSimbolUseCases } from "@/features/gis/application/use-cases";
 import { POLYGON_RESOURCE } from "@/features/gis/domain/gis";
+import {
+  createPolygonAction,
+  deletePolygonAction,
+  updatePolygonAction,
+} from "@/features/gis/presentation/actions";
+import { EntityManager } from "@/features/gis/presentation/components/entity-manager";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -22,58 +24,82 @@ export default async function PolygonPage() {
     return <NoAccess title="Kategori Peta" description="Kelola kategori/layer peta desa." />;
   }
 
-  const polygons = await listPolygonUseCases();
-  const canManage = hasPermission(user.permissions, POLYGON_RESOURCE, "update");
+  const [polygons, simbols] = await Promise.all([listAllPolygonUseCases(), listSimbolUseCases()]);
+  const rows = polygons.map((polygon) => ({
+    id: polygon.id,
+    nama: polygon.nama,
+    tipe: polygon.tipe,
+    tipeLabel: polygon.tipe === 0 ? "Root / Layer Utama" : "Sub-Polygon",
+    color: polygon.color,
+    sortOrder: polygon.sortOrder,
+  }));
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Kategori Peta"
         description="Kelola kategori atau layer peta desa (polygon utama dan sub-polygon)."
-        actions={
-          canManage ? (
-            <Link href="/pemetaan/polygon/form">
-              <Button>
-                <MapIcon className="mr-2 size-4" />
-                Tambah Polygon
-              </Button>
-            </Link>
-          ) : null
-        }
       />
 
-      <Card>
-        <CardContent className="pt-6">
-          {polygons.length === 0 ? (
-            <p className="py-8 text-center text-muted-foreground">
-              Belum ada kategori peta. Klik &quot;Tambah Polygon&quot; untuk membuat kategori
-              pertama.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {polygons.map((p) => (
-                <div key={p.id} className="flex items-center gap-4 rounded-lg border p-4">
-                  <div
-                    className="size-8 rounded"
-                    style={{ backgroundColor: p.color ?? "#94a3b8" }}
-                    aria-label={`Warna: ${p.color ?? "tidak diatur"}`}
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">{p.nama}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {p.tipe === 0 ? "Root / Layer Utama" : "Sub-Polygon"} ·
-                      {p.sortOrder !== 0 ? ` Urutan ${p.sortOrder}` : ""}
-                    </p>
-                  </div>
-                  {p.simbol && (
-                    <span className="text-sm text-muted-foreground">Simbol: {p.simbol}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <EntityManager
+        entityName="Kategori Peta"
+        addLabel="Tambah Polygon"
+        rows={rows}
+        columns={[
+          { key: "nama", label: "Nama" },
+          { key: "tipeLabel", label: "Tipe" },
+          { key: "color", label: "Warna" },
+          { key: "sortOrder", label: "Urutan", format: "number" },
+        ]}
+        fields={[
+          { name: "nama", label: "Nama Polygon", required: true, maxLength: 50 },
+          {
+            name: "simbol",
+            label: "Simbol",
+            type: "select",
+            options: simbols.map((simbol) => ({
+              value: simbol.simbol,
+              label: simbol.simbol,
+            })),
+            placeholder: "— Tanpa simbol —",
+          },
+          {
+            name: "color",
+            label: "Warna (HEX)",
+            placeholder: "#10b981",
+            maxLength: 7,
+          },
+          {
+            name: "tipe",
+            label: "Tipe",
+            type: "select",
+            required: true,
+            options: [
+              { value: "0", label: "Root / Layer Utama" },
+              { value: "1", label: "Sub-Polygon" },
+            ],
+          },
+          {
+            name: "parrent",
+            label: "Polygon Induk",
+            type: "select",
+            options: polygons.map((polygon) => ({
+              value: String(polygon.id),
+              label: polygon.nama,
+            })),
+            placeholder: "— Tanpa induk —",
+          },
+          { name: "sortOrder", label: "Urutan", type: "number" },
+        ]}
+        emptyText="Belum ada kategori peta."
+        actions={{
+          create: createPolygonAction,
+          update: updatePolygonAction,
+          remove: deletePolygonAction,
+        }}
+        canWrite={hasPermission(user.permissions, POLYGON_RESOURCE, "update")}
+        canDelete={hasPermission(user.permissions, POLYGON_RESOURCE, "delete")}
+      />
     </div>
   );
 }

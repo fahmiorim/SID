@@ -6,6 +6,7 @@ import {
   formatMoney,
   KEUANGAN_RESOURCE,
   keuanganBarisFormSchema,
+  LAPORAN_KEUANGAN_RESOURCE,
   laporanRpApbd,
   listBidangBelanja,
   numberToMoney,
@@ -47,7 +48,18 @@ function isValidTahun(value: number): boolean {
 }
 
 export async function listKeuangan(tahunParam?: number) {
-  const user = await requirePermission(KEUANGAN_RESOURCE, "read");
+  return bacaKeuangan(tahunParam, KEUANGAN_RESOURCE);
+}
+
+/**
+ * Pembacaan data keuangan untuk laporan (read-only).
+ *
+ * Memakai resource `laporan-keuangan` agar sekretaris desa dan kepala desa —
+ * yang hanya diberi izin baca laporan — dapat membuka menu Laporan tanpa
+ * mendapat akses penyuntingan APBDes.
+ */
+async function bacaKeuangan(tahunParam: number | undefined, resource: string) {
+  const user = await requirePermission(resource, "read");
   const villageId = await resolveVillageId(user);
 
   const tersedia = await listKeuanganTahunTersedia(villageId);
@@ -61,6 +73,10 @@ export async function listKeuangan(tahunParam?: number) {
   return { villageId, tahun, tersedia, rows };
 }
 
+function bacaKeuanganLaporan(tahunParam?: number) {
+  return bacaKeuangan(tahunParam, LAPORAN_KEUANGAN_RESOURCE);
+}
+
 /**
  * Data laporan RP APBDes & realisasi per bidang untuk satu tahun anggaran.
  *
@@ -68,7 +84,7 @@ export async function listKeuangan(tahunParam?: number) {
  * realisasi, selisih, %) serta rincian realisasi per bidang belanja.
  */
 export async function getLaporanKeuangan(tahunParam?: number, bidangKode?: string) {
-  const { tahun, tersedia, rows } = await listKeuangan(tahunParam);
+  const { tahun, tersedia, rows } = await bacaKeuanganLaporan(tahunParam);
 
   const baris = laporanRpApbd(rows, AKUN_LAPORAN);
   let bidang = listBidangBelanja(rows).map((row) => {
@@ -104,7 +120,7 @@ export async function getLaporanKeuangan(tahunParam?: number, bidangKode?: strin
  * berjalan (OS-FIN-001/OS-FIN-002).
  */
 export async function getLaporanRealisasiResmi(tahunParam?: number) {
-  const { tahun, tersedia, rows } = await listKeuangan(tahunParam);
+  const { tahun, tersedia, rows } = await bacaKeuanganLaporan(tahunParam);
 
   return { tahun, tersedia, laporan: susunLaporanRealisasi(rows) };
 }
@@ -113,7 +129,7 @@ export async function getLaporanRealisasiResmi(tahunParam?: number) {
  * Daftar semua bidang belanja yang tersedia untuk filter laporan.
  */
 export async function getLaporanKeuanganBidangList() {
-  const { rows } = await listKeuangan();
+  const { rows } = await bacaKeuanganLaporan();
   return listBidangBelanja(rows).map((row) => ({
     kode: row.templateUuid,
     uraian: row.uraian,

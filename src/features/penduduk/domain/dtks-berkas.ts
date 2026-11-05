@@ -37,6 +37,68 @@ export interface BarisImporDtks {
   tanggalPencacahan: string;
 }
 
+/**
+ * Rencana impor DTKS: baris yang siap diproses beserta alasan baris lain
+ * dilewati.
+ *
+ * Pencocokan nomor RTM dan penyaringan baris ganda dikerjakan di domain agar
+ * aturannya dapat diuji tanpa basis data; use case hanya menulis formulirnya.
+ */
+export interface RencanaImporDtks {
+  siap: Array<{
+    noRtm: string;
+    rtmId: number;
+    namaResponden: string;
+    namaPetugas: string;
+    tanggalPencacahan: string;
+  }>;
+  /** Nomor RTM pada berkas yang tidak ada di desa ini. */
+  tidakDitemukan: string[];
+  /** Nomor RTM yang muncul lebih dari sekali pada berkas. */
+  ganda: string[];
+}
+
+/**
+ * Susun rencana impor dari baris berkas dan peta nomor RTM → id RTM desa.
+ *
+ * Baris pertama untuk sebuah nomor RTM dipakai; pengulangan berikutnya
+ * dilaporkan sebagai `ganda` agar impor tetap idempoten meski berkas berisi
+ * nomor yang sama dua kali. Nomor RTM yang tidak dikenal tetap dilaporkan,
+ * bukan menggagalkan seluruh impor.
+ */
+export function rencanaImporDtks(
+  rows: readonly BarisImporDtks[],
+  petaRtm: ReadonlyMap<string, number>,
+): RencanaImporDtks {
+  const rencana: RencanaImporDtks = { siap: [], tidakDitemukan: [], ganda: [] };
+  const terlihat = new Set<string>();
+
+  for (const row of rows) {
+    const noRtm = row.noRtm.trim();
+    if (terlihat.has(noRtm)) {
+      rencana.ganda.push(noRtm);
+      continue;
+    }
+    terlihat.add(noRtm);
+
+    const rtmId = petaRtm.get(noRtm);
+    if (!rtmId) {
+      rencana.tidakDitemukan.push(noRtm);
+      continue;
+    }
+
+    rencana.siap.push({
+      noRtm,
+      rtmId,
+      namaResponden: row.namaResponden,
+      namaPetugas: row.namaPetugas,
+      tanggalPencacahan: row.tanggalPencacahan,
+    });
+  }
+
+  return rencana;
+}
+
 // --- Ekspor -----------------------------------------------------------------
 
 /** Satu baris data DTKS untuk ekspor/laporan. */
