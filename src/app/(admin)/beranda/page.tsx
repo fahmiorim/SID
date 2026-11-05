@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { ambilShortcutBeranda } from "@/features/navigation/application/shortcut-use-cases";
+import { ambilMenuSidebar } from "@/features/navigation/application/urutan-menu-use-cases";
 import { ShortcutPicker } from "@/features/navigation/presentation/components/shortcut-picker";
+import { UrutanMenuPicker } from "@/features/navigation/presentation/components/urutan-menu-picker";
 import { verifySession } from "@/lib/dal";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +15,8 @@ export const dynamic = "force-dynamic";
 export default async function BerandaPage() {
   const user = await verifySession();
   const desa = await getIdentitas();
-  const { shortcut, tujuan } = await ambilShortcutBeranda(user);
+  const [{ shortcut, tujuan }, { pilihan: menuPilihan, terpilih: menuTerpilih }] =
+    await Promise.all([ambilShortcutBeranda(user), ambilMenuSidebar(user)]);
 
   const namaDesa = desa?.namaDesa ?? "Desa";
 
@@ -27,9 +30,14 @@ export default async function BerandaPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold">Shortcut saya</h2>
-          {tujuan.length > 0 ? (
-            <ShortcutPicker pilihan={tujuan} terpilih={shortcut.map((item) => item.href)} />
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {menuPilihan.length > 1 ? (
+              <UrutanMenuPicker pilihan={menuPilihan} terpilih={menuTerpilih} />
+            ) : null}
+            {tujuan.length > 0 ? (
+              <ShortcutPicker pilihan={tujuan} terpilih={shortcut.map((item) => item.href)} />
+            ) : null}
+          </div>
         </div>
 
         {shortcut.length > 0 ? (

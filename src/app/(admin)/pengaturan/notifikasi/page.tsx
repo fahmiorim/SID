@@ -14,9 +14,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ambilKotakMasukAdmin } from "@/features/notifikasi/application/mailbox-sms-use-cases";
 import { daftarNotifikasiAdmin } from "@/features/notifikasi/application/notifikasi-use-cases";
 import { parseFilterNotifikasi } from "@/features/notifikasi/domain/notifikasi";
 import { BroadcastForm } from "@/features/notifikasi/presentation/components/broadcast-form";
+import { KotakMasukPanel } from "@/features/notifikasi/presentation/components/kotak-masuk-panel";
+import { SmsPanel } from "@/features/notifikasi/presentation/components/sms-panel";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { verifySession } from "@/lib/dal";
@@ -50,7 +53,11 @@ export default async function NotifikasiPage({
 
   const params = await searchParams;
   const filter = parseFilterNotifikasi({ kanal: params.kanal, status: params.status });
-  const { baris, ringkasan } = await daftarNotifikasiAdmin(filter);
+  const [{ baris, ringkasan }, kotakMasuk] = await Promise.all([
+    daftarNotifikasiAdmin(filter),
+    ambilKotakMasukAdmin(),
+  ]);
+  const bisaBalas = hasPermission(user.permissions, RESOURCES.notifikasi, "delete");
 
   const kanalTerpilih = filter.kanal ?? "";
   const tautan = (kanal: string) => {
@@ -89,6 +96,11 @@ export default async function NotifikasiPage({
       </div>
 
       <BroadcastForm />
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <KotakMasukPanel mailbox={kotakMasuk.mailbox} bisaBalas={bisaBalas} />
+        <SmsPanel percakapan={kotakMasuk.percakapan} bisaBalas={bisaBalas} />
+      </div>
 
       <Card>
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2">
