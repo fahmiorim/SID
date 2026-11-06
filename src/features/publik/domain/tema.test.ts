@@ -34,10 +34,10 @@ describe("pengaturanTemaSchema", () => {
     expect(hasil.success).toBe(false);
   });
 
-  it("membatasi teks berjalan maksimal 240 karakter", () => {
+  it("membatasi teks berjalan maksimal 300 karakter", () => {
     const hasil = pengaturanTemaSchema.safeParse({
       ...FORM_DASAR,
-      teksBerjalan: "a".repeat(241),
+      teksBerjalan: "a".repeat(301),
     });
     expect(hasil.success).toBe(false);
   });
