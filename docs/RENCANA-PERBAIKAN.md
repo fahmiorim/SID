@@ -1176,8 +1176,11 @@ Aktivasi penuh setelah single-tenant stabil.
 **Progres 7 Nov 2026:** dashboard dan provisioning dasar tersedia di
 `/super-admin` (`features/multi-desa/{domain,infrastructure,application,presentation}`).
 Desa baru mendapat role, menu, RBAC, tema, menu publik, katalog surat, dan akun
-admin; provisioning diuji pada DB dev (buat → verifikasi → bersihkan). Yang belum:
-`villages.active` (nonaktifkan/arsip), `village_domains` multi-alias, kuota,
+admin; provisioning diuji pada DB dev (buat → verifikasi → bersihkan). Isolasi
+host multi-desa (domain utama + alias + wildcard `<slug>.<base>`, penolakan host
+tak dikenal) diuji pada lapisan data lewat
+`features/multi-desa/isolasi-host.integration.test.ts`. Yang belum:
+`villages.active` (nonaktifkan/arsip), UI pengelolaan alias domain, kuota,
 penugasan domain kustom + TLS, dan uji isolasi lintas desa berdomain.
 
 **Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
