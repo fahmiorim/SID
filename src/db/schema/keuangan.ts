@@ -1,9 +1,11 @@
 import {
+  date,
   decimal,
   index,
   int,
   mysqlEnum,
   mysqlTable,
+  text,
   timestamp,
   uniqueIndex,
   varchar,
@@ -225,3 +227,74 @@ export const keuanganLaporan = mysqlTable(
 
 export type KeuanganLaporan = typeof keuanganLaporan.$inferSelect;
 export type NewKeuanganLaporan = typeof keuanganLaporan.$inferInsert;
+
+/**
+ * `keuangan_jurnal` — buku jurnal pembukuan kas desa (satu baris = satu mutasi).
+ *
+ * Debet menambah kas, kredit menguranginya. `sumber` membedakan entri manual
+ * (`manual`) dari entri yang dibangkitkan modul lain, dan `referensi` menyimpan
+ * kunci baris asal agar tidak terjadi pencatatan ganda.
+ *
+ * Bentuk kolom mengikuti migrasi `0064_create_keuangan_pembukuan_tables`:
+ * `village_id` **tanpa** foreign key, dan `created_by` menyimpan nama pengguna
+ * (`varchar(100)`), bukan `users.id`. Jangan menambahkan relasi di sini tanpa
+ * migrasi baru — bila tidak, `db:push` akan mencoba mengubah tabel.
+ */
+export const keuanganJurnal = mysqlTable(
+  "keuangan_jurnal",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id").notNull(),
+    tahun: int("tahun").notNull(),
+    tanggal: date("tanggal", { mode: "string" }).notNull(),
+    kodeRekening: varchar("kode_rekening", { length: 50 }).notNull(),
+    uraian: text("uraian").notNull(),
+
+    debet: decimal("debet", { precision: 19, scale: 2 }).notNull().default("0.00"),
+    kredit: decimal("kredit", { precision: 19, scale: 2 }).notNull().default("0.00"),
+
+    /** `manual` untuk entri operator, atau slug modul asal. */
+    sumber: varchar("sumber", { length: 20 }).notNull().default("manual"),
+    referensi: varchar("referensi", { length: 255 }),
+
+    createdBy: varchar("created_by", { length: 100 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_keuangan_jurnal_village_tahun").on(table.villageId, table.tahun),
+    index("idx_keuangan_jurnal_tanggal").on(table.tanggal),
+  ],
+);
+
+export type KeuanganJurnal = typeof keuanganJurnal.$inferSelect;
+export type NewKeuanganJurnal = typeof keuanganJurnal.$inferInsert;
+
+/**
+ * `keuangan_saldo_bank` — saldo awal kas di bank per rekening per tahun.
+ *
+ * Satu baris = satu rekening bank pada satu tahun anggaran, sehingga
+ * kombinasi (`village_id`, `tahun`, `rekening_bank`) unik. Sama seperti
+ * `keuangan_jurnal`, kolom `village_id` tidak memakai foreign key karena
+ * mengikuti migrasi `0064`.
+ */
+export const keuanganSaldoBank = mysqlTable(
+  "keuangan_saldo_bank",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id").notNull(),
+    tahun: int("tahun").notNull(),
+    rekeningBank: varchar("rekening_bank", { length: 50 }).notNull(),
+    namaBank: varchar("nama_bank", { length: 100 }).notNull(),
+    saldoAwal: decimal("saldo_awal", { precision: 19, scale: 2 }).notNull().default("0.00"),
+    updatedAt: timestamp("updated_at")
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+  },
+  (table) => [
+    uniqueIndex("unique_saldo_bank").on(table.villageId, table.tahun, table.rekeningBank),
+  ],
+);
+
+export type KeuanganSaldoBank = typeof keuanganSaldoBank.$inferSelect;
+export type NewKeuanganSaldoBank = typeof keuanganSaldoBank.$inferInsert;

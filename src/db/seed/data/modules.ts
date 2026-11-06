@@ -388,6 +388,24 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "keuangan-grup",
   },
+  {
+    slug: "jurnal-pembukuan",
+    name: "Jurnal & Saldo Bank",
+    url: "/keuangan/jurnal",
+    icon: "book-open",
+    sortOrder: 6,
+    isGroup: false,
+    parentSlug: "keuangan-grup",
+  },
+  {
+    slug: "keuangan-sisa-lebih",
+    name: "Sisa Lebih Pembiayaan (SiLPA)",
+    url: "/keuangan/sisa-lebih",
+    icon: "wallet",
+    sortOrder: 7,
+    isGroup: false,
+    parentSlug: "keuangan-grup",
+  },
 
   {
     slug: "administrasi",

@@ -20,6 +20,8 @@ import { LaporanPrintButton } from "@/features/keuangan/presentation/components/
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "APBDes",
 };
@@ -74,6 +76,12 @@ export default async function AnggaranPage({
               <Link href="/keuangan/pembukuan">
                 <BookOpen className="size-4" />
                 Pembukuan
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/keuangan/sisa-lebih">
+                <Wallet className="size-4" />
+                SiLPA
               </Link>
             </Button>
             {canManage && (
