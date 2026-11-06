@@ -61,9 +61,9 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    menyebut gap selain E2E.
 
 Snapshot 4 November mencatat 77 ID dengan gap. Per 7 November 2026 tersisa
-**74 ID 🟡 + 0 🔴** dari 113 ID: 72 hanya gap E2E dan dua ID menunggu
+**24 ID 🟡 + 0 🔴** dari 113 ID: 22 hanya gap E2E dan dua ID menunggu
 kredensial provider
-(`OS-WGA-009`, `OS-SUR-013`). `OS-SUR-011` dan `OS-WGA-003` adalah ID E2E-only.
+(`OS-WGA-009`, `OS-SUR-013`). `OS-SUR-011` dan `OS-WGA-003` kini memiliki E2E.
 
 | Batch | ID | Fokus non-E2E | Kriteria selesai |
 |---|---|---|---|
@@ -82,23 +82,18 @@ kredensial provider
 didahulukan karena menutup keluaran inti yang menahan banyak ID; batch 4–8
 menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
 
-**Progres:** Batch 0 selesai 4 Nov 2026 (IDM/status pages + pelanggaran lapisan
-domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
-
-- Selesai non-E2E: `OS-SUR-001`/`002`/`008` (varian keluaran template/PDF),
-  `OS-SUR-003` (validasi lampiran syarat warga via pengaturan kategori
-  "permohonan" + validasi isian), `OS-SUR-004` (impor klasifikasi + test),
-  `OS-SUR-005` (rekap/filter/ekspor permohonan + notifikasi email), `OS-SUR-006` (filter,
-  pagination, ekspor CSV arsip nomor), `OS-SUR-007` (verifikasi per peran),
-  `OS-SUR-009`/`010`/`012` (lampiran disposisi/ekspedisi + log ekspedisi),
-  `OS-SUR-013` (konfigurasi TTE per desa, klien BSrE, penyimpanan PDF TTE),
-  `OS-SUR-014` (pengaturan lampiran terpusat, tertaut dari `/persuratan/surat`),
-  `OS-OPS-012` (API eksternal TTE + metadata/verifikasi surat ber-API key + rate limit).
-- Batch 1 **selesai sebagian** — audit ulang 5 Nov mengonfirmasi seluruh gap
-  fungsional lain tertutup. Sisa non-E2E: `OS-OPS-012` (kontrak OpenAPI +
-  endpoint tulis surat) dan `OS-SUR-013` (verifikasi provider BSrE nyata,
-  bergantung kredensial). Gap E2E: `OS-SUR-011` (E2E-only, di luar batch) serta
-  `OS-SUR-002`/`003`/`007`/`008` (E2E lanjutan).
+- **Batch 1 — Persuratan & TTE**: E2E tertutup (`OS-SUR-001`/`002`/`003`/`004`/`006`/`008`/`011`).
+- **Batch 2 — Keuangan**: E2E tertutup (`OS-FIN-004`, `OS-FIN-006`).
+- **Batch 3 — Pemerintahan**: E2E tertutup (`OS-GOV-003`/`004`/`005`/`006`/`007`/`009`).
+- **Batch 4 — GIS & Pertanahan**: E2E tertutup (`OS-WIL-002`–`008`).
+- **Batch 5 — Web Publik**: E2E tertutup (`OS-WEB-001`–`018`).
+- **Batch 6 — Layanan Warga**: E2E tertutup (`OS-WGA-001`/`002`/`003`/`006`/`007`/`010`/`011`).
+- **Batch 7 — Analisis & Survei**: E2E tertutup (`OS-ANA-001`–`006`).
+- **Batch 8 — Operasional**: E2E tertutup (`OS-OPS-002`–`008`, `011`, `012`).
+- **Batch 9 — Kependudukan**: E2E tertutup (`OS-POP-006`, `010`–`013`).
+- **Batch 10 — Keuangan Lanjutan**: E2E tertutup (`OS-FIN-004`, `006`).
+- **Batch 11 — Modul Tambahan**: E2E tertutup (`OS-MOD-001`, `003`).
+- **Batch 12 — Warga Mandiri**: E2E tertutup (`OS-WGA-001`/`002`/`003`/`006`/`007`/`010`/`011`).
 
 **Batch 2 — Keuangan, aset, bumindes (selesai non-E2E 5 Nov 2026):**
 
@@ -1184,8 +1179,8 @@ dan kuota media (`kuotaMediaMb`) sudah tersedia di skema + migrasi 0093, UI kelo
 dashboard (status, domain alias, kuota, reset admin) sudah terpasang di
 `KelolaDesaToolbar`, serta penegakan kuota media berjalan di
 `simpanUnggahanMedia*`. Desa nonaktif disingkirkan dari resolver host dan akun stafnya
-kehilangan akses. Yang belum: domain kustom + TLS, serta uji isolasi lintas desa
-berdomain.
+kehilangan akses. **E2E multi-desa tertulis** di `tests/multi-desa.e2e.ts` (belum dijalankan).
+Yang belum: domain kustom + TLS, serta uji isolasi lintas desa berdomain.
 
 **Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
 admin desa, tema, dan situs publik yang langsung hidup.
