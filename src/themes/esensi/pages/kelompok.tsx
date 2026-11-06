@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { jabatanLabel } from "@/features/kelompok/domain/kelompok";
 import type { KelompokProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader, ThemePrintButton } from "@/themes/ui";
 
@@ -8,47 +7,16 @@ const TIPE_LABELS: Record<string, string> = {
   lembaga: "Lembaga Desa",
 };
 
-const gayaTerpilih = {
-  backgroundColor: "var(--pub-primary)",
-  color: "var(--pub-primary-foreground)",
-};
-
-const TAB = [
-  { value: null, label: "Semua" },
-  { value: "kelompok", label: "Kelompok" },
-  { value: "lembaga", label: "Lembaga" },
-] as const;
-
-/**
- * Daftar kelompok masyarakat dan lembaga desa, beserta anggota yang
- * dipublikasikan operator (OS-WEB-010). NIK tidak pernah ditampilkan.
- */
-export function EsensiKelompok({ ctx, kelompok, tipeAktif, anggota }: KelompokProps) {
-  const anggotaPerKelompok = new Map(anggota.map((item) => [item.kelompokId, item.anggota]));
-  const totalAnggota = anggota.reduce((total, item) => total + item.anggota.length, 0);
-
+/** Daftar kelompok masyarakat dan lembaga desa beserta anggota publiknya. */
+export function EsensiKelompok({ ctx, kelompok }: KelompokProps) {
   return (
     <div className="space-y-8">
-      <ThemePageHeader
-        title="Kelompok & Lembaga"
-        description={`Daftar kelompok masyarakat dan lembaga yang aktif di ${ctx.desa.namaDesa ?? "desa"}.`}
-      />
-
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <nav className="flex flex-wrap gap-2" aria-label="Filter tipe kelompok">
-          {TAB.map((tab) => (
-            <Link
-              key={tab.value ?? "semua"}
-              href={tab.value ? `/desa/kelompok?tipe=${tab.value}` : "/desa/kelompok"}
-              className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
-              style={tipeAktif === tab.value ? gayaTerpilih : undefined}
-            >
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
-
-        {totalAnggota > 0 ? <ThemePrintButton label="Cetak Daftar Anggota" /> : null}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <ThemePageHeader
+          title="Kelompok & Lembaga"
+          description={`Daftar kelompok masyarakat dan lembaga yang aktif di ${ctx.desa.namaDesa ?? "desa"}.`}
+        />
+        <ThemePrintButton label="Cetak daftar anggota" />
       </div>
 
       {kelompok.length === 0 ? (
@@ -56,8 +24,7 @@ export function EsensiKelompok({ ctx, kelompok, tipeAktif, anggota }: KelompokPr
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {kelompok.map((item) => {
-            const daftarAnggota = anggotaPerKelompok.get(item.id) ?? [];
-
+            const anggotaTampil = item.anggota.slice(0, 5);
             return (
               <ThemeCard as="li" key={item.id} className="space-y-3 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -92,35 +59,41 @@ export function EsensiKelompok({ ctx, kelompok, tipeAktif, anggota }: KelompokPr
                   <p className="text-sm leading-relaxed text-muted-foreground">{item.keterangan}</p>
                 ) : null}
 
-                <section className="space-y-2 border-t pt-3">
-                  <h3 className="text-sm font-semibold">Anggota</h3>
-                  {daftarAnggota.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      Belum ada anggota yang dipublikasikan.
-                    </p>
-                  ) : (
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-xs text-muted-foreground">
-                          <th className="py-1 font-medium">Nama</th>
-                          <th className="py-1 font-medium">Jabatan</th>
-                          <th className="py-1 text-right font-medium">No. Anggota</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {daftarAnggota.map((anggotaItem, indeks) => (
-                          <tr key={`${item.id}-${anggotaItem.nama}-${indeks}`} className="border-t">
-                            <td className="py-1.5">{anggotaItem.nama}</td>
-                            <td className="py-1.5 text-muted-foreground">{anggotaItem.jabatan}</td>
-                            <td className="py-1.5 text-right text-muted-foreground">
-                              {anggotaItem.nomorAnggota ?? "—"}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </section>
+                {item.anggota.length > 0 ? (
+                  <details className="group border-t pt-3">
+                    <summary className="cursor-pointer text-sm font-medium">
+                      Daftar anggota ({item.anggota.length})
+                    </summary>
+                    <ul className="mt-2 space-y-1.5 text-sm">
+                      {anggotaTampil.map((anggota) => (
+                        <li key={anggota.id} className="flex flex-wrap justify-between gap-2">
+                          <span>
+                            {anggota.nama}
+                            {anggota.nomorAnggota ? (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                · {anggota.nomorAnggota}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="text-muted-foreground">
+                            {jabatanLabel(anggota.jabatan)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                    {item.anggota.length > anggotaTampil.length ? (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        +{item.anggota.length - anggotaTampil.length} anggota lain. Gunakan tombol
+                        cetak untuk daftar lengkap.
+                      </p>
+                    ) : null}
+                  </details>
+                ) : (
+                  <p className="border-t pt-3 text-xs text-muted-foreground">
+                    Tidak ada anggota yang dipublikasikan.
+                  </p>
+                )}
               </ThemeCard>
             );
           })}

@@ -1,128 +1,15 @@
-import { INVENTARIS_KONDISI_LABELS } from "@/features/inventaris/domain/inventaris";
+import { Download, Search } from "lucide-react";
+
 import {
-  filterInventarisAktif,
-  type InventarisFilter,
-  type OpsiInventarisPublik,
-} from "@/features/inventaris/domain/inventaris-publik";
+  INVENTARIS_KONDISI,
+  INVENTARIS_KONDISI_LABELS,
+  type InventarisKondisi,
+} from "@/features/inventaris/domain/inventaris";
 import { formatRupiah } from "@/features/keuangan/domain/keuangan";
+import { filterInventarisAktif } from "@/features/publik/domain/inventaris-publik";
 import { formatJumlah } from "@/features/publik/domain/ringkasan-publik";
 import type { InventarisProps } from "@/themes/types";
-import { ThemeButton, ThemeCard, ThemeEmpty, ThemePageHeader, ThemeStatGrid } from "@/themes/ui";
-
-const KONDISI_LABELS: Record<string, string> = {
-  baik: "Baik",
-  rusak_ringan: "Rusak ringan",
-  rusak_berat: "Rusak berat",
-};
-
-const selectClass = "min-h-10 w-full border bg-card px-2 text-sm";
-
-function FilterInventaris({
-  filter,
-  opsi,
-}: {
-  filter: InventarisFilter;
-  opsi: OpsiInventarisPublik;
-}) {
-  return (
-    <form
-      method="get"
-      action="/desa/inventaris"
-      className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end print:hidden"
-      aria-label="Filter inventaris"
-    >
-      <div className="space-y-1">
-        <label htmlFor="filter-kategori" className="text-xs font-medium text-muted-foreground">
-          Kategori
-        </label>
-        <select
-          id="filter-kategori"
-          name="kategori"
-          defaultValue={filter.kategoriId ?? ""}
-          className={selectClass}
-        >
-          <option value="">Semua kategori</option>
-          {opsi.kategori.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.nama}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <label htmlFor="filter-kondisi" className="text-xs font-medium text-muted-foreground">
-          Kondisi
-        </label>
-        <select
-          id="filter-kondisi"
-          name="kondisi"
-          defaultValue={filter.kondisi ?? ""}
-          className={selectClass}
-        >
-          <option value="">Semua kondisi</option>
-          {Object.entries(INVENTARIS_KONDISI_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <label htmlFor="filter-lokasi" className="text-xs font-medium text-muted-foreground">
-          Lokasi
-        </label>
-        <select
-          id="filter-lokasi"
-          name="lokasi"
-          defaultValue={filter.lokasi ?? ""}
-          className={selectClass}
-        >
-          <option value="">Semua lokasi</option>
-          {opsi.lokasi.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-1">
-        <label htmlFor="filter-tahun" className="text-xs font-medium text-muted-foreground">
-          Tahun
-        </label>
-        <select
-          id="filter-tahun"
-          name="tahun"
-          defaultValue={filter.tahun ?? ""}
-          className={selectClass}
-        >
-          <option value="">Semua tahun</option>
-          {opsi.tahun.map((item) => (
-            <option key={item} value={item}>
-              {item}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          className="tema-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-medium"
-        >
-          Terapkan
-        </button>
-        {filterInventarisAktif(filter) ? (
-          <a href="/desa/inventaris" className="text-sm underline-offset-4 hover:underline">
-            Reset
-          </a>
-        ) : null}
-      </div>
-    </form>
-  );
-}
+import { ThemeCard, ThemeEmpty, ThemePageHeader, ThemeStatGrid } from "@/themes/ui";
 
 /** Transparansi aset dan inventaris desa. */
 export function EsensiInventaris({
@@ -131,7 +18,7 @@ export function EsensiInventaris({
   inventaris,
   filter,
   opsi,
-  eksporHref,
+  eksporUrl,
 }: InventarisProps) {
   const filterAktif = filterInventarisAktif(filter);
 
@@ -142,7 +29,117 @@ export function EsensiInventaris({
         description={`Ringkasan aset yang tercatat pada ${ctx.desa.namaDesa ?? "desa"}.`}
       />
 
-      <FilterInventaris filter={filter} opsi={opsi} />
+      <section className="space-y-3" aria-label="Filter inventaris">
+        <form
+          method="get"
+          action="/desa/inventaris"
+          className="grid gap-3 border p-4 sm:grid-cols-2 lg:grid-cols-3"
+          style={{ borderRadius: "var(--pub-radius)" }}
+        >
+          <label className="sr-only" htmlFor="inventaris-q">
+            Cari barang
+          </label>
+          <input
+            id="inventaris-q"
+            type="search"
+            name="q"
+            maxLength={100}
+            defaultValue={filter.cari}
+            placeholder="Cari nama atau kode barang"
+            className="min-h-10 border px-3 text-sm"
+          />
+
+          <label className="sr-only" htmlFor="inventaris-kategori">
+            Kategori
+          </label>
+          <select
+            id="inventaris-kategori"
+            name="kategori"
+            defaultValue={filter.kategori}
+            className="min-h-10 border px-3 text-sm"
+          >
+            <option value="">Semua kategori</option>
+            {opsi.kategori.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+
+          <label className="sr-only" htmlFor="inventaris-kondisi">
+            Kondisi
+          </label>
+          <select
+            id="inventaris-kondisi"
+            name="kondisi"
+            defaultValue={filter.kondisi}
+            className="min-h-10 border px-3 text-sm"
+          >
+            <option value="">Semua kondisi</option>
+            {INVENTARIS_KONDISI.map((item) => (
+              <option key={item} value={item}>
+                {INVENTARIS_KONDISI_LABELS[item]}
+              </option>
+            ))}
+          </select>
+
+          <label className="sr-only" htmlFor="inventaris-lokasi">
+            Lokasi
+          </label>
+          <select
+            id="inventaris-lokasi"
+            name="lokasi"
+            defaultValue={filter.lokasi}
+            className="min-h-10 border px-3 text-sm"
+          >
+            <option value="">Semua lokasi</option>
+            {opsi.lokasi.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+
+          <label className="sr-only" htmlFor="inventaris-tahun">
+            Tahun pembelian
+          </label>
+          <select
+            id="inventaris-tahun"
+            name="tahun"
+            defaultValue={filter.tahun === null ? "" : String(filter.tahun)}
+            className="min-h-10 border px-3 text-sm"
+          >
+            <option value="">Semua tahun</option>
+            {opsi.tahun.map((item) => (
+              <option key={item} value={String(item)}>
+                {item}
+              </option>
+            ))}
+          </select>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              className="tema-button-primary inline-flex min-h-10 items-center justify-center gap-2 px-4 text-sm font-medium"
+            >
+              <Search className="size-4" />
+              Terapkan
+            </button>
+            <a
+              href={eksporUrl}
+              className="tema-link-primary inline-flex min-h-10 items-center gap-2 border px-4 text-sm font-medium hover:underline"
+            >
+              <Download className="size-4" />
+              Unduh CSV
+            </a>
+          </div>
+        </form>
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {filterAktif
+            ? `${inventaris.length} barang cocok dengan filter.`
+            : `${inventaris.length} jenis barang tercatat.`}
+        </p>
+      </section>
 
       <ThemeStatGrid
         items={[
@@ -156,21 +153,14 @@ export function EsensiInventaris({
         ]}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-        <p className="text-sm text-muted-foreground">
-          {filterAktif
-            ? `Menampilkan ${rekap.jumlahBarang.toLocaleString("id-ID")} barang sesuai filter.`
-            : "Seluruh aset desa yang tercatat."}
-        </p>
-        <ThemeButton href={eksporHref} variant="outline">
-          Unduh CSV
-        </ThemeButton>
-      </div>
-
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Rekap per Kategori</h2>
         {rekap.perKategori.length === 0 ? (
-          <ThemeEmpty>Data inventaris belum tersedia.</ThemeEmpty>
+          <ThemeEmpty>
+            {filterAktif
+              ? "Tidak ada barang yang cocok dengan filter."
+              : "Data inventaris belum tersedia."}
+          </ThemeEmpty>
         ) : (
           <ThemeCard>
             <table className="w-full text-sm">
@@ -200,11 +190,7 @@ export function EsensiInventaris({
       <section className="space-y-4">
         <h2 className="text-xl font-semibold tracking-tight">Daftar Barang</h2>
         {inventaris.length === 0 ? (
-          <ThemeEmpty>
-            {filterAktif
-              ? "Tidak ada aset yang cocok dengan filter tersebut."
-              : "Belum ada barang inventaris yang tercatat."}
-          </ThemeEmpty>
+          <ThemeEmpty>Belum ada barang inventaris yang tercatat.</ThemeEmpty>
         ) : (
           <ThemeCard>
             <div className="overflow-x-auto">
@@ -227,7 +213,10 @@ export function EsensiInventaris({
                       <td className="px-4 py-3 text-right tabular-nums">
                         {formatJumlah(item.jumlah)} {item.satuan ?? ""}
                       </td>
-                      <td className="px-4 py-3">{KONDISI_LABELS[item.kondisi] ?? item.kondisi}</td>
+                      <td className="px-4 py-3">
+                        {INVENTARIS_KONDISI_LABELS[item.kondisi as InventarisKondisi] ??
+                          item.kondisi}
+                      </td>
                       <td className="px-4 py-3">{item.lokasi ?? "-"}</td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {item.nilai ? formatRupiah(item.nilai) : "-"}

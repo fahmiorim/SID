@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "2743e13e-8eb5-49dd-af31-c59d670c9248",
-  "prevId": "1fa1ec53-65e4-4a1a-ad98-32f82de445d6",
+  "id": "4c425911-9542-4171-a118-ca431cf9ce6f",
+  "prevId": "4be449e0-66a7-48dc-89e7-949afcbdc80b",
   "tables": {
     "analisis_indikator": {
       "name": "analisis_indikator",
@@ -9600,11 +9600,11 @@
         },
         "tampil_publik": {
           "name": "tampil_publik",
-          "type": "int",
+          "type": "boolean",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": 0
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -16526,10 +16526,18 @@
         },
         "target": {
           "name": "target",
-          "type": "varchar(20)",
+          "type": "varchar(150)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "kanal": {
+          "name": "kanal",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'whatsapp'"
         },
         "kode_hash": {
           "name": "kode_hash",
@@ -16966,83 +16974,6 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
-    "pengguna_menu_urutan": {
-      "name": "pengguna_menu_urutan",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "slug": {
-          "name": "slug",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "urut": {
-          "name": "urut",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "(now())"
-        }
-      },
-      "indexes": {
-        "pengguna_menu_urutan_user_slug_uq": {
-          "name": "pengguna_menu_urutan_user_slug_uq",
-          "columns": [
-            "user_id",
-            "slug"
-          ],
-          "isUnique": true
-        }
-      },
-      "foreignKeys": {
-        "pengguna_menu_urutan_user_id_users_id_fk": {
-          "name": "pengguna_menu_urutan_user_id_users_id_fk",
-          "tableFrom": "pengguna_menu_urutan",
-          "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "pengguna_menu_urutan_id": {
-          "name": "pengguna_menu_urutan_id",
-          "columns": [
-            "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
     "plugin_registry": {
       "name": "plugin_registry",
       "columns": {
@@ -17208,6 +17139,113 @@
       "compositePrimaryKeys": {
         "login_otp_id": {
           "name": "login_otp_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "umpan_balik": {
+      "name": "umpan_balik",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kontak": {
+          "name": "kontak",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pesan": {
+          "name": "pesan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'baru'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "umpan_balik_village_status_idx": {
+          "name": "umpan_balik_village_status_idx",
+          "columns": [
+            "village_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "umpan_balik_village_created_idx": {
+          "name": "umpan_balik_village_created_idx",
+          "columns": [
+            "village_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "umpan_balik_village_id_villages_id_fk": {
+          "name": "umpan_balik_village_id_villages_id_fk",
+          "tableFrom": "umpan_balik",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "umpan_balik_id": {
+          "name": "umpan_balik_id",
           "columns": [
             "id"
           ]

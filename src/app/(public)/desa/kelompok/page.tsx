@@ -43,6 +43,12 @@ export default async function KelompokPublikPage({
     jumlahAnggota: row.memberCount,
     kode: row.code,
     keterangan: row.description,
+    anggota: row.anggota.map((anggota) => ({
+      id: anggota.id,
+      nama: anggota.name,
+      jabatan: anggota.position,
+      nomorAnggota: anggota.memberNumber,
+    })),
   }));
 
   return (

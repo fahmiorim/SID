@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Loader2 } from "lucide-react";
+import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { useActionState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,9 @@ export interface KartuTemaView {
   deskripsi: string;
   warnaPratinjau: string;
   aktif: boolean;
+  /** Hasil pemindaian manifest (OS-WEB-017). */
+  valid: boolean;
+  masalah: string[];
 }
 
 /**
@@ -68,16 +71,33 @@ export function TemaSwitcher({
               </CardTitle>
               <CardDescription>{tema.deskripsi}</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
+              {tema.valid ? null : (
+                <div className="space-y-1 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-xs text-destructive">
+                  <p className="flex items-center gap-1 font-medium">
+                    <AlertTriangle className="size-3.5" />
+                    Manifest perlu diperbaiki
+                  </p>
+                  <ul className="list-disc pl-4">
+                    {tema.masalah.map((masalah) => (
+                      <li key={masalah}>{masalah}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <form action={formAction}>
                 <input type="hidden" name="slug" value={tema.slug} />
                 <Button
                   type="submit"
                   variant={tema.aktif ? "secondary" : "default"}
-                  disabled={!canManage || tema.aktif || pending}
+                  disabled={!canManage || tema.aktif || pending || !tema.valid}
                 >
                   {pending ? <Loader2 className="size-4 animate-spin" /> : null}
-                  {tema.aktif ? "Sedang dipakai" : "Pakai tema ini"}
+                  {tema.aktif
+                    ? "Sedang dipakai"
+                    : tema.valid
+                      ? "Pakai tema ini"
+                      : "Tema tidak valid"}
                 </Button>
               </form>
             </CardContent>

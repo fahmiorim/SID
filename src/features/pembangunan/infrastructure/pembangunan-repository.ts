@@ -62,6 +62,7 @@ function dokumentasiDto(
     gambar: row.gambar,
     judul: row.judul,
     keterangan: row.keterangan,
+    createdAt: row.createdAt ?? null,
   };
 }
 

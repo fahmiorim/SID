@@ -14,8 +14,6 @@ describe("themeOptionsSchema", () => {
     expect(opsi.warnaPrimer).toBe("#1a7f4b");
     expect(opsi.font).toBe("system");
     expect(opsi.tampilMenu).toBe(true);
-    expect(opsi.teksBerjalan).toBe("");
-    expect(opsi.sosmed).toEqual([]);
     expect(opsi.beranda).toEqual([
       "hero",
       "statistik",
@@ -37,19 +35,31 @@ describe("themeOptionsSchema", () => {
     expect(hasil.success).toBe(false);
   });
 
-  it("menerima tautan sosial media http/https", () => {
-    const opsi = themeOptionsSchema.parse({
-      teksBerjalan: "  Selamat datang  ",
-      sosmed: [{ platform: "instagram", url: "https://instagram.com/desa" }],
-    });
-    expect(opsi.teksBerjalan).toBe("Selamat datang");
-    expect(opsi.sosmed).toHaveLength(1);
-    expect(opsi.sosmed[0]?.platform).toBe("instagram");
+  it("menyediakan teks berjalan kosong dan tanpa sosial media", () => {
+    const opsi = themeOptionsSchema.parse({});
+    expect(opsi.teksBerjalan).toBe("");
+    expect(opsi.sosmed).toEqual([]);
   });
 
-  it("menolak tautan sosial media selain http/https", () => {
+  it("menerima tautan sosial media http/https", () => {
+    const opsi = themeOptionsSchema.parse({
+      teksBerjalan: "Pelayanan Senin–Jumat",
+      sosmed: [{ platform: "facebook", url: "https://facebook.com/desa" }],
+    });
+    expect(opsi.teksBerjalan).toBe("Pelayanan Senin–Jumat");
+    expect(opsi.sosmed).toEqual([{ platform: "facebook", url: "https://facebook.com/desa" }]);
+  });
+
+  it("menolak tautan sosial media tanpa skema http", () => {
     const hasil = themeOptionsSchema.safeParse({
-      sosmed: [{ platform: "facebook", url: "javascript:alert(1)" }],
+      sosmed: [{ platform: "instagram", url: "instagram.com/desa" }],
+    });
+    expect(hasil.success).toBe(false);
+  });
+
+  it("menolak platform sosial media yang tidak dikenal", () => {
+    const hasil = themeOptionsSchema.safeParse({
+      sosmed: [{ platform: "myspace", url: "https://myspace.com/desa" }],
     });
     expect(hasil.success).toBe(false);
   });
@@ -86,17 +96,16 @@ describe("parseThemeOptions", () => {
     expect(opsi.beranda).toEqual(THEME_DEFAULT_OPTIONS.beranda);
   });
 
-  it("membuang entri sosial media tidak valid tanpa menghapus opsi lain", () => {
+  it("membuang platform sosial media duplikat", () => {
     const opsi = parseThemeOptions({
-      warnaPrimer: "#123456",
       sosmed: [
-        { platform: "instagram", url: "https://instagram.com/desa" },
-        { platform: "facebook", url: "javascript:alert(1)" },
-        { platform: "tidak-ada", url: "https://example.com" },
+        { platform: "facebook", url: "https://facebook.com/a" },
+        { platform: "facebook", url: "https://facebook.com/b" },
+        { platform: "youtube", url: "https://youtube.com/@a" },
       ],
     });
-    expect(opsi.warnaPrimer).toBe("#123456");
-    expect(opsi.sosmed).toEqual([{ platform: "instagram", url: "https://instagram.com/desa" }]);
+    expect(opsi.sosmed).toHaveLength(2);
+    expect(opsi.sosmed[0]?.url).toBe("https://facebook.com/a");
   });
 });
 

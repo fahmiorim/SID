@@ -56,12 +56,12 @@ export function VerifikasiKontakCard({
           ) : (
             <ShieldQuestion className="size-4" />
           )}
-          Verifikasi Nomor HP
+          Verifikasi Kontak
         </CardTitle>
         <CardDescription>
           {terverifikasi
-            ? `Nomor ${target} sudah terverifikasi dan dipakai untuk notifikasi WhatsApp.`
-            : "Verifikasi nomor HP agar notifikasi status permohonan dan izin dapat dikirim via WhatsApp."}
+            ? `Kontak ${target} sudah terverifikasi dan dipakai untuk notifikasi.`
+            : "Verifikasi nomor HP (WhatsApp) atau email agar notifikasi status permohonan dan izin dapat dikirim."}
         </CardDescription>
       </CardHeader>
 
@@ -69,12 +69,12 @@ export function VerifikasiKontakCard({
         <CardContent className="space-y-4">
           <form action={mintaAction} className="flex flex-wrap items-end gap-2">
             <div className="min-w-52 flex-1 space-y-2">
-              <Label htmlFor="target">Nomor HP (WhatsApp)</Label>
+              <Label htmlFor="target">Nomor HP (WhatsApp) atau Email</Label>
               <Input
                 id="target"
                 name="target"
-                inputMode="tel"
-                placeholder="08xxxxxxxxxx"
+                inputMode="email"
+                placeholder="08xxxxxxxxxx atau nama@email.com"
                 defaultValue={target ?? teleponAwal ?? ""}
                 required
               />

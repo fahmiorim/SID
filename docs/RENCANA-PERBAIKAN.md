@@ -307,18 +307,64 @@ WhatsApp memakai `verifikasi_kontak` + `kirimNotifikasi`; TOTP tidak dipakai.
 kredensial Resend/WhatsApp/BSrE tersedia; adapter dibangun + diuji dengan server
 tiruan.
 
-**Status pelaksanaan gelombang (disinkronkan 6 November 2026):** Gelombang A
-tuntas non-E2E. Seluruh ID hanya menyisakan E2E: `OS-OPS-002` (urutan menu
-sidebar personal), `OS-OPS-003` (pengaturan web/mandiri/surat terpusat; lampiran
-dan tema tetap di rute masing-masing), `OS-OPS-004`, `OS-OPS-005` (kotak masuk
-email + SMS dua arah), `OS-OPS-006` (cakupan inti), `OS-OPS-007` (verifikasi
-tabel pasca-restore + runbook), dan `OS-OPS-008` (manifest build-time;
-unggahan/eksekusi runtime di luar keputusan). `OS-OPS-009` di luar scope (⚪).
+**Status pelaksanaan gelombang:** Gelombang A tuntas non-E2E — `OS-OPS-002`,
+`OS-OPS-003`, `OS-OPS-004`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
+`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID
+adalah E2E. Gelombang B berjalan non-E2E:
 
-Gelombang B: `OS-WEB-010` (publikasi anggota kelompok + filter
-+cetak), `OS-WEB-011` (filter + rekap + CSV publik inventaris), `OS-WEB-012`
-(suplemen publik), dan `OS-WEB-013` (rekap agregat hasil pendataan publik +
-filter periode) selesai non-E2E; lima ID Gelombang B lainnya belum dikerjakan.
+- `OS-WEB-012` — suplemen publik (`/desa/suplemen` + detail).
+- `OS-WEB-011` (7 Nov 2026) — filter publik inventaris (kategori, kondisi,
+  lokasi, tahun, kata kunci), rekap yang mengikuti filter, dan ekspor CSV
+  `/desa/inventaris/ekspor` dengan filter yang sama; domain
+  `inventaris-publik.ts` + 14 test.
+- `OS-WEB-013` (7 Nov 2026) — analisis hasil pendataan publik di
+  `/desa/analisis-survei`: distribusi pilihan, rata-rata angka, jumlah jawaban
+  teks tanpa isi, jumlah responden unik, dan filter tahun; domain
+  `hasil-survei.ts` + 8 test.
+- `OS-WEB-016` (7 Nov 2026) — opsi tema `teksBerjalan` + `sosmed[]`, form
+  `/konten/tema`, dan render bilah info + tautan sosial media di tema `esensi`
+  dan `natra`; test `theme.test.ts` diperluas.
+- `OS-WEB-005` (7 Nov 2026) — jenis produk hukum baku pada admin dan filter
+  publik dokumen, arsip per tahun/jenis, embed HTTPS aman; test
+  `dokumen.test.ts`.
+- `OS-WEB-008` (7 Nov 2026) — linimasa proyek pembangunan (mulai, dokumentasi
+  berfoto, selesai) pada halaman detail publik; test `linimasa.test.ts`.
+- `OS-WEB-010` (7 Nov 2026) — publikasi per anggota kelompok
+  (`tampil_publik`), daftar anggota di halaman publik tanpa NIK, dan cetak;
+  test `kelompok-publik.test.ts`.
+- `OS-WEB-015` (7 Nov 2026) — umpan balik warga: tabel `umpan_balik`, form
+  kontak dengan captcha + honeypot, panel `/umpan-balik`, modul dan RBAC
+  `umpan-balik`; test domain.
+- `OS-WEB-017` (7 Nov 2026) — pemindaian manifest tema build-time dan penolakan
+  aktivasi tema tidak valid; test `tema-scan.test.ts`.
+
+Gelombang B tuntas non-E2E. Semua ID yang dikerjakan tetap 🟡 dengan
+`Gap: E2E` sesuai aturan gelombang (E2E belum dijalankan). Migrasi skema
+gelombang ini: `0093_gelombang_b_umpan_balik_dan_anggota_publik.sql`.
+
+Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir bagian ini:
+
+- `OS-WGA-011` — izin **disetujui** masuk rekap kehadiran perangkat (cocokkan
+  NIK perangkat ↔ penduduk, per tanggal, tanpa menggandakan kehadiran; cuti
+  dihitung izin).
+- `OS-ANA-001` — ringkasan skor per kategori pada laporan survei
+  (`rekapPerKategori`) dan ekspor CSV.
+- `OS-OPS-012` — kontrak OpenAPI 3.1 + endpoint tulis surat eksternal
+  (`POST /api/eksternal/surat`, audit, validasi isian). Mendukung JSON dan
+  multipart dengan unggahan syarat `syarat.<id>`.
+- `OS-POP-010` — test rute ekspor PDF statistik penduduk (401/403/200/kind).
+- `OS-WGA-001` — verifikasi email warga (kolom `kanal`, target 150 karakter,
+  Resend) di samping verifikasi nomor HP.
+- `OS-WGA-002` — OTP login sebagai faktor kedua sudah aktif (WhatsApp/email,
+  verifikasi sebelum sesi, aktivasi di profil).
+- `OS-ANA-005` — token HMAC formulir + `POST /api/publik/survei/[id]/respons`
+  dengan validasi server dan rate limit, plus kartu embed iframe di detail
+  survei admin.
+
+Gap non-E2E yang tersisa hanya `OS-WGA-009` dan `OS-SUR-013` (bukti provider
+nyata; kredensial belum tersedia). API tulis surat sudah menerima unggahan
+syarat multipart dan detail survei sudah menyediakan kartu embed iframe +
+token. Seluruh E2E Gelombang A–E ditunda.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 ## Kondisi Awal (snapshot historis sebelum Fase 0)

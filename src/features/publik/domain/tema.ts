@@ -6,9 +6,9 @@ import {
   FONT_CHOICES,
   HEADER_VARIANTS,
   HOME_SECTION_IDS,
-  sosmedListSchema,
-  type SosmedItem,
-  type ThemeOptions,
+  SOSMED_PLATFORMS,
+  sosmedSchema,
+  type SosmedPlatform,
 } from "./theme";
 
 /**
@@ -36,8 +36,8 @@ export const pengaturanTemaSchema = z.object({
   beranda: z.array(z.enum(HOME_SECTION_IDS)).default([]),
   tampilMenu: z.boolean().default(true),
   tampilKontakFooter: z.boolean().default(true),
-  teksBerjalan: z.string().trim().max(240).default(""),
-  sosmed: sosmedListSchema,
+  teksBerjalan: z.string().trim().max(300).default(""),
+  sosmed: z.array(sosmedSchema).max(SOSMED_PLATFORMS.length).default([]),
 });
 
 export type PengaturanTemaForm = z.infer<typeof pengaturanTemaSchema>;
@@ -61,11 +61,25 @@ export interface TemaFormValues {
   tampilMenu: boolean;
   tampilKontakFooter: boolean;
   teksBerjalan: string;
-  sosmed: SosmedItem[];
+  sosmed: { platform: SosmedPlatform; url: string }[];
 }
 
 /** Ubah opsi tema tersimpan menjadi nilai awal form admin. */
-export function opsiKeForm(opsi: ThemeOptions): TemaFormValues {
+export function opsiKeForm(opsi: {
+  warnaPrimer: string;
+  warnaSekunder: string;
+  font: (typeof FONT_CHOICES)[number];
+  kelengkungan: number;
+  heroJudul: string;
+  heroTombol: string;
+  heroTombolUrl: string;
+  headerVarian: (typeof HEADER_VARIANTS)[number];
+  beranda: readonly (typeof HOME_SECTION_IDS)[number][];
+  tampilMenu: boolean;
+  tampilKontakFooter: boolean;
+  teksBerjalan: string;
+  sosmed: readonly { platform: SosmedPlatform; url: string }[];
+}): TemaFormValues {
   return {
     warnaPrimer: opsi.warnaPrimer,
     warnaSekunder: opsi.warnaSekunder,
@@ -79,6 +93,6 @@ export function opsiKeForm(opsi: ThemeOptions): TemaFormValues {
     tampilMenu: opsi.tampilMenu,
     tampilKontakFooter: opsi.tampilKontakFooter,
     teksBerjalan: opsi.teksBerjalan,
-    sosmed: opsi.sosmed.map((item) => ({ ...item })),
+    sosmed: opsi.sosmed.map((item) => ({ platform: item.platform, url: item.url })),
   };
 }

@@ -136,6 +136,8 @@ export interface PembangunanDokumentasiDTO {
   gambar: string;
   judul: string | null;
   keterangan: string | null;
+  /** Waktu unggah, dipakai linimasa publik (OS-WEB-008). */
+  createdAt: Date | null;
 }
 
 export interface PembangunanDetail {

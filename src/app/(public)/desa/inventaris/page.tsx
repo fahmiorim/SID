@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 
 import { getInventarisPublik } from "@/features/inventaris/application/inventaris-publik-use-cases";
-import { parseInventarisFilter } from "@/features/inventaris/domain/inventaris-publik";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
+import {
+  inventarisEksporUrl,
+  parseFilterInventaris,
+} from "@/features/publik/domain/inventaris-publik";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function InventarisPublikPage({
   searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+}: PageProps<"/desa/inventaris">) {
   const params = await searchParams;
-  const filter = parseInventarisFilter(params);
+  const filter = parseFilterInventaris({
+    q: typeof params.q === "string" ? params.q : undefined,
+    kategori: typeof params.kategori === "string" ? params.kategori : undefined,
+    kondisi: typeof params.kondisi === "string" ? params.kondisi : undefined,
+    lokasi: typeof params.lokasi === "string" ? params.lokasi : undefined,
+    tahun: typeof params.tahun === "string" ? params.tahun : undefined,
+  });
 
   const { ctx, tema, desa } = await siapkanTema();
   const { rows, rekap, opsi } = await getInventarisPublik(desa.id, filter);
@@ -39,14 +46,6 @@ export default async function InventarisPublikPage({
     nilai: row.nilaiAkhir,
   }));
 
-  const query = new URLSearchParams();
-  if (filter.kategoriId !== null) query.set("kategori", String(filter.kategoriId));
-  if (filter.kondisi !== null) query.set("kondisi", filter.kondisi);
-  if (filter.lokasi !== null) query.set("lokasi", filter.lokasi);
-  if (filter.tahun !== null) query.set("tahun", String(filter.tahun));
-  const qs = query.toString();
-  const eksporHref = qs ? `/desa/inventaris/ekspor?${qs}` : "/desa/inventaris/ekspor";
-
   return (
     <Inventaris
       ctx={ctx}
@@ -54,7 +53,7 @@ export default async function InventarisPublikPage({
       inventaris={inventaris}
       filter={filter}
       opsi={opsi}
-      eksporHref={eksporHref}
+      eksporUrl={inventarisEksporUrl(filter)}
     />
   );
 }

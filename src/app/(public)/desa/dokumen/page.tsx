@@ -23,11 +23,18 @@ export default async function DokumenPage({ searchParams }: PageProps<"/desa/dok
   const rawYear = typeof params.tahun === "string" ? Number(params.tahun) : Number.NaN;
   const year =
     Number.isInteger(rawYear) && rawYear >= 1900 && rawYear <= 2100 ? rawYear : undefined;
+  const jenis = typeof params.jenis === "string" ? params.jenis.trim().slice(0, 50) : "";
   const rawPage = typeof params.page === "string" ? Number(params.page) : 1;
   const page = Number.isSafeInteger(rawPage) && rawPage > 0 ? Math.min(rawPage, 100_000) : 1;
 
   const { ctx, tema, desa } = await siapkanTema();
-  const result = await daftarDokumenPublik(desa.id, { search, category, year, page });
+  const result = await daftarDokumenPublik(desa.id, {
+    search,
+    category,
+    year,
+    jenis: jenis || undefined,
+    page,
+  });
   const Dokumen = tema.dokumen;
 
   return (
@@ -40,6 +47,8 @@ export default async function DokumenPage({ searchParams }: PageProps<"/desa/dok
       page={result.page}
       pageSize={result.pageSize}
       total={result.total}
+      jenis={jenis}
+      arsip={result.arsip}
     />
   );
 }

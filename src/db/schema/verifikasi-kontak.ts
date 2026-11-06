@@ -19,7 +19,9 @@ export const verifikasiKontak = mysqlTable(
     residentId: int("resident_id")
       .notNull()
       .references(() => residents.id, { onDelete: "cascade" }),
-    target: varchar("target", { length: 20 }).notNull(),
+    target: varchar("target", { length: 150 }).notNull(),
+    /** Kanal pengiriman kode: `whatsapp` atau `email`. */
+    kanal: varchar("kanal", { length: 20 }).notNull().default("whatsapp"),
     kodeHash: varchar("kode_hash", { length: 64 }).notNull(),
     kedaluwarsa: timestamp("kedaluwarsa").notNull(),
     terverifikasiAt: timestamp("terverifikasi_at"),

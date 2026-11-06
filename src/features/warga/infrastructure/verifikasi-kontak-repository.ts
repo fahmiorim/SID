@@ -9,6 +9,7 @@ export async function simpanKodeVerifikasi(data: {
   villageId: number;
   residentId: number;
   target: string;
+  kanal: "whatsapp" | "email";
   kodeHash: string;
   kedaluwarsa: Date;
 }): Promise<void> {
@@ -50,9 +51,9 @@ export async function tandaiKontakTerverifikasi(id: number): Promise<void> {
 export async function getKontakTerverifikasi(
   villageId: number,
   residentId: number,
-): Promise<{ target: string } | null> {
+): Promise<{ target: string; kanal: string } | null> {
   const [row] = await db
-    .select({ target: verifikasiKontak.target })
+    .select({ target: verifikasiKontak.target, kanal: verifikasiKontak.kanal })
     .from(verifikasiKontak)
     .where(
       and(

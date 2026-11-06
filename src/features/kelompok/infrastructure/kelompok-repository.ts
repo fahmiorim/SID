@@ -4,12 +4,12 @@ import { and, asc, count, eq, inArray, like, ne, notInArray, or, type SQL } from
 
 import { db } from "@/db";
 import { kelompok, kelompokAnggota, kelompokMaster, residents } from "@/db/schema";
-import type { AnggotaPublikRow } from "@/features/kelompok/domain/anggota-publik";
 import {
   isKelompokTipe,
   JABATAN_KETUA,
   type KategoriKelompokDTO,
   type KategoriKelompokFormInput,
+  type KelompokAnggotaPublik,
   type KelompokDTO,
   type KelompokFormInput,
   type KelompokListRow,
@@ -316,7 +316,7 @@ export async function listKelompokMembers(
       position: row.position,
       memberNumber: row.memberNumber ?? null,
       decreeNumber: row.decreeNumber ?? null,
-      tampilPublik: row.tampilPublik === 1,
+      tampilPublik: row.tampilPublik,
     }));
 }
 
@@ -387,16 +387,16 @@ export async function removeKelompokMember(
     );
 }
 
-/** Ubah penanda tampil publik satu anggota; `false` bila baris tidak ditemukan. */
-export async function setAnggotaPublik(
+/** Tampilkan/sembunyikan satu anggota di situs publik (OS-WEB-010). */
+export async function setKelompokMemberPublic(
   villageId: number,
   kelompokId: number,
   memberId: number,
-  tampil: boolean,
+  tampilPublik: boolean,
 ): Promise<boolean> {
   const [result] = await db
     .update(kelompokAnggota)
-    .set({ tampilPublik: tampil ? 1 : 0 })
+    .set({ tampilPublik })
     .where(
       and(
         eq(kelompokAnggota.villageId, villageId),
@@ -409,44 +409,41 @@ export async function setAnggotaPublik(
 }
 
 /**
- * Anggota yang ditandai tampil publik untuk halaman kelompok (OS-WEB-010).
- *
- * Hanya kolom aman yang diambil: tanpa NIK/alamat. Filter tenant diterapkan
- * pada kelompok dan keanggotaan; `tipe` kosong berarti seluruh kelompok &
- * lembaga.
+ * Seluruh anggota berstatus publik, dikelompokkan per kelompok (satu query).
+ * NIK tidak diambil karena halaman publik tidak membutuhkannya.
  */
-export async function listAnggotaPublik(
+export async function listKelompokAnggotaPublik(
   villageId: number,
-  tipe: string,
-): Promise<AnggotaPublikRow[]> {
-  const filters: SQL[] = [eq(kelompok.villageId, villageId), eq(kelompokAnggota.tampilPublik, 1)];
-  if (isKelompokTipe(tipe)) filters.push(eq(kelompok.type, tipe));
-
+): Promise<Map<number, KelompokAnggotaPublik[]>> {
   const rows = await db
     .select({
-      kelompokId: kelompok.id,
-      kelompokNama: kelompok.name,
-      kelompokTipe: kelompok.type,
-      kategoriNama: kelompokMaster.name,
-      nama: residents.name,
+      id: kelompokAnggota.id,
+      kelompokId: kelompokAnggota.kelompokId,
+      name: residents.name,
       position: kelompokAnggota.position,
       memberNumber: kelompokAnggota.memberNumber,
     })
     .from(kelompokAnggota)
-    .innerJoin(kelompok, eq(kelompokAnggota.kelompokId, kelompok.id))
     .innerJoin(residents, eq(kelompokAnggota.residentId, residents.id))
-    .leftJoin(kelompokMaster, eq(kelompok.categoryId, kelompokMaster.id))
-    .where(and(...filters));
+    .where(and(eq(kelompokAnggota.villageId, villageId), eq(kelompokAnggota.tampilPublik, true)));
 
-  return rows.map((row) => ({
-    kelompokId: row.kelompokId,
-    kelompokNama: row.kelompokNama,
-    kelompokTipe: row.kelompokTipe,
-    kategoriNama: row.kategoriNama ?? null,
-    nama: row.nama,
-    position: row.position,
-    memberNumber: row.memberNumber ?? null,
-  }));
+  const peta = new Map<number, KelompokAnggotaPublik[]>();
+  const urut = [...rows].sort(
+    (a, b) => a.position - b.position || a.name.localeCompare(b.name, "id") || a.id - b.id,
+  );
+
+  for (const row of urut) {
+    const daftar = peta.get(row.kelompokId) ?? [];
+    daftar.push({
+      id: row.id,
+      name: row.name,
+      position: row.position,
+      memberNumber: row.memberNumber ?? null,
+    });
+    peta.set(row.kelompokId, daftar);
+  }
+
+  return peta;
 }
 
 /**

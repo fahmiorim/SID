@@ -48,6 +48,7 @@ export default async function LaporanSkorPage({
     perResponden,
     distribusi,
     perIndikator,
+    perKategori,
   } = data;
 
   return (
@@ -115,6 +116,42 @@ export default async function LaporanSkorPage({
               </Badge>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Ringkasan per Kategori</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Kategori</TableHead>
+                <TableHead className="text-right">Jumlah Indikator</TableHead>
+                <TableHead className="text-right">Rata-rata</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {perKategori.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-20 text-center text-muted-foreground">
+                    Belum ada indikator yang dinilai.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                perKategori.map((item) => (
+                  <TableRow key={item.kategori ?? "tanpa-kategori"}>
+                    <TableCell>{item.kategori ?? "Tanpa kategori"}</TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {item.jumlahIndikator}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">{item.rataRata}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 

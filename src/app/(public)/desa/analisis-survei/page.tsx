@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 import {
-  listPeriodeSurveiPublik,
+  getHasilSurveiPublik,
   listSurveiPublik,
 } from "@/features/publik/application/survei-publik";
-import { parsePeriodeTahun } from "@/features/publik/domain/rekap-survei";
 
 export const dynamic = "force-dynamic";
 
@@ -19,18 +18,26 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AnalisisSurveiPage({
   searchParams,
-}: {
-  searchParams: Promise<{ periode?: string }>;
-}) {
+}: PageProps<"/desa/analisis-survei">) {
   const params = await searchParams;
-  const periode = parsePeriodeTahun(params.periode);
+  const rawTahun = typeof params.tahun === "string" ? Number(params.tahun) : Number.NaN;
+  const tahun =
+    Number.isInteger(rawTahun) && rawTahun >= 1900 && rawTahun <= 2100 ? rawTahun : null;
 
   const { ctx, tema, desa } = await siapkanTema();
-  const [survei, tersedia] = await Promise.all([
-    listSurveiPublik(desa.id, periode),
-    listPeriodeSurveiPublik(desa.id),
+  const [survei, hasil] = await Promise.all([
+    listSurveiPublik(desa.id),
+    getHasilSurveiPublik(desa.id, { tahun: tahun ?? undefined }),
   ]);
   const Survei = tema.survei;
 
-  return <Survei ctx={ctx} survei={survei} periode={periode} tersedia={tersedia} />;
+  return (
+    <Survei
+      ctx={ctx}
+      survei={survei}
+      hasil={hasil.survei}
+      tahun={tahun}
+      tahunTersedia={hasil.tahunTersedia}
+    />
+  );
 }

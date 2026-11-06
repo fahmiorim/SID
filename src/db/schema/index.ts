@@ -82,3 +82,4 @@ export * from "./pengguna-menu-urutan";
 export * from "./mailbox-sms";
 export * from "./plugin-registry";
 export * from "./login-otp";
+export * from "./umpan-balik";

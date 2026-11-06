@@ -1,8 +1,9 @@
 import { Mail, MapPin, Menu, Phone } from "lucide-react";
 import Link from "next/link";
 
+import { SOSMED_LABELS } from "@/features/publik/domain/theme";
 import type { LayoutProps } from "@/themes/types";
-import { TemaSosmed, TemaTeksBerjalan, ThemeButton } from "@/themes/ui";
+import { ThemeButton } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `esensi`.
@@ -71,7 +72,16 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
         </div>
       </header>
 
-      <TemaTeksBerjalan teks={opsi.teksBerjalan} />
+      {opsi.teksBerjalan ? (
+        <div className="border-b bg-muted/60" aria-label="Teks berjalan">
+          <div className="mx-auto flex w-full max-w-6xl items-baseline gap-2 px-4 py-1.5 text-xs sm:px-6">
+            <span className="shrink-0 font-semibold tracking-wide text-muted-foreground uppercase">
+              Info
+            </span>
+            <p className="min-w-0 truncate">{opsi.teksBerjalan}</p>
+          </div>
+        </div>
+      ) : null}
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
 
@@ -80,6 +90,22 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
           <p>
             © {new Date().getFullYear()} {nama} · {tema.nama}
           </p>
+          {opsi.sosmed.length > 0 ? (
+            <ul className="flex flex-wrap items-center gap-3">
+              {opsi.sosmed.map((item) => (
+                <li key={item.platform}>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="hover:text-foreground"
+                  >
+                    {SOSMED_LABELS[item.platform]}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {opsi.tampilKontakFooter ? (
             <ul className="flex flex-wrap items-center gap-4">
               {desa.alamatKantor ? (
@@ -106,7 +132,6 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
               Masuk Pengelola
             </Link>
           )}
-          <TemaSosmed items={opsi.sosmed} />
         </div>
       </footer>
     </div>

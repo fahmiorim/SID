@@ -89,6 +89,41 @@ export interface RekapIndikatorSkor {
   jumlahResponden: number;
 }
 
+export interface RekapKategoriSkor {
+  /** Nama kategori, atau `null` untuk indikator tanpa kategori. */
+  kategori: string | null;
+  rataRata: number;
+  jumlahIndikator: number;
+}
+
+/**
+ * Rata-rata skor per kategori indikator (OS-ANA-001).
+ *
+ * Nilai dihitung dari rata-rata tiap indikator agar indikator dengan bobot
+ * berbeda tidak mendominasi hanya karena jumlah soalnya lebih banyak.
+ */
+export function rekapPerKategori(
+  perIndikator: readonly (RekapIndikatorSkor & { kategori: string | null })[],
+): RekapKategoriSkor[] {
+  const grup = new Map<string | null, number[]>();
+  for (const item of perIndikator) {
+    const list = grup.get(item.kategori) ?? [];
+    list.push(item.rataRata);
+    grup.set(item.kategori, list);
+  }
+
+  return [...grup.entries()]
+    .map(([kategori, nilai]) => ({
+      kategori,
+      rataRata:
+        nilai.length === 0
+          ? 0
+          : Math.round((nilai.reduce((a, b) => a + b, 0) / nilai.length) * 10) / 10,
+      jumlahIndikator: nilai.length,
+    }))
+    .sort((a, b) => (a.kategori ?? "~").localeCompare(b.kategori ?? "~", "id"));
+}
+
 /** Rata-rata skor per indikator (soal tanpa indikator masuk `null`). */
 export function rekapPerIndikator(
   soal: readonly SoalSkor[],

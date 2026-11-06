@@ -37,7 +37,8 @@ export async function mintaVerifikasiKontakData(target: unknown): Promise<{
   await simpanKodeVerifikasi({
     villageId,
     residentId: user.residentId,
-    target: parsed.target,
+    target: parsed.target.target,
+    kanal: parsed.target.kanal,
     kodeHash: hashKode(kode),
     kedaluwarsa: new Date(Date.now() + MASA_BERLAKU_KODE_MS),
   });
@@ -46,9 +47,9 @@ export async function mintaVerifikasiKontakData(target: unknown): Promise<{
     villageId,
     residentId: user.residentId,
     jenis: "verifikasi-kontak.kode",
-    kanal: "whatsapp",
-    target: parsed.target,
-    subjek: "Kode verifikasi nomor HP",
+    kanal: parsed.target.kanal,
+    target: parsed.target.target,
+    subjek: parsed.target.kanal === "email" ? "Kode verifikasi email" : "Kode verifikasi nomor HP",
     pesan: `Kode verifikasi Layanan Mandiri Anda: ${kode}. Berlaku 10 menit. Jangan bagikan kode ini.`,
   });
 
@@ -56,14 +57,18 @@ export async function mintaVerifikasiKontakData(target: unknown): Promise<{
     return {
       terkirim: false,
       pesan:
-        "Provider WhatsApp belum dikonfigurasi sehingga kode tidak terkirim. Hubungi operator desa untuk verifikasi manual.",
+        parsed.target.kanal === "email"
+          ? "Provider email belum dikonfigurasi sehingga kode tidak terkirim. Hubungi operator desa untuk verifikasi manual."
+          : "Provider WhatsApp belum dikonfigurasi sehingga kode tidak terkirim. Hubungi operator desa untuk verifikasi manual.",
     };
   }
 
   return {
     terkirim: hasil.sukses,
     pesan: hasil.sukses
-      ? "Kode verifikasi telah dikirim ke WhatsApp Anda."
+      ? parsed.target.kanal === "email"
+        ? "Kode verifikasi telah dikirim ke email Anda."
+        : "Kode verifikasi telah dikirim ke WhatsApp Anda."
       : "Gagal mengirim kode verifikasi. Coba lagi beberapa saat.",
   };
 }
@@ -92,9 +97,14 @@ export async function verifikasiKontakWargaData(kode: unknown): Promise<void> {
 export async function statusVerifikasiKontakData(): Promise<{
   target: string | null;
   terverifikasi: boolean;
+  kanal: "whatsapp" | "email" | null;
 }> {
   const user = await requireWarga();
   const villageId = await resolveVillageId(user);
   const terverifikasi = await getKontakTerverifikasi(villageId, user.residentId);
-  return { target: terverifikasi?.target ?? null, terverifikasi: Boolean(terverifikasi) };
+  return {
+    target: terverifikasi?.target ?? null,
+    terverifikasi: Boolean(terverifikasi),
+    kanal: terverifikasi?.kanal === "email" ? "email" : terverifikasi ? "whatsapp" : null,
+  };
 }

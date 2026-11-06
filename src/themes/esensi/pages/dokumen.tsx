@@ -2,6 +2,8 @@ import { Download, ExternalLink, FileText, Search } from "lucide-react";
 import Link from "next/link";
 
 import {
+  DOKUMEN_JENIS,
+  DOKUMEN_JENIS_LABELS,
   DOKUMEN_KATEGORI_FILTERS,
   DOKUMEN_KATEGORI_LABELS,
   isHttpsEmbedUrl,
@@ -18,6 +20,8 @@ export function EsensiDokumen({
   search,
   category,
   year,
+  jenis,
+  arsip,
   page,
   pageSize,
   total,
@@ -29,8 +33,18 @@ export function EsensiDokumen({
     if (search) params.set("q", search);
     if (category !== "semua") params.set("kategori", category);
     if (year !== undefined) params.set("tahun", String(year));
+    if (jenis) params.set("jenis", jenis);
     params.set("page", String(targetPage));
     return `/desa/dokumen?${params.toString()}`;
+  }
+
+  function arsipHref(tahun: number | null, jenisArsip: string | null) {
+    const params = new URLSearchParams();
+    if (category !== "semua") params.set("kategori", category);
+    if (tahun !== null) params.set("tahun", String(tahun));
+    if (jenisArsip) params.set("jenis", jenisArsip);
+    const query = params.toString();
+    return query ? `/desa/dokumen?${query}` : "/desa/dokumen";
   }
 
   return (
@@ -43,7 +57,7 @@ export function EsensiDokumen({
       <form
         method="get"
         action="/desa/dokumen"
-        className="grid gap-3 border p-4 sm:grid-cols-[minmax(12rem,1fr)_12rem_8rem_auto]"
+        className="grid gap-3 border p-4 sm:grid-cols-[minmax(12rem,1fr)_12rem_12rem_8rem_auto]"
         style={{ borderRadius: "var(--pub-radius)" }}
       >
         <label className="sr-only" htmlFor="dokumen-q">
@@ -76,6 +90,22 @@ export function EsensiDokumen({
         <label className="sr-only" htmlFor="dokumen-tahun">
           Tahun dokumen
         </label>
+        <label className="sr-only" htmlFor="dokumen-jenis">
+          Jenis dokumen
+        </label>
+        <select
+          id="dokumen-jenis"
+          name="jenis"
+          defaultValue={jenis}
+          className="min-h-10 border px-3 text-sm"
+        >
+          <option value="">Semua jenis</option>
+          {DOKUMEN_JENIS.map((value) => (
+            <option key={value} value={value}>
+              {DOKUMEN_JENIS_LABELS[value]}
+            </option>
+          ))}
+        </select>
         <input
           id="dokumen-tahun"
           type="number"
@@ -99,9 +129,52 @@ export function EsensiDokumen({
         {total} dokumen ditemukan.
       </p>
 
+      {arsip.length > 0 ? (
+        <section className="space-y-3" aria-label="Arsip dokumen">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold tracking-tight">Arsip Dokumen</h2>
+            {jenis || year !== undefined ? (
+              <Link
+                href={`/desa/dokumen${category !== "semua" ? `?kategori=${category}` : ""}`}
+                className="tema-link-primary text-sm hover:underline"
+              >
+                Tampilkan semua arsip
+              </Link>
+            ) : null}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {arsip.map((item) => (
+              <div
+                key={item.tahun ?? "tanpa-tahun"}
+                className="border p-4"
+                style={{ borderRadius: "var(--pub-radius)" }}
+              >
+                <p className="text-sm font-medium">
+                  {item.tahun ?? "Tanpa tahun"}{" "}
+                  <span className="text-muted-foreground">({item.jumlah})</span>
+                </p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {item.jenis.map((jenisItem) => (
+                    <li key={jenisItem.jenis ?? "tanpa-jenis"}>
+                      <Link
+                        href={arsipHref(item.tahun, jenisItem.jenis)}
+                        className="tema-link-primary hover:underline"
+                      >
+                        {jenisItem.label}{" "}
+                        <span className="text-muted-foreground">({jenisItem.jumlah})</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {dokumen.length === 0 ? (
         <ThemeEmpty>
-          {search || category !== "semua" || year !== undefined
+          {search || category !== "semua" || year !== undefined || jenis
             ? "Tidak ada dokumen yang cocok dengan filter."
             : "Arsip dokumen belum tersedia."}
         </ThemeEmpty>

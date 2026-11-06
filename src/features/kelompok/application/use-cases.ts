@@ -38,7 +38,7 @@ import {
   listLaporanAnggota,
   removeKelompokMember,
   residentExists,
-  setAnggotaPublik as setAnggotaPublikRow,
+  setKelompokMemberPublic as setKelompokMemberPublicRow,
   updateKategori as updateKategoriRow,
   updateKelompok as updateKelompokRow,
   type KelompokListResult,
@@ -295,11 +295,14 @@ export async function removeAnggotaKelompok(kelompokId: number, memberId: number
   await removeKelompokMember(villageId, kelompokId, memberId);
 }
 
-/** Ubah penanda tampil publik satu anggota (OS-WEB-010). */
+/**
+ * Atur publikasi seorang anggota di situs desa (OS-WEB-010).
+ * NIK tetap tersedia di admin, tetapi tidak pernah dikirim ke halaman publik.
+ */
 export async function setAnggotaPublik(
   kelompokId: number,
   memberId: number,
-  tampil: boolean,
+  tampilPublik: boolean,
 ): Promise<void> {
   const user = await requirePermission(KELOMPOK_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
@@ -307,8 +310,8 @@ export async function setAnggotaPublik(
   const kelompokRow = await findKelompokById(villageId, kelompokId);
   if (!kelompokRow) throw notFound("Kelompok tidak ditemukan.");
 
-  const diubah = await setAnggotaPublikRow(villageId, kelompokId, memberId, tampil);
-  if (!diubah) throw notFound("Anggota tidak ditemukan.");
+  const ok = await setKelompokMemberPublicRow(villageId, kelompokId, memberId, tampilPublik);
+  if (!ok) throw notFound("Anggota tidak ditemukan.");
 }
 
 // --- Kategori kelompok ------------------------------------------------------

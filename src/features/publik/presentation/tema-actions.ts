@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { gantiTemaAktif, simpanPengaturanTema } from "@/features/publik/application/tema-use-cases";
 import { pengaturanTemaSchema } from "@/features/publik/domain/tema";
-import { HOME_SECTION_IDS } from "@/features/publik/domain/theme";
+import { HOME_SECTION_IDS, SOSMED_PLATFORMS } from "@/features/publik/domain/theme";
 import {
   errorState,
   successState,
@@ -36,16 +36,6 @@ export async function simpanTemaAction(
       .filter((value): value is string => typeof value === "string")
       .filter((value) => (HOME_SECTION_IDS as readonly string[]).includes(value));
 
-    const platformSosmed = formData
-      .getAll("sosmedPlatform")
-      .filter((value): value is string => typeof value === "string");
-    const urlSosmed = formData
-      .getAll("sosmedUrl")
-      .filter((value): value is string => typeof value === "string");
-    const sosmed = platformSosmed
-      .map((platform, index) => ({ platform, url: urlSosmed[index] ?? "" }))
-      .filter((item) => item.url.trim() !== "");
-
     const parsed = pengaturanTemaSchema.safeParse({
       warnaPrimer: text(formData, "warnaPrimer"),
       warnaSekunder: text(formData, "warnaSekunder"),
@@ -59,7 +49,11 @@ export async function simpanTemaAction(
       tampilMenu: formData.get("tampilMenu") === "on",
       tampilKontakFooter: formData.get("tampilKontakFooter") === "on",
       teksBerjalan: text(formData, "teksBerjalan"),
-      sosmed,
+      // Satu input per platform; yang dikosongkan tidak disimpan.
+      sosmed: SOSMED_PLATFORMS.map((platform) => ({
+        platform,
+        url: text(formData, `sosmed_${platform}`).trim(),
+      })).filter((item) => item.url !== ""),
     });
 
     if (!parsed.success) {

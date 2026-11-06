@@ -12,14 +12,35 @@ export function normalisasiNomorHp(value: string): string {
   return digit;
 }
 
+/**
+ * Target verifikasi: nomor HP (WhatsApp) atau email (OS-WGA-001).
+ *
+ * Nomor HP dinormalkan ke format 62…, email dihuruf-kecilkan. Pemilihan kanal
+ * dilakukan dari bentuk target agar operator/warga tidak perlu memilih manual.
+ */
 export const verifikasiKontakSchema = z.object({
   target: z
     .string()
     .trim()
-    .min(9, "Nomor HP minimal 9 digit.")
-    .max(20, "Nomor HP maksimal 20 digit.")
-    .transform(normalisasiNomorHp)
-    .refine((value) => /^62\d{8,13}$/.test(value), "Format nomor HP tidak valid."),
+    .min(5, "Isi nomor HP atau email.")
+    .max(150, "Nomor HP/email maksimal 150 karakter.")
+    .superRefine((value, ctx) => {
+      if (value.includes("@")) {
+        if (!z.email().safeParse(value).success) {
+          ctx.addIssue({ code: "custom", message: "Format email tidak valid." });
+        }
+        return;
+      }
+
+      if (!/^62\d{8,13}$/.test(normalisasiNomorHp(value))) {
+        ctx.addIssue({ code: "custom", message: "Format nomor HP tidak valid." });
+      }
+    })
+    .transform((value) =>
+      value.includes("@")
+        ? { target: value.toLowerCase(), kanal: "email" as const }
+        : { target: normalisasiNomorHp(value), kanal: "whatsapp" as const },
+    ),
 });
 
 export const kodeVerifikasiSchema = z
@@ -31,4 +52,5 @@ export interface StatusVerifikasiKontak {
   target: string | null;
   terverifikasi: boolean;
   kedaluwarsa: Date | null;
+  kanal?: "whatsapp" | "email";
 }

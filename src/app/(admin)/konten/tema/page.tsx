@@ -57,13 +57,15 @@ export default async function TemaPage() {
         <h2 className="text-lg font-semibold tracking-tight">Tema terpasang</h2>
         <TemaSwitcher
           canManage={canManage}
-          daftar={daftar.map(({ manifest, aktif: sedangAktif }) => ({
+          daftar={daftar.map(({ manifest, aktif: sedangAktif, valid, masalah }) => ({
             slug: manifest.slug,
             nama: manifest.nama,
             versi: manifest.versi,
             deskripsi: manifest.deskripsi,
             warnaPratinjau: manifest.warnaPratinjau,
             aktif: sedangAktif,
+            valid,
+            masalah,
           }))}
         />
       </section>

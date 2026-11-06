@@ -121,6 +121,16 @@ export async function listPermohonanWarga(villageId: number, residentId: number)
     .orderBy(desc(permohonanSurat.createdAt));
 }
 
+/** Penduduk desa berdasarkan NIK (untuk API eksternal, OS-OPS-012). */
+export async function findPendudukByNik(villageId: number, nik: string) {
+  const [row] = await db
+    .select({ id: residents.id, nama: residents.name })
+    .from(residents)
+    .where(and(eq(residents.villageId, villageId), eq(residents.nationalId, nik)))
+    .limit(1);
+  return row ?? null;
+}
+
 /** Satu permohonan milik warga (untuk unduh berkas syarat). */
 export async function getPermohonanWarga(villageId: number, residentId: number, id: number) {
   const [row] = await db

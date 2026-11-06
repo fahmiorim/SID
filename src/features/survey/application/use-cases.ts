@@ -5,7 +5,9 @@ import {
   KLASIFIKASI_SKOR,
   klasifikasiSkor,
   rekapPerIndikator,
+  rekapPerKategori,
   type RekapIndikatorSkor,
+  type RekapKategoriSkor,
   type SkorResponden,
 } from "@/features/analisis/domain/skor";
 import {
@@ -413,6 +415,8 @@ export interface LaporanSkorData {
   perResponden: SkorResponden[];
   distribusi: { label: string; jumlah: number; persentase: number }[];
   perIndikator: (RekapIndikatorSkor & { nama: string; kategori: string | null })[];
+  /** Ringkasan rata-rata per kategori indikator (OS-ANA-001). */
+  perKategori: RekapKategoriSkor[];
 }
 
 /**
@@ -498,6 +502,7 @@ export async function getLaporanSkorData(surveyId: number): Promise<LaporanSkorD
     perResponden,
     distribusi,
     perIndikator,
+    perKategori: rekapPerKategori(perIndikator),
   };
 }
 

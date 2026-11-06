@@ -9,6 +9,7 @@ import { requirePermission } from "@/lib/dal";
 import { getDefaultTheme, getThemeManifest, listThemeManifests } from "@/themes/registry";
 
 import { TEMA_RESOURCE, type PengaturanTemaForm } from "../domain/tema";
+import { pindaiManifestTema, ringkasMasalahTema } from "../domain/tema-scan";
 import {
   parseThemeOptions,
   THEME_DEFAULT_OPTIONS,
@@ -46,15 +47,27 @@ export const getTemaAktif = cache(async (villageId: number): Promise<TemaAktif> 
 export interface KartuTema {
   manifest: ThemeManifest;
   aktif: boolean;
+  /** Hasil pemindaian manifest build-time (OS-WEB-017). */
+  valid: boolean;
+  masalah: string[];
 }
 
-/** Daftar tema terpasang untuk halaman admin, ditandai mana yang aktif. */
+/**
+ * Daftar tema terpasang untuk halaman admin, ditandai mana yang aktif dan
+ * apakah manifestnya lengkap. Pemindaian dilakukan dari registry build, bukan
+ * dari berkas yang diunggah pengguna.
+ */
 export async function listTemaUntukAdmin(villageId: number): Promise<KartuTema[]> {
   const aktif = await getActiveTheme(villageId);
-  return listThemeManifests().map((manifest) => ({
-    manifest,
-    aktif: manifest.slug === aktif?.slug,
-  }));
+  return listThemeManifests().map((manifest) => {
+    const pindai = pindaiManifestTema(manifest);
+    return {
+      manifest,
+      aktif: manifest.slug === aktif?.slug,
+      valid: pindai.valid,
+      masalah: pindai.masalah,
+    };
+  });
 }
 
 /** Simpan opsi tema aktif; nama/versi disegarkan dari manifest. */
@@ -116,6 +129,17 @@ export async function simpanPengaturanTema(input: PengaturanTemaForm): Promise<{
 export async function gantiTemaAktif(slug: string): Promise<void> {
   const user = await requirePermission(TEMA_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
+
+  const manifest = getThemeManifest(slug);
+  if (!manifest) throw new Error("Tema tidak ditemukan pada registry build.");
+
+  const pindai = pindaiManifestTema(manifest);
+  if (!pindai.valid) {
+    throw new Error(
+      `Tema "${manifest.nama}" tidak dapat diaktifkan. ${ringkasMasalahTema(pindai)}`,
+    );
+  }
+
   await setActiveTheme(villageId, slug);
 
   await recordAuditEvent({

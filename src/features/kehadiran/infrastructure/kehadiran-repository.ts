@@ -9,6 +9,8 @@ import {
   type KehadiranPerangkat,
   type NewKehadiranPerangkat,
 } from "@/db/schema/kehadiran";
+import { kehadiranIzin } from "@/db/schema/kehadiran-izin";
+import { residents } from "@/db/schema/resident";
 
 function tanggalUtc(tahun: number, bulan: number, hari: number): Date {
   return new Date(Date.UTC(tahun, bulan, hari));
@@ -49,6 +51,7 @@ export async function listPerangkatDesa(villageId: number) {
       id: perangkatDesa.id,
       nama: perangkatDesa.nama,
       jabatanId: perangkatDesa.jabatanId,
+      nik: perangkatDesa.nik,
     })
     .from(perangkatDesa)
     .where(eq(perangkatDesa.villageId, villageId));
@@ -77,21 +80,95 @@ export async function deleteKehadiran(id: number, villageId: number): Promise<vo
     .where(and(eq(kehadiranPerangkat.id, id), eq(kehadiranPerangkat.villageId, villageId)));
 }
 
+interface RekapBaris {
+  perangkatId: number;
+  nama: string;
+  jabatan: string;
+  hadir: number;
+  izin: number;
+  sakit: number;
+  alpa: number;
+}
+
+/**
+ * Tambahkan hari izin/sakit/cuti yang **disetujui** ke rekap perangkat.
+ *
+ * Izin warga ditautkan ke perangkat lewat NIK (keduanya berasal dari penduduk
+ * desa). Hari yang sudah punya catatan kehadiran tidak dihitung dua kali.
+ * Cuti dihitung sebagai izin agar bentuk rekap lama tetap kompatibel.
+ */
+async function tambahkanIzinDisetujui(
+  villageId: number,
+  tahun: number,
+  bulan: number | undefined,
+  daftarPerangkat: { id: number; nama: string; nik: string | null }[],
+  hasil: Map<number, RekapBaris>,
+  catatan: { perangkatId: number | null; tanggal: Date }[],
+): Promise<void> {
+  const izinRows = await db
+    .select({
+      jenis: kehadiranIzin.jenis,
+      tanggalMulai: kehadiranIzin.tanggalMulai,
+      tanggalSelesai: kehadiranIzin.tanggalSelesai,
+      nik: residents.nationalId,
+    })
+    .from(kehadiranIzin)
+    .innerJoin(residents, eq(residents.id, kehadiranIzin.residentId))
+    .where(and(eq(kehadiranIzin.villageId, villageId), eq(kehadiranIzin.status, "disetujui")));
+
+  if (izinRows.length === 0) return;
+
+  const perangkatPerNik = new Map(
+    daftarPerangkat.filter((item) => item.nik).map((item) => [item.nik as string, item.id]),
+  );
+  const sudahDicatat = new Set(
+    catatan
+      .filter((item) => item.perangkatId !== null)
+      .map((item) => `${item.perangkatId}:${item.tanggal.toISOString().slice(0, 10)}`),
+  );
+
+  const awal = bulan ? new Date(Date.UTC(tahun, bulan - 1, 1)) : new Date(Date.UTC(tahun, 0, 1));
+  const akhir = bulan ? new Date(Date.UTC(tahun, bulan, 0)) : new Date(Date.UTC(tahun, 11, 31));
+
+  for (const izin of izinRows) {
+    const perangkatId = izin.nik ? perangkatPerNik.get(izin.nik) : undefined;
+    if (!perangkatId) continue;
+
+    let baris = hasil.get(perangkatId);
+    if (!baris) {
+      const perangkat = daftarPerangkat.find((item) => item.id === perangkatId);
+      baris = {
+        perangkatId,
+        nama: perangkat?.nama ?? "-",
+        jabatan: "-",
+        hadir: 0,
+        izin: 0,
+        sakit: 0,
+        alpa: 0,
+      };
+      hasil.set(perangkatId, baris);
+    }
+
+    const mulai = new Date(`${izin.tanggalMulai}T00:00:00.000Z`);
+    const selesai = new Date(`${izin.tanggalSelesai}T00:00:00.000Z`);
+    for (
+      let hari = new Date(Math.max(mulai.getTime(), awal.getTime()));
+      hari <= selesai && hari <= akhir;
+      hari.setUTCDate(hari.getUTCDate() + 1)
+    ) {
+      const kunci = hari.toISOString().slice(0, 10);
+      if (sudahDicatat.has(`${perangkatId}:${kunci}`)) continue;
+      if (izin.jenis === "sakit") baris.sakit += 1;
+      else baris.izin += 1;
+    }
+  }
+}
+
 export async function getRekapKehadiran(
   villageId: number,
   tahun: number,
   bulan?: number,
-): Promise<
-  {
-    perangkatId: number;
-    nama: string;
-    jabatan: string;
-    hadir: number;
-    izin: number;
-    sakit: number;
-    alpa: number;
-  }[]
-> {
+): Promise<RekapBaris[]> {
   const conditions = [eq(kehadiranPerangkat.villageId, villageId)];
   if (tahun) {
     conditions.push(
@@ -112,22 +189,12 @@ export async function getRekapKehadiran(
     .select({
       perangkatId: kehadiranPerangkat.perangkatId,
       status: kehadiranPerangkat.status,
+      tanggal: kehadiranPerangkat.tanggal,
     })
     .from(kehadiranPerangkat)
     .where(and(...conditions));
 
-  const result = new Map<
-    number,
-    {
-      perangkatId: number;
-      nama: string;
-      jabatan: string;
-      hadir: number;
-      izin: number;
-      sakit: number;
-      alpa: number;
-    }
-  >();
+  const result = new Map<number, RekapBaris>();
 
   for (const row of rows) {
     if (!row.perangkatId) continue;
@@ -151,6 +218,8 @@ export async function getRekapKehadiran(
     else if (row.status === "sakit") current.sakit += 1;
     else if (row.status === "alpa") current.alpa += 1;
   }
+
+  await tambahkanIzinDisetujui(villageId, tahun, bulan, perangkatList, result, rows);
 
   return [...result.values()].sort((a, b) => b.hadir - a.hadir);
 }

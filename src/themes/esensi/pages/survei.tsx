@@ -1,195 +1,154 @@
 import Link from "next/link";
 
-import type { RekapSoalPublik } from "@/features/publik/domain/rekap-survei";
+import { labelPeriodeSurvei } from "@/features/publik/domain/hasil-survei";
 import type { SurveiProps } from "@/themes/types";
 import { ThemeButton, ThemeCard, ThemeEmpty, ThemePageHeader } from "@/themes/ui";
 
-const TIPE_LABELS: Record<string, string> = {
-  text: "Isian",
-  number: "Angka",
-  choice: "Pilihan",
-};
-
-const gayaTerpilih = {
-  backgroundColor: "var(--pub-primary)",
-  color: "var(--pub-primary-foreground)",
-};
-
-function formatAngka(value: number): string {
-  return value.toLocaleString("id-ID", { maximumFractionDigits: 2 });
-}
-
-/** Rekap satu soal; hanya agregat, tanpa isian teks responden. */
-function SoalRekap({ soal }: { soal: RekapSoalPublik }) {
-  if (soal.tipe === "choice") {
-    return (
-      <ul className="space-y-2">
-        {soal.distribusi.map((item) => (
-          <li key={item.label} className="space-y-1">
-            <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span>{item.label}</span>
-              <span className="text-muted-foreground tabular-nums">
-                {item.jumlah.toLocaleString("id-ID")} ({item.persentase.toLocaleString("id-ID")}%)
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(100, Math.max(0, item.persentase))}%`,
-                  backgroundColor: "var(--pub-primary)",
-                }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  if (soal.tipe === "number") {
-    if (soal.rataRata === null) {
-      return <p className="text-sm text-muted-foreground">Belum ada jawaban angka.</p>;
-    }
-
-    return (
-      <p className="text-sm text-muted-foreground">
-        Rata-rata <span className="font-medium text-foreground">{formatAngka(soal.rataRata)}</span>
-        {soal.terkecil !== null && soal.terbesar !== null ? (
-          <>
-            {" "}
-            · Terkecil {formatAngka(soal.terkecil)} · Terbesar {formatAngka(soal.terbesar)}
-          </>
-        ) : null}{" "}
-        · {soal.dijawab.toLocaleString("id-ID")} jawaban
-      </p>
-    );
-  }
-
-  return (
-    <p className="text-sm text-muted-foreground">
-      {soal.dijawab.toLocaleString("id-ID")} jawaban terkumpul. Isi jawaban tidak ditampilkan demi
-      privasi responden.
-    </p>
-  );
-}
-
-/** Survei aktif, hasil pendataan agregat, dan filter periode respons. */
-export function EsensiSurvei({ ctx, survei, periode, tersedia }: SurveiProps) {
+/** Survei aktif yang dikelola desa beserta rekap agregatnya. */
+export function EsensiSurvei({ ctx, survei, hasil, tahun, tahunTersedia }: SurveiProps) {
   return (
     <div className="space-y-8">
       <ThemePageHeader
         title="Analisis & Survei"
-        description={`Survei dan hasil pendataan yang dihimpun oleh ${ctx.desa.namaDesa ?? "desa"}.`}
+        description={`Survei aktif dan hasil pendataan yang dihimpun oleh ${ctx.desa.namaDesa ?? "desa"}.`}
       />
 
-      {tersedia.length > 0 ? (
-        <nav className="flex flex-wrap items-center gap-2" aria-label="Filter periode hasil survei">
-          <span className="text-sm text-muted-foreground">Periode:</span>
-          <Link
-            href="/desa/analisis-survei"
-            className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
-            style={periode === null ? gayaTerpilih : undefined}
-          >
-            Semua
-          </Link>
-          {tersedia.map((tahun) => (
-            <Link
-              key={tahun}
-              href={`/desa/analisis-survei?periode=${tahun}`}
-              className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
-              style={periode === tahun ? gayaTerpilih : undefined}
+      {tahunTersedia.length > 0 ? (
+        <form
+          method="get"
+          action="/desa/analisis-survei"
+          className="flex flex-wrap items-end gap-3 border p-4"
+          style={{ borderRadius: "var(--pub-radius)" }}
+        >
+          <div className="space-y-1">
+            <label htmlFor="survei-tahun" className="text-sm font-medium">
+              Periode hasil
+            </label>
+            <select
+              id="survei-tahun"
+              name="tahun"
+              defaultValue={tahun === null ? "" : String(tahun)}
+              className="min-h-10 border px-3 text-sm"
             >
-              {tahun}
+              <option value="">Seluruh periode</option>
+              {tahunTersedia.map((item) => (
+                <option key={item} value={String(item)}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            type="submit"
+            className="tema-button-primary inline-flex min-h-10 items-center justify-center px-4 text-sm font-medium"
+          >
+            Tampilkan
+          </button>
+          {tahun !== null ? (
+            <Link
+              href="/desa/analisis-survei"
+              className="tema-link-primary text-sm hover:underline"
+            >
+              Hapus filter
             </Link>
-          ))}
-        </nav>
+          ) : null}
+        </form>
       ) : null}
 
       {survei.length === 0 ? (
         <ThemeEmpty>Belum ada survei aktif saat ini.</ThemeEmpty>
       ) : (
         <ul className="space-y-4">
-          {survei.map((item) => (
-            <ThemeCard as="li" key={item.id} className="space-y-5 p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-1">
-                  <h2 className="font-semibold">{item.judul}</h2>
-                  {item.deskripsi ? (
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      {item.deskripsi}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                  <span className="rounded-full border px-2.5 py-0.5">
-                    {item.jumlahSoal.toLocaleString("id-ID")} pertanyaan
-                  </span>
-                  <span className="rounded-full border px-2.5 py-0.5">
-                    {item.jumlahResponden.toLocaleString("id-ID")} responden
-                  </span>
-                  {item.mulai || item.selesai ? (
+          {survei.map((item) => {
+            const rekap = hasil.find((entry) => entry.surveiId === item.id);
+            return (
+              <ThemeCard as="li" key={item.id} className="space-y-4 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h2 className="font-semibold">{item.judul}</h2>
+                    {item.deskripsi ? (
+                      <p className="text-sm leading-relaxed text-muted-foreground">
+                        {item.deskripsi}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
                     <span className="rounded-full border px-2.5 py-0.5">
-                      {item.mulai ?? "…"} s.d. {item.selesai ?? "…"}
+                      {item.jumlahSoal.toLocaleString("id-ID")} pertanyaan
                     </span>
-                  ) : null}
+                    <span className="rounded-full border px-2.5 py-0.5">
+                      {item.jumlahResponden.toLocaleString("id-ID")} responden
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              <section className="space-y-2">
-                <h3 className="text-sm font-semibold">Pertanyaan</h3>
                 {item.soal.length > 0 ? (
                   <ol className="list-decimal space-y-1 pl-5 text-sm">
                     {item.soal.map((soal) => (
-                      <li key={soal.id}>
-                        {soal.pertanyaan}{" "}
-                        <span className="text-xs text-muted-foreground">
-                          ({TIPE_LABELS[soal.tipe] ?? soal.tipe})
-                        </span>
-                      </li>
+                      <li key={soal.id}>{soal.pertanyaan}</li>
                     ))}
                   </ol>
                 ) : (
                   <p className="text-sm text-muted-foreground">Pertanyaan survei belum diisi.</p>
                 )}
-              </section>
-
-              <section className="space-y-3">
-                <h3 className="text-sm font-semibold">Hasil Pendataan</h3>
-                {item.jumlahResponden === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Belum ada respons{periode === null ? "" : ` pada periode ${periode}`}.
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-xs text-muted-foreground">
-                      Disajikan sebagai agregat: tanpa nama, NIK, atau isi jawaban teks responden.
-                    </p>
-                    <ul className="space-y-4">
-                      {item.soal.map((soal) => (
-                        <li key={soal.id} className="space-y-2">
-                          <p className="text-sm font-medium">{soal.pertanyaan}</p>
-                          <SoalRekap soal={soal} />
-                        </li>
+                {rekap && rekap.jumlahResponden > 0 ? (
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <h3 className="text-sm font-semibold">Hasil pendataan</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {rekap.jumlahResponden.toLocaleString("id-ID")} responden ·{" "}
+                        {labelPeriodeSurvei(tahun)}
+                      </p>
+                    </div>
+                    <dl className="grid gap-4 sm:grid-cols-2">
+                      {rekap.soal.map((soal) => (
+                        <div key={soal.soalId} className="space-y-1">
+                          <dt className="text-sm font-medium">{soal.pertanyaan}</dt>
+                          <dd className="text-sm text-muted-foreground">
+                            {soal.tipe === "choice" ? (
+                              <ul className="space-y-1">
+                                {soal.distribusi.map((baris) => (
+                                  <li
+                                    key={baris.label}
+                                    className="flex items-center justify-between gap-3"
+                                  >
+                                    <span>{baris.label}</span>
+                                    <span className="tabular-nums">
+                                      {baris.jumlah.toLocaleString("id-ID")} (
+                                      {baris.persen.toLocaleString("id-ID")}%)
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : soal.tipe === "number" ? (
+                              <span>
+                                Rata-rata{" "}
+                                {(soal.rataRata ?? 0).toLocaleString("id-ID", {
+                                  maximumFractionDigits: 2,
+                                })}{" "}
+                                dari {soal.jumlahJawaban.toLocaleString("id-ID")} jawaban
+                              </span>
+                            ) : (
+                              <span>
+                                {soal.jumlahJawaban.toLocaleString("id-ID")} jawaban (isi tidak
+                                dipublikasikan)
+                              </span>
+                            )}
+                          </dd>
+                        </div>
                       ))}
-                    </ul>
-                  </>
-                )}
-              </section>
+                    </dl>
+                  </div>
+                ) : null}
 
-              <div>
-                {item.bisaDiisi ? (
+                <div className="mt-4">
                   <ThemeButton href={`/desa/analisis-survei/${item.id}/isi`}>
                     Isi Survei
                   </ThemeButton>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Pengisian survei ini sudah ditutup.
-                  </p>
-                )}
-              </div>
-            </ThemeCard>
-          ))}
+                </div>
+              </ThemeCard>
+            );
+          })}
         </ul>
       )}
     </div>

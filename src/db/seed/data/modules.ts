@@ -489,6 +489,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isActive: true,
   },
   {
+    slug: "umpan-balik",
+    name: "Umpan Balik",
+    url: "/umpan-balik",
+    icon: "message-square-heart",
+    sortOrder: 48,
+    isGroup: false,
+    isActive: true,
+  },
+  {
     slug: "pendapat",
     name: "Jajak Pendapat",
     url: "/pendapat",

@@ -165,8 +165,43 @@ export interface KelompokMember {
   position: number;
   memberNumber: string | null;
   decreeNumber: string | null;
-  /** Tampil di daftar anggota publik (OS-WEB-010). */
+  /** Apakah keanggotaan ini tampil di situs publik (OS-WEB-010). */
   tampilPublik: boolean;
+}
+
+/** Anggota yang dipublikasikan di situs desa (tanpa NIK). */
+export interface KelompokAnggotaPublik {
+  id: number;
+  name: string;
+  position: number;
+  memberNumber: string | null;
+}
+
+export interface RingkasanAnggotaPublik {
+  jumlah: number;
+  ketua: string | null;
+  anggota: KelompokAnggotaPublik[];
+}
+
+/**
+ * Ringkas anggota publik sebuah kelompok.
+ *
+ * Anggota diurutkan menurut jabatan lalu nama; ketua diambil dari jabatan
+ * KETUA bila ada. Anggota yang disembunyikan operator tidak boleh masuk ke
+ * fungsi ini (difilter saat query).
+ */
+export function ringkasAnggotaPublik(
+  anggota: readonly KelompokAnggotaPublik[],
+): RingkasanAnggotaPublik {
+  const urut = [...anggota].sort(
+    (a, b) => a.position - b.position || a.name.localeCompare(b.name, "id") || a.id - b.id,
+  );
+
+  return {
+    jumlah: urut.length,
+    ketua: urut.find((item) => item.position === JABATAN_KETUA)?.name ?? null,
+    anggota: urut,
+  };
 }
 
 /** Bentuk data kategori kelompok yang dikirim ke UI. */

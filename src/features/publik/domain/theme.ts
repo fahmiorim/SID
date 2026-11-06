@@ -102,45 +102,44 @@ export const FONT_LABELS: Record<FontChoice, string> = {
 /** Pola header: logo+nama, atau dengan latar berwarna. */
 export const HEADER_VARIANTS = ["terang", "berwarna"] as const;
 
-/** Platform sosial media yang dapat ditautkan dari footer tema. */
-export const SOCIAL_PLATFORMS = [
+/** Platform sosial media yang dapat diisi operator (OS-WEB-016). */
+export const SOSMED_PLATFORMS = [
   "facebook",
   "instagram",
-  "x",
   "youtube",
+  "x",
   "tiktok",
   "whatsapp",
   "telegram",
-  "website",
 ] as const;
 
-export type SocialPlatform = (typeof SOCIAL_PLATFORMS)[number];
+export type SosmedPlatform = (typeof SOSMED_PLATFORMS)[number];
 
-export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
+export const SOSMED_LABELS: Record<SosmedPlatform, string> = {
   facebook: "Facebook",
   instagram: "Instagram",
-  x: "X / Twitter",
   youtube: "YouTube",
+  x: "X (Twitter)",
   tiktok: "TikTok",
   whatsapp: "WhatsApp",
   telegram: "Telegram",
-  website: "Situs lain",
 };
 
-/** Satu tautan sosial media; URL dibatasi ke http/https agar aman dirender. */
-export const sosmedItemSchema = z.object({
-  platform: z.enum(SOCIAL_PLATFORMS),
+/** Satu tautan sosial media yang tampil di header/footer tema. */
+export const sosmedSchema = z.object({
+  platform: z.enum(SOSMED_PLATFORMS),
   url: z
     .string()
     .trim()
     .min(1, "Tautan sosial media wajib diisi.")
     .max(255)
-    .refine((value) => /^https?:\/\//i.test(value), "Tautan harus diawali http:// atau https://."),
+    .refine(
+      (value) => /^https?:\/\//i.test(value),
+      "Tautan sosial media harus dimulai http:// atau https://.",
+    ),
 });
 
-export type SosmedItem = z.infer<typeof sosmedItemSchema>;
-
-export const sosmedListSchema = z.array(sosmedItemSchema).max(10).default([]);
+export type SosmedLink = z.infer<typeof sosmedSchema>;
 
 /** Maksimal jumlah bagian beranda yang boleh diatur sekaligus. */
 const DEFAULT_HOME_SECTIONS: HomeSectionId[] = [
@@ -186,9 +185,9 @@ export const themeOptionsSchema = z.object({
   /** Tampilkan kolom kontak di footer. */
   tampilKontakFooter: z.boolean().default(true),
   /** Teks berjalan di bawah header; kosong = tidak ditampilkan. */
-  teksBerjalan: z.string().trim().max(240).default(""),
-  /** Tautan sosial media yang tampil di footer. */
-  sosmed: sosmedListSchema,
+  teksBerjalan: z.string().trim().max(300).default(""),
+  /** Tautan sosial media desa; urutan dipertahankan. */
+  sosmed: z.array(sosmedSchema).max(SOSMED_PLATFORMS.length).default([]),
 });
 
 export type ThemeOptions = z.infer<typeof themeOptionsSchema>;
@@ -239,45 +238,40 @@ export function parseThemeOptions(raw: unknown): ThemeOptions {
     }
   }
 
-  nilai = saringSosmed(nilai);
-
   const hasil = themeOptionsSchema.safeParse(nilai);
-  if (hasil.success) return normalisasiBeranda(hasil.data);
+  if (hasil.success) return normalisasiOpsi(hasil.data);
 
   // Coba lengkapi dengan bawaan dulu (mis. hanya sebagian field yang tersimpan).
   const sebagian = themeOptionsSchema.partial().safeParse(nilai);
   if (sebagian.success) {
-    return normalisasiBeranda(themeOptionsSchema.parse(sebagian.data));
+    return normalisasiOpsi(themeOptionsSchema.parse(sebagian.data));
   }
 
   return THEME_DEFAULT_OPTIONS;
 }
 
-/** Buang bagian beranda yang duplikat tanpa mengubah urutan pilihan. */
-function normalisasiBeranda(opsi: ThemeOptions): ThemeOptions {
+/**
+ * Buang bagian beranda dan platform sosial media yang duplikat tanpa mengubah
+ * urutan pilihan.
+ */
+function normalisasiOpsi(opsi: ThemeOptions): ThemeOptions {
   const unik = Array.from(new Set(opsi.beranda));
-  return unik.length > 0 ? { ...opsi, beranda: unik } : theDefaultOptions(opsi);
+  const platform = new Set<SosmedPlatform>();
+  const sosmed = opsi.sosmed.filter((item) => {
+    if (platform.has(item.platform)) return false;
+    platform.add(item.platform);
+    return true;
+  });
+
+  return {
+    ...opsi,
+    beranda: unik.length > 0 ? unik : theDefaultOptions(opsi).beranda,
+    sosmed,
+  };
 }
 
 function theDefaultOptions(opsi: ThemeOptions): ThemeOptions {
   return { ...opsi, beranda: [...DEFAULT_HOME_SECTIONS] };
-}
-
-/**
- * Buang entri sosial media yang tidak valid tanpa membuang opsi tema lain.
- * Data lama/manual bisa memuat URL `javascript:` atau platform asing; satu
- * entri rusak tidak boleh mengembalikan seluruh tema ke bawaan.
- */
-function saringSosmed(nilai: unknown): unknown {
-  if (!nilai || typeof nilai !== "object" || Array.isArray(nilai)) return nilai;
-
-  const data = nilai as Record<string, unknown>;
-  if (!Array.isArray(data.sosmed)) return nilai;
-
-  return {
-    ...data,
-    sosmed: data.sosmed.filter((item) => sosmedItemSchema.safeParse(item).success).slice(0, 10),
-  };
 }
 
 /** Susun nilai CSS variable dari opsi tema (dipakai wrapper situs publik). */

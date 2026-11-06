@@ -3,8 +3,11 @@
 import { Badge } from "@/components/ui/badge";
 import type { DokumenRow } from "@/features/konten/domain/dokumen";
 import {
+  DOKUMEN_JENIS,
+  DOKUMEN_JENIS_LABELS,
   DOKUMEN_KATEGORI,
   DOKUMEN_KATEGORI_LABELS,
+  dokumenJenisLabel,
   type DokumenKategori,
 } from "@/features/publik/domain/dokumen";
 
@@ -15,6 +18,11 @@ const KATEGORI_OPTIONS = DOKUMEN_KATEGORI.map((value) => ({
   value,
   label: DOKUMEN_KATEGORI_LABELS[value],
 }));
+
+const JENIS_OPTIONS = [
+  { value: "", label: "— Tanpa jenis —" },
+  ...DOKUMEN_JENIS.map((value) => ({ value, label: DOKUMEN_JENIS_LABELS[value] })),
+];
 
 export function DokumenManager({
   dokumen,
@@ -51,7 +59,9 @@ export function DokumenManager({
       cell: (row) => (
         <div className="space-y-1 text-xs">
           <p>{row.nomor || "—"}</p>
-          {row.jenis ? <p className="text-muted-foreground">{row.jenis}</p> : null}
+          {row.jenis ? (
+            <p className="text-muted-foreground">{dokumenJenisLabel(row.jenis)}</p>
+          ) : null}
         </div>
       ),
     },
@@ -99,11 +109,10 @@ export function DokumenManager({
       required: true,
     },
     {
-      type: "text",
+      type: "select",
       name: "jenis",
-      label: "Jenis",
-      placeholder: "Contoh: Peraturan Desa",
-      maxLength: 50,
+      label: "Jenis produk hukum",
+      options: JENIS_OPTIONS,
     },
     {
       type: "text",

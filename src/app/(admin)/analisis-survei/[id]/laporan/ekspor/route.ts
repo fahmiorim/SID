@@ -19,6 +19,13 @@ export async function GET(
       ["Nama", "NIK", "Skor", "Klasifikasi"],
       ...data.perResponden.map((r) => [r.nama ?? "", "", r.skor.toString(), r.klasifikasi]),
       [],
+      ["Kategori", "Jumlah Indikator", "Rata-rata"],
+      ...data.perKategori.map((k) => [
+        k.kategori ?? "Tanpa kategori",
+        k.jumlahIndikator.toString(),
+        k.rataRata.toString(),
+      ]),
+      [],
       ["Indikator", "Kategori", "Rata-rata"],
       ...data.perIndikator.map((i) => [i.nama, i.kategori ?? "", i.rataRata.toString()]),
     ];

@@ -3,6 +3,104 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-07 — Gelombang C–E tuntas non-E2E: email, OTP, form eksternal, API surat
+
+- **`OS-WGA-001`** — verifikasi kontak kini mendukung email: kolom `kanal`
+  (migrasi `0094`), target 150 karakter, kanal dipilih otomatis dari bentuk
+  target, kode dikirim lewat Resend. Test domain `verifikasi-kontak.test.ts`.
+- **`OS-WGA-002`** — OTP login sebagai faktor kedua sudah aktif: kode 6 digit
+  via WhatsApp/email, diverifikasi sebelum sesi dibuat, aktivasi di profil,
+  batas permintaan. Gap tinggal E2E.
+- **`OS-ANA-001`** — ringkasan kategori ditambahkan ke ekspor CSV laporan skor.
+- **`OS-ANA-005`** — token HMAC formulir eksternal (7 hari, terikat survei) dan
+  endpoint `POST /api/publik/survei/[id]/respons` dengan validasi jawaban,
+  desa dari host, dan rate limit per IP. Test token 5 kasus.
+- **`OS-OPS-012`** — `POST /api/eksternal/surat` untuk mengajukan surat atas
+  nama warga dari NIK: validasi isian, nomor antrean server, audit
+  `api.eksternal.surat.create`; kontrak OpenAPI ikut diperbarui. **Ditambah
+  unggahan syarat multipart** (`syarat.<id>`) dengan validasi pengaturan
+  lampiran `permohonan` dan penyimpanan media privat.
+- **`OS-ANA-005`** — detail survei admin kini punya kartu **embed iframe** siap
+  tempel, tautan formulir, dan token API 7 hari yang dibuat server-side.
+- Sisa non-E2E: bukti provider nyata `OS-WGA-009`/`OS-SUR-013` (kredensial).
+  E2E ditunda.
+- Verifikasi: `npm run check` lulus (150 file, 1317 test) dan `npm run build`
+  lulus. `restore.test.ts` sempat memunculkan EPIPE flaky saat suite paralel;
+  lulus saat dijalankan ulang dan pada gate kedua.
+
+## 2026-11-07 — Gelombang C–E sebagian: rekap izin, kategori skor, OpenAPI, test PDF
+
+- **`OS-WGA-011`** — izin disetujui kini memengaruhi rekap kehadiran
+  perangkat. Izin ditautkan lewat NIK perangkat ↔ penduduk, dihitung per
+  tanggal dalam periode rekap, tidak menggandakan tanggal yang sudah punya
+  catatan kehadiran, dan cuti dihitung sebagai izin.
+- **`OS-ANA-001`** — laporan skor survei menampilkan ringkasan per kategori
+  (`rekapPerKategori`), termasuk indikator tanpa kategori. Ekspor CSV belum
+  memuat ringkasan kategori.
+- **`OS-OPS-012`** — `GET /api/eksternal/openapi` menyajikan kontrak OpenAPI
+  3.1 (API key, TTE, verifikasi surat, format galat) yang disusun dari kode.
+  Endpoint tulis surat belum ada.
+- **`OS-POP-010`** — test rute `/statistik/penduduk/ekspor/pdf`: 401 tanpa
+  sesi, 403 tanpa izin, 200 `application/pdf` + header unduhan + awalan
+  `%PDF-`, dan `kind` bawaan.
+- Sisa non-E2E: `OS-WGA-001` (email), `OS-WGA-002` (OTP/2FA login warga),
+  `OS-ANA-005` (formulir eksternal), tulis surat `OS-OPS-012`; `OS-WGA-009`
+  dan `OS-SUR-013` tertahan kredensial provider. E2E belum dijalankan.
+- Verifikasi: `npm run check` lulus (148 file, 1307 test) dan `npm run build`
+  lulus. E2E tidak dijalankan.
+
+## 2026-11-07 — Gelombang B tuntas: dokumen, linimasa, anggota publik, umpan balik, tema
+
+- **`OS-WEB-005`** — jenis produk hukum baku (`DOKUMEN_JENIS`) dipakai form
+  admin (select) dan filter publik `/desa/dokumen`; arsip dokumen aktif
+  dikelompokkan per tahun lalu jenis dan setiap kelompok dapat diklik. Embed
+  hanya HTTPS dengan `iframe sandbox`. Domain `dokumen.ts` + test.
+- **`OS-WEB-008`** — detail pembangunan menampilkan linimasa kronologis:
+  mulai, dokumentasi (foto + keterangan), dan selesai. DTO dokumentasi kini
+  membawa `createdAt`. Domain `linimasa.ts` + test.
+- **`OS-WEB-010`** — kolom `kelompok_anggota.tampil_publik` (default tampil),
+  tombol tampilkan/sembunyikan per anggota di dialog admin, dan daftar anggota
+  terpublikasi di `/desa/kelompok` tanpa NIK; ketua/jumlah mengikuti anggota
+  publik. Tombol cetak tersedia. Domain `ringkasAnggotaPublik` + test.
+- **`OS-WEB-015`** — tabel `umpan_balik`, form umpan balik di `/desa/kontak`
+  dengan captcha aritmetika bertanda tangan + honeypot, dan panel admin
+  `/umpan-balik` (filter status, ubah baru/dibaca/ditindaklanjuti). Modul +
+  RBAC `umpan-balik` (operator `manage`, sekdes/kades `read`).
+- **`OS-WEB-017`** — `pindaiManifestTema` memeriksa slug, versi semver, nama,
+  serta slot dikenal/tidak ganda/lengkap; kartu tema menampilkan masalah dan
+  tombol aktivasi nonaktif untuk manifest tidak valid (use case memvalidasi
+  ulang). Tetap build-time, tanpa unggah/eksekusi kode.
+- Migrasi `0093_gelombang_b_umpan_balik_dan_anggota_publik.sql` (tabel
+  `umpan_balik`, kolom `tampil_publik`, FK + indeks).
+- Dokumen diperbarui: `PARITAS-OPENSID.md` (lima baris ID, tetap 🟡
+  `Gap: E2E`), `RENCANA-PERBAIKAN.md` (Gelombang B tuntas non-E2E), log ini.
+- Verifikasi: `npm run check` lulus (147 file, 1303 test) dan `npm run build`
+  lulus. E2E tidak dijalankan.
+
+## 2026-11-07 — Gelombang B: filter inventaris publik, hasil survei publik, teks berjalan & sosmed
+
+- **`OS-WEB-011`** — `/desa/inventaris` kini punya filter kategori, kondisi,
+  lokasi, tahun, dan pencarian nama/kode/nomor inventaris. Rekap dan hitungan
+  barang mengikuti hasil saringan. Ekspor baru `/desa/inventaris/ekspor`
+  menghasilkan CSV dengan filter yang sama; tenant diambil dari host dan berkas
+  memakai BOM UTF-8 serta proteksi formula. Domain murni
+  `features/publik/domain/inventaris-publik.ts`, test 14 kasus.
+- **`OS-WEB-013`** — `/desa/analisis-survei` menampilkan rekap agregat tanpa
+  data pribadi: distribusi pilihan + persentase, rata-rata soal angka, jumlah
+  jawaban teks (isi tidak dipublikasikan), dan jumlah responden unik. Filter
+  periode tahun berasal dari `survey_responden.created_at` dan hanya memilih
+  kolom agregat. Domain `features/publik/domain/hasil-survei.ts`, test 8 kasus.
+- **`OS-WEB-016`** — opsi tema `teksBerjalan` (≤ 300 karakter) dan `sosmed[]`
+  (tujuh platform, validasi http/https, platform ganda dibuang). Form
+  `/konten/tema` menerima keduanya; tema `esensi` dan `natra` merender bilah
+  teks berjalan di bawah header serta tautan sosial media di footer. Test
+  `theme.test.ts` diperluas menjadi 17 kasus.
+- Dokumen diperbarui: `PARITAS-OPENSID.md` (tiga baris ID di atas),
+  `RENCANA-PERBAIKAN.md` (status Gelombang B dan sisa lima ID), log ini.
+  Status tetap 🟡 dengan `Gap: E2E` sesuai aturan gelombang (E2E ditunda).
+- Verifikasi: `npm run check` lulus (142 file, 1275 test) dan `npm run build`
+  lulus.
+
 ## 2026-11-05 — Audit Batch 1–2: RBAC laporan, validasi syarat, dan tautan pengaturan lampiran
 
 - Audit ulang Batch 1 & 2 terhadap kode (bukan hanya klaim dokumen). Dua cacat

@@ -1,5 +1,6 @@
 import { ArrowLeft, BarChart3, MessageSquareText, Users } from "lucide-react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -11,7 +12,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { getSurveyDetailData } from "@/features/survey/application/use-cases";
+import { buatTokenFormEksternal } from "@/features/survey/domain/form-eksternal";
 import { TIPE_SOAL_LABELS, type RekapSoal } from "@/features/survey/domain/survey";
+import { EmbedSurveiCard } from "@/features/survey/presentation/components/embed-survei-card";
 import { RespondenCreateButton } from "@/features/survey/presentation/components/responden-create-button";
 import { RespondenRowActions } from "@/features/survey/presentation/components/responden-row-actions";
 import { SoalCreateButton } from "@/features/survey/presentation/components/soal-create-button";
@@ -19,6 +22,7 @@ import { SoalRowActions } from "@/features/survey/presentation/components/soal-r
 import { SurveyCsvTools } from "@/features/survey/presentation/components/survey-csv-tools";
 import { SurveyEditButton } from "@/features/survey/presentation/components/survey-edit-button";
 import { verifySession } from "@/lib/dal";
+import { env } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Detail Survei" };
 
@@ -102,6 +106,17 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
   const { survei, soal, responden, rekap, urutanBerikutnya } = detail;
   const canWrite = hasPermission(user.permissions, RESOURCES.analisisSurvei, "update");
   const canDelete = hasPermission(user.permissions, RESOURCES.analisisSurvei, "delete");
+
+  const requestHeaders = await headers();
+  const host =
+    requestHeaders.get("x-forwarded-host") ??
+    requestHeaders.get("host") ??
+    new URL(env.APP_URL).host;
+  const proto =
+    requestHeaders.get("x-forwarded-proto") ??
+    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
+  const embedUrl = `${proto}://${host}/desa/analisis-survei/${survei.id}/isi`;
+  const tokenForm = buatTokenFormEksternal(env.BETTER_AUTH_SECRET, survei.id);
 
   return (
     <div className="space-y-6">
@@ -264,6 +279,8 @@ export default async function SurveyDetailPage({ params }: PageProps<"/analisis-
           />
         </CardContent>
       </Card>
+
+      <EmbedSurveiCard judul={survei.judul} embedUrl={embedUrl} token={tokenForm} />
 
       <Card>
         <CardHeader>

@@ -1,4 +1,12 @@
-import { index, int, mysqlTable, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
+import {
+  boolean,
+  index,
+  int,
+  mysqlTable,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
 import { residents } from "./resident";
 import { villages } from "./village";
@@ -110,12 +118,11 @@ export const kelompokAnggota = mysqlTable(
     decreeNumber: varchar("decree_number", { length: 100 }),
 
     /**
-     * Tampil di daftar anggota publik (OS-WEB-010).
-     *
-     * Bawaan **privat** agar operator memilih sendiri anggota yang boleh
-     * ditampilkan; data lama tidak otomatis dipublikasikan.
+     * Apakah keanggotaan ini dipublikasikan di situs desa (OS-WEB-010).
+     * Bawaan `true` agar data lama tetap tampil sampai operator menyembunyikan
+     * anggota tertentu.
      */
-    tampilPublik: int("tampil_publik").notNull().default(0),
+    tampilPublik: boolean("tampil_publik").notNull().default(true),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")

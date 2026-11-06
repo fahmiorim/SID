@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getPembangunanPublikBySlug } from "@/features/pembangunan/application/use-cases";
+import { susunLinimasa, type JenisLinimasa } from "@/features/pembangunan/domain/linimasa";
 import { formatAnggaran, statusPembangunanLabel } from "@/features/pembangunan/domain/pembangunan";
 import { formatTanggal, urlMedia } from "@/features/publik/domain/format";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
@@ -30,6 +31,18 @@ export default async function PembangunanDetailPublikPage({
 }) {
   const { slug } = await params;
   const { proyek, dokumentasi } = await getPembangunanPublikBySlug(slug);
+  const linimasa = susunLinimasa({
+    mulai: proyek.mulai,
+    selesai: proyek.selesai,
+    status: proyek.status,
+    progres: proyek.progres,
+    dokumentasi,
+  });
+  const labelJenis: Record<JenisLinimasa, string> = {
+    mulai: "Mulai",
+    dokumentasi: "Dokumentasi",
+    selesai: "Selesai",
+  };
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 py-12">
@@ -107,6 +120,35 @@ export default async function PembangunanDetailPublikPage({
           <p className="text-sm whitespace-pre-line text-muted-foreground">{proyek.hasil}</p>
         </section>
       ) : null}
+
+      <section className="space-y-3" aria-label="Linimasa proyek">
+        <h2 className="text-base font-semibold">Linimasa & Foto Progres</h2>
+        <ol className="space-y-4 border-l pl-4">
+          {linimasa.map((event) => (
+            <li key={event.id} className="relative space-y-1">
+              <span className="absolute top-1.5 -left-[1.32rem] size-2.5 rounded-full bg-primary" />
+              <p className="text-xs text-muted-foreground">
+                {formatTanggal(event.tanggal) || "Tanggal tidak dicatat"} ·{" "}
+                {labelJenis[event.jenis]}
+              </p>
+              <p className="text-sm font-medium">{event.judul}</p>
+              {event.keterangan ? (
+                <p className="text-sm whitespace-pre-line text-muted-foreground">
+                  {event.keterangan}
+                </p>
+              ) : null}
+              {event.gambar ? (
+                // eslint-disable-next-line @next/next/no-img-element -- media dinamis dari penyimpanan lokal
+                <img
+                  src={urlMedia(event.gambar) ?? ""}
+                  alt={event.judul}
+                  className="mt-2 h-32 w-full max-w-sm rounded-md border object-cover"
+                />
+              ) : null}
+            </li>
+          ))}
+        </ol>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-base font-semibold">Dokumentasi</h2>

@@ -3,14 +3,10 @@ import type { ReactNode } from "react";
 import type { StatistikDesa, SuratPublikRow } from "@/features/desa/application/statistik-desa";
 import type { StatistikPublik } from "@/features/desa/application/statistik-publik";
 import type { IdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
-import type {
-  InventarisFilter,
-  OpsiInventarisPublik,
-} from "@/features/inventaris/domain/inventaris-publik";
-import type { KelompokAnggotaPublik } from "@/features/kelompok/domain/anggota-publik";
 import type { TriwulanBaris, TriwulanTotal } from "@/features/keuangan/domain/laporan-triwulan";
-import type { SurveiPublik } from "@/features/publik/application/survei-publik";
-import type { DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
+import type { HasilSurveiPublik, SurveiPublik } from "@/features/publik/application/survei-publik";
+import type { DokumenKategoriFilter, KelompokArsipDokumen } from "@/features/publik/domain/dokumen";
+import type { FilterInventarisPublik } from "@/features/publik/domain/inventaris-publik";
 import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
@@ -135,6 +131,9 @@ export interface DokumenProps {
   search: string;
   category: DokumenKategoriFilter;
   year?: number;
+  jenis: string;
+  /** Ringkasan arsip per tahun & jenis (OS-WEB-005). */
+  arsip: KelompokArsipDokumen[];
   page: number;
   pageSize: number;
   total: number;
@@ -158,16 +157,20 @@ export interface KelompokProps {
     jumlahAnggota: number;
     kode: string | null;
     keterangan: string | null;
+    /** Anggota yang dipublikasikan (OS-WEB-010). */
+    anggota: { id: number; nama: string; jabatan: number; nomorAnggota: string | null }[];
   }[];
-  /** Filter tipe yang aktif; `null` = semua. */
-  tipeAktif: "kelompok" | "lembaga" | null;
-  /** Anggota yang dipublikasikan, dikelompokkan per kelompok (tanpa NIK). */
-  anggota: KelompokAnggotaPublik[];
 }
 
 export interface InventarisProps {
   ctx: ThemeContext;
   rekap: RekapInventaris;
+  /** Filter aktif dari query string (OS-WEB-011). */
+  filter: FilterInventarisPublik;
+  /** Pilihan filter yang tersedia pada data desa. */
+  opsi: { kategori: string[]; lokasi: string[]; tahun: number[] };
+  /** Tautan ekspor CSV dengan filter yang sama. */
+  eksporUrl: string;
   inventaris: {
     id: number;
     nama: string;
@@ -180,12 +183,6 @@ export interface InventarisProps {
     tahun: number | null;
     nilai: string | null;
   }[];
-  /** Filter aktif dari URL. */
-  filter: InventarisFilter;
-  /** Pilihan filter yang tersedia pada data desa. */
-  opsi: OpsiInventarisPublik;
-  /** Tautan unduh CSV dengan filter yang sama. */
-  eksporHref: string;
 }
 
 export interface SuratProps {
@@ -202,10 +199,10 @@ export interface StatusDesaProps {
 export interface SurveiProps {
   ctx: ThemeContext;
   survei: SurveiPublik[];
-  /** Tahun respons yang dipakai sebagai filter; `null` = semua periode. */
-  periode: number | null;
-  /** Tahun yang memiliki respons survei. */
-  tersedia: number[];
+  /** Rekap agregat tanpa data pribadi (OS-WEB-013). */
+  hasil: HasilSurveiPublik[];
+  tahun: number | null;
+  tahunTersedia: number[];
 }
 
 export interface TriwulanProps {
@@ -255,6 +252,8 @@ export interface SinergiProps {
 
 export interface KontakProps {
   ctx: ThemeContext;
+  /** Tantangan captcha untuk form umpan balik (OS-WEB-015). */
+  captcha: { pertanyaan: string; token: string };
 }
 
 export interface HalamanProps {

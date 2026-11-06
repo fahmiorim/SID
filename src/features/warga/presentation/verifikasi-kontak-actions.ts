@@ -33,7 +33,7 @@ export async function verifikasiKontakAction(
   try {
     await verifikasiKontakWargaData(formData.get("kode"));
     revalidatePath("/layanan-mandiri/profil");
-    return successState("Nomor HP berhasil diverifikasi.");
+    return successState("Kontak berhasil diverifikasi.");
   } catch (error) {
     return toErrorState(error);
   }

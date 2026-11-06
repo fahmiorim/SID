@@ -58,7 +58,7 @@ type AnggotaState =
   | { status: "ready"; members: KelompokMember[]; kandidat: LabelOption[] }
   | { status: "error"; message: string };
 
-/** Satu baris anggota: toggle publikasi dan tombol keluarkan. */
+/** Satu baris anggota dengan tombol publikasi & keluarkan (aksi mandiri). */
 function AnggotaRow({
   kelompokId,
   member,
@@ -69,6 +69,24 @@ function AnggotaRow({
   onChanged: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [isToggling, startToggle] = useTransition();
+
+  function handleTogglePublic() {
+    const formData = new FormData();
+    formData.set("kelompokId", String(kelompokId));
+    formData.set("memberId", String(member.id));
+    formData.set("tampilPublik", member.tampilPublik ? "0" : "1");
+
+    startToggle(async () => {
+      const state = await setAnggotaPublikAction(idleActionState, formData);
+      if (state.status === "success") {
+        toast.success(state.message);
+        onChanged();
+      } else if (state.status === "error") {
+        toast.error(state.message);
+      }
+    });
+  }
 
   function handleRemove() {
     const formData = new FormData();
@@ -79,19 +97,6 @@ function AnggotaRow({
       const state = await removeAnggotaAction(idleActionState, formData);
       if (state.status === "success") {
         toast.success(state.message);
-        onChanged();
-      } else if (state.status === "error") {
-        toast.error(state.message);
-      }
-    });
-  }
-
-  function handleTogglePublik() {
-    startTransition(async () => {
-      const state = await setAnggotaPublikAction(kelompokId, member.id, !member.tampilPublik);
-      if (state.status === "success") {
-        toast.success(state.message);
-        onChanged();
       } else if (state.status === "error") {
         toast.error(state.message);
       }
@@ -110,35 +115,45 @@ function AnggotaRow({
         </Badge>
       </TableCell>
       <TableCell>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleTogglePublik}
-          disabled={isPending}
-          aria-pressed={member.tampilPublik}
-          aria-label={
-            member.tampilPublik
-              ? `Sembunyikan ${member.name} dari situs publik`
-              : `Tampilkan ${member.name} di situs publik`
-          }
-        >
-          {member.tampilPublik ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-          {member.tampilPublik ? "Tampil" : "Sembunyi"}
-        </Button>
+        <Badge variant={member.tampilPublik ? "outline" : "secondary"} className="text-xs">
+          {member.tampilPublik ? "Tampil" : "Tersembunyi"}
+        </Badge>
       </TableCell>
       <TableCell className="text-right">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={handleRemove}
-          disabled={isPending}
-          aria-label={`Keluarkan ${member.name}`}
-        >
-          {isPending ? <Loader2 className="animate-spin" /> : <UserMinus className="size-4" />}
-          Keluarkan
-        </Button>
+        <div className="flex justify-end gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleTogglePublic}
+            disabled={isToggling}
+            aria-label={
+              member.tampilPublik
+                ? `Sembunyikan ${member.name} dari situs publik`
+                : `Tampilkan ${member.name} di situs publik`
+            }
+          >
+            {isToggling ? (
+              <Loader2 className="animate-spin" />
+            ) : member.tampilPublik ? (
+              <EyeOff className="size-4" />
+            ) : (
+              <Eye className="size-4" />
+            )}
+            {member.tampilPublik ? "Sembunyikan" : "Tampilkan"}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleRemove}
+            disabled={isPending}
+            aria-label={`Keluarkan ${member.name}`}
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : <UserMinus className="size-4" />}
+            Keluarkan
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -265,8 +280,6 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
     };
   }, [kelompok.id, reloadKey]);
 
-  const muatUlang = () => setReloadKey((key) => key + 1);
-
   if (state.status === "loading") {
     return (
       <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
@@ -287,11 +300,6 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
 
   return (
     <div className="space-y-4">
-      <p className="text-xs text-muted-foreground">
-        Anggota hanya tampil di situs publik bila ditandai “Tampil”. NIK tidak pernah
-        dipublikasikan.
-      </p>
-
       {state.members.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">
           Belum ada anggota pada kelompok ini.
@@ -302,10 +310,10 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Nama</TableHead>
-                <TableHead className="w-44">NIK</TableHead>
-                <TableHead className="w-32">Jabatan</TableHead>
+                <TableHead className="w-40">NIK</TableHead>
+                <TableHead className="w-28">Jabatan</TableHead>
                 <TableHead className="w-28">Publik</TableHead>
-                <TableHead className="w-32 text-right">Aksi</TableHead>
+                <TableHead className="w-64 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -314,7 +322,7 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
                   key={member.id}
                   kelompokId={kelompok.id}
                   member={member}
-                  onChanged={muatUlang}
+                  onChanged={() => setReloadKey((key) => key + 1)}
                 />
               ))}
             </TableBody>
@@ -322,7 +330,11 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
         </div>
       )}
 
-      <AddForm kelompokId={kelompok.id} kandidat={state.kandidat} onAdded={muatUlang} />
+      <AddForm
+        kelompokId={kelompok.id}
+        kandidat={state.kandidat}
+        onAdded={() => setReloadKey((key) => key + 1)}
+      />
     </div>
   );
 }

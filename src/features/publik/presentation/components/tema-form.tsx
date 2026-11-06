@@ -1,7 +1,7 @@
 "use client";
 
-import { Loader2, Palette, Plus, Trash2 } from "lucide-react";
-import { useActionState, useState } from "react";
+import { Loader2, Palette } from "lucide-react";
+import { useActionState } from "react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,8 @@ import {
   FONT_CHOICES,
   FONT_LABELS,
   HEADER_VARIANTS,
-  SOCIAL_PLATFORM_LABELS,
-  SOCIAL_PLATFORMS,
-  type SocialPlatform,
-  type SosmedItem,
+  SOSMED_LABELS,
+  SOSMED_PLATFORMS,
 } from "@/features/publik/domain/theme";
 import { idleActionState } from "@/lib/action-state";
 
@@ -56,25 +54,6 @@ export function TemaForm({
 }) {
   const [state, formAction, pending] = useActionState(simpanTemaAction, idleActionState);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
-  const [sosmed, setSosmed] = useState<SosmedItem[]>(() =>
-    nilai.sosmed.map((item) => ({ ...item })),
-  );
-
-  function ubahSosmed(index: number, patch: Partial<SosmedItem>) {
-    setSosmed((sebelumnya) =>
-      sebelumnya.map((item, i) => (i === index ? { ...item, ...patch } : item)),
-    );
-  }
-
-  function hapusSosmed(index: number) {
-    setSosmed((sebelumnya) => sebelumnya.filter((_, i) => i !== index));
-  }
-
-  function tambahSosmed() {
-    setSosmed((sebelumnya) =>
-      sebelumnya.length >= 10 ? sebelumnya : [...sebelumnya, { platform: "facebook", url: "" }],
-    );
-  }
 
   return (
     <Card>
@@ -233,93 +212,6 @@ export function TemaForm({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="teksBerjalan">Teks berjalan</Label>
-            <Input
-              id="teksBerjalan"
-              name="teksBerjalan"
-              defaultValue={nilai.teksBerjalan}
-              maxLength={240}
-              placeholder="Contoh: Selamat datang di situs resmi desa"
-              disabled={!canManage}
-            />
-            <p className="text-xs text-muted-foreground">
-              Tampil bergerak di bawah header situs publik. Kosongkan untuk menyembunyikannya.
-            </p>
-            <FieldError messages={fieldErrors?.teksBerjalan} />
-          </div>
-
-          <fieldset className="space-y-3">
-            <legend className="text-sm font-medium">Sosial media</legend>
-            <p className="text-xs text-muted-foreground">
-              Tautan tampil di footer situs publik. Maksimal 10 tautan dengan alamat http/https.
-            </p>
-
-            {sosmed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Belum ada tautan sosial media.</p>
-            ) : (
-              <div className="space-y-2">
-                {sosmed.map((item, index) => (
-                  <div key={index} className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <Select
-                      name="sosmedPlatform"
-                      value={item.platform}
-                      onValueChange={(value) =>
-                        ubahSosmed(index, { platform: value as SocialPlatform })
-                      }
-                      disabled={!canManage}
-                    >
-                      <SelectTrigger
-                        className="sm:w-44"
-                        aria-label={`Platform sosial media ${index + 1}`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SOCIAL_PLATFORMS.map((platform) => (
-                          <SelectItem key={platform} value={platform}>
-                            {SOCIAL_PLATFORM_LABELS[platform]}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      name="sosmedUrl"
-                      value={item.url}
-                      onChange={(event) => ubahSosmed(index, { url: event.target.value })}
-                      placeholder="https://instagram.com/desa"
-                      aria-label={`Tautan sosial media ${index + 1}`}
-                      disabled={!canManage}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => hapusSosmed(index)}
-                      disabled={!canManage}
-                      aria-label={`Hapus sosial media ${index + 1}`}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={tambahSosmed}
-              disabled={!canManage || sosmed.length >= 10}
-            >
-              <Plus className="size-4" />
-              Tambah sosial media
-            </Button>
-            <FieldError messages={fieldErrors?.sosmed} />
-          </fieldset>
-
           <fieldset className="space-y-3">
             <legend className="text-sm font-medium">Bagian beranda</legend>
             <p className="text-xs text-muted-foreground">
@@ -364,6 +256,50 @@ export function TemaForm({
               Tampilkan blok kontak di footer
             </label>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="teksBerjalan">Teks berjalan</Label>
+            <textarea
+              id="teksBerjalan"
+              name="teksBerjalan"
+              rows={2}
+              maxLength={300}
+              defaultValue={nilai.teksBerjalan}
+              placeholder="Contoh: Pelayanan kantor desa Senin–Jumat, 08.00–15.00 WIB."
+              disabled={!canManage}
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              Tampil sebagai bilah informasi di bawah header. Kosongkan untuk menyembunyikan.
+            </p>
+            <FieldError messages={fieldErrors?.teksBerjalan} />
+          </div>
+
+          <fieldset className="space-y-3">
+            <legend className="text-sm font-medium">Sosial media</legend>
+            <p className="text-xs text-muted-foreground">
+              Tautan yang diisi tampil sebagai ikon teks di footer situs publik.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {SOSMED_PLATFORMS.map((platform) => (
+                <div key={platform} className="space-y-2">
+                  <Label htmlFor={`sosmed_${platform}`}>{SOSMED_LABELS[platform]}</Label>
+                  <Input
+                    id={`sosmed_${platform}`}
+                    name={`sosmed_${platform}`}
+                    type="url"
+                    inputMode="url"
+                    defaultValue={
+                      nilai.sosmed.find((item) => item.platform === platform)?.url ?? ""
+                    }
+                    placeholder="https://"
+                    disabled={!canManage}
+                  />
+                  <FieldError messages={fieldErrors?.[`sosmed_${platform}`]} />
+                </div>
+              ))}
+            </div>
+          </fieldset>
 
           {canManage ? (
             <Button type="submit" disabled={pending}>

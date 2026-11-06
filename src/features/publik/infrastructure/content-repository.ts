@@ -447,6 +447,8 @@ export interface CariDokumenPublikFilter {
   search: string;
   category: DokumenKategoriFilter;
   year?: number;
+  /** Jenis produk hukum (OS-WEB-005); kosong berarti semua jenis. */
+  jenis?: string;
   page: number;
 }
 
@@ -468,6 +470,9 @@ export async function cariDokumenPublik(
   }
   if (filter.year !== undefined) {
     conditions.push(eq(dokumenPublik.tahun, filter.year));
+  }
+  if (filter.jenis) {
+    conditions.push(eq(dokumenPublik.jenis, filter.jenis));
   }
   const query = filter.search.trim().slice(0, 100);
   if (query) {
@@ -513,6 +518,25 @@ export async function cariDokumenPublik(
     page,
     pageSize: DOKUMEN_PAGE_SIZE,
   };
+}
+
+/**
+ * Baris ringkas (tahun + jenis) seluruh dokumen aktif untuk navigasi arsip
+ * publik (OS-WEB-005). Pengelompokan dilakukan di domain agar dapat diuji.
+ */
+export async function listArsipDokumen(
+  villageId: number,
+  category: DokumenKategoriFilter,
+): Promise<{ tahun: number | null; jenis: string | null }[]> {
+  const conditions = [eq(dokumenPublik.villageId, villageId), eq(dokumenPublik.aktif, true)];
+  if (category !== "semua") {
+    conditions.push(eq(dokumenPublik.kategori, category));
+  }
+
+  return db
+    .select({ tahun: dokumenPublik.tahun, jenis: dokumenPublik.jenis })
+    .from(dokumenPublik)
+    .where(and(...conditions));
 }
 
 /** Cek slug dokumen unik per desa (kecuali baris yang sedang diubah). */
