@@ -290,8 +290,8 @@ kredensial Resend/WhatsApp/BSrE tersedia; adapter dibangun + diuji dengan server
 tiruan.
 
 **Status pelaksanaan gelombang:** Gelombang A tuntas non-E2E — `OS-OPS-002`,
-`OS-OPS-003`, `OS-OPS-004`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
-`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID Gelombang A
+`OS-OPS-003`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
+`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-004` **belum tuntas** (UI aktivasi TOTP belum dipasang), `OS-OPS-009` di luar scope. Sisa seluruh ID Gelombang A
 adalah E2E. Gelombang B berjalan non-E2E:
 
 - `OS-WEB-012` — suplemen publik (`/desa/suplemen` + detail).
