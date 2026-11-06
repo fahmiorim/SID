@@ -1175,13 +1175,17 @@ Aktivasi penuh setelah single-tenant stabil.
 
 **Progres 7 Nov 2026:** dashboard dan provisioning dasar tersedia di
 `/super-admin` (`features/multi-desa/{domain,infrastructure,application,presentation}`).
-Desa baru mendapat role, menu, RBAC, tema, menu publik, katalog surat, dan akun
-admin; provisioning diuji pada DB dev (buat → verifikasi → bersihkan). Isolasi
-host multi-desa (domain utama + alias + wildcard `<slug>.<base>`, penolakan host
-tak dikenal) diuji pada lapisan data lewat
-`features/multi-desa/isolasi-host.integration.test.ts`. Yang belum:
-`villages.active` (nonaktifkan/arsip), UI pengelolaan alias domain, kuota,
-penugasan domain kustom + TLS, dan uji isolasi lintas desa berdomain.
+Desa baru mendapat role, menu, RBAC, tema, menu publik, katalog surat, akun admin,
+serta salinan `bumindes_buku` dan `inventaris_kategori`; provisioning diuji pada DB dev
+(buat → verifikasi → bersihkan). Isolasi host multi-desa (domain utama + alias +
+wildcard `<slug>.<base>`, penolakan host tak dikenal) diuji pada lapisan data lewat
+`features/multi-desa/isolasi-host.integration.test.ts`. Status desa (`villages.active`)
+dan kuota media (`kuotaMediaMb`) sudah tersedia di skema + migrasi 0093, UI kelola
+dashboard (status, domain alias, kuota, reset admin) sudah terpasang di
+`KelolaDesaToolbar`, serta penegakan kuota media berjalan di
+`simpanUnggahanMedia*`. Desa nonaktif disingkirkan dari resolver host dan akun stafnya
+kehilangan akses. Yang belum: domain kustom + TLS, serta uji isolasi lintas desa
+berdomain.
 
 **Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
 admin desa, tema, dan situs publik yang langsung hidup.
