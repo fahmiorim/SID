@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { UbahPinForm } from "@/features/warga/presentation/components/ubah-pin-form";
 import { verifyWargaSession } from "@/lib/dal";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Ubah PIN" };
 
 export default async function UbahPinWargaPage() {

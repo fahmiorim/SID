@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { SOCIAL_PLATFORM_LABELS, type SosmedItem } from "@/features/publik/domain/theme";
+import { SOSMED_LABELS, type SosmedLink } from "@/features/publik/domain/theme";
 import { sanitasiHtml } from "@/lib/sanitize";
 
 /**
@@ -166,7 +166,7 @@ export function TemaTeksBerjalan({ teks }: { teks: string }) {
 }
 
 /** Daftar tautan sosial media untuk footer tema. */
-export function TemaSosmed({ items }: { items: readonly SosmedItem[] }) {
+export function TemaSosmed({ items }: { items: readonly SosmedLink[] }) {
   if (items.length === 0) return null;
 
   return (
@@ -179,7 +179,7 @@ export function TemaSosmed({ items }: { items: readonly SosmedItem[] }) {
           rel="noopener noreferrer nofollow"
           className="underline-offset-4 hover:underline"
         >
-          {SOCIAL_PLATFORM_LABELS[item.platform]}
+          {SOSMED_LABELS[item.platform]}
         </a>
       ))}
     </div>

@@ -4,6 +4,7 @@ import {
   ringkasAnggotaPublik,
   type KelompokAnggotaPublik,
   type KelompokListRow,
+  type KelompokTipe,
 } from "@/features/kelompok/domain/kelompok";
 import {
   listKelompokAnggotaPublik,
@@ -22,13 +23,19 @@ export interface KelompokPublikRow extends KelompokListRow {
  * tetap dibatasi `villageId` dari host. Jumlah anggota, ketua, dan rincian
  * anggota hanya berasal dari keanggotaan berstatus `tampil_publik`, sehingga
  * operator dapat menyembunyikan anggota tertentu tanpa memengaruhi panel admin.
+ *
+ * `tipe` opsional menyaring kelompok/lembaga; halaman publik memakainya lewat
+ * tautan `/desa/kelompok?tipe=lembaga` (OS-WEB-003).
  */
-export async function listKelompokPublik(villageId: number): Promise<KelompokPublikRow[]> {
+export async function listKelompokPublik(
+  villageId: number,
+  tipe: KelompokTipe | null = null,
+): Promise<KelompokPublikRow[]> {
   const [result, anggotaPerKelompok] = await Promise.all([
     listKelompokRows({
       villageId,
       search: "",
-      tipe: "",
+      tipe: tipe ?? "",
       categoryId: null,
       page: 1,
       pageSize: 500,

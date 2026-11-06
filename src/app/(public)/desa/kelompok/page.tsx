@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 
-import {
-  listAnggotaKelompokPublik,
-  listKelompokPublik,
-} from "@/features/kelompok/application/publik-use-cases";
-import { kelompokkanAnggotaPublik } from "@/features/kelompok/domain/anggota-publik";
+import { listKelompokPublik } from "@/features/kelompok/application/publik-use-cases";
 import { isKelompokTipe, type KelompokTipe } from "@/features/kelompok/domain/kelompok";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
@@ -28,10 +24,7 @@ export default async function KelompokPublikPage({
   const tipe: KelompokTipe | null = isKelompokTipe(tipeParam) ? tipeParam : null;
 
   const { ctx, tema, desa } = await siapkanTema();
-  const [rows, anggotaRows] = await Promise.all([
-    listKelompokPublik(desa.id, tipe ?? ""),
-    listAnggotaKelompokPublik(desa.id, tipe ?? ""),
-  ]);
+  const rows = await listKelompokPublik(desa.id, tipe);
   const Kelompok = tema.kelompok;
 
   const kelompok = rows.map((row) => ({
@@ -51,12 +44,5 @@ export default async function KelompokPublikPage({
     })),
   }));
 
-  return (
-    <Kelompok
-      ctx={ctx}
-      kelompok={kelompok}
-      tipeAktif={tipe}
-      anggota={kelompokkanAnggotaPublik(anggotaRows)}
-    />
-  );
+  return <Kelompok ctx={ctx} kelompok={kelompok} />;
 }

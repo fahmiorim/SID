@@ -15,6 +15,8 @@ import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { verifySession } from "@/lib/dal";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Pesan Warga" };
 
 export default async function PesanWargaAdminPage({

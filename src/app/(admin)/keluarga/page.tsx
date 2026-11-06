@@ -22,6 +22,8 @@ import { KeluargaRowActions } from "@/features/keluarga/presentation/components/
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Kartu Keluarga",
 };

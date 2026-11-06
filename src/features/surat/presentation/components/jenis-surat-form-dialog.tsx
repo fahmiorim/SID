@@ -1,3 +1,5 @@
+"use client";
+
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useActionState, useEffect } from "react";
 import { toast } from "sonner";

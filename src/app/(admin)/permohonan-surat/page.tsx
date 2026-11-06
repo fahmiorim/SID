@@ -23,6 +23,8 @@ import {
 import { getLayananMandiriData } from "@/features/layanan-mandiri/presentation/actions";
 import { PermohonanDetailButton } from "@/features/layanan-mandiri/presentation/components/permohonan-detail-button";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = { title: "Permohonan Surat" };
 
 function badgeVariant(status: number): "default" | "secondary" | "outline" | "destructive" {
