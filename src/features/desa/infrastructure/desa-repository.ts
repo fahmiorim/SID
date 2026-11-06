@@ -107,11 +107,12 @@ export async function getIdentitasDesa(villageId: number): Promise<IdentitasDesa
   return row ?? null;
 }
 
-/** Id desa pertama. Hanya untuk fallback mode satu-desa/administrasi. */
+/** Id desa aktif pertama. Hanya untuk fallback mode satu-desa/administrasi. */
 export async function getFirstVillageId(): Promise<number | null> {
   const [row] = await db
     .select({ id: villages.id })
     .from(villages)
+    .where(eq(villages.active, true))
     .orderBy(asc(villages.id))
     .limit(1);
   return row?.id ?? null;
@@ -123,16 +124,21 @@ export async function getFirstVillageId(): Promise<number | null> {
  * Satu desa dapat muncul beberapa kali (satu baris per alias). `villages.domain`
  * tetap disertakan sebagai cermin domain utama agar instalasi lama tetap
  * ter-resolve meski baris `village_domains` belum lengkap.
+ *
+ * Desa nonaktif tidak dipetakan dari host mana pun.
  */
 export async function listVillageDomains(): Promise<BarisDesa[]> {
   const [desa, alias] = await Promise.all([
     db
       .select({ id: villages.id, domain: villages.domain, slug: villages.slug })
       .from(villages)
+      .where(eq(villages.active, true))
       .orderBy(asc(villages.id)),
     db
       .select({ villageId: villageDomains.villageId, domain: villageDomains.domain })
-      .from(villageDomains),
+      .from(villageDomains)
+      .innerJoin(villages, eq(villageDomains.villageId, villages.id))
+      .where(eq(villages.active, true)),
   ]);
 
   const slugPerDesa = new Map(desa.map((baris) => [baris.id, baris.slug]));

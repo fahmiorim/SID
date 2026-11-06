@@ -8,6 +8,7 @@ import {
   isSuperAdminUser,
 } from "@/features/multi-desa/application/provisioning-use-cases";
 import { DesaBaruForm } from "@/features/multi-desa/presentation/components/desa-baru-form";
+import { KelolaDesaToolbar } from "@/features/multi-desa/presentation/components/kelola-desa-toolbar";
 import { verifySession } from "@/lib/dal";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export default async function SuperAdminDashboard() {
   const totalPengguna = desa.reduce((jumlah, item) => jumlah + item.pengguna, 0);
   const totalPenduduk = desa.reduce((jumlah, item) => jumlah + item.penduduk, 0);
   const berdomain = desa.filter((item) => item.domain !== null).length;
+  const nonaktif = desa.filter((item) => !item.active).length;
 
   return (
     <div className="space-y-6">
@@ -41,12 +43,12 @@ export default async function SuperAdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold">Super Admin — Multi-Desa</h1>
           <p className="text-sm text-muted-foreground">
-            Kelola desa, domain publik, dan akun administrator desa.
+            Kelola desa, domain publik, status, kuota media, dan akun administrator desa.
           </p>
         </div>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
@@ -87,6 +89,16 @@ export default async function SuperAdminDashboard() {
             <p className="text-2xl font-bold tabular-nums">{totalPenduduk}</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Users className="size-4" /> Diarsipkan
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold tabular-nums">{nonaktif}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -100,10 +112,13 @@ export default async function SuperAdminDashboard() {
                 <th className="py-2 pr-4 font-medium">Desa</th>
                 <th className="py-2 pr-4 font-medium">Kode</th>
                 <th className="py-2 pr-4 font-medium">Domain</th>
+                <th className="py-2 pr-4 font-medium">Status</th>
+                <th className="py-2 pr-4 font-medium">Kuota media</th>
                 <th className="py-2 pr-4 font-medium">Tema</th>
                 <th className="py-2 pr-4 text-right font-medium">Pengguna</th>
                 <th className="py-2 pr-4 text-right font-medium">Penduduk</th>
                 <th className="py-2 text-right font-medium">Jenis surat</th>
+                <th className="py-2 font-medium">Kelola</th>
               </tr>
             </thead>
             <tbody>
@@ -112,10 +127,21 @@ export default async function SuperAdminDashboard() {
                   <td className="py-2 pr-4 font-medium">{item.name ?? "—"}</td>
                   <td className="py-2 pr-4 tabular-nums">{item.code ?? "—"}</td>
                   <td className="py-2 pr-4">{item.domain ?? "belum dipetakan"}</td>
+                  <td className="py-2 pr-4">
+                    <span className={item.active ? "text-emerald-600" : "text-amber-600"}>
+                      {item.active ? "Aktif" : "Diarsipkan"}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-4 tabular-nums">
+                    {item.kuotaMediaMb === null ? "tanpa batas" : `${item.kuotaMediaMb} MB`}
+                  </td>
                   <td className="py-2 pr-4">{item.tema ?? "—"}</td>
                   <td className="py-2 pr-4 text-right tabular-nums">{item.pengguna}</td>
                   <td className="py-2 pr-4 text-right tabular-nums">{item.penduduk}</td>
                   <td className="py-2 text-right tabular-nums">{item.jenisSurat}</td>
+                  <td className="py-2">
+                    <KelolaDesaToolbar desa={item} />
+                  </td>
                 </tr>
               ))}
             </tbody>

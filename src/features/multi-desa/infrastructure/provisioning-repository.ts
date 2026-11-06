@@ -7,6 +7,8 @@ import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   accounts,
+  bumindesBuku,
+  inventarisKategori,
   letterClassifications,
   letterRequirements,
   letterTypes,
@@ -28,6 +30,8 @@ export interface DesaSuperAdminRow {
   name: string | null;
   code: string | null;
   domain: string | null;
+  active: boolean;
+  kuotaMediaMb: number | null;
   tema: string | null;
   pengguna: number;
   penduduk: number;
@@ -43,6 +47,8 @@ export async function listDesaSuperAdmin(): Promise<DesaSuperAdminRow[]> {
       name: villages.name,
       code: villages.code,
       domain: villages.domain,
+      active: villages.active,
+      kuotaMediaMb: villages.kuotaMediaMb,
       createdAt: villages.createdAt,
       tema: sql<string | null>`(
         SELECT t.slug FROM theme t
@@ -160,6 +166,8 @@ export async function provisionDesa(input: DesaBaruInput): Promise<{ id: number 
           province: opsional(input.province),
           headName: opsional(input.headName),
           email: input.adminEmail,
+          active: true,
+          kuotaMediaMb: input.kuotaMediaMb ?? null,
         })
         .$returningId(),
     );
@@ -399,7 +407,35 @@ export async function provisionDesa(input: DesaBaruInput): Promise<{ id: number 
       });
     }
 
-    // 7. Akun administrator desa baru.
+    // 7. Buku register bumindes & kategori inventaris (fondasi data master).
+    const bukuSumber = await tx
+      .select({
+        kodeBuku: bumindesBuku.kodeBuku,
+        namaBuku: bumindesBuku.namaBuku,
+        uraian: bumindesBuku.uraian,
+      })
+      .from(bumindesBuku)
+      .where(eq(bumindesBuku.villageId, sumber.id));
+    if (bukuSumber.length > 0) {
+      await tx.insert(bumindesBuku).values(bukuSumber.map((buku) => ({ villageId, ...buku })));
+    }
+
+    const kategoriSumber = await tx
+      .select({
+        kode: inventarisKategori.kode,
+        nama: inventarisKategori.nama,
+        golongan: inventarisKategori.golongan,
+        keterangan: inventarisKategori.keterangan,
+      })
+      .from(inventarisKategori)
+      .where(eq(inventarisKategori.villageId, sumber.id));
+    if (kategoriSumber.length > 0) {
+      await tx
+        .insert(inventarisKategori)
+        .values(kategoriSumber.map((kategori) => ({ villageId, ...kategori })));
+    }
+
+    // 8. Akun administrator desa baru.
     const adminRoleId = roleIdPerSlug.get("administrator");
     if (adminRoleId === undefined)
       throw conflict("Role administrator tidak ditemukan pada desa sumber.");

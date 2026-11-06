@@ -652,6 +652,13 @@
       "when": 1794435880000,
       "tag": "0092_create_village_domains",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "5",
+      "when": 1793996588548,
+      "tag": "0093_village_status_dan_kuota_media",
+      "breakpoints": true
     }
   ]
 }

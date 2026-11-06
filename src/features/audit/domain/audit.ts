@@ -40,6 +40,11 @@ export const AUDIT_EVENTS = {
   suratKeluarDelete: "surat-keluar.delete",
   totpAktifkan: "totp.aktifkan",
   totpNonaktifkan: "totp.nonaktifkan",
+  desaCreate: "desa.create",
+  desaStatus: "desa.status",
+  desaDomain: "desa.domain",
+  desaKuota: "desa.kuota",
+  desaAdminReset: "desa.admin.reset",
 } as const;
 
 export type AuditEvent = (typeof AUDIT_EVENTS)[keyof typeof AUDIT_EVENTS];
@@ -86,6 +91,11 @@ export const AUDIT_EVENT_LABELS: Record<AuditEvent, string> = {
   [AUDIT_EVENTS.suratKeluarDelete]: "Hapus surat keluar",
   [AUDIT_EVENTS.totpAktifkan]: "Aktifkan TOTP",
   [AUDIT_EVENTS.totpNonaktifkan]: "Nonaktifkan TOTP",
+  [AUDIT_EVENTS.desaCreate]: "Buat desa baru",
+  [AUDIT_EVENTS.desaStatus]: "Ubah status desa",
+  [AUDIT_EVENTS.desaDomain]: "Ubah domain desa",
+  [AUDIT_EVENTS.desaKuota]: "Ubah kuota media desa",
+  [AUDIT_EVENTS.desaAdminReset]: "Reset akses admin desa",
 };
 
 export interface AuditEventInput {

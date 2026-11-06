@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { users, villages } from "@/db/schema";
 import {
   computeEffectivePermissions,
   hasPermission,
@@ -66,12 +66,19 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       active: users.active,
       residentId: users.residentId,
       mustChangePin: users.mustChangePin,
+      villageActive: villages.active,
+      villageId: users.villageId,
     })
     .from(users)
+    .leftJoin(villages, eq(users.villageId, villages.id))
     .where(eq(users.id, user.id))
     .limit(1);
 
   if (!account?.active) return null;
+
+  // Desa nonaktif (arsip lunak) memblokir seluruh akun staf & warga miliknya.
+  // Super admin (villageId null) tetap bisa masuk untuk mengelola desa.
+  if (account.villageId !== null && account.villageActive !== true) return null;
 
   const permissions = await computeEffectivePermissions(
     // `roleId`/`villageId` berasal dari additionalFields better-auth.

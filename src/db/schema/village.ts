@@ -55,6 +55,18 @@ export const villages = mysqlTable("villages", {
    */
   domain: varchar("domain", { length: 255 }).unique(),
 
+  /**
+   * Status operasional desa. Desa nonaktif tidak dipetakan dari host mana pun
+   * dan akun stafnya kehilangan akses; datanya tetap disimpan (arsip lunak).
+   */
+  active: boolean("active").notNull().default(true),
+
+  /**
+   * Kuota penyimpanan media dalam MB untuk desa ini. `NULL` = tanpa batas.
+   * Ditegakkan saat unggah media (`simpanUnggahanMedia*`).
+   */
+  kuotaMediaMb: int("kuota_media_mb"),
+
   /** Nama kepala desa. */
   headName: varchar("head_name", { length: 100 }),
   /** NIP kepala desa. */

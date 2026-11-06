@@ -1,8 +1,11 @@
 import "server-only";
 
-import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 
+import { db } from "@/db";
+import { villages } from "@/db/schema";
 import {
   namaBerkasAman,
   validasiMedia,
@@ -103,10 +106,64 @@ export interface HasilSimpanMedia {
   mime: string;
 }
 
+/** Total ukuran seluruh berkas media satu desa (byte). */
+export async function hitungUkuranMedia(villageId: number): Promise<number> {
+  const akar = path.join(AKAR_PENYIMPANAN, String(villageId));
+  try {
+    return await hitungUkuranDirektori(akar);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return 0;
+    throw error;
+  }
+}
+
+async function hitungUkuranDirektori(direktori: string): Promise<number> {
+  const entri = await readdir(direktori, { withFileTypes: true });
+  let total = 0;
+
+  for (const item of entri) {
+    const penuh = path.join(direktori, item.name);
+    if (item.isDirectory()) {
+      total += await hitungUkuranDirektori(penuh);
+    } else if (item.isFile()) {
+      total += (await stat(penuh)).size;
+    }
+  }
+
+  return total;
+}
+
+/**
+ * Pastikan penambahan berkas tidak melewati kuota media desa.
+ *
+ * `villages.kuota_media_mb` bernilai `NULL` berarti tanpa batas (instalasi
+ * lama tetap berperilaku seperti sebelumnya). Penggunaan dihitung dari disk
+ * agar berkas yang dihapus manual tidak terus dihitung.
+ */
+export async function pastikanKuotaMedia(villageId: number, tambahanByte: number): Promise<void> {
+  const [desa] = await db
+    .select({ kuotaMediaMb: villages.kuotaMediaMb })
+    .from(villages)
+    .where(eq(villages.id, villageId))
+    .limit(1);
+
+  const kuotaMb = desa?.kuotaMediaMb ?? null;
+  if (kuotaMb === null) return;
+
+  const batasByte = kuotaMb * 1024 * 1024;
+  const terpakai = await hitungUkuranMedia(villageId);
+  if (terpakai + tambahanByte > batasByte) {
+    throw new Error(
+      `Kuota media desa (${kuotaMb} MB) terlampaui. Hapus berkas lama atau minta super admin menaikkan kuota.`,
+    );
+  }
+}
+
 /**
  * Validasi lalu simpan berkas unggahan.
  *
- * @throws Error dengan pesan ramah-baca bila MIME/ukuran tidak sah.
+ * @throws Error dengan pesan ramah-baca bila MIME/ukuran tidak sah atau kuota
+ * media desa terlampaui.
  */
 export async function simpanUnggahanMedia(
   villageId: number,
@@ -115,6 +172,8 @@ export async function simpanUnggahanMedia(
 ): Promise<HasilSimpanMedia> {
   const validasi = validasiMedia(berkas.mime, berkas.ukuran);
   if (!validasi.ok) throw new Error(validasi.pesan);
+
+  await pastikanKuotaMedia(villageId, berkas.ukuran);
 
   const relatif = jalurRelatifMedia(
     villageId,
@@ -151,6 +210,8 @@ export async function simpanUnggahanMediaDenganPengaturan(
     : validasiMedia(berkas.mime, berkas.ukuran);
 
   if (!validasi.ok) throw new Error(validasi.pesan);
+
+  await pastikanKuotaMedia(villageId, berkas.ukuran);
 
   const relatif = jalurRelatifMedia(
     villageId,

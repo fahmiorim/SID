@@ -17,7 +17,11 @@ export function normalisasiDomain(nilai: string): string | null {
   return bersih.length === 0 ? null : bersih;
 }
 
-const POLA_DOMAIN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+export const POLA_DOMAIN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/;
+
+/** Batas kuota media: 1 MB s.d. 1 TB (nilai kosong = tanpa batas). */
+export const KUOTA_MEDIA_MIN_MB = 1;
+export const KUOTA_MEDIA_MAX_MB = 1024 * 1024;
 
 /**
  * Skema form pembuatan desa.
@@ -57,6 +61,16 @@ export const desaBaruSchema = z.object({
     .max(255)
     .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Format email tidak valid."),
   adminPassword: z.string().min(8, "Sandi minimal 8 karakter.").max(72),
+  /** Kuota media desa baru (MB); kosong = tanpa batas. */
+  kuotaMediaMb: z.preprocess(
+    (value) => (value === "" || value === null || value === undefined ? null : value),
+    z.coerce
+      .number()
+      .int("Kuota media harus bilangan bulat.")
+      .min(KUOTA_MEDIA_MIN_MB, `Kuota media minimal ${KUOTA_MEDIA_MIN_MB} MB.`)
+      .max(KUOTA_MEDIA_MAX_MB, `Kuota media maksimal ${KUOTA_MEDIA_MAX_MB} MB.`)
+      .nullable(),
+  ),
 });
 
 export type DesaBaruInput = z.infer<typeof desaBaruSchema>;
