@@ -379,6 +379,11 @@ slug resource RBAC-nya kini `permohonan-surat` (dulu `layanan-mandiri`).
   jangan mengandalkan `orderBy(id).limit(1)`; fallback hanya dipakai bila
   instalasi benar-benar satu desa atau untuk fallback admin. Bila ada >1 desa
   dan host tak dikenal → 404.
+- Domain publik disimpan di `village_domains` (satu desa boleh punya banyak
+  host: primary + alias); `villages.domain` hanya cermin domain utama.
+- Wildcard `<slug>.<DESA_BASE_DOMAIN>` memetakan label subdomain ke
+  `villages.slug`; exact/alias selalu menang. Label bertingkat (`a.b.desa.id`)
+  dan label tak dikenal tidak pernah memakai desa lain (multi-desa → 404).
 - Halaman publik: `villageId` berasal dari **host**.
 - Halaman admin/warga: `villageId` berasal dari **sesi** pengguna.
 - Setiap repository yang menyentuh data desa **wajib** menerima `villageId` dan

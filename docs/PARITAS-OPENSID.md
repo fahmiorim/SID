@@ -29,8 +29,8 @@ Legenda:
 ## Catatan Umum
 
 - Status hanya boleh diambil dari bukti nyata di kode (rute, UI, action/use-case, test). 
-- **Rute orphan**: modul yang sebelumnya orphan (`buku-tamu`, `arsip`, `kehadiran`, `lapak`, `pelanggan`, `anjungan`, `analisis`, `pemilihan`, `registrasi-warga`) kini terdaftar di `modules.ts`, resource RBAC, grant role, dan navigasi. Sisa halaman tanpa entri modul/navigasi: `/pengaturan/plugin`, `/pengaturan/notifikasi`, `/pengaturan/sinkronisasi`, dan `/docs-status` (halaman pengembangan). Dua yang pertama tetap dihitung lewat ID katalognya (`OS-OPS-008`, `OS-OPS-005`), sedangkan `/pengaturan/sinkronisasi` tidak lagi dihitung karena `OS-OPS-009` di luar scope (tidak memakai OpenDK); `/docs-status` tidak dipetakan ke katalog. `/persuratan/tte` kini modul `tte` dengan resource RBAC sendiri. Tidak satu pun dihitung sebagai modul operasional.
-- **Halaman status jujur**: `/pengaturan/notifikasi`, `/pengaturan/plugin`, dan `/pengaturan/sinkronisasi` kini menyatakan fiturnya belum tersedia dan tidak menampilkan data contoh. Pusat notifikasi, registri plugin, dan sinkronisasi pusat tetap belum diimplementasikan.
+- **Rute orphan**: modul yang sebelumnya orphan (`buku-tamu`, `arsip`, `kehadiran`, `lapak`, `pelanggan`, `anjungan`, `analisis`, `pemilihan`, `registrasi-warga`) kini terdaftar di `modules.ts`, resource RBAC, grant role, dan navigasi. `/pengaturan/notifikasi` dan `/pengaturan/plugin` kini juga modul operasional (`notifikasi`, `plugin`). Sisa halaman tanpa entri modul: `/pengaturan/lampiran` (ditautkan dari `/persuratan/surat`), `/pengaturan/sinkronisasi` (status-only karena `OS-OPS-009` di luar scope), dan `/docs-status` (halaman pengembangan, tidak dipetakan ke katalog). `/persuratan/tte` adalah modul `tte` dengan resource RBAC sendiri.
+- **Halaman status**: hanya `/pengaturan/sinkronisasi` yang tersisa sebagai halaman status (menjelaskan bahwa sinkronisasi pusat/OpenDK tidak dipakai, tanpa data contoh). `/pengaturan/notifikasi` dan `/pengaturan/plugin` sudah berisi data nyata melalui use case `daftarNotifikasiAdmin` dan `daftarPluginAdmin`.
 - **Halaman statis placeholder**: tidak ada lagi halaman publik berstatus placeholder untuk lapak; `/desa/lapak`, `/desa/pemilihan`, dan `/desa/registrasi-warga` memakai data/aksi nyata. Halaman IDM/SDGs juga memakai use case dan data nyata. Halaman publik IDM ada di `/desa/idm-sdgs` (kanonis); rute lama `/idm` dialihkan permanen ke sana, sedangkan `/desa/idm` adalah halaman admin.
 - **Tombol dan rute**: ekspor PDF statistik sudah punya rute nyata (`/statistik/penduduk/ekspor/pdf`, `/statistik/bantuan/ekspor/pdf`); yang tersisa adalah E2E-nya, bukan rutenya.
 - **Kedalaman bukti E2E**: sebagian E2E yang dirujuk hanya memuat halaman/URL (mis. kontak, backup database, IDM admin). Status ✅ tetap berarti UI+aksi+otorisasi+test tersedia, tetapi tidak menjamin setiap interaksi sudah diuji end-to-end; gap E2E dicatat per ID.
@@ -41,8 +41,8 @@ Legenda:
 
 
 | Scope | Total ID/modul | ✅ | 🟡 | 🔴 | ⚪ |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| **Katalog per-ID — register direkonsiliasi (6 Nov 2026)** | **113** | **37** | **74** | **0** | **2** |
+|---|---:|---:|---:|---:|---:|
+| **Katalog per-ID — register direkonsiliasi (7 Nov 2026)** | **113** | **37** | **74** | **0** | **2** |
 | Baseline kelompok lama (92 modul) — **historis, bukan status delivery** | 92 | 42 | 12 | 38 | — |
 
 Dari 111 ID dalam scope: **37 ✅ (33,3%)**, **74 🟡 (66,7%)**,
@@ -102,7 +102,7 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-GOV-003 | 🟡 Gap: E2E | Struktur jabatan + perangkat + publik `/desa/pemerintahan`. Bagan SOTK tersedia di tema esensi (`perangkat.tsx` + `susunBaganSotk`). |
 | OS-GOV-004 | 🟡 Sebagian | Lembaga via `kelompok` tipe `lembaga`: kategori, CRUD, anggota, jabatan, RBAC, publikasi. **Cetak via browser** tersedia di halaman daftar. **Laporan anggota terperinci** `/kelompok/laporan` (jabatan, NIK, nomor keanggotaan per kelompok) + ekspor CSV `/kelompok/ekspor`; domain `laporan-anggota.ts` + test. **Gap: E2E halaman laporan/ekspor belum ada.** E2E admin `/kelompok?tipe=lembaga`. |
 | OS-GOV-005 | 🟡 Sebagian | Kelompok masyarakat: kategori, CRUD, anggota, jabatan, publikasi. **Cetak via browser** tersedia di halaman daftar. **Laporan anggota terperinci** `/kelompok/laporan` (jabatan, NIK, nomor keanggotaan per kelompok) + ekspor CSV `/kelompok/ekspor`; domain `laporan-anggota.ts` + test. **Gap: E2E halaman laporan/ekspor belum ada.** Test `kelompok.test.ts`; E2E `/kelompok?tipe=kelompok`. |
-| OS-GOV-006 | 🟡 Sebagian | IDM/SDGs: admin `/desa/idm` dan `/desa/idm-sdgs`; publik `/desa/idm-sdgs` (kanonis), rute lama `/idm` dialihkan permanen ke sana. Use case dan rekap skor tersedia. Bukti: `src/features/idm/domain/idm.test.ts`, `tests/idm.e2e.ts` (CRUD admin; publik `/desa/idm-sdgs`), migrasi `0061_create_idm_sdgs.sql`. **Ekspor laporan** `/desa/idm/ekspor?tahun=` memuat rekap tiga dimensi, rincian indikator, dan capaian 18 tujuan SDGs (domain `laporan-idm.ts` + test). **Gap: E2E ekspor laporan belum ada.** |
+| OS-GOV-006 | 🟡 Sebagian | IDM/SDGs: admin `/desa/idm` dan `/desa/idm-sdgs`; publik `/desa/idm-sdgs` (kanonis), rute lama `/idm` dialihkan permanen ke sana. Use case dan rekap skor tersedia. Bukti: `src/features/idm/domain/idm.test.ts`, `tests/idm.e2e.ts` (CRUD admin; publik `/desa/idm-sdgs`), migrasi `0058_create_idm_sdgs.sql`. **Ekspor laporan** `/desa/idm/ekspor?tahun=` memuat rekap tiga dimensi, rincian indikator, dan capaian 18 tujuan SDGs (domain `laporan-idm.ts` + test). **Gap: E2E ekspor laporan belum ada.** |
 | OS-GOV-007 | 🟡 Sebagian | Admin `/pemerintahan/pemilihan` dengan CRUD pemilihan (tahun, jenis, tanggal, keterangan), otorisasi `pemilihan`, dan halaman publik `/desa/pemilihan`. **Kandidat & hasil** ditambahkan lewat tabel `pemilihan_kandidat` (nomor urut unik per pemilihan, keterangan, jumlah suara), CRUD berizin di dialog `/pemerintahan/pemilihan`, rekap suara + pemenang (domain `hitungRekapSuara` + test), dan tampilan kandidat/hasil di publik `/desa/pemilihan`. Jumlah daftar pemilih (DPT) ditampilkan dari modul DPT aktif. **Gap: E2E pemilihan.** |
 | OS-GOV-008 | ✅ Berfungsi penuh | Sinergi program `/desa/sinergi`: CRUD (tabel, form tambah/ubah, hapus), pencarian, RBAC `sinergi`, migrasi `sinergi_program`, ekspor CSV `/desa/sinergi/ekspor`. Publikasi tema `/desa/sinergi-program` (slot `sinergi` + menu Informasi Publik). Test `sinergi.test.ts`; E2E `tests/sinergi.e2e.ts` (muat, tambah/hapus, ekspor, publik tanpa sesi). |
 | OS-GOV-009 | 🟡 Sebagian | Pembangunan: CRUD proyek `/pembangunan`, detail + dokumentasi foto, publik `/desa/pembangunan` + detail + cetak, RBAC, test 13 case. **Buku pembangunan** `/pembangunan/buku` (rekap per tahun: jumlah proyek per status, total anggaran, progres rata-rata, rincian proyek, siap cetak) + ekspor CSV `/pembangunan/buku/ekspor` (domain `buku-pembangunan.ts` + 8 test). **Gap: E2E buku pembangunan belum ada.** |
@@ -123,9 +123,9 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 | OS-SUR-014 | ✅ Berfungsi penuh | Keamanan berkas: allowlist MIME, batas ukuran, sanitasi nama, proteksi path traversal, route media privat/publik, test `media.test.ts`/`media-nama.test.ts`. **Pengaturan lampiran terpusat di admin (`/pengaturan/lampiran` kategori "surat") dengan validasi MIME/ukuran/jumlah via DB; E2E membuktikan lampiran hanya bisa diunduh pemilik.** |
 | OS-FIN-001 | ✅ Berfungsi penuh | `/keuangan/anggaran`: struktur rekening, pagu, tahun, bidang, sumber dana, RBAC, cetak, E2E `keuangan.e2e.ts`. **Impor CSV/XLSX + unduh template XLSX** (`apbdes-import.ts`, `apbdes-import.test.ts`, `ApbdesImportDialog`, `ApbdesTemplateButton`) dan **laporan realisasi format resmi** `/keuangan/laporan/realisasi` (hierarki akun, JUMLAH, SURPLUS/(DEFISIT), PEMBIAYAAN NETTO, SiLPA) dengan domain `laporan-realisasi.ts` + 12 test. |
 | OS-FIN-002 | ✅ Berfungsi penuh | Laporan RP APBDes, realisasi per bidang, agregasi, grafik, CSV/Excel, print, E2E `keuangan.e2e.ts`. **Rincian realisasi resmi** `/keuangan/laporan/realisasi` + ekspor CSV `/keuangan/laporan/realisasi/ekspor`, mengikuti susunan laporan rujukan (akun → bidang → rincian, persentase pembiayaan dikosongkan). |
-| OS-FIN-003 | ✅ Berfungsi penuh | Realisasi, rekonsiliasi tahunan vs triwulan, saldo selisih, test + E2E. **Pembukuan manual kas** `/keuangan/pembukuan` (`pembukuan-use-cases.ts`, `pembukuan.test.ts`): CRUD transaksi pendapatan/belanja, saldo berjalan dari selisih, izin `update`/`delete`, scoping `villageId`. Saldo rekening koran bank tidak dicatat (di luar cakupan; dibandingkan lewat halaman rekonsiliasi). |
+| OS-FIN-003 | ✅ Berfungsi penuh | Realisasi, rekonsiliasi tahunan vs triwulan, saldo selisih, test + E2E. **Pembukuan manual kas** `/keuangan/pembukuan` (`pembukuan-use-cases.ts`, `pembukuan.test.ts`): CRUD transaksi pendapatan/belanja, saldo berjalan dari selisih, izin `update`/`delete`, scoping `villageId`. **Jurnal umum & saldo bank** `/keuangan/jurnal` (`jurnal-use-cases.ts`, `jurnal-repository.ts`, tabel `keuangan_jurnal` + `keuangan_saldo_bank`): CRUD mutasi debet/kredit per kode rekening, ringkasan total debet/kredit/saldo, dan saldo awal per rekening bank, izin `update`/`delete` + scoping `villageId`. Mutasi rekening koran (impor bank) tetap di luar cakupan dan dibandingkan lewat halaman rekonsiliasi. |
 | OS-FIN-004 | 🟡 Sebagian | Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, E2E. **Ditambah impor banyak dokumen sekaligus**: dialog unggah multi-PDF + metadata per berkas (judul, jenis, tahun, semester), validasi MIME PDF/ukuran ≤ 8 MB/keunikan periode di domain `laporan-dokumen-impor.ts` (test `laporan-dokumen-impor.test.ts`), use case `imporDokumenLaporan`, server action `imporDokumenLaporanAction`, disimpan ke media privat kategori laporan. **Gap: E2E impor belum ada.** |
-| OS-FIN-005 | ✅ Berfungsi penuh | SiLPA: CRUD `/keuangan/sisa-lebih`, RBAC `keuangan-sisa-lebih`, validasi domain, dan isolasi `villageId`. Test `sisa-lebih.test.ts` + `isolasi-village.integration.test.ts`. |
+| OS-FIN-005 | ✅ Berfungsi penuh | SiLPA: CRUD `/keuangan/sisa-lebih` (modul `keuangan-sisa-lebih`, menu grup Keuangan, tautan dari `/keuangan/anggaran`), RBAC (operator `manage`, sekdes/kades `read`), validasi domain, dan isolasi `villageId`. Test `sisa-lebih.test.ts` + `isolasi-village.integration.test.ts`. |
 | OS-FIN-006 | 🟡 Sebagian | Transparansi APBDes dan laporan triwulan publik memakai use case `getLaporanApbdesPublik()` / `getLaporanTriwulanPublik()` pada `/desa/apbdes`. **Ditambah dimensi periode (tahun + triwulan) pada keluaran publik**: `getLaporanApbdesPublik()` kini menyertakan ringkasan realisasi per triwulan (`ringkasRealisasiPeriode()`, test `laporan-triwulan.test.ts`) yang ditampilkan tema beserta filter tahun. Ditambah E2E `tests/publik-apbdes.e2e.ts` (lulus). **Gap: E2E periode publik bisa diperluas.** |
 | OS-FIN-007 | ✅ Berfungsi penuh | Inventaris enam kategori, kondisi, asal, lokasi, jumlah, nilai, CRUD, RBAC, E2E. **Ditambah laporan per kategori `/inventaris/laporan` (rekap unit + nilai, filter kategori, cetak `window.print`, ekspor CSV `/inventaris/laporan/ekspor`) dengan domain murni `rekapPerKategori`/`buildInventarisCsv` + test `laporan-inventaris.test.ts`.** |
 | OS-FIN-008 | ✅ Berfungsi penuh | Mutasi aset (pindah/rusak/hapus/perbaikan), approval operator → sekdes → kades, audit, E2E. **Ditambah neraca kekayaan aset `/inventaris/neraca` (total nilai per kategori + kondisi baik/rusak ringan/rusak berat, grand total, cetak) dengan domain murni `neracaAset` + test `laporan-inventaris.test.ts`.** |
@@ -190,13 +190,14 @@ tidak boleh dianggap menutup semua ID di dalamnya.
 **Catatan lintas-ID (direkonsiliasi 5 Nov 2026):**
 - Register ini mencakup seluruh 113 ID katalog tepat satu kali; ringkasan domain
   dihitung langsung dari status per-ID di atas.
-- Implementasi IDM/SDGs sudah tersedia pada admin dan situs publik, dengan unit
-  test domain dan alur E2E di `tests/idm.e2e.ts`; status tetap 🟡 sampai keluaran
-  laporan dan isolasi lintas-tenant diuji lengkap.
+- Implementasi IDM/SDGs sudah tersedia pada admin dan situs publik, termasuk
+  ekspor laporan `/desa/idm/ekspor`, dengan unit test domain dan E2E
+  `tests/idm.e2e.ts`; status tetap 🟡 karena gap E2E (isolasi lintas-tenant
+  belum diuji browser).
 - `.github/workflows/ci.yml` menjalankan migrasi, seed, smoke HTTP, dan suite
   E2E browser pada build produksi; hasil E2E diunggah sebagai artefak.
-- Pembaruan 5 Nov 2026 (audit Batch 1–2): Batch 1 (Persuratan & TTE) hampir selesai non-E2E. `OS-SUR-001`/`002`/`008` (varian template/PDF), `OS-SUR-003` (validasi lampiran syarat warga via pengaturan kategori "permohonan"), `OS-SUR-009`/`010`/`012` (lampiran disposisi/ekspedisi), `OS-SUR-014` (pengaturan lampiran terpusat, kini tertaut dari `/persuratan/surat`), dan API eksternal dasar `OS-OPS-012` termasuk rate limit tersedia. Sisa non-E2E: `OS-OPS-012` (kontrak OpenAPI + endpoint tulis surat) dan `OS-SUR-013` (verifikasi provider BSrE nyata, bergantung kredensial). Gap E2E: `OS-SUR-011` (E2E-only) serta `OS-SUR-002`/`003`/`007`/`008` (E2E lanjutan).
-Angka resmi **37 ✅ / 74 🟡 / 0 🔴 / 2 ⚪**. Dua ID (`OS-POP-009`, `OS-OPS-009`) resmi di luar scope. Batch 2 bagian keuangan menaikkan `OS-FIN-001`, `OS-FIN-002`, dan `OS-FIN-003` ke ✅; sisa gap Batch 2 adalah E2E (`OS-FIN-004`, `OS-FIN-006`).
+- Pembaruan 5 Nov 2026 (audit Batch 1–2): Batch 1 (Persuratan & TTE) hampir selesai non-E2E. `OS-SUR-001`/`002`/`008` (varian template/PDF), `OS-SUR-003` (validasi lampiran syarat warga via pengaturan kategori "permohonan"), `OS-SUR-009`/`010`/`012` (lampiran disposisi/ekspedisi), `OS-SUR-014` (pengaturan lampiran terpusat, kini tertaut dari `/persuratan/surat`), dan API eksternal `OS-OPS-012` (OpenAPI 3.1 + endpoint tulis surat + rate limit) tersedia. Sisa non-E2E: hanya `OS-SUR-013` (verifikasi provider BSrE nyata, bergantung kredensial). Gap E2E: `OS-SUR-011` (E2E-only) serta `OS-SUR-002`/`003`/`007`/`008` (E2E lanjutan).
+Angka resmi **37 ✅ / 74 🟡 / 0 🔴 / 2 ⚪**. Dua ID (`OS-POP-009`, `OS-OPS-009`) resmi di luar scope. Batch 2 bagian keuangan menaikkan `OS-FIN-001`, `OS-FIN-002`, dan `OS-FIN-003` ke ✅; sisa Batch 2: E2E (`OS-FIN-004`, `OS-FIN-006`).
 
 ## Ringkasan modul per domain
 
@@ -206,16 +207,16 @@ Status rinci tetap mengacu register per-ID di atas.
 
 | Domain | ID | ✅ | 🟡 | 🔴 | Catatan utama |
 |---|---:|---:|---:|---:|---|
-| Kependudukan & sosial (OS-POP) | 15 | 9 | 5 | 0 | Sisa gap: impor DTKS, keluaran statistik/bantuan; 1 ID di luar scope. |
-| Wilayah, GIS & pertanahan (OS-WIL) | 8 | 1 | 7 | 0 | Polygon sudah dirender per layer di peta publik; admin pertanahan masih baca dan test GIS belum lengkap. |
+| Kependudukan & sosial (OS-POP) | 15 | 9 | 5 | 0 | Impor DTKS, kartu peserta, serta ekspor/PDF statistik & bantuan tersedia; sisa gap E2E; 1 ID di luar scope. |
+| Wilayah, GIS & pertanahan (OS-WIL) | 8 | 1 | 7 | 0 | CRUD area/garis/point/polygon/simbol, CRUD pertanahan, peta publik, dan cetak peta tersedia; sisa gap E2E. |
 | Persuratan (OS-SUR) | 14 | 4 | 10 | 0 | Alur inti berjalan; TTE operasional (provider BSrE), API eksternal dasar, arsip/permohonan diperluas. **Lampiran disposisi/ekspedisi, ekspedisi terpadu, pengaturan lampiran terpusat, validasi lampiran komprehensif, varian template/PDF (default/landscape/compact) selesai.** Sisa: E2E (`OS-SUR-011` E2E-only, lainnya 🟡 hanya gap E2E). |
-| Web publik (OS-WEB) | 19 | 2 | 17 | 0 | IDM/SDGs nyata; katalog lapak + pencarian/filter berjalan, sisa gap analisis hasil dan entitas pelapak. |
-| Layanan mandiri warga (OS-WGA) | 11 | 1 | 10 | 0 | Registrasi mandiri dan bantuan personal tersedia; lapak/kehadiran warga dan pesan dua arah belum. |
-| Analisis & survei (OS-ANA) | 6 | 0 | 6 | 0 | Survei, kategori, dan indikator tersedia; parameter, skoring, dan analisis formal belum lengkap. |
-| Modul tambahan (OS-MOD) | 5 | 1 | 4 | 0 | Buku tamu, anjungan, kehadiran, lapak, dan pelanggan punya CRUD; alur publik/kerja sama belum lengkap. |
-| Sistem & operasional (OS-OPS) | 12 | 2 | 10 | 0 | Audit log dan backup tersedia sebagian; API eksternal dasar ada, notifikasi/plugin/sinkronisasi belum lengkap. |
-| Pemerintahan & pemerintahan desa (OS-GOV) | 10 | 4 | 6 | 0 | SOTK/cetak, laporan lembaga, keluaran IDM, kandidat/hasil pemilihan, dan buku pembangunan masih menjadi gap. |
-| Keuangan, aset & bumindes (OS-FIN) | 13 | 11 | 2 | 0 | APBDes + impor/template + laporan realisasi resmi, keuangan manual, inventaris + neraca, dan bumindes selesai; sisa E2E impor dokumen (`OS-FIN-004`) dan periode publik (`OS-FIN-006`). |
+| Web publik (OS-WEB) | 19 | 2 | 17 | 0 | IDM/SDGs, analisis hasil survei, dan lapak (produk/keranjang) memakai data nyata; sisa gap E2E. |
+| Layanan mandiri warga (OS-WGA) | 11 | 1 | 10 | 0 | Registrasi mandiri, pesan dua arah, lapak warga, izin/kehadiran, dan verifikasi warga tersedia; sisa gap E2E dan bukti provider (`OS-WGA-009`). |
+| Analisis & survei (OS-ANA) | 6 | 0 | 6 | 0 | Kategori, indikator/bobot, skoring, laporan formal, pengisian mandiri, dan formulir eksternal tersedia; sisa gap E2E. |
+| Modul tambahan (OS-MOD) | 5 | 3 | 2 | 0 | Buku tamu, lapak, dan kehadiran ✅; anjungan & pelanggan sisa gap E2E (alur kiosk dan kerja sama). |
+| Sistem & operasional (OS-OPS) | 12 | 2 | 9 | 0 | Pusat notifikasi + mailbox/SMS, registri plugin, OTP login, dan API publik/eksternal tersedia; sinkronisasi di luar scope. Sisa gap E2E. |
+| Pemerintahan & pemerintahan desa (OS-GOV) | 10 | 4 | 6 | 0 | SOTK/cetak, laporan lembaga, ekspor IDM, kandidat/hasil pemilihan, dan buku pembangunan tersedia; sisa gap E2E. |
+| Keuangan, aset & bumindes (OS-FIN) | 13 | 11 | 2 | 0 | APBDes + impor/template + laporan realisasi resmi, keuangan manual/jurnal, SiLPA, inventaris + neraca, dan bumindes selesai; sisa E2E (`OS-FIN-004`, `OS-FIN-006`). |
 | **Total** | **113** | **37** | **74** | **0** | 2 ID di luar scope (`OS-POP-009`, `OS-OPS-009`).
 
 ## Peta Prioritas Implementasi
@@ -248,11 +249,13 @@ diberikan setelah Definition of Done di katalog terpenuhi.
 ## Kesimpulan
 
 1. Proyek masih berada di fase pembangunan; target akhirnya seluruh ID `OS-*`.
-2. Register berisi 113 ID unik: 35 berfungsi penuh, 77 sebagian, 0 belum ada,
-   dan 1 di luar scope. Persentase scope 112 ID: 31,3% penuh, 68,8% sebagian,
+2. Register berisi 113 ID unik: 37 berfungsi penuh, 74 sebagian, 0 belum ada,
+   dan 2 di luar scope. Persentase scope 111 ID: 33,3% penuh, 66,7% sebagian,
    dan 0% belum ada.
-3. IDM/SDGs sudah memiliki halaman admin/publik, use case, unit test, dan E2E;
-   statusnya sebagian karena keluaran laporan dan isolasi tenant belum lengkap.
-4. Prioritas penutupan tetap pada gap keluaran, alur warga, analisis, GIS,
-   modul tambahan, integrasi, dan hardening; lihat gap spesifik per ID di atas.
+3. IDM/SDGs sudah memiliki halaman admin/publik, use case, unit test, ekspor
+   laporan, dan E2E; statusnya sebagian karena gap E2E (isolasi tenant belum
+   diuji browser).
+4. Prioritas penutupan: uji E2E yang ditunda, sisa Fase 5 multi-desa
+   (provisioning dasar sudah ada), hardening Fase 6, dan dua bukti provider
+   yang menunggu kredensial (`OS-WGA-009`, `OS-SUR-013`).
 5. Status ✅ hanya diberikan setelah Definition of Done di katalog dibuktikan.

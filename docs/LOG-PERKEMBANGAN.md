@@ -70,7 +70,7 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
   serta slot dikenal/tidak ganda/lengkap; kartu tema menampilkan masalah dan
   tombol aktivasi nonaktif untuk manifest tidak valid (use case memvalidasi
   ulang). Tetap build-time, tanpa unggah/eksekusi kode.
-- Migrasi `0093_gelombang_b_umpan_balik_dan_anggota_publik.sql` (tabel
+- Migrasi `0089_gelombang_b_umpan_balik_dan_anggota_publik.sql` (tabel
   `umpan_balik`, kolom `tampil_publik`, FK + indeks).
 - Dokumen diperbarui: `PARITAS-OPENSID.md` (lima baris ID, tetap 🟡
   `Gap: E2E`), `RENCANA-PERBAIKAN.md` (Gelombang B tuntas non-E2E), log ini.
@@ -159,7 +159,7 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
   klien BSrE `buatKlienBsre` (Basic Auth, form-data, timeout, respons PDF/JSON
   URL/base64). Surat terbit menyimpan PDF bertanda tangan di media privat
   `surat-tte`, disajikan lewat route PDF admin/warga berizin; kegagalan TTE
-  tidak memblokir penerbitan. Migrasi `0066_add_tte_file_and_config_unique`.
+  tidak memblokir penerbitan. Migrasi `0062_add_tte_file_and_config_unique`.
 - API eksternal ber-API key: `POST /api/eksternal/tte/tanda-tangan`,
   `GET /api/eksternal/surat/[token]`, dan `POST /api/eksternal/surat/verifikasi`,
   tenant dari host, audit `api.eksternal.*`.
