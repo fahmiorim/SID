@@ -60,8 +60,10 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    impor/unggah/laporan yang diminta katalog ada; baris PARITAS tidak lagi
    menyebut gap selain E2E.
 
-Saat ini ada **77 ID** dengan gap (77 🟡 + 0 🔴). Dua ID sudah E2E-only dan
-tidak masuk batch: `OS-SUR-011` dan `OS-WGA-003`.
+Snapshot 4 November mencatat 77 ID dengan gap. Per 7 November 2026 tersisa
+**74 ID 🟡 + 0 🔴** dari 113 ID: 72 hanya gap E2E dan dua ID menunggu
+kredensial provider
+(`OS-WGA-009`, `OS-SUR-013`). `OS-SUR-011` dan `OS-WGA-003` adalah ID E2E-only.
 
 | Batch | ID | Fokus non-E2E | Kriteria selesai |
 |---|---|---|---|
@@ -109,8 +111,10 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
 - `OS-FIN-002` ✅: laporan RP APBDes + per bidang + grafik tetap; rincian
   realisasi resmi menjadi keluaran tambahan dengan CSV.
 - `OS-FIN-003` ✅: pembukuan manual kas `/keuangan/pembukuan` (CRUD, saldo
-  berjalan, izin `update`/`delete`, scoping tenant) sudah tersedia; saldo
-  rekening koran bank tetap di luar cakupan.
+  berjalan, izin `update`/`delete`, scoping tenant) dan jurnal umum + saldo
+  awal rekening bank `/keuangan/jurnal` (mutasi debet/kredit per kode
+  rekening, ringkasan, izin `update`/`delete`) sudah tersedia; mutasi
+  rekening koran (impor bank) tetap di luar cakupan.
 - `OS-FIN-004` 🟡 (E2E impor) dan `OS-FIN-006` 🟡 (E2E periode publik):
   gap non-E2E tidak tersisa.
 - `OS-FIN-007`–`OS-FIN-013` sudah ✅ (inventaris, neraca, bumindes).
@@ -155,33 +159,16 @@ domain). **Batch 1 — Persuratan & TTE selesai 5 Nov 2026**:
   sampai uji browser untuk keluaran baru tersedia.
 ---
 
-**Batch 5 — Web publik (progres 5 Nov 2026):**
-
-- **OS-WEB-001** ✅ gap agenda beranda: menambahkan `daftarAgendaBeranda()` use case + `daftarAgendaPublik()` repository dari tabel `bumindes_agenda`; komponen tema esensi & natra menampilkan bagian "Agenda Desa" di beranda; `HOME_SECTION_IDS` + `DEFAULT_HOME_SECTIONS` + `HOME_SECTION_LABELS` diperbarui termasuk "agenda"; test `theme.test.ts` disesuaikan.
-- **OS-WEB-002** ✅ gap pencarian berita: menambahkan `cari` pada
-  `listBerita()` + use case `daftarBerita()`, form pencarian di tema
-  `berita.tsx`, domain `pencarian.ts` berisi `normalisasiKataKunci` +
-  `polaLike` untuk escaping `%`/`_` wildcard SQL, test `pencarian.test.ts`
-  (5 test).
-- **OS-WEB-004** ✅ gap pencarian galeri: menambahkan parameter `cari` pada
-  `listAlbumGaleri()` + use case `daftarAlbumGaleri()`, form pencarian di tema
-  `galeri.tsx`.
-- **OS-WEB-018** ✅ gap cakupan URL sitemap: menambahkan 12 URL publik ke
-  `sitemap.ts` (`pengaduan`, `lapak`, `kontak`, `kesehatan/*`, `pertanahan`,
-  `peta`, `peta/cetak`, `verifikasi-surat`) dan menghapus `/bantuan` serta
-  `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
-- Seluruh ID Batch 5 lainnya masih 🟡 dengan gap masing-masing; E2E ditunda
----
 **Batch 5 — Web publik (selesai non-E2E 5 Nov 2026):**
-- **OS-WEB-001** ✅ gap agenda beranda: menambahkan `daftarAgendaBeranda()` use case + `daftarAgendaPublik()` repository dari tabel `bumindes_agenda`; komponen tema esensi & natra menampilkan bagian "Agenda Desa" di beranda; `HOME_SECTION_IDS` + `DEFAULT_HOME_SECTIONS` + `HOME_SECTION_LABELS` diperbarui termasuk "agenda"; test `theme.test.ts` disesuaikan.
-- **OS-WEB-002** ✅ gap pencarian berita: menambahkan `cari` pada
+- **OS-WEB-001** selesai non-E2E (status tetap 🟡) — gap agenda beranda: menambahkan `daftarAgendaBeranda()` use case + `daftarAgendaPublik()` repository dari tabel `bumindes_agenda`; komponen tema esensi & natra menampilkan bagian "Agenda Desa" di beranda; `HOME_SECTION_IDS` + `DEFAULT_HOME_SECTIONS` + `HOME_SECTION_LABELS` diperbarui termasuk "agenda"; test `theme.test.ts` disesuaikan.
+- **OS-WEB-002** selesai non-E2E (status tetap 🟡) — gap pencarian berita: menambahkan `cari` pada
   `listBerita()` + use case `daftarBerita()`, form pencarian di tema
   `berita.tsx`, domain `pencarian.ts` berisi `normalisasiKataKunci` +
   `polaLike` untuk escaping `%`/`_` wildcard SQL, test `pencarian.test.ts`
   (5 test).
-- **OS-WEB-003** ✅ gap bagan SOTK publik: menambahkan SOTK ke `EsensiPerangkat` (`perangkat.tsx`) via `susunBaganSotk`, menampilkan Kepala Desa → Sekretaris → Staf dalam `details` + `TreeNode`; test `theme.test.ts` disesuaikan.
-- **OS-WEB-004** ✅ gap cetak album galeri: menambahkan `ThemePrintButton` (`themes/ui.tsx`) + tombol "Cetak Album" di `EsensiGaleriDetail` (`galeri-detail.tsx`).
-- **OS-WEB-018** ✅ gap cakupan URL sitemap: menambahkan 12 URL publik ke
+- **OS-WEB-003** selesai non-E2E (status tetap 🟡) — gap bagan SOTK publik: menambahkan SOTK ke `EsensiPerangkat` (`perangkat.tsx`) via `susunBaganSotk`, menampilkan Kepala Desa → Sekretaris → Staf dalam `details` + `TreeNode`; test `theme.test.ts` disesuaikan.
+- **OS-WEB-004** selesai non-E2E (status tetap 🟡) — gap cetak album galeri: menambahkan `ThemePrintButton` (`themes/ui.tsx`) + tombol "Cetak Album" di `EsensiGaleriDetail` (`galeri-detail.tsx`).
+- **OS-WEB-018** selesai non-E2E (status tetap 🟡) — gap cakupan URL sitemap: menambahkan 12 URL publik ke
   `sitemap.ts` (`pengaduan`, `lapak`, `kontak`, `kesehatan/*`, `pertanahan`,
   `peta`, `peta/cetak`, `verifikasi-surat`) dan menghapus `/bantuan` serta
   `/kelompok` dari `robots.ts` disallow (halaman tersebut publik).
@@ -309,7 +296,7 @@ tiruan.
 
 **Status pelaksanaan gelombang:** Gelombang A tuntas non-E2E — `OS-OPS-002`,
 `OS-OPS-003`, `OS-OPS-004`, `OS-OPS-005`, `OS-OPS-006` (cakupan inti),
-`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID
+`OS-OPS-007`, dan `OS-OPS-008`; `OS-OPS-009` di luar scope. Sisa seluruh ID Gelombang A
 adalah E2E. Gelombang B berjalan non-E2E:
 
 - `OS-WEB-012` — suplemen publik (`/desa/suplemen` + detail).
@@ -340,7 +327,7 @@ adalah E2E. Gelombang B berjalan non-E2E:
 
 Gelombang B tuntas non-E2E. Semua ID yang dikerjakan tetap 🟡 dengan
 `Gap: E2E` sesuai aturan gelombang (E2E belum dijalankan). Migrasi skema
-gelombang ini: `0093_gelombang_b_umpan_balik_dan_anggota_publik.sql`.
+gelombang ini: `0089_gelombang_b_umpan_balik_dan_anggota_publik.sql`.
 
 Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir bagian ini:
 
@@ -361,12 +348,11 @@ Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir 
   dengan validasi server dan rate limit, plus kartu embed iframe di detail
   survei admin.
 
-Gap non-E2E yang tersisa hanya `OS-WGA-009` dan `OS-SUR-013` (bukti provider
-nyata; kredensial belum tersedia). API tulis surat sudah menerima unggahan
+Gap non-E2E yang tersisa hanya bukti provider nyata untuk `OS-WGA-009` dan
+`OS-SUR-013` (kredensial belum tersedia). API tulis surat sudah menerima unggahan
 syarat multipart dan detail survei sudah menyediakan kartu embed iframe +
 token. Seluruh E2E Gelombang A–E ditunda.
 
-## Kondisi Awal (snapshot historis sebelum Fase 0)
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
 Bagian ini menjelaskan masalah pada awal audit, bukan klaim kondisi working tree
@@ -582,7 +568,7 @@ Mengacu `donjo-app/controllers/fweb/*`:
       dialihkan permanen ke sana. Admin mengelola indikator dan capaian SDGs di
       `/desa/idm` dan `/desa/idm-sdgs`. Bukti:
       `features/idm/domain/idm.test.ts`, `tests/idm.e2e.ts` (CRUD admin; publik
-      `/desa/idm-sdgs`), migrasi `0061_create_idm_sdgs.sql`. Keluaran laporan
+      `/desa/idm-sdgs`), migrasi `0058_create_idm_sdgs.sql`. Keluaran laporan
       dan E2E isolasi tenant masih perlu dilengkapi (lihat `OS-GOV-006` /
       `OS-WEB-013`).
 - [x] `/desa/surat`: daftar jenis surat dari DB lewat
@@ -595,7 +581,9 @@ Mengacu `donjo-app/controllers/fweb/*`:
 - [x] `/desa/pembangunan` dan `/desa/peta` — memakai data nyata Fase 3B/3C
       (pembangunan + detail + cetak; peta Leaflet area/garis/titik/polygon).
       (`/desa/pengaduan` keluar dari daftar ini: sudah memakai data 3D.)
-- [ ] `/desa/suplemen` masih menunggu backend publik. Halaman publik lapak
+- [x] `/desa/suplemen` + detail `/desa/suplemen/[slug]` sudah memakai use case
+      publik (`getSuplemenPublik`), tanpa data pribadi; test use case tersedia
+      (gap E2E). Halaman publik lapak
       (`/desa/lapak`), pemilihan (admin `/pemerintahan/pemilihan`, publik
       `/desa/pemilihan`), dan registrasi akun warga
       (`/desa/registrasi-warga`) sudah memakai data/aksi nyata. `/desa/idm-sdgs`
@@ -1026,11 +1014,12 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 
 ### 3F. Analisis penuh (2 minggu)
 
-- [ ] `OS-ANA-001`–`OS-ANA-004`: kategori, indikator, parameter, periode,
-      respon, laporan, dan statistik jawaban.
-- [x] `OS-ANA-005`: impor/ekspor respons — versi survei selesai 24 Okt 2026
-      (CSV di `/analisis-survei/[id]/ekspor` + impor per baris). Sisa: format
-      kategori–indikator–parameter OpenSID.
+- [x] `OS-ANA-001`–`OS-ANA-004`: kategori, indikator/bobot, periode, respons,
+      laporan skor formal, dan rekap per kategori tersedia (status tetap 🟡,
+      gap E2E).
+- [x] `OS-ANA-005`: impor/ekspor respons CSV + proteksi formula, token HMAC
+      formulir eksternal, endpoint `POST /api/publik/survei/[id]/respons`, dan
+      kartu embed iframe (status tetap 🟡, gap E2E).
 
 ### 3G. Bumindes lengkap (1 minggu)
 
@@ -1044,12 +1033,15 @@ tidak ada kategori yang dikeluarkan dari target akhir.
   - [x] `OS-OPS-007`: backup/restore database SQL/SQL.GZ (mysqldump/mysql), halaman `/pengaturan/database`, RBAC `database`, izin `delete` untuk restore + konfirmasi, audit log. **Tersedia/berfungsi** saat ini; optimasi (backup folder/inkremental, penanganan besar) masih menyusul. |
  - [x] `OS-OPS-006`: audit log aktivitas (login berhasil/gagal, halaman `/pengaturan/log-aktivitas`, RBAC `audit-log`, migrasi `0027`). |
  - [x] `OS-OPS-004`: lupa sandi mandiri (email/token), perkuatan rate limit login/reset, audit login/reset, link lupa sandi di halaman masuk. OTP/2FA/captcha menyusul. |
-- [ ] `OS-OPS-005`: mailbox masuk dan SMS dua arah (pusat notifikasi dan broadcast satu arah sudah ada).
+- [x] `OS-OPS-005`: mailbox masuk + SMS dua arah (migrasi `0095`, webhook
+      bertoken, adapter `kirimSms`), pusat notifikasi, dan broadcast satu arah
+      tersedia; gap E2E.
 
 ### 3I. Modul tambahan OpenSID
 
-- [ ] `OS-MOD-001`: Anjungan mandiri. Admin `/anjungan` sudah CRUD penuh
-      (modul + RBAC); sisa: alur kiosk publik dan test/E2E.
+- [x] `OS-MOD-001`: Anjungan mandiri. Admin `/anjungan` CRUD penuh dengan field
+      kiosk (migrasi `0082`) dan halaman publik `/desa/anjungan`; gap E2E alur
+      kiosk.
 - [x] `OS-GOV-007`: Pemilihan desa. Admin `/pemerintahan/pemilihan` (CRUD
       pemilihan + dialog kandidat/suara) dan publik `/desa/pemilihan` (kandidat,
       rekap, pemenang). Kandidat disimpan di `pemilihan_kandidat` dengan nomor
@@ -1058,31 +1050,35 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 - [x] `OS-MOD-002`: Buku tamu — CRUD admin dan laporan; domain/application
       test tersedia. Bukti route `/buku-tamu`, modul + RBAC `buku-tamu`, dan fitur
       `src/features/buku-tamu/`.
-- [ ] `OS-MOD-003`: Kehadiran perangkat. Admin `/kehadiran` sudah CRUD + modul;
-      sisa: jam kerja, hari libur, izin, rekap bulanan otomatis, dan E2E.
+- [x] `OS-MOD-003`: Kehadiran perangkat. CRUD `/kehadiran`, `/kehadiran/izin`,
+      pengaturan jam kerja/hari libur, dan rekap `/kehadiran/rekap` + ekspor CSV
+      tersedia; izin disetujui masuk rekap. Gap E2E.
 - [x] `OS-MOD-004`: Lapak dan produk warga. Admin `/lapak` + publik
       `/desa/lapak`, entitas produk terpisah, keranjang, peta produk, dan cetak
       faktur. Gap: E2E.
 - [x] `OS-MOD-005`: Pelanggan/layanan kerja sama. `/pelanggan` CRUD + status
       langganan (badge, dropdown ubah status), dan halaman pendaftaran
-      `/pelanggan/kerja-sama`. Gap: unggah dokumen kerja sama, test use
-      case/action, dan E2E.
+      `/pelanggan/kerja-sama`. Unggah dokumen kerja sama (PDF/JPG/PNG ≤ 5 MB),
+      unduhan berizin, dan test use case tersedia; gap E2E.
 
 ### 3J. Integrasi, API, dan kompatibilitas keluaran
 
-- [ ] `OS-OPS-011`: API internal dengan kontrak, auth, rate limit, audit, dan
-      error yang terdokumentasi.
+- [x] `OS-OPS-011`: API data publik (informasi, dokumen, inventaris, surat)
+      dengan kontrak OpenAPI 3.1, rate limit 60/menit per IP, dan audit
+      `api.publik.akses`; gap E2E.
 - [x] `OS-OPS-012`: API eksternal dasar ber-API key
       (`POST /api/eksternal/tte/tanda-tangan`, `GET /api/eksternal/surat/[nomor]`),
-      tenant dari host, audit, error JSON. Sisa: kontrak OpenAPI, rate limit,
-      endpoint tulis surat, dan E2E.
+      tenant dari host, audit, error JSON. Kontrak OpenAPI, rate limit, dan
+      endpoint tulis surat (JSON/multipart) sudah ada; sisa E2E dan verifikasi
+      provider nyata (`OS-SUR-013`).
 - [x] `OS-SUR-013`: TTE operasional — konfigurasi non-rahasia per desa
       (`tte_config`), form `/persuratan/tte`, passphrase hanya dari
       `TTE_PASSWORD`, klien BSrE `buatKlienBsre` (+19 test), PDF bertanda tangan
       disimpan di media privat dan disajikan lewat route berizin. Sisa: uji
       provider nyata dan E2E. 
-- [ ] Integrasi OpenDK, Siskeudes, Google Forms, email, SMS/WA, Telegram/FCM,
-      dan storage eksternal memakai adapter tanpa secret di source.
+- [ ] Integrasi yang belum ada: Siskeudes, Google Forms, Telegram/FCM, dan
+      storage eksternal (adapter tanpa secret di source). Email, SMS/WA, dan
+      Resend sudah ada; OpenDK di luar scope (`OS-OPS-009`).
 - [ ] Setiap keluaran katalog memiliki cetak/PDF, impor/ekspor, unggah/unduh,
       QR/token, atau rekap bila perilaku OpenSID memilikinya.
 
@@ -1091,7 +1087,9 @@ tidak ada kategori yang dikeluarkan dari target akhir.
 - [ ] Setiap ID `OS-*` mempunyai status dan bukti route/UI/test di matriks
       paritas.
 - [ ] Tidak ada halaman placeholder, mockup, menu mati, action tanpa UI, atau
-      status `✅` tanpa bukti yang dapat dijalankan.
+      status `✅` tanpa bukti yang dapat dijalankan. Sisa yang diketahui:
+      modul `super-admin` kini punya grant role dan halaman nyata; sisa
+      fungsional ada di Fase 5 (status aktif/kuota desa).
 - [x] Halaman minimal/orphan yang punya fitur nyata (`buku-tamu`, `arsip`,
       `kehadiran`, `lapak`, `pelanggan`, `anjungan`, `analisis`, `pemilihan`,
       `registrasi-warga`) sudah terdaftar di modul/menu/RBAC. Halaman
@@ -1117,17 +1115,16 @@ terkoneksi dengan modul admin yang sudah fungsi di Fase 2.
       Sisa: E2E.
 - [x] `/desa/dokumen` + produk hukum memakai Fase 3E. Sisa: embed/peraturan
       (unggah PDF tersedia di `/konten/dokumen`).
-- [x] `/desa/statistik` + `/desa/apbdes` memakai use case publik. Sisa: finalisasi
-      periodisasi dan E2E.
+- [x] `/desa/statistik` + `/desa/apbdes` memakai use case publik. Sisa: E2E.
 - [x] `/desa/dpt` dan `/desa/kesehatan/*` memakai data; `/desa/idm-sdgs`
       (publik kanonis; `/idm` dialihkan) dan `/desa/idm` (admin) memakai use
       case IDM/SDGs (lihat `OS-GOV-006` dan `OS-WEB-013`). `/desa/suplemen`
-      masih menunggu backend publik.
+      sudah memakai use case publik `getSuplemenPublik` (gap E2E).
 - [x] `/desa/lapak` memakai data nyata dengan pencarian + filter kategori;
-      sisa: entitas pelapak/produk terpisah dan keranjang.
+      produk terpisah, keranjang, peta produk, dan cetak faktur sudah ada (gap E2E).
 - [x] `/pengaturan/plugin`, `/pengaturan/sinkronisasi`, dan
       `/pengaturan/notifikasi` menampilkan status "belum tersedia" tanpa data
-      contoh. Belum ada implementasi fungsional.
+      contoh. Notifikasi dan plugin kini berisi data nyata; hanya sinkronisasi yang tetap status-only.
 
 ## Fase 5 — Multi-Desa (4–6 minggu)
 
@@ -1135,19 +1132,25 @@ Aktivasi penuh setelah single-tenant stabil.
 
 ### 5A. Fondasi tenant
 
-- [ ] Role `super-admin` (tanpa `villageId`).
-- [ ] Tabel `village_domains` (banyak domain per desa: primary + alias),
-      migrasi dari `villages.domain`.
-- [ ] `resolveVillageByHost` final + wildcard `*.desa.id` + domain kustom.
+- [x] Role `super-admin` (tanpa `villageId`) di-seed; pengelolaan desa dijaga
+      `isSuperAdminUser` (role `administrator`/`super-admin`).
+- [x] Tabel `village_domains` (banyak domain per desa: primary + alias),
+      migrasi/backfill dari `villages.domain`, dan kolom `villages.slug`.
+- [x] `resolveVillageByHost` final: domain persis → alias `www` → wildcard
+      `<slug>.<DESA_BASE_DOMAIN>` (env opsional) → fallback satu desa → 404.
+      Domain kustom + verifikasi + TLS tetap di 5C.
 - [ ] Semua staf wajib punya `villageId`; super admin memilih desa eksplisit.
 - [ ] Isolasi data: semua query admin & publik ter-scope `villageId`.
 
 ### 5B. Super admin & provisioning
 
-- [ ] Dashboard super admin: daftar desa, domain, status, admin, kuota.
-- [ ] Wizard buat desa: identitas, domain, tema default, akun admin desa.
-- [ ] Seed per desa: jenis surat, klasifikasi, syarat, buku bumindes, kategori
-      inventaris, menu publik default.
+- [x] Dashboard `/super-admin`: daftar desa, domain, tema, jumlah
+      pengguna/penduduk/jenis surat. Status aktif & kuota desa belum.
+- [x] Wizard buat desa di `/super-admin` (form + Server Action berizin):
+      identitas, domain opsional, tema, dan akun admin desa baru.
+- [x] Seed per desa (dasar): role, katalog modul, matriks akses, tema, menu
+      publik, serta jenis/klasifikasi/syarat surat disalin dari desa pertama
+      dengan pemetaan ulang id. Buku bumindes & kategori inventaris belum.
 - [ ] Nonaktifkan/arsipkan desa.
 - [ ] Reset akses admin desa oleh super admin.
 
@@ -1169,6 +1172,13 @@ Aktivasi penuh setelah single-tenant stabil.
 - [ ] Dua desa + dua domain: data, media, tema, metadata, sitemap tidak bocor.
 - [ ] Uji beban dasar (ratusan desa) + cache per host.
 - [ ] Audit keamanan: IDOR, path traversal, cross-tenant query.
+
+**Progres 7 Nov 2026:** dashboard dan provisioning dasar tersedia di
+`/super-admin` (`features/multi-desa/{domain,infrastructure,application,presentation}`).
+Desa baru mendapat role, menu, RBAC, tema, menu publik, katalog surat, dan akun
+admin; provisioning diuji pada DB dev (buat → verifikasi → bersihkan). Yang belum:
+`villages.active` (nonaktifkan/arsip), `village_domains` multi-alias, kuota,
+penugasan domain kustom + TLS, dan uji isolasi lintas desa berdomain.
 
 **Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
 admin desa, tema, dan situs publik yang langsung hidup.
@@ -1260,6 +1270,12 @@ asumsi akun warga. Tindak lanjut hari yang sama: `/idm` dialihkan permanen ke
 `@/db` dihapus. Urutan prioritas: web publik → admin berfungsi → paritas
 OpenSID → multi-desa.
 
+Rekonsiliasi angka 7 November 2026: ringkasan paritas diselaraskan dengan
+register per-ID (**37 ✅ / 74 🟡 / 0 🔴 / 2 ⚪** dari 113 ID), catatan "status
+page" yang usang diganti, dan baris per domain dihitung ulang dari register.
+SiLPA (`OS-FIN-005`) kembali ✅ setelah modul `keuangan-sisa-lebih`, grant, dan
+tautannya terdaftar.
+
 ---
 
 ## Status Akhir (diperbarui 5 November 2026)
@@ -1269,7 +1285,7 @@ OpenSID → multi-desa.
 | 0 — Stabilisasi | ✅ **Terverifikasi pada snapshot 31 Okt** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Itu bukti historis; jalankan quality gate ulang sebelum menutup milestone baru. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi, tema, dan sebagian besar CMS selesai; pembangunan/peta/pertanahan memakai data. `/desa/lapak` memakai katalog + pencarian/filter nyata; IDM/SDGs sudah memakai data nyata. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Banyak modul inti berjalan; pembukuan manual, notifikasi, dan beberapa keluaran lanjutan masih tersisa. |
-| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 35 berfungsi penuh, 77 sebagian, 0 belum ada; `OS-POP-009` di luar scope. Batch 2 menaikkan `OS-FIN-001`/`002`/`003`; sisa gap Batch 2 hanya E2E. Register diverifikasi `src/db/paritas-register.test.ts`. |
+| 3 — Paritas seluruh katalog OpenSID | 🔴 **Belum selesai** | Register 113 ID: 37 berfungsi penuh, 74 sebagian, 0 belum ada, 2 di luar scope (`OS-POP-009`, `OS-OPS-009`). Batch 2 menaikkan `OS-FIN-001`/`002`/`003`; sisa Batch 2: E2E (`OS-FIN-004`, `OS-FIN-006`). Register diverifikasi `src/db/paritas-register.test.ts`. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Pengaduan, pembangunan, peta, pertanahan, IDM/SDGs, lapak, widget/CMS, manifest, dan OG sudah tersambung; sisa gap ada di keluaran analisis dan entitas pelapak. |
 | 5 — Multi-desa | 🟡 **Fondasi** | Resolusi host dan isolasi publik tersedia; provisioning, super-admin, domain kustom, dan uji penuh belum. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | E2E domain admin/warga, audit keamanan menyeluruh, dan runbook belum lengkap; workflow CI telah dikonfigurasi untuk menjalankan suite browser E2E. |

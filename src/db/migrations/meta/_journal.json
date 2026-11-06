@@ -283,367 +283,374 @@
       "breakpoints": true
     },
     {
-      "idx": 42,
+      "idx": 40,
       "version": "5",
       "when": 1793140140000,
-      "tag": "0042_create_polygon",
+      "tag": "0040_create_polygon",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1793140180000,
+      "tag": "0041_create_area",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1793140181000,
+      "tag": "0042_create_cdesa_rincian",
       "breakpoints": true
     },
     {
       "idx": 43,
       "version": "5",
-      "when": 1793140180000,
-      "tag": "0043_create_area",
+      "when": 1793140182000,
+      "tag": "0043_create_cdesa_mutasi",
       "breakpoints": true
     },
     {
       "idx": 44,
       "version": "5",
-      "when": 1793140181000,
-      "tag": "0044_create_cdesa_rincian",
+      "when": 1793140183000,
+      "tag": "0044_create_garis",
       "breakpoints": true
     },
     {
       "idx": 45,
       "version": "5",
-      "when": 1793140182000,
-      "tag": "0045_create_cdesa_mutasi",
+      "when": 1793140184000,
+      "tag": "0045_create_point",
       "breakpoints": true
     },
     {
       "idx": 46,
       "version": "5",
-      "when": 1793140183000,
-      "tag": "0046_create_garis",
+      "when": 1793140186000,
+      "tag": "0046_alter_persil_hardening",
       "breakpoints": true
     },
     {
       "idx": 47,
       "version": "5",
-      "when": 1793140184000,
-      "tag": "0047_create_point",
+      "when": 1793140187000,
+      "tag": "0047_alter_cdesa_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "5",
+      "when": 1793140188000,
+      "tag": "0048_add_cdesa_rincian_village_id",
       "breakpoints": true
     },
     {
       "idx": 49,
       "version": "5",
-      "when": 1793140186000,
-      "tag": "0049_alter_persil_hardening",
+      "when": 1793140188500,
+      "tag": "0049_backfill_cdesa_rincian_village_id",
       "breakpoints": true
     },
     {
       "idx": 50,
       "version": "5",
-      "when": 1793140187000,
-      "tag": "0050_alter_cdesa_hardening",
+      "when": 1793140189000,
+      "tag": "0050_alter_cdesa_rincian_columns",
       "breakpoints": true
     },
     {
       "idx": 51,
       "version": "5",
-      "when": 1793140188000,
-      "tag": "0051_add_cdesa_rincian_village_id",
+      "when": 1793140189500,
+      "tag": "0051_add_cdesa_rincian_index",
       "breakpoints": true
     },
     {
       "idx": 52,
       "version": "5",
-      "when": 1793140188500,
-      "tag": "0052_backfill_cdesa_rincian_village_id",
+      "when": 1793140190000,
+      "tag": "0052_add_cdesa_rincian_fk",
       "breakpoints": true
     },
     {
       "idx": 53,
       "version": "5",
-      "when": 1793140189000,
-      "tag": "0053_alter_cdesa_rincian_columns",
+      "when": 1793140191000,
+      "tag": "0053_add_cdesa_mutasi_index",
       "breakpoints": true
     },
     {
       "idx": 54,
       "version": "5",
-      "when": 1793140189500,
-      "tag": "0054_add_cdesa_rincian_index",
+      "when": 1793140200000,
+      "tag": "0054_add_cdesa_mutasi_village_fk",
       "breakpoints": true
     },
     {
       "idx": 55,
       "version": "5",
-      "when": 1793140190000,
-      "tag": "0055_add_cdesa_rincian_fk",
+      "when": 1793140201000,
+      "tag": "0055_add_cdesa_mutasi_cdesa_fk",
       "breakpoints": true
     },
     {
       "idx": 56,
       "version": "5",
-      "when": 1793140191000,
-      "tag": "0056_add_cdesa_mutasi_index",
+      "when": 1793140240000,
+      "tag": "0056_add_kontak_resident_index",
       "breakpoints": true
     },
     {
       "idx": 57,
       "version": "5",
-      "when": 1793140200000,
-      "tag": "0057_add_cdesa_mutasi_village_fk",
+      "when": 1793140250000,
+      "tag": "0057_create_sinergi_program",
       "breakpoints": true
     },
     {
       "idx": 58,
-      "version": "5",
-      "when": 1793140201000,
-      "tag": "0058_add_cdesa_mutasi_cdesa_fk",
+      "version": "7",
+      "when": 1793397287613,
+      "tag": "0058_create_idm_sdgs",
       "breakpoints": true
     },
     {
       "idx": 59,
       "version": "5",
-      "when": 1793140240000,
-      "tag": "0059_add_kontak_resident_index",
+      "when": 1793733507523,
+      "tag": "0059_archive_letter_numbers",
       "breakpoints": true
     },
     {
       "idx": 60,
       "version": "5",
-      "when": 1793140250000,
-      "tag": "0060_create_sinergi_program",
+      "when": 1794435600000,
+      "tag": "0060_create_surat_masuk_disposisi_ekspedisi",
       "breakpoints": true
     },
     {
       "idx": 61,
-      "version": "7",
-      "when": 1793397287613,
-      "tag": "0061_create_idm_sdgs",
+      "version": "5",
+      "when": 1794435610000,
+      "tag": "0061_create_missing_feature_tables",
       "breakpoints": true
     },
     {
       "idx": 62,
       "version": "5",
-      "when": 1793733507523,
-      "tag": "0062_archive_letter_numbers",
+      "when": 1794435615000,
+      "tag": "0062_add_tte_file_and_config_unique",
       "breakpoints": true
     },
     {
       "idx": 63,
       "version": "5",
-      "when": 1794435600000,
-      "tag": "0064_create_surat_masuk_disposisi_ekspedisi",
+      "when": 1794435620000,
+      "tag": "0063_create_api_keys",
       "breakpoints": true
     },
     {
       "idx": 64,
       "version": "5",
-      "when": 1794435610000,
-      "tag": "0065_create_missing_feature_tables",
+      "when": 1794435630000,
+      "tag": "0064_create_keuangan_pembukuan_tables",
       "breakpoints": true
     },
     {
       "idx": 65,
       "version": "5",
-      "when": 1794435615000,
-      "tag": "0066_add_tte_file_and_config_unique",
+      "when": 1794435640000,
+      "tag": "0065_create_media_settings",
       "breakpoints": true
     },
     {
       "idx": 66,
       "version": "5",
-      "when": 1794435620000,
-      "tag": "0067_create_api_keys",
+      "when": 1794435650000,
+      "tag": "0066_create_bumindes_resmi_tables",
       "breakpoints": true
     },
     {
       "idx": 67,
       "version": "5",
-      "when": 1794435630000,
-      "tag": "0068_create_keuangan_pembukuan_tables",
+      "when": 1794435660000,
+      "tag": "0067_add_template_variant_to_letter_types",
       "breakpoints": true
     },
     {
       "idx": 68,
       "version": "5",
-      "when": 1794435640000,
-      "tag": "0069_create_media_settings",
+      "when": 1794435670000,
+      "tag": "0068_create_unified_shipments_and_audit",
       "breakpoints": true
     },
     {
       "idx": 69,
       "version": "5",
-      "when": 1794435650000,
-      "tag": "0070_create_bumindes_resmi_tables",
+      "when": 1794435680000,
+      "tag": "0069_pemilihan_kandidat",
       "breakpoints": true
     },
     {
       "idx": 70,
       "version": "5",
-      "when": 1794435660000,
-      "tag": "0071_add_template_variant_to_letter_types",
+      "when": 1794435690000,
+      "tag": "0070_add_cdesa_created_at",
       "breakpoints": true
     },
     {
       "idx": 71,
       "version": "5",
-      "when": 1794435670000,
-      "tag": "0072_create_unified_shipments_and_audit",
+      "when": 1794435700000,
+      "tag": "0071_add_komentar_pengunjung_bukti_notifikasi",
       "breakpoints": true
     },
     {
       "idx": 72,
       "version": "5",
-      "when": 1794435680000,
-      "tag": "0072_pemilihan_kandidat",
+      "when": 1794435710000,
+      "tag": "0072_create_warga_pesan",
       "breakpoints": true
     },
     {
       "idx": 73,
       "version": "5",
-      "when": 1794435690000,
-      "tag": "0073_add_cdesa_created_at",
+      "when": 1794435720000,
+      "tag": "0073_create_dokumen_warga",
       "breakpoints": true
     },
     {
       "idx": 74,
       "version": "5",
-      "when": 1794435700000,
-      "tag": "0074_add_komentar_pengunjung_bukti_notifikasi",
+      "when": 1794435730000,
+      "tag": "0074_create_notifikasi_terkirim",
       "breakpoints": true
     },
     {
       "idx": 75,
       "version": "5",
-      "when": 1794435710000,
-      "tag": "0075_create_warga_pesan",
+      "when": 1794435740000,
+      "tag": "0075_add_lapak_resident",
       "breakpoints": true
     },
     {
       "idx": 76,
       "version": "5",
-      "when": 1794435720000,
-      "tag": "0076_create_dokumen_warga",
+      "when": 1794435750000,
+      "tag": "0076_create_kehadiran_izin",
       "breakpoints": true
     },
     {
       "idx": 77,
       "version": "5",
-      "when": 1794435730000,
-      "tag": "0077_create_notifikasi_terkirim",
+      "when": 1794435760000,
+      "tag": "0077_create_verifikasi_kontak",
       "breakpoints": true
     },
     {
       "idx": 78,
       "version": "5",
-      "when": 1794435740000,
-      "tag": "0078_add_lapak_resident",
+      "when": 1794435770000,
+      "tag": "0078_add_analisis_skoring",
       "breakpoints": true
     },
     {
       "idx": 79,
       "version": "5",
-      "when": 1794435750000,
-      "tag": "0079_create_kehadiran_izin",
+      "when": 1794435780000,
+      "tag": "0079_add_anjungan_kiosk_fields",
       "breakpoints": true
     },
     {
       "idx": 80,
       "version": "5",
-      "when": 1794435760000,
-      "tag": "0080_create_verifikasi_kontak",
+      "when": 1794435790000,
+      "tag": "0080_add_lapak_produk",
       "breakpoints": true
     },
     {
       "idx": 81,
       "version": "5",
-      "when": 1794435770000,
-      "tag": "0081_add_analisis_skoring",
+      "when": 1794435800000,
+      "tag": "0081_add_keranjang",
       "breakpoints": true
     },
     {
       "idx": 82,
       "version": "5",
-      "when": 1794435780000,
-      "tag": "0082_add_anjungan_kiosk_fields",
+      "when": 1794435810000,
+      "tag": "0082_add_pelanggan_langganan",
       "breakpoints": true
     },
     {
       "idx": 83,
       "version": "5",
-      "when": 1794435790000,
-      "tag": "0083_add_lapak_produk",
+      "when": 1794435820000,
+      "tag": "0083_add_pelanggan_dokumen",
       "breakpoints": true
     },
     {
       "idx": 84,
       "version": "5",
-      "when": 1794435800000,
-      "tag": "0084_add_keranjang",
+      "when": 1794435830000,
+      "tag": "0084_create_pengaturan_desa",
       "breakpoints": true
     },
     {
       "idx": 85,
       "version": "5",
-      "when": 1794435810000,
-      "tag": "0086_add_pelanggan_langganan",
+      "when": 1794435831000,
+      "tag": "0085_create_pengguna_shortcut",
       "breakpoints": true
     },
     {
       "idx": 86,
       "version": "5",
-      "when": 1794435820000,
-      "tag": "0087_add_pelanggan_dokumen",
+      "when": 1794435832000,
+      "tag": "0086_create_plugin_registry",
       "breakpoints": true
     },
     {
       "idx": 87,
       "version": "5",
-      "when": 1794435830000,
-      "tag": "0088_create_pengaturan_desa",
+      "when": 1794435833000,
+      "tag": "0087_create_login_otp",
       "breakpoints": true
     },
     {
       "idx": 88,
       "version": "5",
-      "when": 1794435831000,
-      "tag": "0089_create_pengguna_shortcut",
+      "when": 1794435840000,
+      "tag": "0088_create_totp",
       "breakpoints": true
     },
     {
       "idx": 89,
       "version": "5",
-      "when": 1794435832000,
-      "tag": "0090_create_plugin_registry",
+      "when": 1794435850000,
+      "tag": "0089_gelombang_b_umpan_balik_dan_anggota_publik",
       "breakpoints": true
     },
     {
       "idx": 90,
       "version": "5",
-      "when": 1794435833000,
-      "tag": "0091_create_login_otp",
+      "when": 1794435860000,
+      "tag": "0090_verifikasi_kontak_email",
       "breakpoints": true
     },
     {
       "idx": 91,
       "version": "5",
-      "when": 1794435840000,
-      "tag": "0092_create_totp",
+      "when": 1794435870000,
+      "tag": "0091_create_mailbox_sms",
       "breakpoints": true
     },
     {
       "idx": 92,
       "version": "5",
-      "when": 1794435850000,
-      "tag": "0093_gelombang_b_umpan_balik_dan_anggota_publik",
-      "breakpoints": true
-    },
-    {
-      "idx": 93,
-      "version": "5",
-      "when": 1794435860000,
-      "tag": "0094_verifikasi_kontak_email",
-      "breakpoints": true
-    },
-    {
-      "idx": 94,
-      "version": "5",
-      "when": 1794435870000,
-      "tag": "0095_create_mailbox_sms",
+      "when": 1794435880000,
+      "tag": "0092_create_village_domains",
       "breakpoints": true
     }
   ]

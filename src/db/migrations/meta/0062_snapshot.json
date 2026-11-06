@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "6090f96b-0af2-41aa-9de0-f8536e92465e",
-  "prevId": "f788d9cc-e066-4a7f-9fdf-9e7dafdbd9f9",
+  "id": "e338935f-b644-4425-befd-7f6d65bfffee",
+  "prevId": "20f0a334-abf2-44a6-9153-5e18c4afa238",
   "tables": {
     "analisis_indikator": {
       "name": "analisis_indikator",
@@ -9064,6 +9064,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "tte_file": {
+          "name": "tte_file",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "urls_id": {
           "name": "urls_id",
           "type": "int",
@@ -13060,7 +13067,15 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "tte_config_village_uq": {
+          "name": "tte_config_village_uq",
+          "columns": [
+            "village_id"
+          ],
+          "isUnique": true
+        }
+      },
       "foreignKeys": {
         "tte_config_village_id_villages_id_fk": {
           "name": "tte_config_village_id_villages_id_fk",
@@ -13232,15 +13247,412 @@
       },
       "uniqueConstraints": {},
       "checkConstraint": {}
+    },
+    "incoming_letter_dispositions": {
+      "name": "incoming_letter_dispositions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "incoming_letter_id": {
+          "name": "incoming_letter_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "to_user_id": {
+          "name": "to_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "to_role": {
+          "name": "to_role",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "instruction": {
+          "name": "instruction",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "due_date": {
+          "name": "due_date",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "note": {
+          "name": "note",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "dispatched_by": {
+          "name": "dispatched_by",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "incoming_letter_dispositions_village_idx": {
+          "name": "incoming_letter_dispositions_village_idx",
+          "columns": [
+            "village_id"
+          ],
+          "isUnique": false
+        },
+        "incoming_letter_dispositions_letter_idx": {
+          "name": "incoming_letter_dispositions_letter_idx",
+          "columns": [
+            "incoming_letter_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "incoming_letter_dispositions_village_id_villages_id_fk": {
+          "name": "incoming_letter_dispositions_village_id_villages_id_fk",
+          "tableFrom": "incoming_letter_dispositions",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "incoming_letter_dispositions_incoming_letter_id_incoming_letters_id_fk": {
+          "name": "incoming_letter_dispositions_incoming_letter_id_incoming_letters_id_fk",
+          "tableFrom": "incoming_letter_dispositions",
+          "tableTo": "incoming_letters",
+          "columnsFrom": [
+            "incoming_letter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "incoming_letter_dispositions_to_user_id_users_id_fk": {
+          "name": "incoming_letter_dispositions_to_user_id_users_id_fk",
+          "tableFrom": "incoming_letter_dispositions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "to_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "incoming_letter_dispositions_id": {
+          "name": "incoming_letter_dispositions_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "letter_agenda_logs": {
+      "name": "letter_agenda_logs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "letter_id": {
+          "name": "letter_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "action": {
+          "name": "action",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "letter_agenda_logs_village_idx": {
+          "name": "letter_agenda_logs_village_idx",
+          "columns": [
+            "village_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "letter_agenda_logs_village_id_villages_id_fk": {
+          "name": "letter_agenda_logs_village_id_villages_id_fk",
+          "tableFrom": "letter_agenda_logs",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "letter_agenda_logs_actor_id_users_id_fk": {
+          "name": "letter_agenda_logs_actor_id_users_id_fk",
+          "tableFrom": "letter_agenda_logs",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "letter_agenda_logs_id": {
+          "name": "letter_agenda_logs_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "outgoing_letter_shipments": {
+      "name": "outgoing_letter_shipments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outgoing_letter_id": {
+          "name": "outgoing_letter_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sent_date": {
+          "name": "sent_date",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recipient": {
+          "name": "recipient",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "delivery_method": {
+          "name": "delivery_method",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "tracking_no": {
+          "name": "tracking_no",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "note": {
+          "name": "note",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "outgoing_letter_shipments_village_idx": {
+          "name": "outgoing_letter_shipments_village_idx",
+          "columns": [
+            "village_id"
+          ],
+          "isUnique": false
+        },
+        "outgoing_letter_shipments_letter_idx": {
+          "name": "outgoing_letter_shipments_letter_idx",
+          "columns": [
+            "outgoing_letter_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "outgoing_letter_shipments_village_id_villages_id_fk": {
+          "name": "outgoing_letter_shipments_village_id_villages_id_fk",
+          "tableFrom": "outgoing_letter_shipments",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "outgoing_letter_shipments_outgoing_letter_id_outgoing_letters_id_fk": {
+          "name": "outgoing_letter_shipments_outgoing_letter_id_outgoing_letters_id_fk",
+          "tableFrom": "outgoing_letter_shipments",
+          "tableTo": "outgoing_letters",
+          "columnsFrom": [
+            "outgoing_letter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "outgoing_letter_shipments_id": {
+          "name": "outgoing_letter_shipments_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
     }
   },
   "views": {},
   "_meta": {
     "schemas": {},
     "tables": {},
-    "columns": {
-      "\"kontak\".\"keterangan\"": "\"kontak\".\"eterangan\""
-    }
+    "columns": {}
   },
   "internal": {
     "tables": {},

@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "622e55dc-eaab-4225-9aad-5e92109972cd",
-  "prevId": "c41ae147-dddc-4126-b8d7-b87bb94c0562",
+  "id": "51e7aaac-d109-4caf-a7b3-e9e066619209",
+  "prevId": "eb25190f-60ca-4bfc-b3cf-81254d7e131f",
   "tables": {
     "analisis_indikator": {
       "name": "analisis_indikator",
@@ -8868,6 +8868,127 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "keuangan_jurnal": {
+      "name": "keuangan_jurnal",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tahun": {
+          "name": "tahun",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tanggal": {
+          "name": "tanggal",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kode_rekening": {
+          "name": "kode_rekening",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "uraian": {
+          "name": "uraian",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "debet": {
+          "name": "debet",
+          "type": "decimal(19,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "kredit": {
+          "name": "kredit",
+          "type": "decimal(19,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "sumber": {
+          "name": "sumber",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'manual'"
+        },
+        "referensi": {
+          "name": "referensi",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "idx_keuangan_jurnal_village_tahun": {
+          "name": "idx_keuangan_jurnal_village_tahun",
+          "columns": [
+            "village_id",
+            "tahun"
+          ],
+          "isUnique": false
+        },
+        "idx_keuangan_jurnal_tanggal": {
+          "name": "idx_keuangan_jurnal_tanggal",
+          "columns": [
+            "tanggal"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "keuangan_jurnal_id": {
+          "name": "keuangan_jurnal_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "keuangan_laporan": {
       "name": "keuangan_laporan",
       "columns": {
@@ -9017,6 +9138,84 @@
       "compositePrimaryKeys": {
         "keuangan_laporan_id": {
           "name": "keuangan_laporan_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "keuangan_saldo_bank": {
+      "name": "keuangan_saldo_bank",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tahun": {
+          "name": "tahun",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "rekening_bank": {
+          "name": "rekening_bank",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nama_bank": {
+          "name": "nama_bank",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "saldo_awal": {
+          "name": "saldo_awal",
+          "type": "decimal(19,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "unique_saldo_bank": {
+          "name": "unique_saldo_bank",
+          "columns": [
+            "village_id",
+            "tahun",
+            "rekening_bank"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "keuangan_saldo_bank_id": {
+          "name": "keuangan_saldo_bank_id",
           "columns": [
             "id"
           ]
@@ -9597,6 +9796,14 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
+        },
+        "tampil_publik": {
+          "name": "tampil_publik",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -13820,6 +14027,89 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "village_domains": {
+      "name": "village_domains",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "domain": {
+          "name": "domain",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_primary": {
+          "name": "is_primary",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "village_domains_village_idx": {
+          "name": "village_domains_village_idx",
+          "columns": [
+            "village_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "village_domains_village_id_villages_id_fk": {
+          "name": "village_domains_village_id_villages_id_fk",
+          "tableFrom": "village_domains",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "village_domains_id": {
+          "name": "village_domains_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "village_domains_domain_unique": {
+          "name": "village_domains_domain_unique",
+          "columns": [
+            "domain"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
     "villages": {
       "name": "villages",
       "columns": {
@@ -13840,6 +14130,13 @@
         "code": {
           "name": "code",
           "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(60)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -13999,6 +14296,12 @@
         }
       },
       "uniqueConstraints": {
+        "villages_slug_unique": {
+          "name": "villages_slug_unique",
+          "columns": [
+            "slug"
+          ]
+        },
         "villages_domain_unique": {
           "name": "villages_domain_unique",
           "columns": [
@@ -16518,10 +16821,18 @@
         },
         "target": {
           "name": "target",
-          "type": "varchar(20)",
+          "type": "varchar(150)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "kanal": {
+          "name": "kanal",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'whatsapp'"
         },
         "kode_hash": {
           "name": "kode_hash",
@@ -16958,6 +17269,288 @@
       "uniqueConstraints": {},
       "checkConstraint": {}
     },
+    "pengguna_menu_urutan": {
+      "name": "pengguna_menu_urutan",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "urut": {
+          "name": "urut",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "pengguna_menu_urutan_user_slug_uq": {
+          "name": "pengguna_menu_urutan_user_slug_uq",
+          "columns": [
+            "user_id",
+            "slug"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "pengguna_menu_urutan_user_id_users_id_fk": {
+          "name": "pengguna_menu_urutan_user_id_users_id_fk",
+          "tableFrom": "pengguna_menu_urutan",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "pengguna_menu_urutan_id": {
+          "name": "pengguna_menu_urutan_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "mailbox_pesan": {
+      "name": "mailbox_pesan",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "arah": {
+          "name": "arah",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "alamat": {
+          "name": "alamat",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "subjek": {
+          "name": "subjek",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "isi": {
+          "name": "isi",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dibaca": {
+          "name": "dibaca",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "mailbox_pesan_village_created_idx": {
+          "name": "mailbox_pesan_village_created_idx",
+          "columns": [
+            "village_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "mailbox_pesan_village_id_villages_id_fk": {
+          "name": "mailbox_pesan_village_id_villages_id_fk",
+          "tableFrom": "mailbox_pesan",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "mailbox_pesan_id": {
+          "name": "mailbox_pesan_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "sms_pesan": {
+      "name": "sms_pesan",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "arah": {
+          "name": "arah",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nomor": {
+          "name": "nomor",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "isi": {
+          "name": "isi",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'diterima'"
+        },
+        "dibaca": {
+          "name": "dibaca",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "sms_pesan_village_nomor_created_idx": {
+          "name": "sms_pesan_village_nomor_created_idx",
+          "columns": [
+            "village_id",
+            "nomor",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "sms_pesan_village_id_villages_id_fk": {
+          "name": "sms_pesan_village_id_villages_id_fk",
+          "tableFrom": "sms_pesan",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "sms_pesan_id": {
+          "name": "sms_pesan_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
     "plugin_registry": {
       "name": "plugin_registry",
       "columns": {
@@ -17123,6 +17716,113 @@
       "compositePrimaryKeys": {
         "login_otp_id": {
           "name": "login_otp_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "umpan_balik": {
+      "name": "umpan_balik",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "village_id": {
+          "name": "village_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "nama": {
+          "name": "nama",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "kontak": {
+          "name": "kontak",
+          "type": "varchar(150)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "pesan": {
+          "name": "pesan",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'baru'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "umpan_balik_village_status_idx": {
+          "name": "umpan_balik_village_status_idx",
+          "columns": [
+            "village_id",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "umpan_balik_village_created_idx": {
+          "name": "umpan_balik_village_created_idx",
+          "columns": [
+            "village_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "umpan_balik_village_id_villages_id_fk": {
+          "name": "umpan_balik_village_id_villages_id_fk",
+          "tableFrom": "umpan_balik",
+          "tableTo": "villages",
+          "columnsFrom": [
+            "village_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "umpan_balik_id": {
+          "name": "umpan_balik_id",
           "columns": [
             "id"
           ]
