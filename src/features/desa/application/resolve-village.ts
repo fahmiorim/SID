@@ -11,6 +11,7 @@ import {
   type IdentitasDesa,
 } from "@/features/desa/infrastructure/desa-repository";
 import type { CurrentUser } from "@/lib/dal";
+import { env } from "@/lib/env";
 import { notFound } from "@/lib/errors";
 
 /**
@@ -38,7 +39,7 @@ export async function resolveVillageId(user: CurrentUser): Promise<number> {
  */
 export const resolveVillageByHost = cache(
   async (host: string | null | undefined): Promise<IdentitasDesa> => {
-    const peta = susunPetaDesa(await listVillageDomains());
+    const peta = susunPetaDesa(await listVillageDomains(), env.DESA_BASE_DOMAIN ?? null);
     const villageId = villageIdDariHost(host, peta);
 
     if (villageId !== null) {

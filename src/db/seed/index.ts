@@ -86,6 +86,7 @@ async function ensureVillage(): Promise<number> {
       .values({
         name: "Desa Contoh",
         code: "3201012001",
+        slug: "desa-contoh",
         postalCode: "16710",
         district: "Kecamatan Contoh",
         districtCode: "3201012",

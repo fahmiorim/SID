@@ -3,8 +3,9 @@ import "server-only";
 import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { villages } from "@/db/schema";
+import { villageDomains, villages } from "@/db/schema";
 import type { DesaFormInput } from "@/features/desa/domain/desa";
+import type { BarisDesa } from "@/features/desa/domain/tenant";
 
 /** Perbarui identitas desa berdasarkan id. */
 export async function updateIdentitasDesa(id: number, input: DesaFormInput): Promise<void> {
@@ -117,15 +118,37 @@ export async function getFirstVillageId(): Promise<number | null> {
 }
 
 /**
- * Daftar id + domain seluruh desa, terurut menaik berdasarkan id.
+ * Daftar desa beserta seluruh domain/alias dan slug subdomainnya.
  *
- * Dipakai resolver host (`resolveVillageByHost`) untuk menyusun peta domain
- * sekali per permintaan, alih-alih satu query per kandidat host. Ukurannya
- * satu baris per desa sehingga murah bahkan untuk ratusan desa.
+ * Satu desa dapat muncul beberapa kali (satu baris per alias). `villages.domain`
+ * tetap disertakan sebagai cermin domain utama agar instalasi lama tetap
+ * ter-resolve meski baris `village_domains` belum lengkap.
  */
-export async function listVillageDomains(): Promise<{ id: number; domain: string | null }[]> {
-  return db
-    .select({ id: villages.id, domain: villages.domain })
-    .from(villages)
-    .orderBy(asc(villages.id));
+export async function listVillageDomains(): Promise<BarisDesa[]> {
+  const [desa, alias] = await Promise.all([
+    db
+      .select({ id: villages.id, domain: villages.domain, slug: villages.slug })
+      .from(villages)
+      .orderBy(asc(villages.id)),
+    db
+      .select({ villageId: villageDomains.villageId, domain: villageDomains.domain })
+      .from(villageDomains),
+  ]);
+
+  const slugPerDesa = new Map(desa.map((baris) => [baris.id, baris.slug]));
+  const hasil: BarisDesa[] = desa.map((baris) => ({
+    id: baris.id,
+    domain: baris.domain,
+    slug: baris.slug,
+  }));
+
+  for (const baris of alias) {
+    hasil.push({
+      id: baris.villageId,
+      domain: baris.domain,
+      slug: slugPerDesa.get(baris.villageId) ?? null,
+    });
+  }
+
+  return hasil;
 }

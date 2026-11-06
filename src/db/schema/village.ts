@@ -1,4 +1,12 @@
-import { int, mysqlTable, timestamp, tinyint, varchar } from "drizzle-orm/mysql-core";
+import {
+  boolean,
+  index,
+  int,
+  mysqlTable,
+  timestamp,
+  tinyint,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
 /**
  * `villages` — identitas desa sekaligus kunci tenant (multi-desa).
@@ -12,6 +20,13 @@ export const villages = mysqlTable("villages", {
 
   name: varchar("name", { length: 100 }),
   code: varchar("code", { length: 10 }),
+
+  /**
+   * Label subdomain publik untuk wildcard `*.DESA_BASE_DOMAIN`
+   * (mis. `sukamaju` → `sukamaju.desa.id`). Unik agar satu label hanya
+   * menunjuk satu desa.
+   */
+  slug: varchar("slug", { length: 60 }).unique(),
   postalCode: varchar("postal_code", { length: 5 }),
 
   /** Kecamatan (sub-distrik) beserta kode wilayahnya. */
@@ -62,3 +77,28 @@ export const villages = mysqlTable("villages", {
 
 export type Village = typeof villages.$inferSelect;
 export type NewVillage = typeof villages.$inferInsert;
+
+/**
+ * `village_domains` — satu desa boleh punya banyak host (domain utama + alias).
+ *
+ * Domain di sini adalah sumber kebenaran resolusi host. `villages.domain` tetap
+ * dipertahankan sebagai cermin domain utama agar identitas desa dan form lama
+ * tidak berubah. Setiap host unik lintas desa.
+ */
+export const villageDomains = mysqlTable(
+  "village_domains",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    villageId: int("village_id")
+      .notNull()
+      .references(() => villages.id, { onDelete: "cascade" }),
+    domain: varchar("domain", { length: 255 }).notNull().unique(),
+    /** Domain utama yang ditampilkan sebagai identitas desa. */
+    isPrimary: boolean("is_primary").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [index("village_domains_village_idx").on(table.villageId)],
+);
+
+export type VillageDomain = typeof villageDomains.$inferSelect;
+export type NewVillageDomain = typeof villageDomains.$inferInsert;

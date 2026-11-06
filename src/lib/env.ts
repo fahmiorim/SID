@@ -19,6 +19,16 @@ const envSchema = z
     /** URL publik aplikasi (untuk tautan absolut, callback OAuth, dsb.). */
     APP_URL: z.url().default("http://localhost:3000"),
 
+    /**
+     * Domain induk untuk wildcard subdomain desa (mis. `desa.id` sehingga
+     * `<slug>.desa.id` menunjuk desa). Kosong = wildcard nonaktif.
+     */
+    DESA_BASE_DOMAIN: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined),
+
     /** DSN MySQL/MariaDB: mysql://user:pass@host:port/database */
     DATABASE_URL: z.string().min(1, "DATABASE_URL wajib diisi."),
 

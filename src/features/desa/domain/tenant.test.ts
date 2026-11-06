@@ -64,6 +64,51 @@ describe("villageIdDariHost — isolasi dua desa/dua host", () => {
   });
 });
 
+describe("susunPetaDesa — banyak domain per desa", () => {
+  it("menggabungkan domain utama dan alias untuk desa yang sama", () => {
+    const peta = susunPetaDesa([
+      { id: 1, domain: "desa-a.id", slug: "desa-a" },
+      { id: 1, domain: "sukamaju.desa.id", slug: "desa-a" },
+      { id: 2, domain: null, slug: "desa-b" },
+    ]);
+
+    expect(peta.jumlahDesa).toBe(2);
+    expect(peta.domain.get("sukamaju.desa.id")).toBe(1);
+    expect(villageIdDariHost("sukamaju.desa.id", peta)).toBe(1);
+    expect(villageIdDariHost("desa-a.id", peta)).toBe(1);
+  });
+});
+
+describe("villageIdDariHost — wildcard subdomain", () => {
+  const peta = susunPetaDesa(
+    [
+      { id: 1, domain: "desa-a.id", slug: "sukamaju" },
+      { id: 2, domain: null, slug: "desa-b" },
+    ],
+    "https://desa.id/",
+  );
+
+  it("memetakan <slug>.<base> ke desa", () => {
+    expect(villageIdDariHost("sukamaju.desa.id", peta)).toBe(1);
+    expect(villageIdDariHost("SUKAMAJU.DESA.ID:3000", peta)).toBe(1);
+    expect(villageIdDariHost("www.sukamaju.desa.id", peta)).toBe(1);
+  });
+
+  it("menolak label tak dikenal dan label bertingkat", () => {
+    expect(villageIdDariHost("tidak-ada.desa.id", peta)).toBeNull();
+    expect(villageIdDariHost("a.sukamaju.desa.id", peta)).toBeNull();
+  });
+
+  it("wildcard mati saat DESA_BASE_DOMAIN kosong", () => {
+    const tanpa = susunPetaDesa([
+      { id: 1, domain: null, slug: "sukamaju" },
+      { id: 2, domain: null, slug: "desa-b" },
+    ]);
+
+    expect(villageIdDariHost("sukamaju.desa.id", tanpa)).toBeNull();
+  });
+});
+
 describe("villageIdDariHost — fallback satu desa", () => {
   it("memakai satu-satunya desa untuk host apa pun", () => {
     const peta = susunPetaDesa([{ id: 7, domain: "desa-tunggal.desa.id" }]);

@@ -31,7 +31,9 @@ export const ROLE_SEEDS: readonly RoleSeed[] = [
     slug: "super-admin",
     name: "Super Admin",
     isSystem: true,
-    grants: {},
+    grants: {
+      "super-admin": "manage",
+    },
   },
   {
     slug: "sekretaris-desa",

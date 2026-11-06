@@ -24,6 +24,23 @@ export function normalizeHost(host: string | null | undefined): string {
 }
 
 /**
+ * Normalisasi domain induk untuk wildcard subdomain.
+ *
+ * Menerima `https://desa.id/` atau `Desa.ID` dan mengembalikan `desa.id`.
+ * String kosong berarti wildcard dinonaktifkan.
+ */
+export function normalizeBaseDomain(value: string | null | undefined): string {
+  if (!value) return "";
+
+  return normalizeHost(
+    value
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .replace(/\/.*$/, ""),
+  );
+}
+
+/**
  * Kandidat domain yang dicoba berurutan.
  *
  * `www.` diperlakukan sebagai alias dari domain tanpa `www` agar pengunjung
