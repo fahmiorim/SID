@@ -68,7 +68,7 @@
     "@types/sanitize-html": "^2.16.2",
     "drizzle-kit": "^0.31.11",
     "e2e": "^0.21.3",
-    "eslint": "^9",
+    "eslint": "^10",
     "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
