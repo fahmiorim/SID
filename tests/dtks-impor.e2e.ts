@@ -6,37 +6,34 @@ import { expect } from "e2e";
 // Impor CSV tersedia via dialog `/penduduk/dtks` (`DtksImportDialog` + `imporDtksAction`)
 // dengan pembacaan CSV/XLSX lewat `bacaImporDariFormData`. Pemetaan baris impor kini ada di domain
 // (`rencanaImporDtks`) dan diuji: nomor RTM tidak ditemukan, baris ganda, dan normalisasi spasi.
-// Test `dtks.test.ts` + `dtks-berkas.test.ts`; **Gap: E2E impor DTKS**.
+// Test `dtks.test.ts` + `dtks-berkas.test.ts`; E2E di bawah memeriksa dialog dan
+// pelaporan RTM tidak ditemukan. **Gap: E2E impor sukses.**
 // ============================================================================
 test(
-  "DTKS impor CSV dialog terbuka dan membaca file",
+  "DTKS impor CSV dialog terbuka dan menerima berkas",
   { session: "admin", tags: ["smoke"] },
   async ({ app, screen }) => {
     await app.open("/penduduk/dtks");
-    await expect(screen.getByRole("heading", { name: /impor DTKS/i })).toBeVisible();
-    // Input file
-    await expect(screen.getByRole("button", { name: /upload|impor/i })).toBeVisible();
-    // Validasi jenis file
-    const fileInput = screen.getByRole("textbox", { name: /file|nama file/i });
-    if (await fileInput.isVisible({ timeout: 3000 })) {
-      await expect(fileInput).toBeVisible();
-    }
+    await screen.getByRole("button", { name: /^impor$/i }).tap();
+    await expect(screen.getByRole("heading", { name: /impor dtks/i })).toBeVisible();
+    // Input berkas CSV/TXT/XLSX
+    await expect(screen.getByLabel(/berkas/i)).toBeVisible();
   },
 );
 
 test(
-  "DTKS impor validasi baris: RTM tidak ditemukan, baris ganda, normalisasi spasi",
+  "DTKS impor melaporkan nomor RTM yang tidak ditemukan",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, screen, browser }) => {
+  async ({ app, screen }) => {
     await app.open("/penduduk/dtks");
-    // Unggah file CSV test
-    await app.upload("//cdn.example.com/dtks-sample.csv", { fieldName: "file" });
-    // Proses impor
-    await screen.getByRole("button", { name: /proses|mulai impor/i }).click({ timeout: 5000 });
-    // Cek hasil validasi
-    await expect(
-      browser.locator("text=/RTM tidak ditemukan|baris ganda|normalisasi/i"),
-    ).toBeVisible({ timeout: 5000 });
+    await screen.getByRole("button", { name: /^impor$/i }).tap();
+    await expect(screen.getByRole("heading", { name: /impor dtks/i })).toBeVisible();
+    await screen.page.setInputFiles('input[type="file"]', "tests/fixtures/dtks-sample.csv");
+    await screen
+      .getByRole("dialog")
+      .getByRole("button", { name: /^impor$/i })
+      .tap();
+    await expect(screen.getByText(/tidak ditemukan/i)).toBeVisible({ timeout: 10000 });
   },
 );
 
@@ -48,29 +45,12 @@ test(
 // **Gap: E2E impor peserta.** Test `bantuan.test.ts`; E2E detail `/bantuan/999999`.
 // ============================================================================
 test(
-  "peserta bantuan: dialog impor terbuka dan validasi kolom",
+  "peserta bantuan: halaman program bantuan dapat dibuka",
   { session: "admin", tags: ["smoke"] },
   async ({ app, screen }) => {
-    await app.open("/bantuan/impor-peserta");
-    await expect(screen.getByRole("heading", { name: /impor peserta/i })).toBeVisible();
-    // Kolom yang dibutuhkan
-    await expect(screen.getByLabel(/NIK/i)).toBeVisible();
-    await expect(screen.getByLabel(/No\. KK/i)).toBeVisible();
-    await expect(screen.getByLabel(/No\. RTM/i)).toBeVisible();
-    await expect(screen.getByLabel(/kode kelompok/i)).toBeVisible();
-  },
-);
-
-test(
-  "peserta bantuan: validasi kandidat sasaran dan impor",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/bantuan/impor-peserta");
-    await app.upload("//cdn.example.com/peserta-sample.csv", { fieldName: "file" });
-    await screen.getByRole("button", { name: /impor/i }).click({ timeout: 5000 });
-    // Cek hasil: kandidat yang valid dan yang tidak valid
-    await expect(
-      browser.locator("text=/kandidat valid|kandidat tidak valid|kode ganda/i"),
-    ).toBeVisible({ timeout: 5000 });
+    // Impor peserta berada di dialog detail program; alur unggahnya belum punya
+    // E2E (lihat gap OS-POP-012). Yang dijaga di sini hanya halaman program.
+    await app.open("/bantuan");
+    await expect(screen.getByRole("heading", { name: /bantuan/i })).toBeVisible();
   },
 );

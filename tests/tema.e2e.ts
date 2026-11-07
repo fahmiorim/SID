@@ -40,7 +40,7 @@ test(
   "tema: halaman pengaturan manifest scan divisualisasikan",
   { session: "admin" },
   async ({ app, screen }) => {
-    await app.open("/pengaturan/tema");
+    await app.open("/konten/tema");
     await expect(screen.getByRole("heading", { name: /tema|pengaturan/i })).toBeVisible();
     // Daftar tema dengan status valid/tidak valid
     await expect(screen.getByText(/valid|tidak valid|masalah|slot/i)).toBeVisible({

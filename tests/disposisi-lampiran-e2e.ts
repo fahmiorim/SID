@@ -30,7 +30,7 @@ test(
     await expect(browser).toHaveURL("/beranda");
 
     // 2. Buka halaman surat masuk
-    await app.open("/persurata/surat-masuk");
+    await app.open("/persuratan/surat-masuk");
     await expect(screen.getByRole("heading", { name: "Surat Masuk" })).toBeVisible();
 
     // 3. Cari surat masuk yang baru dibuat
@@ -50,7 +50,7 @@ test(
     await expect(screen.getByText("Disposisi surat masuk ditambahkan")).toBeVisible();
 
     // 5b. Tambah disposisi dengan lampiran JPG
-    await app.open("/persurata/surat-masuk");
+    await app.open("/persuratan/surat-masuk");
     await screen.getByRole("row").first().getByRole("button", { name: "Periksa" }).tap();
     await screen.getByRole("button", { name: "Tambah disposisi" }).tap();
 
@@ -64,7 +64,7 @@ test(
     await expect(screen.getByText("Disposisi surat masuk ditambahkan")).toBeVisible();
 
     // 5c. Tambah disposisi dengan lampiran WebP
-    await app.open("/persurata/surat-masuk");
+    await app.open("/persuratan/surat-masuk");
     await screen.getByRole("row").first().getByRole("button", { name: "Periksa" }).tap();
     await screen.getByRole("button", { name: "Tambah disposisi" }).tap();
 

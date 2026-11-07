@@ -249,7 +249,7 @@ test(
   "manifes tema halaman pengaturan dapat diakses",
   { session: "admin" },
   async ({ app, screen }) => {
-    await app.open("/pengaturan/tema");
+    await app.open("/konten/tema");
     await expect(screen.getByRole("heading", { name: /tema|pengaturan/i })).toBeVisible({
       timeout: 5000,
     });

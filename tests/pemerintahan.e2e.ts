@@ -6,7 +6,7 @@ test(
   "pemerintahan: bagan SOTK dan perangkat desa tersedia",
   { session: "admin" },
   async ({ app, screen }) => {
-    await app.open("/pemerintahan/perangkat");
+    await app.open("/konten/perangkat");
     await expect(screen.getByRole("heading", { name: /perangkat|sotk/i })).toBeVisible();
   },
 );

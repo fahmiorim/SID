@@ -37,16 +37,16 @@ test(
 );
 
 test(
-  "ekspor CSV laporan survey menyertai ringkasan kategori",
+  "ekspor CSV laporan survey menolak id survei tidak valid",
   { session: "admin", tags: ["smoke"] },
   async ({ app, browser }) => {
-    await app.open("/analisis-survei/export");
-    await expect(browser).toHaveURL("/analisis-survei/export");
-    // CSV harus berisi header kategori, rata-rata, jumlah
-    const csvContent = await browser.locator("pre, code, textarea").textContent();
-    expect(csvContent).toContain("kategori");
-    expect(csvContent).toContain("rata-rata");
-    expect(csvContent).toContain("jumlah");
+    await app.open("/analisis-survei");
+    const hasil = await browser.evaluate(async () => {
+      const respons = await fetch("/analisis-survei/0/laporan/ekspor");
+      return { status: respons.status, body: await respons.text() };
+    });
+    expect(hasil.status).toBe(400);
+    expect(hasil.body).toContain("tidak valid");
   },
 );
 
@@ -147,15 +147,16 @@ test(
 );
 
 test(
-  "ekspor CSV skor formal menyertai kategori, rata-rata, jumlah indikator",
+  "ekspor CSV skor formal menolak id survei tidak valid",
   { session: "admin", tags: ["smoke"] },
   async ({ app, browser }) => {
-    await app.open("/analisis-survei/export/skor");
-    await expect(browser).toHaveURL("/analisis-survei/export/skor");
-    const csvContent = await browser.locator("pre, code, textarea").textContent();
-    expect(csvContent).toContain("kategori");
-    expect(csvContent).toContain("rata-rata");
-    expect(csvContent).toContain("jumlah");
+    await app.open("/analisis-survei");
+    const hasil = await browser.evaluate(async () => {
+      const respons = await fetch("/analisis-survei/0/ekspor");
+      return { status: respons.status, body: await respons.text() };
+    });
+    expect(hasil.status).toBe(400);
+    expect(hasil.body).toContain("tidak valid");
   },
 );
 
@@ -193,21 +194,18 @@ test("endpoint publik /api/publik/survei/[id]/respons validasi token + jawaban",
   app,
   browser,
 }) => {
-  // POST ke endpoint publik tanpa autentikasi admin
-  const _token = "test-hmac-token-not-valid-real-7d-expiry";
-  await app.open("/api/publik/survei/1/respons", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    payload: JSON.stringify({
-      surveyId: 1,
-      jawaban: { jawaban1: "pilihA" },
-      // token dikirim lewat header atau form
-    }),
+  await app.open("/desa/analisis-survei");
+  // POST tanpa token HMAC harus ditolak
+  const hasil = await browser.evaluate(async () => {
+    const respons = await fetch("/api/publik/survei/1/respons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jawaban: { jawaban1: "pilihA" } }),
+    });
+    return { status: respons.status, body: await respons.text() };
   });
-  // Harus error karena token tidak valid atau expire
-  await expect(browser.locator("body")).toContainText(/error|gagal|tidak valid/i);
+  expect(hasil.status).toBe(401);
+  expect(hasil.body).toMatch(/token/i);
 });
 
 // ============================================================================

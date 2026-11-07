@@ -4,31 +4,32 @@ import { expect } from "e2e";
 // ============================================================================
 // OS-FIN-004 — Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, dan impor multi-PDF
 // dengan validasi MIME/ukuran/periode melalui `imporDokumenLaporan`. Test domain
-// `laporan-dokumen-impor.test.ts`. **Gap: E2E impor belum membuktikan unggah dan hasil penyimpanan**;
-// `tests/keuangan-lanjutan.e2e.ts` hanya memeriksa tombol impor.
+// `laporan-dokumen-impor.test.ts`. **Gap: E2E impor belum membuktikan hasil penyimpanan**;
+// E2E di bawah memeriksa dialog impor dan metadata unggah PDF.
 // ============================================================================
 test(
-  "arsip dokumen: impor multi-PDF validasi MIME/ukuran/periode",
+  "arsip dokumen: dialog impor multi-PDF menampilkan validasi berkas",
   { session: "admin", tags: ["smoke"] },
   async ({ app, screen }) => {
-    await app.open("/keuaran/arsip/dokumen/impor");
-    await expect(screen.getByRole("heading", { name: /impor dokumen/i })).toBeVisible();
-    // Form unggah
-    await expect(screen.getByRole("input", { type: "file" })).toBeVisible();
-    // Validasi periode
-    await expect(screen.getByLabel(/periode/i)).toBeVisible();
+    await app.open("/keuangan/laporan-dokumen");
+    await screen.getByRole("button", { name: /impor dokumen/i }).tap();
+    await expect(screen.getByRole("heading", { name: /impor dokumen laporan/i })).toBeVisible();
+    // Form unggah hanya menerima PDF
+    await expect(screen.getByLabel(/berkas pdf/i)).toBeVisible();
   },
 );
 
 test(
-  "arsip dokumen: cek hasil impor dan penyimpanan",
+  "arsip dokumen: unggah PDF menampilkan metadata dan tombol impor",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/keuaran/arsip/dokumen/impor");
-    await app.upload("//cdn.example.com/laporan-impor.zip", { fieldName: "file" });
-    await screen.getByRole("button", { name: /proses impor/i }).click({ timeout: 5000 });
-    // Cek status di halaman
-    await expect(browser.locator("text=/berhasil|gagal|diterima/i")).toBeVisible({ timeout: 5000 });
+  async ({ app, screen }) => {
+    await app.open("/keuangan/laporan-dokumen");
+    await screen.getByRole("button", { name: /impor dokumen/i }).tap();
+    await expect(screen.getByRole("heading", { name: /impor dokumen laporan/i })).toBeVisible();
+    await screen.page.setInputFiles('input[type="file"]', "tests/fixtures/berkas-uji-e2e.pdf");
+    // Metadata baris muncul dan berkas lolos validasi PDF
+    await expect(screen.getByText("OK", { exact: true })).toBeVisible({ timeout: 5000 });
+    await expect(screen.getByRole("button", { name: /impor 1 berkas/i })).toBeVisible();
   },
 );
 

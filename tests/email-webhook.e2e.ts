@@ -24,20 +24,22 @@ test(
   },
 );
 
-test("webhook email menerima pesan masuk", async ({ app, browser }) => {
-  // POST ke webhook endpoint
-  await app.open("/api/webhooks/email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Email-Token": "test-token",
-    },
-    payload: JSON.stringify({
-      from: "test@example.com",
-      subject: "Test",
-      body: "Test body",
-    }),
+test("webhook email menolak payload tanpa token", async ({ app, browser }) => {
+  await app.open("/");
+  // POST tanpa token harus ditolak (400 payload tidak valid, 401 token salah,
+  // atau 503 bila EMAIL_WEBHOOK_TOKEN belum dikonfigurasi)
+  const hasil = await browser.evaluate(async () => {
+    const respons = await fetch("/api/webhooks/email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "test@example.com",
+        subject: "Test",
+        body: "Test body",
+      }),
+    });
+    return { status: respons.status, body: await respons.text() };
   });
-  // Cek response
-  await expect(browser.locator("body")).toBeVisible({ timeout: 5000 });
+  expect([400, 401, 503]).toContain(hasil.status);
+  expect(hasil.body).toMatch(/tidak valid|belum dikonfigurasi/i);
 });

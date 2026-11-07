@@ -20,9 +20,8 @@ test(
 );
 
 test("plugin aktivasi berizin tersedia", { session: "admin" }, async ({ app, screen }) => {
-  await app.open("/pengaturan/plugin/aktivasi");
-  await expect(screen.getByRole("heading", { name: /aktivasi plugin/i })).toBeVisible();
-  // Form aktivasi
-  await expect(screen.getByLabel(/nama provider/i)).toBeVisible();
-  await expect(screen.getByRole("button", { name: /aktifkan/i })).toBeVisible();
+  await app.open("/pengaturan/plugin");
+  await expect(screen.getByRole("heading", { name: /plugin/i })).toBeVisible();
+  // Tombol aktivasi/nonaktif per provider
+  await expect(screen.getByRole("button", { name: /aktifkan|nonaktifkan/i }).first()).toBeVisible();
 });
