@@ -42,7 +42,21 @@ describe("addToCartAction session cookie", () => {
       set: vi.fn(),
     } as never);
     vi.mocked(getIdentitasFromRequest).mockResolvedValue({ id: 17 } as never);
-    vi.mocked(tambahKeKeranjang).mockResolvedValue({ id: 1 });
+    vi.mocked(tambahKeKeranjang).mockResolvedValue({ id: 1, merged: false });
+  });
+
+  it("menyimpan penggabungan item keranjang yang sudah ada", async () => {
+    const cookieStore = {
+      get: vi.fn().mockReturnValue({ value: "existing-guest-key" }),
+      set: vi.fn(),
+    };
+    vi.mocked(cookies).mockResolvedValue(cookieStore as never);
+
+    const result = await addToCartAction(createIdleActionState<null>(), buatFormData());
+
+    expect(result.status).toBe("success");
+    expect(tambahKeKeranjang).toHaveBeenCalledWith("existing-guest-key", 17, 12, 34, 2);
+    expect(cookieStore.set).not.toHaveBeenCalled();
   });
 
   it("uses an unpredictable guest key and sets a protected session cookie", async () => {

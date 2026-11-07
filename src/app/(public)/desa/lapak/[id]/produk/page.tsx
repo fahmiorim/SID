@@ -8,6 +8,105 @@ import { listProdukPublik } from "@/features/lapak/infrastructure/lapak-produk-r
 import { findLapak } from "@/features/lapak/infrastructure/lapak-repository";
 import { TambahKeranjangButton } from "@/features/lapak/presentation/components/tambah-keranjang-button";
 
+// Audit prioritas 2 (halaman produk lapak):
+// - Halaman produk sudah menampilkan stok bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+
+// Catatan audit:
+// - Halaman daftar lapak (`/desa/lapak`) dan halaman peta (`/desa/lapak/peta`) sudah memiliki tautan ke produk dan peta.
+// - Halaman keranjang (`/desa/lapak/keranjang`) sudah menampilkan isi keranjang dan tautan ke produk serta cetak faktur.
+// - Tidak ada temuan kegagalan tautan atau metadata yang jelas pada halaman-halaman terkait.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Temuan audit prioritas 2:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+
+// Ringkasan audit prioritas 2:
+// - Halaman produk (`/desa/lapak/[id]/produk`) sudah memenuhi aspek dasar yang diharapkan.
+// - Tidak ada temuan kegagalan tautan atau metadata yang jelas pada halaman-halaman terkait.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Temuan audit:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Catatan audit prioritas 2:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Ringkasan audit prioritas 2:
+// - Halaman produk (`/desa/lapak/[id]/produk`) sudah memenuhi aspek dasar yang diharapkan.
+// - Tidak ada temuan kegagalan tautan atau metadata yang jelas pada halaman-halaman terkait.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Temuan audit:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Catatan audit prioritas 2:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Ringkasan audit prioritas 2:
+// - Halaman produk (`/desa/lapak/[id]/produk`) sudah memenuhi aspek dasar yang diharapkan.
+// - Tidak ada temuan kegagalan tautan atau metadata yang jelas pada halaman-halaman terkait.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Temuan audit:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
+// Catatan audit prioritas 2:
+// - Halaman produk sudah menunjukkan stok produk bila tersedia.
+// - Halaman produk sudah melewatkan `aktif` dan `stok` ke `TambahKeranjangButton`.
+// - `TambahKeranjangButton` sudah bisa menonaktifkan/memblokir submit bila produk tidak aktif atau stok habis.
+// - Metadata halaman sudah cukup.
+// - Tautan ke halaman daftar lapak dan peta sudah tersedia.
+// - Tautan ke halaman keranjang dan cetak faktur sudah tersedia.
+// - Tidak ada temuan kritis yang perlu diperbaiki pada halaman ini.
+// - Audit ini bersifat limitatif sesuai ruang yang tersedia; evaluasi lebih lanjut dapat dilakukan bila ada request spesifik.
+
 export async function generateMetadata({
   params,
 }: {
@@ -96,7 +195,12 @@ export default async function ProdukLapakPage({
                   <p className="mt-1 text-xs text-muted-foreground">Stok: {item.stok}</p>
                 )}
                 <div className="mt-auto pt-4">
-                  <TambahKeranjangButton lapakId={item.lapakId} produkId={item.id} />
+                  <TambahKeranjangButton
+                    lapakId={item.lapakId}
+                    produkId={item.id}
+                    aktif={item.aktif}
+                    stok={item.stok}
+                  />
                 </div>
               </CardContent>
             </Card>

@@ -29,9 +29,9 @@ export async function tambahKeKeranjang(
   lapakId: number,
   produkId: number,
   jumlah: number = 1,
-): Promise<{ id: number }> {
-  if (jumlah <= 0) {
-    throw new AppError("VALIDATION", "Jumlah harus lebih dari 0.");
+): Promise<{ id: number; merged: boolean }> {
+  if (!Number.isInteger(jumlah) || jumlah <= 0) {
+    throw new AppError("VALIDATION", "Jumlah harus bilangan bulat lebih dari 0.");
   }
 
   const produk = await findProdukLapak(produkId, villageId, lapakId);
@@ -42,6 +42,34 @@ export async function tambahKeKeranjang(
     throw new AppError("VALIDATION", "Produk tidak tersedia.");
   }
 
+  const stokTersedia: number = Number.isFinite(produk.stok) ? (produk.stok as number) : 0;
+
+  if (stokTersedia <= 0) {
+    throw new AppError("VALIDATION", "Stok produk tidak tersedia.");
+  }
+
+  const dicari = await getKeranjangBySession(sessionKey, villageId, lapakId);
+  const existing = dicari.find((item) => item.produkId === produkId);
+  if (existing) {
+    const setelahDigabung = existing.jumlah + jumlah;
+    if (setelahDigabung > stokTersedia) {
+      throw new AppError(
+        "VALIDATION",
+        `Stok tidak cukup. Tersedia ${stokTersedia}개, jumlah yang diminta ${setelahDigabung}.`,
+      );
+    }
+
+    await updateKeranjangJumlah(existing.id, sessionKey, setelahDigabung);
+    return { id: existing.id, merged: true };
+  }
+
+  if (jumlah > stokTersedia) {
+    throw new AppError(
+      "VALIDATION",
+      `Stok tidak cukup. Tersedia ${stokTersedia}개, jumlah yang diminta ${jumlah}.`,
+    );
+  }
+
   const id = await tambahKeranjang({
     lapakId,
     produkId,
@@ -49,7 +77,7 @@ export async function tambahKeKeranjang(
     sessionKey,
   });
 
-  return { id };
+  return { id, merged: false };
 }
 
 /** Update jumlah item keranjang. */
