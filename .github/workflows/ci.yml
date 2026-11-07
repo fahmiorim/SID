@@ -161,7 +161,7 @@ jobs:
 
       - name: Unggah laporan E2E
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-report
           path: |
