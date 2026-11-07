@@ -94,4 +94,76 @@ describe("register paritas", () => {
       hitung["⚪"],
     ]);
   });
+
+  it("angka ringkasan prosa sama dengan hitungan baris", () => {
+    const register = barisRegister();
+    const hitung: Record<string, number> = {
+      "✅": register.filter(({ status }) => status.includes("✅")).length,
+      "🟡": register.filter(({ status }) => status.includes("🟡")).length,
+      "🔴": register.filter(({ status }) => status.includes("🔴")).length,
+      "⚪": register.filter(({ status }) => status.includes("⚪")).length,
+    };
+    const pengecualian = /menggantikan|historis|angka lama|tidak berlaku|sebelumnya|snapshot/i;
+    const salah: string[] = [];
+
+    for (const dokumen of ["PARITAS-OPENSID.md", "RENCANA-PERBAIKAN.md"]) {
+      baca(dokumen)
+        .split(/\r?\n/)
+        .forEach((baris, indeks) => {
+          if (pengecualian.test(baris)) return;
+          for (const cocok of baris.matchAll(/(\d+)(?:\s*ID)?\s*(✅|🟡|🔴|⚪)/g)) {
+            const angka = Number(cocok[1] ?? "");
+            const status = cocok[2] ?? "";
+            if (angka !== hitung[status]) {
+              salah.push(
+                `${dokumen}:${indeks + 1} menulis ${angka} ${status}, aktual ${hitung[status]}`,
+              );
+            }
+          }
+        });
+    }
+
+    expect(salah).toEqual([]);
+  });
+
+  it("rujukan E2E menunjuk berkas yang ada", () => {
+    const akar = fileURLToPath(new URL("../../", import.meta.url));
+    const pengecualian = /belum dibuat|belum tersedia|sudah dihapus|dihapus/i;
+    const hilang: string[] = [];
+
+    for (const dokumen of ["PARITAS-OPENSID.md", "RENCANA-PERBAIKAN.md"]) {
+      baca(dokumen)
+        .split(/\r?\n/)
+        .forEach((baris, indeks) => {
+          if (pengecualian.test(baris)) return;
+          for (const cocok of baris.matchAll(/tests\/[A-Za-z0-9._-]+\.e2e\.ts/g)) {
+            const jalur = cocok[0] ?? "";
+            if (!fs.existsSync(akar + jalur)) hilang.push(`${dokumen}:${indeks + 1} ${jalur}`);
+          }
+        });
+    }
+
+    expect(hilang).toEqual([]);
+  });
+
+  it("rujukan nomor migrasi menunjuk berkas migrasi yang ada", () => {
+    const folder = fileURLToPath(new URL("./migrations/", import.meta.url));
+    const berkas = fs.readdirSync(folder).filter((nama) => nama.endsWith(".sql"));
+    const salah: string[] = [];
+
+    for (const dokumen of ["PARITAS-OPENSID.md", "RENCANA-PERBAIKAN.md"]) {
+      baca(dokumen)
+        .split(/\r?\n/)
+        .forEach((baris, indeks) => {
+          for (const cocok of baris.matchAll(/migrasi\s+`?(\d{4})`?/gi)) {
+            const nomor = cocok[1] ?? "";
+            if (!berkas.some((nama) => nama.startsWith(nomor))) {
+              salah.push(`${dokumen}:${indeks + 1} migrasi ${nomor}`);
+            }
+          }
+        });
+    }
+
+    expect(salah).toEqual([]);
+  });
 });

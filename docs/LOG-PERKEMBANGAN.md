@@ -57,7 +57,7 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 ## 2026-11-07 — Gelombang C–E tuntas non-E2E: email, OTP, form eksternal, API surat
 
 - **`OS-WGA-001`** — verifikasi kontak kini mendukung email: kolom `kanal`
-  (migrasi `0094`), target 150 karakter, kanal dipilih otomatis dari bentuk
+  (migrasi `0090`), target 150 karakter, kanal dipilih otomatis dari bentuk
   target, kode dikirim lewat Resend. Test domain `verifikasi-kontak.test.ts`.
 - **`OS-WGA-002`** — OTP login sebagai faktor kedua sudah aktif: kode 6 digit
   via WhatsApp/email, diverifikasi sebelum sesi dibuat, aktivasi di profil,

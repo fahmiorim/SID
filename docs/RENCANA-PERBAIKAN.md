@@ -53,7 +53,8 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
 1. Sebelum batch dimulai, salin gap per-ID dari `PARITAS-OPENSID.md`.
 2. Kerjakan seluruh gap non-E2E; jangan menambah atau menjalankan E2E.
 3. Setelah batch, perbarui baris PARITAS. Jika hanya E2E tersisa, tulis
-   `Gap: E2E`; jangan menaikkan status ke ✅ sebelum E2E tersedia.
+   `Gap: E2E`; status boleh ✅ setelah seluruh gap non-E2E nol, dengan gap E2E
+   tetap dicatat pada baris ID.
 4. Sertakan test non-E2E (unit, integrasi DB, HTTP smoke) pada perubahan.
 5. Batch selesai bila seluruh ID di dalamnya lolos checklist "E2E-only":
    UI/aksi ada; CRUD/keluaran lengkap; otorisasi + tenant diuji non-E2E;
@@ -61,7 +62,7 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    menyebut gap selain E2E.
 
 Snapshot 4 November mencatat 77 ID dengan gap. Per 7 November 2026, register
-mencatat **50 ID ✅, 61 ID 🟡, dan 0 🔴** dari 111 ID katalog. Status parsial
+mencatat **51 ID ✅, 60 ID 🟡, dan 0 🔴** dari 111 ID katalog. Status parsial
 mencakup gap perilaku, E2E, dan bukti provider; rincian otoritatif per ID ada di
 `PARITAS-OPENSID.md`.
 
@@ -174,13 +175,14 @@ menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
   `verifikasi-surat`) dan menghapus `/bantuan` serta `/kelompok` dari `robots.ts`
   disallow (halaman tersebut publik). Sitemap kini mengindeks katalog lapak +
   produk per lapak; halaman lapak dan produk memakai metadata Open Graph.
-- Seluruh ID Batch 5 tersisa 🟡 dengan `Gap: E2E` karena uji browser untuk
-  keluaran baru belum ditambahkan (sesuai aturan batch: E2E ditunda).
+- `OS-WEB-014` dan `OS-WEB-018` sudah ✅; ID Batch 5 lainnya tetap 🟡 dengan
+  `Gap: E2E` karena uji browser untuk keluaran baru belum ditambahkan (sesuai
+  aturan batch: E2E ditunda).
 
 **Batch 6 — Layanan warga (progres 5 Nov 2026):**
 
 - **OS-WGA-006** ✅ non-E2E: percakapan dua arah warga ↔ operator. Tabel
-  `warga_pesan` (migrasi `0075`) menyimpan pesan, pengirim, serta penanda dibaca
+  `warga_pesan` (migrasi `0072`) menyimpan pesan, pengirim, serta penanda dibaca
   terpisah per sisi. Halaman warga `/layanan-mandiri/pesan` menampilkan riwayat
   percakapan + form kirim (`residentId` dari sesi, PIN sementara wajib diganti
   lebih dulu) dan lencana pesan belum dibaca di beranda warga. Halaman operator
@@ -202,7 +204,7 @@ menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
   `PARITAS-OPENSID.md`.
 **Batch 7 — Analisis & survei (selesai non-E2E 5 Nov 2026):**
 
-- **OS-ANA-001** ✅ non-E2E: test domain `analisis.test.ts` (7 kasus) menutupi
+- **OS-ANA-001** ✅ non-E2E: test domain `analisis.test.ts` (26 kasus) menutupi
   validasi `kategoriAnalisisSchema` (nama wajib, trim, max 100 karakter,
   keterangan opsional) dan `indikatorAnalisisSchema`. Gap: pemakaian kategori
   pada laporan skor belum ada; E2E.
@@ -235,16 +237,16 @@ menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
 **Batch 8 — Modul tambahan & sistem (progres 5 Nov 2026):**
 
 - **OS-MOD-003** ✅ non-E2E: rekap kehadiran bulanan admin `/kehadiran/rekap` tersedia dengan ringkasan total hadir/izin/sakit/alpa, tabel per perangkat, dan unduh CSV `/kehadiran/rekap/ekspor`. Use case `getRekapKehadiranData` expose fungsi repository yang sudah ada. Rekap menggabungkan data kehadiran perangkat + izin warga disetujui. Gap: E2E.
-- **OS-MOD-001** ✅ non-E2E: field kiosk device ditambahkan ke skema `anjungan` (migrasi `0082`): `uuid`, `ip_address`, `mac_address`, `ip_address_port_printer`, `keyboard`, `orientasi_layar`, `permohonan_surat_tanpa_akun`, `status`. Form admin `/anjungan` kini menerima seluruh field tersebut dan menyimpannya lewat use case. Halaman publik `/desa/anjungan` menampilkan layanan aktif. Gap: E2E alur kiosk.
-- **OS-MOD-004** ✅ non-E2E: entitas produk terpisah (`lapak_produk` migrasi `0083`), keranjang (`keranjang` migrasi `0084` + sessionKey), peta produk `/desa/lapak/peta` (Leaflet), cetak faktur `/desa/lapak/keranjang/cetak`. CRUD produk admin `/lapak/[id]/produk`, katalog produk publik `/desa/lapak/[id]/produk`, keranjang `/desa/lapak/keranjang`. Keranjang tenant-aware; session tamu memakai token 256-bit acak kriptografis dan cookie HttpOnly, SameSite=Lax, Secure di production, path `/`. Gap: E2E.
-- **OS-MOD-005** 🟡: kolom langganan `status_langganan`/`tanggal_mulai`/`tanggal_selesai`/`no_kerjasama`/`keterangan_langganan` (migrasi `0086`) + kolom dokumen `dokumen_kerjasama`/`dokumen_nama`/`dokumen_mime` (migrasi `0087`). Form admin + halaman `/pelanggan/kerja-sama`, badge status dan dropdown ubah status, unggah PDF/JPG/PNG ≤ 5 MB dengan validasi domain, dan unduhan berizin `/pelanggan/[id]/dokumen`. Test domain `pelanggan.test.ts` + test use case `pelanggan-use-cases.test.ts`. Gap: E2E.
+- **OS-MOD-001** ✅ non-E2E: field kiosk device ditambahkan ke skema `anjungan` (migrasi `0079`): `uuid`, `ip_address`, `mac_address`, `ip_address_port_printer`, `keyboard`, `orientasi_layar`, `permohonan_surat_tanpa_akun`, `status`. Form admin `/anjungan` kini menerima seluruh field tersebut dan menyimpannya lewat use case. Halaman publik `/desa/anjungan` menampilkan layanan aktif. Gap: E2E alur kiosk.
+- **OS-MOD-004** ✅ non-E2E: entitas produk terpisah (`lapak_produk` migrasi `0080`), keranjang (`keranjang` migrasi `0081` + sessionKey), peta produk `/desa/lapak/peta` (Leaflet), cetak faktur `/desa/lapak/keranjang/cetak`. CRUD produk admin `/lapak/[id]/produk`, katalog produk publik `/desa/lapak/[id]/produk`, keranjang `/desa/lapak/keranjang`. Keranjang tenant-aware; session tamu memakai token 256-bit acak kriptografis dan cookie HttpOnly, SameSite=Lax, Secure di production, path `/`. Gap: E2E.
+- **OS-MOD-005** 🟡: kolom langganan `status_langganan`/`tanggal_mulai`/`tanggal_selesai`/`no_kerjasama`/`keterangan_langganan` (migrasi `0082`) + kolom dokumen `dokumen_kerjasama`/`dokumen_nama`/`dokumen_mime` (migrasi `0083`). Form admin + halaman `/pelanggan/kerja-sama`, badge status dan dropdown ubah status, unggah PDF/JPG/PNG ≤ 5 MB dengan validasi domain, dan unduhan berizin `/pelanggan/[id]/dokumen`. Test domain `pelanggan.test.ts` + test use case `pelanggan-use-cases.test.ts`. Gap: E2E.
 - **OS-OPS-011** 🟡: API data publik `/api/publik/informasi`, `/api/publik/dokumen`, `/api/publik/inventaris`, `/api/publik/surat` (tenant dari `Host`), kontrak OpenAPI 3.1 di `/api/publik/openapi`, rate limit 60 permintaan/menit per IP per endpoint memakai sliding-window MySQL lintas instans, dan audit `api.publik.akses`. Test `features/rate-limit/application/rate-limit.test.ts`, `openapi.test.ts`, `public-api.test.ts`. Gap: E2E.
 
 ## Rencana Penutupan Gap Non-E2E per ID (6 November 2026)
 
 Tujuan saat rencana disusun 6 November: tiap ID hanya menyisakan **gap E2E**,
 dengan uji browser ditunda sampai gelombang non-E2E selesai. Audit 7 November
-menemukan 61 ID 🟡; beberapa masih memiliki gap non-E2E atau E2E yang belum
+menemukan 60 ID 🟡; beberapa masih memiliki gap non-E2E atau E2E yang belum
 membuktikan perilaku, sehingga rencana ini bukan klaim penyelesaian.
 
 **Definisi "non-E2E tertutup" untuk satu ID:** rute/UI yang dipakai, aksi atau
@@ -356,7 +358,7 @@ Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir 
 Gap non-E2E yang masih menunggu bukti provider nyata adalah `OS-WGA-009` dan
 `OS-SUR-013` (kredensial belum tersedia). Gap non-E2E `OS-OPS-005` sudah ditutup;
 yang tersisa untuk ID itu adalah E2E pengiriman/filter/inbox. Register saat ini
-memuat 61 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
+memuat 60 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
@@ -642,7 +644,7 @@ Mengacu `donjo-app/controllers/fweb/*`:
 
 - [x] Sanitasi HTML: `sanitize-html` + `@types/sanitize-html` terpasang;
       `src/lib/sanitize.ts` (`sanitasiHtml`, `teksPolos`); sanitasi saat
-      render (lapisan kedua) via `_components/konten-html.tsx`; test XSS
+      render (lapisan kedua) via `KontenHtml` di `src/themes/ui.tsx`; test XSS
       (`<script>`, `onerror=`, `javascript:`, `style=`, `<iframe>`, `data:`).
 - [x] Semua halaman publik bisa dibuka tanpa sesi. *(Sejak 25 Okt 2026
       dibuktikan otomatis: `npm run smoke` memeriksa 24 halaman publik + 2
@@ -773,35 +775,35 @@ masih halaman informasi tema publik dengan CTA ke `/masuk`.
       dinamis (teks, teks panjang, angka, tanggal, pilihan, centang), dan arsip
       dokumen pribadi sudah ditulis; **belum dijalankan pada sesi ini**.
 - [x] Arsip dokumen pribadi warga (OS-WGA-005): tabel `dokumen_warga` (migrasi
-      `0076`), katalog jenis baku, unggah ke media privat kategori `permohonan`,
+      `0073`), katalog jenis baku, unggah ke media privat kategori `permohonan`,
       ubah/hapus hanya unggahan sendiri, dan unduh ber-otorisasi pemilik lewat
       `/layanan-mandiri/dokumen/[id]/berkas`; UI di Dokumen Saya, test domain
       `dokumen-warga.test.ts`. **Gap: E2E belum dijalankan.**
 - [x] Anti-abuse login (OS-WGA-002): captcha aritmetika bertanda tangan HMAC +
       honeypot pada `/masuk`, diverifikasi di server sebelum kredensial.
-      **Gap: OTP/2FA saat login.**
+      OTP login sebagai faktor kedua tersedia; **Gap: E2E.**
 - [x] Verifikasi HP warga (OS-WGA-001): tabel `verifikasi_kontak` (migrasi
-      `0080`), OTP 6 digit dikirim via WhatsApp, di-hash, berlaku 10 menit; kartu
+      `0077`), OTP 6 digit dikirim via WhatsApp, di-hash, berlaku 10 menit; kartu
       verifikasi di Profil Warga. Notifikasi WhatsApp otomatis saat registrasi
-      disetujui/ditolak. **Gap: verifikasi email dan E2E.**
+      disetujui/ditolak. Verifikasi email (migrasi `0090`) tersedia; **Gap: E2E.**
 - [x] Notifier terpusat (OS-WGA-009): `kirimNotifikasi` mengirim email/WhatsApp
-      dan mencatat bukti ke `notifikasi_terkirim` (migrasi `0077`); dipakai untuk
+      dan mencatat bukti ke `notifikasi_terkirim` (migrasi `0074`); dipakai untuk
       status permohonan surat dan keputusan registrasi warga. **Gap: bukti ke
       provider nyata dan E2E.**
-- [x] Lapak warga (OS-WGA-010): `lapak.resident_id` (migrasi `0078`), CRUD
+- [x] Lapak warga (OS-WGA-010): `lapak.resident_id` (migrasi `0075`), CRUD
       `/layanan-mandiri/lapak` dengan kepemilikan dari sesi, tampil di katalog
       publik. **Gap: E2E.**
 - [x] Izin warga & rekap (OS-WGA-011): tabel `kehadiran_izin` dan
-      `kehadiran_pengaturan` (migrasi `0079`), pengajuan di
+      `kehadiran_pengaturan` (migrasi `0076`), pengajuan di
       `/layanan-mandiri/izin`, keputusan + rekap bulanan di `/kehadiran/izin`,
-      pengaturan jam kerja/hari libur. **Gap: E2E dan integrasi otomatis ke
-      rekap kehadiran perangkat.**
+      pengaturan jam kerja/hari libur. Integrasi izin disetujui ke rekap
+      kehadiran perangkat tersedia; **Gap: E2E.**
 - [x] Pendaftaran mandiri akun warga (OS-WGA-001): `/desa/registrasi-warga`
       memvalidasi NIK terhadap penduduk hidup desa, menolak duplikat/akun yang
       sudah ada; operator menyetujui/menolak di `/penduduk/registrasi`, dan
       persetujuan membuat akun NIK + PIN yang ditampilkan sekali. Modul + RBAC
-      `registrasi-warga` terdaftar. **Gap: captcha/anti-abuse, verifikasi
-      HP/email, notifikasi otomatis, audit khusus, dan E2E.**
+      `registrasi-warga` terdaftar. Captcha/anti-abuse, verifikasi HP/email,
+      notifikasi otomatis, dan audit khusus tersedia; **Gap: E2E.**
 
 ### 2D. Bumindes (4 hari)
 
@@ -938,7 +940,7 @@ operasional; fitur di luar katalog bukan target akhir.
 
 ### 3A. Kependudukan lanjutan (2 minggu)
 
-  - [x] `OS-POP-006`: DTKS (Data Terpadu Kesejahteraan Sosial) — CRUD dari RTM di `/penduduk/dtks`, status/agregasi/anggota, lampiran, pengaturan program, laporan, ekspor CSV, dan **impor CSV/XLSX** via `DtksImportDialog` + `imporDtksAction` (menghubungkan RTM ke formulir DTKS). RBAC `penduduk`. E2E `/penduduk/dtks`. Test `dtks.test.ts`, `dtks-berkas.test.ts` (termasuk `rencanaImporDtks`: RTM tidak ditemukan, baris ganda, normalisasi). **Gap: E2E.**
+  - [x] `OS-POP-006`: DTKS (Data Terpadu Kesejahteraan Sosial) — CRUD dari RTM di `/penduduk/dtks`, status/agregasi/anggota, lampiran, pengaturan program, laporan, ekspor CSV, dan **impor CSV/XLSX** via `DtksImportDialog` + `imporDtksAction` (menghubungkan RTM ke formulir DTKS). RBAC `penduduk`. E2E `/penduduk/dtks`. Test `dtks.test.ts`, `dtks-berkas.test.ts` (termasuk `rencanaImporDtks`: RTM tidak ditemukan, baris ganda, normalisasi). E2E `tests/dtks-impor.e2e.ts` memeriksa dialog dan pelaporan RTM tidak ditemukan. **Gap: E2E impor sukses.**
   - [x] `OS-POP-002`: log/riwayat penduduk (lahir, mati, pindah, datang, perubahan
        status dasar) — `/penduduk/riwayat`, migrasi `0028`, test domain, dialog
        catat perubahan, cetak, ekspor CSV `/penduduk/riwayat/ekspor`, E2E (`tests/penduduk.e2e.ts`). Gap: —.
@@ -960,7 +962,16 @@ operasional; fitur di luar katalog bukan target akhir.
 - [x] `OS-WIL-002`–`OS-WIL-005`: CRUD area, garis, titik, polygon + halaman admin.
       Sisa: test/E2E GIS, dan polygon belum dirender di peta publik.
 - [x] `OS-WIL-007`–`OS-WIL-008`: peta publik Leaflet (area/garis/titik) + API
-      `/api/peta` + katalog simbol. Sisa: layer polygon, test/E2E.\n\n**Catatan teknis migrasi:** Migrasi `0039` (`gis_map_and_tenant_hardening`) adalah migrasi hardening satu kali yang menambahkan konstriaint foreign key dan backfill `village_id` ke `cdesa_rincian`. Migrasi `0040` awalnya dianggap duplikat karena kontennya identik dengan `0039`, namun ternyata `0039` sudah tercatat di jurnal migrasi (`meta/_journal.json` idx 39) sedangkan `0040` belum pernah dijalankan — lalu diasalkan dan dihapus (file `0040_gis_map_and_tenant_hardening.sql` dan entri journal-nya). Skema saat ini sudah konsisten dengan asumsi migrasi 0039 telah dieksekusi, sehingga data `cdesa_rincian.village_id` sudah terisi dan relasi ke `villages.id` aktif.
+      `/api/peta` + katalog simbol. Sisa: layer polygon, test/E2E.
+
+      **Catatan teknis migrasi:** hardening pertanahan dilakukan bertahap oleh
+      migrasi `0046_alter_persil_hardening.sql`,
+      `0047_alter_cdesa_hardening.sql`,
+      `0048_add_cdesa_rincian_village_id.sql`,
+      `0049_backfill_cdesa_rincian_village_id.sql`, dan
+      `0052_add_cdesa_rincian_fk.sql`. Kolom `cdesa_rincian.village_id`
+      ditambahkan, diisi dari `cdesa.village_id`, lalu ditautkan ke `villages.id`.
+      Tidak ada berkas 0040_gis_map_and_tenant_hardening.sql pada riwayat repo.
 
 ### 3C. Pembangunan (2 minggu)
 
@@ -987,7 +998,8 @@ operasional; fitur di luar katalog bukan target akhir.
 - [x] UI admin pengaduan `/pengaduan`: daftar berfilter, statistik, detail
       (tanggapan/status), publikasi ke web (`setPublikPengaduan`), dan hapus.
       *(Bukti: `src/app/(admin)/pengaduan/page.tsx`,
-      `presentation/components/pengaduan-{detail-dialog,row-actions}.tsx`.
+      `features/pengaduan/presentation/components/pengaduan-detail-dialog.tsx`
+      dan `pengaduan-row-actions.tsx`.
       Modul & ikon menu kini di-seed (`modules.ts` + grant: operator
       `manage`, sekdes/kades `read`) dan lampiran disajikan lewat route
       ber-otentikasi `src/app/api/pengaduan/lampiran/[...path]/route.ts`
@@ -1043,7 +1055,7 @@ operasional; fitur di luar katalog bukan target akhir.
 ### 3I. Modul tambahan OpenSID
 
 - [x] `OS-MOD-001`: Anjungan mandiri. Admin `/anjungan` CRUD penuh dengan field
-      kiosk (migrasi `0082`) dan halaman publik `/desa/anjungan`; gap E2E alur
+      kiosk (migrasi `0079`) dan halaman publik `/desa/anjungan`; gap E2E alur
       kiosk.
 - [x] `OS-GOV-007`: Pemilihan desa. Admin `/pemerintahan/pemilihan` (CRUD
       pemilihan + dialog kandidat/suara) dan publik `/desa/pemilihan` (kandidat,
@@ -1184,7 +1196,7 @@ dan kuota media (`kuotaMediaMb`) sudah tersedia di skema + migrasi 0093, UI kelo
 dashboard (status, domain alias, kuota, reset admin) sudah terpasang di
 `KelolaDesaToolbar`, serta penegakan kuota media berjalan di
 `simpanUnggahanMedia*`. Desa nonaktif disingkirkan dari resolver host dan akun stafnya
-kehilangan akses. **E2E multi-desa tertulis** di `tests/multi-desa.e2e.ts` (belum dijalankan).
+kehilangan akses. **E2E multi-desa belum tersedia** (`tests/multi-desa.e2e.ts` belum dibuat); isolasi host baru diuji di lapisan data lewat `features/multi-desa/isolasi-host.integration.test.ts`.
 Yang belum: domain kustom + TLS, serta uji isolasi lintas desa berdomain.
 
 **Selesai bila:** super admin bisa membuat desa baru lengkap dengan domain,
@@ -1287,7 +1299,7 @@ dokumen, mode adapter TTE, dan asumsi akun warga. Tindak lanjut hari yang sama:
 `@/db` dihapus. Urutan prioritas: web publik → admin berfungsi → scope katalog
 → multi-desa.
 
-Rekonsiliasi 7 November 2026: register paritas berisi **50 ✅ / 61 🟡 / 0 🔴 /
+Rekonsiliasi 7 November 2026: register paritas berisi **51 ✅ / 60 🟡 / 0 🔴 /
 0 ⚪** dari 111 ID. Rincian status per ID dan hitungan per domain ada di
 `PARITAS-OPENSID.md`; angka lama 37 ✅ / 74 🟡 sudah tidak berlaku.
 
@@ -1300,7 +1312,7 @@ Rekonsiliasi 7 November 2026: register paritas berisi **50 ✅ / 61 🟡 / 0 �
 | 0 — Stabilisasi | ⚪ **Bukti historis** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Bukan bukti quality gate working tree saat ini. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi dan sebagian besar CMS tersedia; gap per fitur mengacu ke register paritas. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Modul inti tersedia; sisa gap perilaku/E2E dan operasional dicatat per ID pada register paritas. |
-| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 50 berfungsi penuh, 61 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
+| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 51 berfungsi penuh, 60 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Route publik tersambung ke data nyata; status dan gap keluaran/E2E per ID ada di register. |
 | 5 — Multi-desa | 🟡 **Fondasi tersedia** | Provisioning, pengelolaan status/kuota, dan resolusi host tersedia. Domain kustom + TLS dan uji isolasi lintas desa berdomain belum selesai. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | Audit keamanan/performa/aksesibilitas menyeluruh dan validasi runbook masih terbuka; CI terkonfigurasi, tetapi konfigurasi bukan bukti run terbaru lulus. |
