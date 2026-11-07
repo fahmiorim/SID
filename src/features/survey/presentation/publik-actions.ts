@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { simpanResponsPublikData } from "@/features/survey/application/use-cases";
 import { respondenFormSchema } from "@/features/survey/domain/survey";
 import {
@@ -54,6 +56,19 @@ export async function kirimSurveiPublikAction(
 
   try {
     const desa = await getIdentitasFromRequest();
+    const requestHeaders = await headers();
+    const ip =
+      requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      requestHeaders.get("x-real-ip")?.trim() ||
+      "tidak-diketahui";
+    const batas = await batasiPermintaan(`survei-publik:${desa.id}:${parsed.data.surveyId}:${ip}`, {
+      batas: 10,
+      jendelaMs: 15 * 60 * 1000,
+    });
+    if (batas.dibatasi) {
+      return errorState("Terlalu banyak jawaban dari jaringan ini. Coba lagi nanti.");
+    }
+
     await simpanResponsPublikData(
       desa.id,
       parsed.data.surveyId,

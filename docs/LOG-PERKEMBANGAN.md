@@ -3,6 +3,57 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-07 — Hardening: throttle survei, paginasi API, label DPT
+
+- Limiter survei publik (10/15 menit), API publik (60/menit), API eksternal
+  (100/menit), dan OTP (3/5 menit) berbagi sliding-window MySQL.
+  Migrasi `0096` menyimpan HMAC kunci, berbagi kuota lintas instans, dan
+  membersihkan catatan kedaluwarsa.
+- `/api/publik/dokumen` dan daftar dokumen di `/api/publik/informasi` kini
+  memakai pagination (20 bawaan, maksimum 100), metadata terdokumentasi di
+  OpenAPI, serta tetap tenant-aware.
+- Input pencarian DPT publik memiliki label untuk pembaca layar.
+- SDK Resend diperbarui ke 6.37.0; perubahan kompatibel pada API pengiriman
+  email yang dipakai aplikasi. `npm audit fix` tanpa `--force` memperbarui
+  dependensi yang masih dalam rentang semver; advisori yang memerlukan
+  pembaruan major `drizzle-kit`/`exceljs` tetap tercatat untuk keputusan terpisah.
+- Suite penuh memunculkan `EPIPE` tak tertangani saat `mysql` tiruan gagal
+  sebelum menerima stdin; restore kini menangani galat pipa tersebut dan
+  mempertahankan pesan stderr. Test `restore.test.ts` + suite terfokus lulus.
+
+## 2026-11-07 — Pengamanan session keranjang lapak (OS-MOD-004)
+
+- Session tamu dibuat dengan 32 byte acak kriptografis, bukan nilai berbasis waktu
+  dan `Math.random()`.
+- Cookie `lapak_session` menetapkan `HttpOnly`, `SameSite=Lax`, `Path=/`, dan
+  `Secure` di production; test kontrak aksi mencakup pembuatan dan pemakaian ulang.
+- E2E belum dijalankan karena pengujian ditunda.
+
+## 2026-11-07 — Publik lapak: accessibility, discoverability, metadata, unbounded list
+
+- Katalog lapak publik `/desa/lapak` menghindari N+1 dengan `produkCount`
+  di kueri tunggal via sub-kueri `SELECT COUNT(*)` di repository.
+- Pagination dibatasi maksimal 100 item per halaman; default 20.
+- Halaman produk lapak `/desa/lapak/[id]/produk` memakai metadata
+  Open Graph per produk (title + description).
+- Sitemap dinamis mengindeks katalog lapak dan produk per lapak.
+- Metadata halaman lapak menampilkan nama desa dari host.
+- Pencarian `LIKE` sudah case-insensitive via collation default MySQL.
+- E2E checkout tidak dijalankan sesuai penundaan pengujian.
+
+
+## 2026-11-07 — Kotak masuk email via webhook (OS-OPS-005)
+
+- Menyelesaikan endpoint `POST /api/webhooks/email`: token wajib, tenant dari
+  host, payload dibatasi 32 KiB, dan pesan disimpan ke `mailbox_pesan`.
+- Halaman `/pengaturan/notifikasi` kini menampilkan pesan masuk/keluar, mendukung
+  tandai dibaca, dan balas melalui Resend; aksi memeriksa izin dan desa sesi.
+- Konfigurasi `EMAIL_WEBHOOK_TOKEN` minimal 32 karakter dijelaskan di
+  `.env.example`. E2E provider dan alur inbox tetap belum dijalankan.
+- Menghapus draft TOTP yang tidak dipilih dari halaman, use case, repository,
+  domain/test, audit, dan skema. Migrasi `0095_drop_totp` menghapus tabel
+  `totp` serta kolom `users.totp_secret`; migrasi lama tetap dipertahankan.
+
 ## 2026-11-07 — Gelombang C–E tuntas non-E2E: email, OTP, form eksternal, API surat
 
 - **`OS-WGA-001`** — verifikasi kontak kini mendukung email: kolom `kanal`
@@ -184,14 +235,13 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
 - `/idm` dialihkan permanen ke halaman kanonis `/desa/idm-sdgs`; komentar
   `src/lib/public-paths.ts` diperbarui.
-- `/pengaturan/notifikasi` tidak lagi 404: menampilkan status "belum tersedia".
-  `/pengaturan/plugin` dan `/pengaturan/sinkronisasi` tidak lagi menampilkan
-  plugin/log contoh; keduanya menyatakan integrasinya belum tersedia.
+- `/pengaturan/notifikasi` dan `/pengaturan/plugin` tidak lagi menampilkan
+  status contoh; status keduanya mencerminkan ketersediaan integrasi.
 - Pelanggaran lapisan domain dihapus: konstanta mutasi penduduk dipindah ke
   `src/lib/resident-mutation.ts`, sehingga domain penduduk tidak lagi mengimpor
   `@/db/schema`.
 - Dokumen diperbarui: `PARITAS-OPENSID.md` (OS-GOV-006, OS-WEB-013,
-  OS-OPS-005/008/009, catatan umum), `RENCANA-PERBAIKAN.md` (rute/halaman +
+  OS-OPS-005/008, catatan umum), `RENCANA-PERBAIKAN.md` (rute/halaman +
   rencana penutupan gap non-E2E), `ARCHITECTURE.md` (domain 0 pelanggaran).
 - Verifikasi: `npm run typecheck`, `npm run lint`, `npm run format:check`, dan
   `npm run test` (898/898 lulus) — semuanya lulus. E2E tidak dijalankan.
@@ -203,8 +253,8 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
   ringkasan, dan `RENCANA-PERBAIKAN.md` konsisten); angka 22 ✅ / 89 🟡 pada
   entri di bawah dikoreksi.
 - Koreksi klaim: `/pengaturan/notifikasi` ternyata `notFound()` (404), bukan
-  placeholder; `/pengaturan/plugin` dan `/pengaturan/sinkronisasi` memakai data
-  contoh hardcoded; halaman publik IDM ada di `/idm` (belum tertaut menu),
+  placeholder; `/pengaturan/plugin` memakai data contoh hardcoded; halaman publik
+  IDM ada di `/idm` (belum tertaut menu),
   bukan `/desa/idm`; polygon sudah dirender di `/desa/peta`; adapter TTE
   mendukung `nonaktif`/`manual`/`bsre` dengan klien jaringan `null`; unggah PDF
   `/konten/dokumen` sudah ada; rute ekspor PDF statistik sudah ada.
@@ -247,8 +297,8 @@ sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 - Halaman placeholder 17 baris yang masih ada: `/analisis`, `/anjungan`,
   `/arsip`, `/buku-tamu`, `/dokumen`, `/kehadiran`, `/kehadiran/daftar-hadir`,
   `/keuangan/sisa-lebih`, `/lapak`, `/pelanggan`, `/pengaturan/notifikasi`,
-  `/pengaturan/plugin`, `/pengaturan/sinkronisasi`, `/persuratan/tte`,
-  `/desa/lapak`, dan `/layanan-mandiri/bantuan`. Rute `/desa/idm`, `/desa/sdgs`,
+  `/pengaturan/plugin`, `/persuratan/tte`, `/desa/lapak`, dan
+  `/layanan-mandiri/bantuan`. Rute `/desa/idm`, `/desa/sdgs`,
   `/desa/pemilihan`, `/desa/sinergi`, dan `/desa/suplemen` tidak ada sama sekali
   (404).
 - Skema tanpa implementasi: `registrasi_warga`, `lapak`, `kehadiran`,

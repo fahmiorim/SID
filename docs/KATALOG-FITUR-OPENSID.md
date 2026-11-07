@@ -1,4 +1,4 @@
-# Katalog Fitur OpenSID — Baseline Paritas Lengkap
+# Katalog Fitur OpenSID — Scope Produk
 
 Dokumen ini adalah **katalog kebutuhan**, bukan laporan status. Tujuannya memastikan
 setiap fitur yang terlihat di source OpenSID lokal memiliki tempat di rencana
@@ -30,14 +30,13 @@ OpenSID diperbarui, lakukan inventaris ulang sebelum mengubah status paritas.
 
 - Status implementasi terkini hanya dicatat di
   [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
-- Katalog ini mendefinisikan **cakupan yang wajib dipetakan**; baris tanpa status
-  berarti bukan berarti sudah selesai.
+- Katalog ini mendefinisikan fitur OpenSID yang dipilih sebagai **scope produk**;
+  baris tanpa status bukan berarti sudah selesai.
 - `OS-xxx` adalah ID stabil untuk issue, milestone, test, dan review.
-- Status `⚪` di `PARITAS-OPENSID.md` berarti ID sengaja berada di luar scope
-  implementasi (mis. `OS-POP-009`), bukan fitur yang sudah selesai.
-- Fitur premium, modul tambahan, API, dan integrasi tetap masuk katalog. Jika
-  perilaku provider tidak bisa direplikasi tanpa layanan eksternal, implementasi
-  memakai adapter dengan mode nonaktif/manual yang terdokumentasi.
+- Status `⚪` di `PARITAS-OPENSID.md` menandai ID yang ditetapkan di luar scope.
+- Fitur premium, modul tambahan, API, dan integrasi yang tercantum tetap masuk
+  katalog. Jika perilaku provider tidak bisa direplikasi tanpa layanan eksternal,
+  implementasi memakai adapter dengan mode nonaktif/manual yang terdokumentasi.
 
 ## Definition of Done per ID
 
@@ -70,7 +69,6 @@ belum memenuhi Definition of Done.
 | OS-POP-006 | DTKS: data terpadu, impor, anggota, detail, dan laporan | `Dtks.php`, `views/admin/dtks/` |
 | OS-POP-007 | Data suplemen: definisi jenis, isian, pendataan, impor, detail, cetak | `Suplemen.php`, `fweb/Suplemen.php` |
 | OS-POP-008 | Stunting: KIA, ibu hamil, pemantauan anak, skor, rekap, dan cetak | `Stunting.php`, `Stunting_rekapitulasi.php`, `fweb/Stunting.php` |
-| OS-POP-009 | Vaksin/Covid: pendataan, status, rekap, dan publikasi yang relevan | `Vaksin_covid.php`, `Covid19.php`, `fweb/Vaksin.php` |
 | OS-POP-010 | Rentang umur, statistik penduduk, statistik rentan, dan laporan periodik | `Rentang_umur.php`, `Statistik.php`, `Laporan_penduduk.php`, `Laporan_rentan.php` |
 | OS-POP-011 | Program bantuan: definisi program, sasaran, periode, asal dana, dan status | `Program_bantuan.php` |
 | OS-POP-012 | Peserta bantuan: penduduk/KK/RTM, kartu peserta, pembersihan, impor, ekspor, cetak | `Peserta_bantuan.php`, `BantuanPeserta.php` |
@@ -158,7 +156,7 @@ belum memenuhi Definition of Done.
 | OS-WEB-009 | Pengaduan publik, widget, daftar terpublikasi, dan detail | `fweb/Pengaduan.php` |
 | OS-WEB-010 | Kelompok, lembaga, dan anggota yang boleh dipublikasikan | `fweb/Kelompok.php`, `fweb/Lembaga.php` |
 | OS-WEB-011 | Inventaris/aset yang boleh ditampilkan secara publik | `fweb/Inventaris.php` |
-| OS-WEB-012 | Bantuan, suplemen, kesehatan, vaksin, dan DPT publik | `internal_api/BantuanPeserta.php`, `fweb/{Suplemen,Kesehatan,Vaksin,Dpt}.php` |
+| OS-WEB-012 | Bantuan, suplemen, kesehatan, dan DPT publik | `internal_api/BantuanPeserta.php`, `fweb/{Suplemen,Kesehatan,Dpt}.php` |
 | OS-WEB-013 | IDM, SDGs, analisis, dan statistik hasil pendataan | `fweb/Idm.php`, `fweb/Sdgs.php`, `fweb/Analisis.php` |
 | OS-WEB-014 | Lapak, produk warga, dan peta produk | `fweb/Lapak.php`, `Modules/Lapak/` |
 | OS-WEB-015 | Kontak, komentar, pengunjung, dan umpan balik | `fweb/` terkait, `Kontak.php`, `Komentar.php`, `Pengunjung.php` |
@@ -212,11 +210,10 @@ belum memenuhi Definition of Done.
 | OS-OPS-002 | Shortcut, dashboard, konfigurasi menu, dan navigasi administratif | `Shortcut.php`, `Main.php` |
 | OS-OPS-003 | Pengaturan aplikasi, web, mandiri, surat, lampiran, dan tema | `Setting*.php`, `Pengaturan_lampiran.php` |
 | OS-OPS-004 | Token, OTP, captcha, 2FA, rate limit, dan pemulihan akun | `Token.php`, `Otp.php`, `Securimage.php`, `auth/` |
-| OS-OPS-005 | Notifikasi, mailbox, SMS outbox/pending/sent, dan broadcast | `Notif.php`, `NotifikasiController.php`, `Mailbox.php`, `Sms*.php` |
+| OS-OPS-005 | Notifikasi, mailbox, dan broadcast | `Notif.php`, `NotifikasiController.php`, `Mailbox.php` |
 | OS-OPS-006 | Log aktivitas, log sistem, log surat, dan audit trail | `Info_sistem.php`, `LogSurat.php`, `LogSuratDinas.php` |
 | OS-OPS-007 | Backup, restore, migrasi database, optimasi, dan pemulihan | `Koneksi_database.php`, `Tools.php`, `Optimasi_gambar.php`, `views/admin/database/` |
 | OS-OPS-008 | Pengelolaan plugin dan pemasangan modul | `Plugin.php`, `Install_modul.php`, `views/admin/plugin/` |
-| OS-OPS-009 | Sinkronisasi desa dan OpenDK | `Sinkronisasi.php`, `Opendk_pesan.php`, `views/admin/sinkronisasi/` |
 | OS-OPS-010 | File serving, media, validasi unggahan, dan kontrol akses | `ServeFileController.php`, `Lampiran.php` |
 | OS-OPS-011 | API informasi publik, inventaris, surat, dan integrasi internal | `controllers/internal_api/` |
 | OS-OPS-012 | API eksternal surat, TTE, tanda tangan, dan layanan pihak ketiga | `controllers/external_api/` |

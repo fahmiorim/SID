@@ -2,10 +2,10 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-import { batasiPermintaan } from "@/features/api-publik/domain/rate-limit";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import type { IdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
 import { getTenantFromRequest } from "@/features/publik/api/middleware";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 
 /** Alamat IP klien dari header proxy, dengan fallback aman. */
 export function alamatIp(request: Request): string {
@@ -21,6 +21,7 @@ export function alamatIp(request: Request): string {
 export const BATAS_PER_MENIT = 60;
 
 type PenanganApiPublik<T> = (desa: IdentitasDesa) => Promise<T>;
+type FormatResponsApiPublik<T> = (hasil: T) => { data: unknown; [key: string]: unknown };
 
 /**
  * Bungkus endpoint data publik: tenant dari host, rate limit per IP, audit
@@ -30,9 +31,10 @@ export async function jalankanApiPublik<T>(
   request: Request,
   nama: string,
   ambil: PenanganApiPublik<T>,
+  format?: FormatResponsApiPublik<T>,
 ): Promise<NextResponse> {
   const ip = alamatIp(request);
-  const batas = batasiPermintaan(`${nama}:${ip}`, { batas: BATAS_PER_MENIT });
+  const batas = await batasiPermintaan(`${nama}:${ip}`, { batas: BATAS_PER_MENIT });
   if (batas.dibatasi) {
     return NextResponse.json(
       { success: false, error: "Terlalu banyak permintaan. Coba lagi beberapa saat." },
@@ -51,11 +53,17 @@ export async function jalankanApiPublik<T>(
   }
 
   try {
-    const data = await ambil(desa);
+    const hasil = await ambil(desa);
 
     await catatAkses(request, desa.id, nama, ip);
 
-    return NextResponse.json({ success: true, data }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json(
+      {
+        success: true,
+        ...(format ? format(hasil) : { data: hasil }),
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     console.error(`Gagal melayani API publik ${nama}:`, error);
     return NextResponse.json(

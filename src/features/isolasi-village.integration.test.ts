@@ -141,17 +141,17 @@ describe("isolasi villageId antar desa", () => {
     if (!dbReady || !fixture) return ctx.skip();
     const items = await listLapak(fixture.desaA);
 
-    expect(items).toHaveLength(1);
-    expect(items[0]?.nama).toContain(`Lapak A ${RUN}`);
+    expect(items.rows).toHaveLength(1);
+    expect(items.rows[0]?.nama).toContain(`Lapak A ${RUN}`);
     expect(await listKategoriLapak(fixture.desaA)).toEqual([`Kategori A`]);
   });
 
   it("menyaring pencarian dan kategori di dalam desa sendiri", async (ctx) => {
     if (!dbReady || !fixture) return ctx.skip();
 
-    expect(await listLapak(fixture.desaA, { q: `Lapak A ${RUN}` })).toHaveLength(1);
-    expect(await listLapak(fixture.desaA, { q: `Lapak B ${RUN}` })).toHaveLength(0);
-    expect(await listLapak(fixture.desaA, { kategori: "Kategori B" })).toHaveLength(0);
+    expect((await listLapak(fixture.desaA, { q: `Lapak A ${RUN}` })).rows).toHaveLength(1);
+    expect((await listLapak(fixture.desaA, { q: `Lapak B ${RUN}` })).rows).toHaveLength(0);
+    expect((await listLapak(fixture.desaA, { kategori: "Kategori B" })).rows).toHaveLength(0);
   });
 
   it("tidak mengubah atau menghapus lapak desa lain", async (ctx) => {
@@ -161,8 +161,8 @@ describe("isolasi villageId antar desa", () => {
     await deleteLapak(fixture.lapakA, fixture.desaB);
 
     const masihAda = await listLapak(fixture.desaA);
-    expect(masihAda).toHaveLength(1);
-    expect(masihAda[0]?.nama).toContain(`Lapak A ${RUN}`);
+    expect(masihAda.rows).toHaveLength(1);
+    expect(masihAda.rows[0]?.nama).toContain(`Lapak A ${RUN}`);
   });
 
   it("hanya menampilkan arsip milik desa sendiri", async (ctx) => {

@@ -1,21 +1,46 @@
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
 import { daftarBerita, profilDesaPublik } from "@/features/publik/application/konten-publik";
-import { listDokumenPublik } from "@/features/publik/infrastructure/content-repository";
+import { parsePaginasiDokumen } from "@/features/publik/domain/dokumen";
+import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 
 /**
  * GET /api/publik/informasi
  *
- * Profil desa, berita terbaru, dan dokumen publik aktif. Desa di-resolve dari
- * header `Host`; laju permintaan dibatasi per IP dan akses dicatat ke audit.
+ * Profil desa, berita terbaru, dan satu halaman dokumen aktif.
+ * Query `page`/`pageSize` mengatur paginasi dokumen.
  */
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const paginasi = parsePaginasiDokumen(searchParams.get("page"), searchParams.get("pageSize"));
+  if (!paginasi) {
+    return Response.json(
+      { success: false, error: "Parameter page atau pageSize tidak valid." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   return jalankanApiPublik(request, "informasi", async (desa) => {
     const [profil, berita, dokumen] = await Promise.all([
       profilDesaPublik(desa.id),
       daftarBerita(desa.id),
-      listDokumenPublik(desa.id),
+      cariDokumenPublik(desa.id, {
+        search: "",
+        category: "semua",
+        page: paginasi.page,
+        pageSize: paginasi.pageSize,
+      }),
     ]);
 
-    return { profilDesa: profil, berita, dokumen };
+    return {
+      profilDesa: profil,
+      berita,
+      dokumen: dokumen.rows,
+      dokumenPagination: {
+        page: dokumen.page,
+        pageSize: dokumen.pageSize,
+        totalItems: dokumen.total,
+        totalPages: Math.ceil(dokumen.total / dokumen.pageSize),
+      },
+    };
   });
 }

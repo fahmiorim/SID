@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import * as batas from "@/features/api-publik/domain/rate-limit";
 import * as notifikasi from "@/features/notifikasi/application/kirim-notifikasi";
+import * as batas from "@/features/rate-limit/application/rate-limit";
 
 import * as authRepo from "../infrastructure/auth-repository";
 import * as repo from "../infrastructure/login-otp-repository";
 import { mintaKodeLogin, verifikasiKodeLogin } from "./login-otp-use-cases";
 
-vi.mock("@/features/api-publik/domain/rate-limit", () => ({ batasiPermintaan: vi.fn() }));
+vi.mock("@/features/rate-limit/application/rate-limit", () => ({ batasiPermintaan: vi.fn() }));
 vi.mock("@/features/notifikasi/application/kirim-notifikasi", () => ({ kirimNotifikasi: vi.fn() }));
 vi.mock("../infrastructure/auth-repository", () => ({
   getLoginOtpContext: vi.fn(),
@@ -33,7 +33,11 @@ const konteks = {
 describe("mintaKodeLogin", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(batas.batasiPermintaan).mockReturnValue({ dibatasi: false, sisa: 2, resetMs: 0 });
+    vi.mocked(batas.batasiPermintaan).mockResolvedValue({
+      dibatasi: false,
+      sisa: 2,
+      resetMs: 0,
+    });
   });
 
   it("membalas generik untuk akun tanpa OTP tanpa mengirim apa pun", async () => {
@@ -66,7 +70,7 @@ describe("mintaKodeLogin", () => {
 
   it("menolak saat batas permintaan terlampaui", async () => {
     vi.mocked(authRepo.getLoginOtpContext).mockResolvedValueOnce(konteks);
-    vi.mocked(batas.batasiPermintaan).mockReturnValueOnce({
+    vi.mocked(batas.batasiPermintaan).mockResolvedValueOnce({
       dibatasi: true,
       sisa: 0,
       resetMs: 1000,

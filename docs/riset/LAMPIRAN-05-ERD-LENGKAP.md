@@ -6,8 +6,8 @@
 
 ## A. Ringkasan
 
-- Jumlah tabel inti terdeteksi: **243**
-- Jumlah relasi foreign key terdeteksi: **282**
+- Jumlah tabel inti terdeteksi: **233**
+- Jumlah relasi foreign key terdeteksi: **272**
 - Semua tabel transaksional memiliki `config_id` (multi-desa dalam satu database).
 
 ## B. Diagram ERD Inti (Mermaid)
@@ -165,12 +165,12 @@ erDiagram
 | `disposisi_surat_masuk` | id_disposisi:integer, config_id:integer, id_surat_masuk:integer, id_desa_pamong:integer, disposisi_ke:string |
 | `klasifikasi_surat` | id:integer, config_id:integer, kode:string, nama:text, uraian:mediumText, enabled:integer |
 | `lampiran_surat` | id:integer, config_id:integer, slug:string, nama:string, jenis:tinyInteger, template:longText, template_desa:longText, status:tinyInteger |
-| `log_surat` | id:integer, config_id:integer, id_format_surat:integer, id_pend:integer, id_pamong:integer, nama_pamong:string, nama_jabatan:string, id_user:integer, tanggal:timestamp, bulan:string, tahun:string, no_surat:string, nama_surat:string, lampiran:string, nik_non_warga:decimal, nama_non_warga:string, keterangan:string, lokasi_arsip:string, urls_id:integer, status:tinyInteger, log_verifikasi:string, tte:boolean, verifikasi_operator:boolean, verifikasi_kades:boolean, verifikasi_sekdes:boolean, isi_surat:longText, kecamatan:boolean, deleted_at:dateTime, pemohon:string |
+| `log_surat` | id:integer, config_id:integer, id_format_surat:integer, id_pend:integer, id_pamong:integer, nama_pamong:string, nama_jabatan:string, id_user:integer, tanggal:timestamp, bulan:string, tahun:string, no_surat:string, nama_surat:string, lampiran:string, nik_non_warga:decimal, nama_non_warga:string, keterangan:string, lokasi_arsip:string, urls_id:integer, status:tinyInteger, log_verifikasi:string, tte:boolean, verifikasi_operator:boolean, verifikasi_kades:boolean, verifikasi_sekdes:boolean, isi_surat:longText, deleted_at:dateTime, pemohon:string |
 | `permohonan_surat` | id:integer, config_id:integer, id_pemohon:integer, id_surat:integer, isian_form:text, status:boolean, alasan:string, keterangan:text, no_hp_aktif:string, syarat:text, created_at:timestamp, updated_at:timestamp, no_antrian:string |
 | `ref_syarat_surat` | ref_syarat_id:increments, config_id:integer, ref_syarat_nama:string |
 | `surat_keluar` | id:integer, config_id:integer, nomor_urut:smallInteger, nomor_surat:string, kode_surat:string, tanggal_surat:date, tanggal_catat:timestamp, tujuan:string, isi_singkat:string, berkas_scan:string, ekspedisi:boolean, tanggal_pengiriman:date, tanda_terima:string, keterangan:string, lokasi_arsip:string |
 | `surat_masuk` | id:integer, config_id:integer, nomor_urut:smallInteger, tanggal_penerimaan:date, nomor_surat:string, kode_surat:string, tanggal_surat:date, pengirim:string, isi_singkat:string, isi_disposisi:string, berkas_scan:string, lokasi_arsip:string |
-| `tweb_surat_format` | id:integer, config_id:integer, nama:string, url_surat:string, kode_surat:string, lampiran:string, kunci:boolean, favorit:boolean, jenis:tinyInteger, mandiri:boolean, masa_berlaku:integer, satuan_masa_berlaku:string, qr_code:boolean, qr_code_tte:boolean, logo_garuda:boolean, kecamatan:boolean, syarat_surat:longText, template:longText, template_desa:longText, form_isian:longText, kode_isian:longText, orientasi:string, ukuran:string, margin:text, margin_global:boolean, footer:integer, header:integer, format_nomor:string, format_nomor_global:tinyInteger, sumber_penduduk_berulang:boolean |
+| `tweb_surat_format` | id:integer, config_id:integer, nama:string, url_surat:string, kode_surat:string, lampiran:string, kunci:boolean, favorit:boolean, jenis:tinyInteger, mandiri:boolean, masa_berlaku:integer, satuan_masa_berlaku:string, qr_code:boolean, qr_code_tte:boolean, logo_garuda:boolean, syarat_surat:longText, template:longText, template_desa:longText, form_isian:longText, kode_isian:longText, orientasi:string, ukuran:string, margin:text, margin_global:boolean, footer:integer, header:integer, format_nomor:string, format_nomor_global:tinyInteger, sumber_penduduk_berulang:boolean |
 
 ## Bantuan Sosial & Program (8 tabel)
 
@@ -180,7 +180,7 @@ erDiagram
 | `dtks_lampiran` | id:integer, config_id:integer, id_rtm:integer, judul:string, keterangan:string, foto:text, created_at:timestamp, updated_at:timestamp |
 | `dtks_pengaturan_program` | id:integer, config_id:integer, versi_kuisioner:integer, kode:string, id_bantuan:integer, nilai_default:string, target_table:string, target_field:text, created_at:timestamp, updated_at:timestamp |
 | `dtks_ref_lampiran` | id:integer, id_dtks:integer, id_lampiran:integer |
-| `dtks` | id:integer, config_id:integer, is_draft:boolean, id_rtm:integer, id_keluarga:integer, created_at:timestamp, updated_at:timestamp, versi_kuisioner:string, catatan:text, kode_provinsi:string, kode_kabupaten:string, kode_kecamatan:string, kode_desa:string, kode_sls_non_sls:string, kode_sub_sls:string, nama_sls_non_sls:string, no_urut_bangunan_tinggal:string, no_urut_keluarga_verif:string, status_keluarga:string, kode_landmark_wilkerstat:string, kd_kk:string, no_urut_ruta:string, tanggal_pencacahan:date, nama_petugas_pencacahan:string, kode_petugas_pencacahan:string, tanggal_pemeriksaan:date, nama_pemeriksa:string, kode_pemeriksa:string, nama_responden:string, kd_hasil_pencacahan_ruta:string, tanggal_pendataan:date, nama_ppl:string, kode_ppl:string, nama_pml:string, kode_pml:string, kd_hasil_pendataan_keluarga:string, no_hp_responden:string, kd_stat_bangunan_tinggal:string, kd_stat_lahan_tinggal:string, kd_sertiv_lahan_milik:string, luas_lantai:integer, kd_jenis_lantai_terluas:string, kd_jenis_dinding:string, kd_kondisi_dinding:string, kd_jenis_atap:string, kd_kondisi_atap:string, jumlah_kamar_tidur:string, kd_sumber_air_minum:string, kd_jarak_sumber_air_ke_tpl:string, kd_memperoleh_air_minum:string, kd_sumber_penerangan_utama:string, kd_daya_terpasang:string, kd_daya_terpasang2:string, kd_daya_terpasang3:string, kode_pelanggan_daya:string, kd_bahan_bakar_memasak:string, kd_fasilitas_tempat_bab:string, kd_jenis_kloset:string, kd_pembuangan_akhir_tinja:string, kd_tabung_gas_3_kg:string, kd_tabung_gas_5_5_kg:string, kd_tabung_gas_12_kg:string, kd_lemari_es:string, kd_ac:string, kd_pemanas_air:string, kd_telepon_rumah:string, kd_televisi:string, kd_perhiasan_10_gr_emas:string, kd_rek_aktif:string, kd_komputer_laptop:string, kd_sepeda_motor:string, kd_mobil:string, kd_perahu:string, kd_kapal_perahu_motor:string, kd_featured_phone:string, kd_smartphone:string, kd_sepeda:string, kd_lahan:string, luas_lahan:integer, kd_ada_sertiv_lahan:string, kd_rumah_ditempat_lain:string, jumlah_sapi:integer, jumlah_kerbau:integer, jumlah_kuda:integer, jumlah_babi:integer, jumlah_kambing_domba:integer, jumlah_unggas:integer, jumlah_ikan:integer, jumlah_lainnya:integer, kd_ada_art_usaha_sendiri_bersama:string, kd_internet_sebulan:string, kd_pengeluaran_pulsa_dan_data:string, kd_ada_art_lanjut_usia:string, kd_bss_bnpt:string, bulan_bss_bnpt:string, tahun_bss_bnpt:year, kd_pkh:string, bulan_pkh:string, tahun_pkh:year, kd_bst_covid19:string, bulan_bst_covid19:string, tahun_bst_covid19:year, kd_blt_dana_desa:string, bulan_blt_dana_desa:string, tahun_blt_dana_desa:year, kd_subsidi_listrik:string, bulan_subsidi_listrik:string, tahun_subsidi_listrik:year, kd_asuransi_lain:string, bulan_asuransi_lain:string, tahun_asuransi_lain:year, kd_bantuan_pemprov:string, bulan_bantuan_pemprov:string, tahun_bantuan_pemprov:year, kd_bantuan_pemkabkot:string, bulan_bantuan_pemkabkot:string, tahun_bantuan_pemkabkot:year, kd_bantuan_pemdes:string, bulan_bantuan_pemdes:string, tahun_bantuan_pemdes:year, kd_bantuan_pemda:string, bulan_bantuan_pemda:string, tahun_bantuan_pemda:year, kd_bantuan_masyarakat:string, bulan_bantuan_masyarakat:string, tahun_bantuan_masyarakat:year, kd_subsidi_pupuk:string, bulan_subsidi_pupuk:string, tahun_subsidi_pupuk:year, kd_subsidi_lpg:string, bulan_subsidi_lpg:string, tahun_subsidi_lpg:year, kd_konsumsi_daging:string, kd_makan:string, kd_beli_pakaian_baru:string, kd_bayar_biaya_pengobatan:string, kd_bahasa_wawancara:string, tulis_bahasa_daerah:string |
+| `dtks` | id:integer, config_id:integer, is_draft:boolean, id_rtm:integer, id_keluarga:integer, created_at:timestamp, updated_at:timestamp, versi_kuisioner:string, catatan:text, kode_provinsi:string, kode_kabupaten:string, kode_kecamatan:string, kode_desa:string, kode_sls_non_sls:string, kode_sub_sls:string, nama_sls_non_sls:string, no_urut_bangunan_tinggal:string, no_urut_keluarga_verif:string, status_keluarga:string, kode_landmark_wilkerstat:string, kd_kk:string, no_urut_ruta:string, tanggal_pencacahan:date, nama_petugas_pencacahan:string, kode_petugas_pencacahan:string, tanggal_pemeriksaan:date, nama_pemeriksa:string, kode_pemeriksa:string, nama_responden:string, kd_hasil_pencacahan_ruta:string, tanggal_pendataan:date, nama_ppl:string, kode_ppl:string, nama_pml:string, kode_pml:string, kd_hasil_pendataan_keluarga:string, no_hp_responden:string, kd_stat_bangunan_tinggal:string, kd_stat_lahan_tinggal:string, kd_sertiv_lahan_milik:string, luas_lantai:integer, kd_jenis_lantai_terluas:string, kd_jenis_dinding:string, kd_kondisi_dinding:string, kd_jenis_atap:string, kd_kondisi_atap:string, jumlah_kamar_tidur:string, kd_sumber_air_minum:string, kd_jarak_sumber_air_ke_tpl:string, kd_memperoleh_air_minum:string, kd_sumber_penerangan_utama:string, kd_daya_terpasang:string, kd_daya_terpasang2:string, kd_daya_terpasang3:string, kode_pelanggan_daya:string, kd_bahan_bakar_memasak:string, kd_fasilitas_tempat_bab:string, kd_jenis_kloset:string, kd_pembuangan_akhir_tinja:string, kd_tabung_gas_3_kg:string, kd_tabung_gas_5_5_kg:string, kd_tabung_gas_12_kg:string, kd_lemari_es:string, kd_ac:string, kd_pemanas_air:string, kd_telepon_rumah:string, kd_televisi:string, kd_perhiasan_10_gr_emas:string, kd_rek_aktif:string, kd_komputer_laptop:string, kd_sepeda_motor:string, kd_mobil:string, kd_perahu:string, kd_kapal_perahu_motor:string, kd_featured_phone:string, kd_smartphone:string, kd_sepeda:string, kd_lahan:string, luas_lahan:integer, kd_ada_sertiv_lahan:string, kd_rumah_ditempat_lain:string, jumlah_sapi:integer, jumlah_kerbau:integer, jumlah_kuda:integer, jumlah_babi:integer, jumlah_kambing_domba:integer, jumlah_unggas:integer, jumlah_ikan:integer, jumlah_lainnya:integer, kd_ada_art_usaha_sendiri_bersama:string, kd_internet_sebulan:string, kd_pengeluaran_pulsa_dan_data:string, kd_ada_art_lanjut_usia:string, kd_bss_bnpt:string, bulan_bss_bnpt:string, tahun_bss_bnpt:year, kd_pkh:string, bulan_pkh:string, tahun_pkh:year, kd_blt_dana_desa:string, bulan_blt_dana_desa:string, tahun_blt_dana_desa:year, kd_subsidi_listrik:string, bulan_subsidi_listrik:string, tahun_subsidi_listrik:year, kd_asuransi_lain:string, bulan_asuransi_lain:string, tahun_asuransi_lain:year, kd_bantuan_pemprov:string, bulan_bantuan_pemprov:string, tahun_bantuan_pemprov:year, kd_bantuan_pemkabkot:string, bulan_bantuan_pemkabkot:string, tahun_bantuan_pemkabkot:year, kd_bantuan_pemdes:string, bulan_bantuan_pemdes:string, tahun_bantuan_pemdes:year, kd_bantuan_pemda:string, bulan_bantuan_pemda:string, tahun_bantuan_pemda:year, kd_bantuan_masyarakat:string, bulan_bantuan_masyarakat:string, tahun_bantuan_masyarakat:year, kd_subsidi_pupuk:string, bulan_subsidi_pupuk:string, tahun_subsidi_pupuk:year, kd_subsidi_lpg:string, bulan_subsidi_lpg:string, tahun_subsidi_lpg:year, kd_konsumsi_daging:string, kd_makan:string, kd_beli_pakaian_baru:string, kd_bayar_biaya_pengobatan:string, kd_bahasa_wawancara:string, tulis_bahasa_daerah:string |
 | `program_peserta` | id:integer, config_id:integer, peserta:string, program_id:integer, no_id_kartu:string, kartu_nik:string, kartu_nama:string, kartu_tempat_lahir:string, kartu_tanggal_lahir:date, kartu_alamat:string, kartu_peserta:string, kartu_id_pend:integer |
 | `program` | id:integer, config_id:integer, nama:string, slug:string, sasaran:tinyInteger, ndesc:string, sdate:date, edate:date, userid:mediumInteger, status:boolean, asaldana:char |
 | `tweb_status_dasar` | id:increments, nama:string |
@@ -320,7 +320,7 @@ erDiagram
 | `teks_berjalan` | id:integer, config_id:integer, teks:text, urut:integer, status:boolean, tipe:tinyInteger, tautan:string, judul_tautan:string |
 | `widget` | id:integer, config_id:integer, isi:text, enabled:integer, judul:string, jenis_widget:tinyInteger, urut:integer, form_admin:string, setting:text, foto:string |
 
-## Pendataan & Layanan Mandiri (12 tabel)
+## Pendataan & Layanan Mandiri (11 tabel)
 
 | Tabel | Kolom |
 |---|---|
@@ -335,9 +335,8 @@ erDiagram
 | `kelompok` | id:integer, config_id:integer, id_master:integer, id_ketua:integer, nama:string, slug:string, keterangan:string, kode:string, tipe:string |
 | `kontak_grup` | id_grup:integer, config_id:integer, nama_grup:string, keterangan:text, created_at:timestamp, updated_at:timestamp |
 | `kontak` | id_kontak:integer, config_id:integer, nama:string, telepon:string, email:string, telegram:string, hubung_warga:string, keterangan:text, created_at:timestamp, updated_at:timestamp |
-| `laporan_sinkronisasi` | id:integer, config_id:integer, tipe:string, judul:string, tahun:integer, semester:integer, nama_file:string, kirim:dateTime, created_at:timestamp, updated_at:timestamp |
 
-## Pengaturan & Template (18 tabel)
+## Pengaturan & Template (16 tabel)
 
 | Tabel | Kolom |
 |---|---|
@@ -357,10 +356,8 @@ erDiagram
 | `ref_persil_mutasi` | id:tinyIncrements, nama:string, ndesc:text |
 | `ref_peruntukan_tanah_kas` | id:integer, nama:text |
 | `ref_pindah` | id:tinyInteger, nama:string |
-| `ref_sinkronisasi` | tabel:string, server:string, jenis_update:tinyInteger, tabel_hapus:string |
-| `ref_status_covid` | id:increments, nama:string |
 
-## Lain-lain (64 tabel)
+## Lain-lain (57 tabel)
 
 | Tabel | Kolom |
 |---|---|
@@ -371,9 +368,6 @@ erDiagram
 | `buku_pertanyaan` | id:integer, config_id:integer, pertanyaan:text, status:boolean, created_at:timestamp, updated_at:timestamp |
 | `bulanan_anak` | id_bulanan_anak:increments, config_id:integer, posyandu_id:integer, kia_id:integer, status_gizi:boolean, umur_bulan:tinyInteger, status_tikar:boolean, pemberian_imunisasi_dasar:boolean, pemberian_imunisasi_campak:boolean, pengukuran_berat_badan:boolean, berat_badan:float, pengukuran_tinggi_badan:boolean, tinggi_badan:float, konseling_gizi_ayah:boolean, konseling_gizi_ibu:boolean, kunjungan_rumah:boolean, air_bersih:boolean, kepemilikan_jamban:boolean, akta_lahir:boolean, jaminan_kesehatan:boolean, pengasuhan_paud:boolean |
 | `captcha_codes` | id:string, namespace:string, code:string, code_display:string, created:integer, audio_data:binary |
-| `covid19_pantau` | id:integer, config_id:integer, id_pemudik:integer, tanggal_jam:dateTime, suhu_tubuh:decimal, batuk:string, flu:string, sesak_nafas:string, keluhan_lain:string, status_covid:string |
-| `covid19_pemudik` | id:integer, config_id:integer, id_terdata:integer, pantau:boolean, tanggal_datang:date, asal_mudik:string, durasi_mudik:string, tujuan_mudik:string, keluhan_kesehatan:string, status_covid:string, no_hp:string, email:string, keterangan:string, is_wajib_pantau:string |
-| `covid19_vaksin` | id_penduduk:integer, config_id:integer, vaksin_1:integer, tgl_vaksin_1:date, dokumen_vaksin_1:string, jenis_vaksin_1:string, vaksin_2:integer, tgl_vaksin_2:date, dokumen_vaksin_2:string, jenis_vaksin_2:string, vaksin_3:integer, tgl_vaksin_3:date, dokumen_vaksin_3:string, jenis_vaksin_3:string, tunda:integer, keterangan:tinyText, surat_dokter:string |
 | `dokumen` | id:integer, config_id:integer, satuan:string, nama:string, enabled:integer, tgl_upload:timestamp, id_pend:integer, kategori:tinyInteger, attr:text, tipe:tinyInteger, url:text, tahun:integer, kategori_info_publik:tinyInteger, updated_at:timestamp, deleted:boolean, id_syarat:integer, id_parent:integer, created_at:timestamp, created_by:string, updated_by:string, dok_warga:boolean, lokasi_arsip:string |
 | `fcm_token_mandiri` | id_user_mandiri:integer, config_id:mediumInteger, device:string, token:longText |
 | `fcm_token` | id_user:mediumInteger, config_id:integer, device:string, token:longText |
@@ -382,7 +376,6 @@ erDiagram
 | `gis_simbol` | id:integer, config_id:integer, simbol:string |
 | `hubung_warga` | id:increments, config_id:integer, id_grup:integer, subjek:string, isi:text |
 | `ibu_hamil` | id_ibu_hamil:increments, config_id:integer, posyandu_id:integer, kia_id:integer, status_kehamilan:boolean, usia_kehamilan:tinyInteger, tanggal_melahirkan:date, pemeriksaan_kehamilan:boolean, konsumsi_pil_fe:boolean, butir_pil_fe:integer, pemeriksaan_nifas:boolean, konseling_gizi:boolean, kunjungan_rumah:boolean, akses_air_bersih:boolean, kepemilikan_jamban:boolean, jaminan_kesehatan:boolean |
-| `inbox` | UpdatedInDB:timestamp, ReceivingDateTime:timestamp, Text:text, SenderNumber:string, Coding:enum, UDH:text, SMSCNumber:string, Class:integer, TextDecoded:text, ID:increments, config_id:integer, RecipientID:text, Processed:enum |
 | `kader_pemberdayaan_masyarakat` | id:increments, config_id:integer, penduduk_id:integer, kursus:text, bidang:text, keterangan:text |
 | `kia` | id:increments, config_id:integer, no_kia:string, ibu_id:integer, anak_id:integer, hari_perkiraan_lahir:date |
 | `line` | id:integer, config_id:integer, nama:string, simbol:string, color:string, tipe:integer, tebal:integer, jenis:string, parrent:integer, enabled:integer |
@@ -397,12 +390,10 @@ erDiagram
 | `log_penduduk` | id:integer, config_id:integer, id_pend:integer, kode_peristiwa:integer, meninggal_di:string, jam_mati:string, sebab:string, penolong_mati:string, akta_mati:string, alamat_tujuan:tinyText, tgl_lapor:timestamp, tgl_peristiwa:dateTime, catatan:text, no_kk:string, nama_kk:string, ref_pindah:tinyInteger, maksud_tujuan_kedatangan:string |
 | `log_perubahan_penduduk` | id:integer, config_id:integer, id_pend:integer, id_cluster:string, tanggal:timestamp |
 | `log_restore_desa` | id:increments, config_id:integer, ukuran:string, path:string, restore_at:timestamp, status:integer, pid_process:integer |
-| `log_sinkronisasi` | id:increments, config_id:integer, modul:string |
 | `log_tolak` | id:integer, config_id:integer, id_surat:integer, keterangan:longText |
 | `log_tte` | id:increments, config_id:integer, message:text, jenis_error:string |
 | `lokasi` | id:integer, config_id:integer, desk:text, nama:string, enabled:integer, lat:string, lng:string, ref_point:integer, foto:string, id_cluster:integer |
 | `migrasi` | id:integer, versi_database:string, premium:text |
-| `outbox` | UpdatedInDB:timestamp, InsertIntoDB:timestamp, SendingDateTime:timestamp, SendBefore:time, SendAfter:time, Text:text, DestinationNumber:string, Coding:enum, UDH:text, Class:integer, TextDecoded:text, ID:increments, config_id:integer, MultiPart:enum, RelativeValidity:integer, SenderID:string, SendingTimeOut:timestamp, DeliveryReport:enum, CreatorID:text |
 | `password_resets` | email:string, token:string, created_at:timestamp |
 | `pelapak` | id:integer, config_id:integer, id_pend:integer, telepon:string, lat:string, lng:string, zoom:tinyInteger, status:boolean |
 | `pendapat` | id:integer, config_id:integer, pengguna:text, tanggal:timestamp, pilihan:integer |
@@ -415,7 +406,6 @@ erDiagram
 | `produk_kategori` | id:integer, config_id:integer, kategori:string, slug:string, status:boolean |
 | `produk` | id:integer, config_id:integer, id_pelapak:integer, id_produk_kategori:integer, nama:string, harga:integer, satuan:string, tipe_potongan:boolean, potongan:integer, deskripsi:text, foto:string, status:boolean, created_at:timestamp, updated_at:timestamp |
 | `sasaran_paud` | id_sasaran_paud:increments, config_id:integer, posyandu_id:integer, kia_id:integer, kategori_usia:boolean, januari:boolean, februari:boolean, maret:boolean, april:boolean, mei:boolean, juni:boolean, juli:boolean, agustus:boolean, september:boolean, oktober:boolean, november:boolean, desember:boolean |
-| `sentitems` | UpdatedInDB:timestamp, InsertIntoDB:timestamp, SendingDateTime:timestamp, DeliveryDateTime:timestamp, Text:text, DestinationNumber:string, Coding:enum, UDH:text, SMSCNumber:string, Class:integer, TextDecoded:text, ID:unsignedInteger, config_id:integer, SenderID:string, SequencePosition:integer, Status:enum, StatusError:integer, TPMR:integer, RelativeValidity:integer, CreatorID:text |
 | `statistics` | id:integer, config_id:integer, url_id:integer, created:dateTime |
 | `suplemen` | id:integer, config_id:integer, nama:string, slug:string, sasaran:tinyInteger, keterangan:string |
 | `suplemen_terdata` | id:integer, config_id:integer, id_suplemen:integer, id_terdata:string, sasaran:tinyInteger, keterangan:string |
@@ -429,7 +419,7 @@ erDiagram
 | `tweb_status_ktp` | id:tinyInteger, nama:string, ktp_el:tinyInteger, status_rekam:string |
 | `urls` | id:integer, config_id:integer, url:string, alias:string, created:dateTime |
 
-## C. Relasi Foreign Key (282)
+## C. Relasi Foreign Key (272)
 
 | Tabel | Kolom | Referensi | Nama Constraint |
 |---|---|---|---|
@@ -460,11 +450,6 @@ erDiagram
 | `cdesa_penduduk` | `id_cdesa` | `id` | cdesa_penduduk_fk |
 | `cdesa_penduduk` | `config_id` | `id` | cdesa_penduduk_config_fk |
 | `cdesa` | `config_id` | `id` | cdesa_config_fk |
-| `covid19_pantau` | `id_pemudik` | `id` | fk_pantau_pemudik |
-| `covid19_pantau` | `config_id` | `id` | covid19_pantau_config_fk |
-| `covid19_pemudik` | `id_terdata` | `id` | fk_pemudik_penduduk |
-| `covid19_pemudik` | `config_id` | `id` | covid19_pemudik_config_fk |
-| `covid19_vaksin` | `config_id` | `id` | covid19_vaksin_config_fk |
 | `disposisi_surat_masuk` | `config_id` | `id` | disposisi_surat_masuk_config_fk |
 | `disposisi_surat_masuk` | `id_desa_pamong` | `pamong_id` | desa_pamong_fk |
 | `disposisi_surat_masuk` | `id_surat_masuk` | `id` | id_surat_fk |
@@ -491,7 +476,6 @@ erDiagram
 | `hubung_warga` | `id_grup` | `id_grup` | hubung_warga_id_grup_fk |
 | `hubung_warga` | `config_id` | `id` | hubung_warga_config_fk |
 | `ibu_hamil` | `config_id` | `id` | ibu_hamil_config_fk |
-| `inbox` | `config_id` | `id` | inbox_config_fk |
 | `inventaris_asset` | `config_id` | `id` | inventaris_asset_config_fk |
 | `inventaris_gedung` | `config_id` | `id` | inventaris_gedung_config_fk |
 | `inventaris_jalan` | `config_id` | `id` | inventaris_jalan_config_fk |
@@ -635,7 +619,6 @@ erDiagram
 | `kontak_grup` | `config_id` | `id` | kontak_grup_config_fk |
 | `kontak` | `config_id` | `id` | kontak_config_fk |
 | `lampiran_surat` | `config_id` | `id` | lampiran_surat_config_fk |
-| `laporan_sinkronisasi` | `config_id` | `id` | laporan_sinkronisasi_config_fk |
 | `line` | `config_id` | `id` | line_config_fk |
 | `login_attempts` | `config_id` | `id` | login_attempts_config_fk |
 | `log_backup` | `config_id` | `id` | log_backup_config_fk |
@@ -647,7 +630,6 @@ erDiagram
 | `log_penduduk` | `config_id` | `id` | log_penduduk_config_fk |
 | `log_perubahan_penduduk` | `config_id` | `id` | log_perubahan_penduduk_config_fk |
 | `log_restore_desa` | `config_id` | `id` | log_restore_desa_config_fk |
-| `log_sinkronisasi` | `config_id` | `id` | log_sinkronisasi_config_fk |
 | `log_surat` | `config_id` | `id` | log_surat_config_fk |
 | `log_tolak` | `config_id` | `id` | log_tolak_config_fk |
 | `log_tte` | `config_id` | `id` | log_tte_config_fk |
@@ -667,7 +649,6 @@ erDiagram
 | `mutasi_inventaris_tanah` | `config_id` | `id` | mutasi_inventaris_tanah_config_fk |
 | `mutasi_inventaris_tanah` | `id_inventaris_tanah` | `id` | FK_mutasi_inventaris_tanah |
 | `notifikasi` | `config_id` | `id` | notifikasi_config_fk |
-| `outbox` | `config_id` | `id` | outbox_config_fk |
 | `pelapak` | `config_id` | `id` | pelapak_config_fk |
 | `pembangunan_ref_dokumentasi` | `config_id` | `id` | pembangunan_ref_dokumentasi_config_fk |
 | `pembangunan` | `config_id` | `id` | pembangunan_config_fk |
@@ -689,7 +670,6 @@ erDiagram
 | `ref_jabatan` | `config_id` | `id` | ref_jabatan_config_fk |
 | `ref_syarat_surat` | `config_id` | `id` | ref_syarat_surat_config_fk |
 | `sasaran_paud` | `config_id` | `id` | sasaran_paud_config_fk |
-| `sentitems` | `config_id` | `id` | sentitems_config_fk |
 | `setting_aplikasi` | `config_id` | `id` | setting_aplikasi_config_fk |
 | `setting_modul` | `config_id` | `id` | setting_modul_config_fk |
 | `statistics` | `config_id` | `id` | statistics_config_fk |
@@ -741,8 +721,8 @@ erDiagram
 | `notifications` | `Migrasi_beta.php` | notifikasi Laravel (`id, type, notifiable, data, read_at, config_id`) |
 
 ### Ringkasan jumlah tabel
-- Tabel snapshot (`struktur_tabel`): **243**
+- Tabel snapshot (`struktur_tabel`): **233**
 - Tabel tambahan (`Migrasi_*.php`): **17** unik
-- **Total ≈ 260 tabel**
+- **Total ≈ 250 tabel**
 - Ditambah puluhan **view** (`create_*_view.php`) dan tabel referensi `tweb_*`/`ref_*` yang tidak memiliki `config_id`.
 

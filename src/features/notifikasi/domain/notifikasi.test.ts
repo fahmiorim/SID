@@ -15,7 +15,7 @@ describe("filter notifikasi", () => {
   });
 
   it("mengabaikan nilai asing", () => {
-    expect(parseFilterNotifikasi({ kanal: "sms", status: "hilang" })).toEqual({
+    expect(parseFilterNotifikasi({ kanal: "invalid", status: "hilang" })).toEqual({
       kanal: null,
       status: "semua",
     });
@@ -39,7 +39,8 @@ describe("broadcastSchema", () => {
       false,
     );
     expect(
-      broadcastSchema.safeParse({ kanal: "sms", target: "08123", pesan: "pesan cukup" }).success,
+      broadcastSchema.safeParse({ kanal: "invalid", target: "08123", pesan: "pesan cukup" })
+        .success,
     ).toBe(false);
   });
 });

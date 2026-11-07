@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { authenticateApiKey } from "@/features/api-eksternal/domain/auth";
-import { isRateLimited } from "@/features/api-eksternal/domain/rate-limit";
 import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import {
@@ -9,6 +8,7 @@ import {
   suratEksternalSchema,
 } from "@/features/layanan-mandiri/application/eksternal-use-cases";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { isAppError } from "@/lib/errors";
 
 /** Batas kasar badan multipart (berkas individual tetap divalidasi). */
@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
 
   const auth = await authenticateApiKey(apiKeyHeader);
   if (!auth.ok) return galat(auth.status, auth.message);
-  if (isRateLimited(auth.apiKey.id)) return galat(429, "Rate limit exceeded");
+  if ((await batasiPermintaan(`api-eksternal:${auth.apiKey.id}`, { batas: 100 })).dibatasi)
+    return galat(429, "Rate limit exceeded");
 
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > BATAS_BADAN) return galat(413, "Badan permintaan terlalu besar.");

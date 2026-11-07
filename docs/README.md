@@ -1,8 +1,7 @@
 # Dokumentasi — Peta & Aturan
 
-Dokumen ini adalah **pintu masuk** semua dokumentasi. Tujuannya mencegah agent
-atau kontributor memakai dokumen lama yang sudah tidak sesuai kode atau
-melewatkan fitur OpenSID yang belum dipetakan.
+Dokumen ini mencegah agent atau kontributor memakai dokumen lama yang sudah
+tidak sesuai kode atau melewatkan fitur dalam scope katalog yang belum dipetakan.
 
 ## Sumber Kebenaran
 
@@ -18,9 +17,10 @@ Baca dengan urutan ini:
 | 6 | [`riset/`](./riset/) | Analisis mendalam sistem acuan (OpenSID) | Referensi, **bukan** status |
 | 7 | [`arsip/`](./arsip/) | Dokumen yang sudah digantikan | ❌ **Jangan** dipakai untuk status |
 
-`KATALOG-FITUR-OPENSID.md` mendefinisikan cakupan lengkap, sedangkan status
-implementasi hanya boleh ditulis di `PARITAS-OPENSID.md`. Katalog tidak boleh
-dipersempit menjadi T1/T2 bila target produk adalah seluruh fitur OpenSID.
+`KATALOG-FITUR-OPENSID.md` mendefinisikan cakupan fitur OpenSID yang dipilih
+untuk produk ini; status implementasi hanya boleh ditulis di
+`PARITAS-OPENSID.md`. Katalog dapat menetapkan scope yang lebih sempit dari
+seluruh fitur OpenSID.
 
 ## Batas tanggung jawab
 
@@ -28,7 +28,7 @@ dipersempit menjadi T1/T2 bila target produk adalah seluruh fitur OpenSID.
 |---|---|---|
 | `README.md` akar | quick start, teknologi, link dokumentasi | rincian status per domain |
 | `RENCANA-PERBAIKAN.md` | urutan fase, milestone, acceptance, risiko | inventaris fitur yang tidak punya ID katalog |
-| `KATALOG-FITUR-OPENSID.md` | seluruh requirement dan sumber OpenSID | klaim status terkini |
+| `KATALOG-FITUR-OPENSID.md` | requirement dalam scope produk dan sumber OpenSID | klaim status terkini |
 | `PARITAS-OPENSID.md` | status terkini, bukti, gap, prioritas | changelog bertanggal panjang |
 | `ARCHITECTURE.md` | aturan teknis dan quality gate | status feature delivery |
 | `LOG-PERKEMBANGAN.md` | kronologi bukti pekerjaan yang sudah dilakukan | roadmap baru atau prioritas baru |

@@ -15,7 +15,12 @@ import {
   ubahLapak,
 } from "../application/lapak-use-cases";
 
-export async function listLapakAction(opts?: { kategori?: string; q?: string }) {
+export async function listLapakAction(opts?: {
+  kategori?: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}) {
   const user = await getCurrentUser();
   if (!user?.villageId) throw new Error("Desa tidak ditemukan");
   return daftarLapak(user.villageId, opts);

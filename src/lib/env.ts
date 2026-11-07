@@ -62,12 +62,15 @@ const envSchema = z
     /** Endpoint URL dan Token untuk WhatsApp Provider (Fase 5 - OS-WEB-009). */
     WHATSAPP_API_URL: z.string().url().optional(),
     WHATSAPP_TOKEN: z.string().optional(),
-    /** SMS gateway dua arah (OS-OPS-005); opsional sampai provider tersedia. */
-    SMS_API_URL: z.string().url().optional(),
-    SMS_TOKEN: z.string().optional(),
     /** Token webhook masuk; webhook menolak semua permintaan bila kosong. */
-    EMAIL_WEBHOOK_TOKEN: z.string().trim().optional(),
-    SMS_WEBHOOK_TOKEN: z.string().trim().optional(),
+    EMAIL_WEBHOOK_TOKEN: z
+      .string()
+      .trim()
+      .optional()
+      .transform((value) => value || undefined)
+      .refine((value) => value === undefined || value.length >= 32, {
+        message: "EMAIL_WEBHOOK_TOKEN minimal 32 karakter.",
+      }),
     /** Kunci API untuk endpoint `/api/eksternal/*` (minimal 16 karakter). */
     EKSTERNAL_API_KEY: z
       .string()

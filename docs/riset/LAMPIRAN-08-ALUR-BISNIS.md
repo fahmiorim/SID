@@ -66,7 +66,7 @@ yang direlasikan ke **hierarki `keuangan_template`**, menggantikan 66 tabel lega
 |---|---|---|---|
 | Laporan & grafik | `donjo-app/controllers/Keuangan_laporan.php` | `keuangan` / `laporan` | Tampilan realisasi/anggaran per tahun, rincian realisasi manual, grafik APBDes |
 | Input manual & impor | `donjo-app/controllers/Keuangan_manual.php` | `keuangan` / `input-data` (+ `impor-data`) | CRUD rincian anggaran/realisasi; impor data Siskeudes |
-| Publikasi APBDes | `donjo-app/controllers/Laporan_apbdes.php` | `keuangan` / `laporan-apbdes` | Unggah PDF laporan APBDes & kirim ke OpenDK/kecamatan |
+| Publikasi APBDes | `donjo-app/controllers/Laporan_apbdes.php` | `keuangan` / `laporan-apbdes` | Unggah PDF laporan APBDes |
 
 Model/library: `app/Models/Keuangan.php`, `app/Models/KeuanganTemplate.php`,
 `app/Models/KeuanganManualRefRek2.php`, `KeuanganManualRefRek3.php`, `app/Libraries/Keuangan.php`,
@@ -114,8 +114,7 @@ Sub-modul dipetakan ke URL melalui `setting_modul`; migrasi `migrasi_2024102351(
 12. `Keuangan_laporan::index()` menampilkan ringkasan; `grafik_rp_apbd($tahun)` menyiapkan grafik;
     `rincian_realisasi_manual($tahun, $judul)` untuk rincian realisasi manual.
 13. `Laporan_apbdes::index()/form()/insert()/update()` mengelola berkas laporan APBDes
-    (`uploadFile()`, `file()`); `unduh($id)` mengunduh; `kirim()` mengirim ke OpenDK
-    (`opendk($id)`) bila integrasi aktif.
+    (`uploadFile()`, `file()`); `unduh($id)` mengunduh.
 14. `Laporan_apbdes::datatables()` menampilkan daftar tahun/laporan.
 
 ### Tabel & kolom kunci
@@ -149,7 +148,7 @@ Sub-modul dipetakan ke URL melalui `setting_modul`; migrasi `migrasi_2024102351(
 ### Output/cetak
 
 - **Grafik APBDes** untuk website/footer (`Keuangan::grafik_keuangan_tema`) — bukan cetak kertas.
-- **Laporan APBDes PDF** diunggah manual oleh operator (`Laporan_apbdes`) lalu dikirim ke OpenDK.
+- **Laporan APBDes PDF** diunggah manual oleh operator (`Laporan_apbdes`).
 - Tabel laporan/realisasi dirender di layar; detail bentuk cetak ada di `LAMPIRAN-06`.
 
 ### Catatan rebuild Next.js
@@ -161,8 +160,7 @@ Sub-modul dipetakan ke URL melalui `setting_modul`; migrasi `migrasi_2024102351(
    mengirim nilai parent. Sediakan endpoint rekomputasi untuk perbaikan data.
 3. **Impor Siskeudes:** port `proses_impor` sebagai *worker* terpisah (stream `.csv` dalam `.zip`),
    dengan laporan baris gagal; pertahankan aturan `Debet+Kredit` dan `AnggaranStlhPAK`.
-4. **Publikasi:** pisahkan peran "input/verifikasi" (admin) dan "publikasi APBDes" (unggah PDF +
-   kirim OpenDK) ke permission berbeda; untuk website publik, ekspos endpoint ringkasan APBDes read-only.
+4. **Publikasi:** pisahkan peran "input/verifikasi" (admin) dan "publikasi APBDes" (unggah PDF)
 
 ---
 
@@ -411,7 +409,7 @@ Model: `app/Models/Pembangunan.php` (`pembangunan`), `app/Models/PembangunanDoku
 - Dokumentasi pembangunan dapat diekspor ke **Word `.doc`** (HTML + header Word) —
   lihat `LAMPIRAN-06`.
 - Tampilan publik (website) + peta (GIS).
-- Integrasi OpenDK untuk ekspor pembangunan (`app/Exports`).
+
 
 ### Catatan rebuild Next.js
 
@@ -515,7 +513,7 @@ Model: `app/Models/PendudukMandiri.php` (`tweb_penduduk_mandiri`), `app/Models/P
 ### Ringkasan
 
 Modul surat **dinas internal desa** (naskah dinas: pengaturan jenis, pencetakan, arsip, verifikasi
-berjenjang, TTE, integrasi kecamatan). Modul `surat-dinas` dengan tiga sub-modul:
+berjenjang, TTE). Modul `surat-dinas` dengan tiga sub-modul:
 
 | Controller | Sub-modul | Peran |
 |---|---|---|
@@ -525,7 +523,7 @@ berjenjang, TTE, integrasi kecamatan). Modul `surat-dinas` dengan tiga sub-modul
 
 Model: `SuratDinas` (`surat_dinas`), `LogSuratDinas` (`log_surat_dinas`), `SuratMasuk`
 (`surat_masuk`), `SuratKeluar` (`surat_keluar`). Enum: `DerajatSuratEnum` (Biasa/Segera/Sangat
-Segera), `KarakterSuratEnum` (Biasa/Terbata/…), `StatusSuratKecamatanEnum`.
+`KarakterSuratEnum` (Biasa/Terbata/…).
 Helper: `PeriksaKlasifikasiSurat`.
 
 > **Tidak diulang di sini:** mesin penomoran & template surat *layanan* (keterangan) sudah dibahas di
@@ -538,7 +536,7 @@ Helper: `PeriksaKlasifikasiSurat`.
 | Operator | Menyusun konsep, mengajukan verifikasi |
 | Sekretaris Desa (sekdes) | Verifikasi (bila `setting` mengaktifkan) |
 | Kepala Desa (kades) | Verifikasi akhir (bila `setting` mengaktifkan) |
-| Admin arsip | Kelola arsip, cetak ulang, kirim ke kecamatan |
+| Admin arsip | Kelola arsip, cetak ulang |
 
 ### Alur langkah
 
@@ -567,10 +565,9 @@ Helper: `PeriksaKlasifikasiSurat`.
     Token format: `[nomor_surat]`, `[nomor_surat,N]`, `[kode_surat]`, `[tahun]`, `[bulan_romawi]`,
     `[kode_desa]`.
 
-**E. Arsip & kecamatan.**
+**E. Arsip.**
 11. `log_surat_dinas` menyimpan `no_surat`, `urls_id` (verifikasi QR).
 12. Surat masuk/keluar pada `surat_masuk`/`surat_keluar`.
-13. Status kecamatan: `StatusSuratKecamatanEnum` — `1` TidakAktif, `2` BelumDikirim, `3` SudahDikirim.
 
 **F. Notifikasi.** Verifikasi memakai Telegram + FCM (`FirebaseEnum::SERVER_KEY`/`SENDER_ID`).
 
@@ -589,7 +586,7 @@ Helper: `PeriksaKlasifikasiSurat`.
   dihormati urutannya.
 - **Jenis sistem tak terhapus** (`SISTEM=[3]`). Jenis desa (`4`) bebas dikelola.
 - **Penomoran multi-mode**; format token harus dievaluasi berurutan agar nomor unik.
-- **Status kecamatan** terpisah dari status internal (`1/2/3`).
+
 - **Kode isian & form isian disimpan sebagai JSON** — perlu migrasi struktur terpisah di rebuild.
 
 ### Output/cetak
@@ -603,7 +600,7 @@ Helper: `PeriksaKlasifikasiSurat`.
    bukan flag tersebar; simpan jejak tiap tahap + siapa & kapan.
 2. **Editor dinamis** untuk `kode_isian`/`form_isian` (JSON schema) agar bisa render form & PDF.
 3. **Penomoran** sebagai service transaksional dengan lock, menerapkan format token sesuai mode.
-4. **TTE & arsip kecamatan** sebagai integrasi eksternal terisolasi (retry + log error).
+4. **TTE & arsip** sebagai integrasi eksternal terisolasi (retry + log error).
 
 ---
 
@@ -924,7 +921,7 @@ Catatan: beberapa controller menolak jalan bila `setting('offline_mode') >= 2`.
    (`Agenda::show`), komentar terbaru, arsip (`ArsipArtikel`), aparatur, sinergi program, widget
    keuangan, jam kerja.
 10. `fweb/Utama::index()` memuat artikel (`enable()`, `headline != 1`, `tgl_upload <= now`, search),
-    `headline`, feed (bila `covid_rss`), transparansi APBDes (bila `apbdes_footer`), data covid.
+    `headline`, transparansi APBDes (bila `apbdes_footer`).
 11. Artikel dibaca → `Artikel::read()` menambah `hit` (sekali per sesi, kecuali robot/crawler).
 
 **C. Slider.** (`Slider.php`)

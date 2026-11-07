@@ -7,11 +7,11 @@
 
 | Entitas | Jumlah |
 |---|---|
-| Modul (setting_modul) | 137 |
+| Modul (setting_modul) | 131 |
 | Controller | 161 |
-| Model (Eloquent + legacy) | 179 |
-| Tabel (create-table) | 243 |
-| Modul yang controller-nya berhasil dipetakan | 100 / 137 |
+| Model (Eloquent + legacy) | 172 |
+| Tabel (create-table) | 233 |
+| Modul yang controller-nya berhasil dipetakan | 94 / 131 |
 | Controller tanpa modul | 71 |
 
 ## 2. Hierarki Menu (berdasarkan nilai `parent`)
@@ -39,20 +39,19 @@
 | 201 | 5 | Impor Data, Laporan, Input Data, Laporan Manual, Laporan APBDes |
 | 4 | 5 | Pengaturan Surat, Cetak Surat, Arsip Layanan, Daftar Persyaratan, Permohonan Surat |
 | 14 | 5 | Kotak Pesan, Pendaftar Layanan Mandiri, Pengaturan, Pendapat, Gawai Layanan |
-| 206 | 4 | Pendataan, Pemantauan, Vaksin, Stunting |
+| 206 | 1 | Stunting |
 | 3 | 4 | Statistik Kependudukan, Laporan Bulanan, Laporan Kelompok Rentan, Laporan Penduduk |
 | 354 | 4 | Data Tamu, Data Kepuasan, Data Pertanyaan, Data Keperluan |
 | 312 | 3 | Daftar Anjungan, Menu, Pengaturan |
-| 10 | 3 | Kirim Pesan, Daftar Kontak, Grup Kontak |
+| 10 | 2 | Daftar Kontak, Grup Kontak |
 | 6 | 2 | Program Bantuan, Peserta Bantuan |
-| 343 | 2 | Sinkronisasi, Pesan |
 | 7 | 2 | Daftar Persil, C-Desa |
 | 352 | 1 | DTKS |
 | 52 | 1 | Informasi Publik |
 
-> Kelompok dengan anggota terbanyak memberi petunjuk grup menu: `200` (Pengaturan/Profil Desa), `301` (Bumindes), `201` (Laporan/Keuangan), `206` (Pendataan/Sasaran), `337`/`343` (Pengaturan sistem).
+> Kelompok dengan anggota terbanyak memberi petunjuk grup menu: `200` (Pengaturan/Profil Desa), `301` (Bumindes), `201` (Laporan/Keuangan), `206` (Pendataan/Sasaran), `337` (Pengaturan sistem).
 
-## 3. Katalog Modul Lengkap (137)
+## 3. Katalog Modul Lengkap (131)
 
 | Id | Modul | slug | url | parent | controller (perkiraan) |
 |---|---|---|---|---|---|
@@ -73,7 +72,6 @@
 | 15 | Pengaturan Surat | `pengaturan-surat` | `surat_master` | 4 | Surat_master |
 | 16 | Cetak Surat | `cetak-surat` | `surat` | 4 | Surat |
 | 17 | Arsip Layanan | `arsip-layanan` | `keluar/clear/masuk` | 4 | Keluar |
-| 18 | Kirim Pesan | `kirim-pesan` | `sms` | 10 | Sms |
 | 19 | Daftar Kontak | `daftar-kontak` | `daftar_kontak` | 10 | Daftar_kontak |
 | 20 | Modul | `modul` | `modul/clear` | 11 | Modul |
 | 21 | Aplikasi | `aplikasi` | `setting` | 11 | Setting |
@@ -135,8 +133,6 @@
 | 77 | Impor Data | `impor-data` | `keuangan/impor_data` | 201 | _(tidak dipetakan)_ |
 | 78 | Laporan | `laporan` | `keuangan/laporan` | 201 | Laporan |
 | 79 | Pengunjung | `pengunjung` | `pengunjung/clear` | 13 | Pengunjung |
-| 80 | Pendataan | `pendataan` | `covid19` | 206 | Covid19 |
-| 81 | Pemantauan | `pemantauan` | `covid19/pantau` | 206 | Covid19 |
 | 82 | Input Data | `input-data` | `keuangan_manual/manual_apbdes` | 201 | Keuangan_manual |
 | 83 | Laporan Manual | `laporan-manual` | `keuangan_manual/laporan_manual` | 201 | Keuangan_manual |
 | 84 | Pengaturan | `pengaturan-web` | `setting/web` | 13 | Setting |
@@ -162,7 +158,6 @@
 | 104 | Buku Rencana Kerja Pembangunan | `buku-rencana-kerja-pembangunan` | `bumindes_rencana_pembangunan` | 301 | Bumindes_rencana_pembangunan |
 | 105 | Lapak | `lapak` | `lapak_admin` | 0 | _(tidak dipetakan)_ |
 | 106 | Laporan APBDes | `laporan-apbdes` | `laporan_apbdes` | 201 | Laporan_apbdes |
-| 107 | Sinkronisasi | `sinkronisasi` | `sinkronisasi` | 343 | Sinkronisasi |
 | 108 | Lembaga [Desa] | `lembaga-desa` | `lembaga/clear` | 200 | Lembaga |
 | 109 | Kategori Lembaga | `kategori-lembaga` | `lembaga_master` | 200 | Lembaga_master |
 | 110 | Bumindes Kegiatan Pembangunan | `bumindes-kegiatan-pembangunan` | `bumindes_kegiatan_pembangunan` | 301 | Bumindes_kegiatan_pembangunan |
@@ -171,13 +166,11 @@
 | 113 | Kader Pemberdayaan Masyarakat | `bumindes-kader` | `bumindes_kader` | 301 | Bumindes_kader |
 | 114 | Buku Inventaris Hasil - Hasil Pembangunan | `bumindes-hasil-pembangunan` | `bumindes_hasil_pembangunan` | 301 | Bumindes_hasil_pembangunan |
 | 115 | Pengaduan | `pengaduan` | `pengaduan_admin` | 0 | Pengaduan_admin |
-| 116 | Vaksin | `vaksin` | `vaksin_covid/clear` | 206 | Vaksin_covid |
 | 117 | Arsip [Desa] | `arsip-desa` | `bumindes_arsip` | 301 | Bumindes_arsip |
 | 118 | Jam Kerja | `jam-kerja` | `kehadiran_jam_kerja` | 337 | _(tidak dipetakan)_ |
 | 119 | Hari Libur | `hari-libur` | `kehadiran_hari_libur` | 337 | _(tidak dipetakan)_ |
 | 120 | Rekapitulasi | `rekapitulasi` | `kehadiran_rekapitulasi` | 337 | _(tidak dipetakan)_ |
 | 121 | Pengaduan | `kehadiran-pengaduan` | `kehadiran_pengaduan` | 337 | _(tidak dipetakan)_ |
-| 122 | Pesan | `pesan` | `opendk_pesan/clear` | 343 | Opendk_pesan |
 | 123 | Grup Kontak | `grup-kontak` | `grup_kontak` | 10 | Grup_kontak |
 | 124 | Stunting | `stunting` | `stunting` | 206 | Stunting |
 | 125 | Daftar Anjungan | `daftar-anjungan` | `anjungan` | 312 | _(tidak dipetakan)_ |
@@ -257,9 +250,6 @@
 - `Sinergi_program`
 - `Sitemap`
 - `Slider`
-- `Sms_outbox`
-- `Sms_pending`
-- `Sms_sentitem`
 - `Statistik_bantuan`
 - `Statistik_web`
 - `Stunting_rekapitulasi`
@@ -270,7 +260,7 @@
 - `Token`
 - `Tools`
 
-## 5. Daftar Model -> Tabel (179)
+## 5. Daftar Model -> Tabel (172)
 
 > Kolom **eksplisit** = apakah nama tabel dideklarasikan di model (protected $table); bila **inferensi**, nama tabel diturunkan dari nama kelas (bisa tidak akurat, mis. kelas abstrak).
 
@@ -295,9 +285,6 @@
 | CdesaMutasi | `mutasi_cdesa` | app/Models | eksplisit |
 | CdesaPenduduk | `cdesa_penduduk` | app/Models | eksplisit |
 | Config | `config` | app/Models | eksplisit |
-| Covid19_model | `covid19model` | donjo-app/models | inferensi |
-| CovidPemudik | `covid19_pemudik` | app/Models | eksplisit |
-| CovidVaksin | `covid19_vaksin` | app/Models | eksplisit |
 | DaftarKontak | `kontak` | app/Models | eksplisit |
 | DatabaseNotification | `databasenotification` | app/Models | inferensi |
 | DisposisiSuratmasuk | `disposisi_surat_masuk` | app/Models | eksplisit |
@@ -319,7 +306,6 @@
 | GrupKontak | `kontak_grup` | app/Models | eksplisit |
 | HubungWarga | `hubung_warga` | app/Models | eksplisit |
 | IbuHamil | `ibu_hamil` | app/Models | eksplisit |
-| Inbox | `inbox` | app/Models | eksplisit |
 | InventarisAsset | `inventaris_asset` | app/Models | eksplisit |
 | InventarisGedung | `inventaris_gedung` | app/Models | eksplisit |
 | InventarisJalan | `inventaris_jalan` | app/Models | eksplisit |
@@ -345,7 +331,6 @@
 | KlasifikasiSurat | `klasifikasi_surat` | app/Models | eksplisit |
 | Komentar | `komentar` | app/Models | eksplisit |
 | LampiranSurat | `lampiran_surat` | app/Models | eksplisit |
-| LaporanSinkronisasi | `laporan_sinkronisasi` | app/Models | eksplisit |
 | Line | `line` | app/Models | eksplisit |
 | LogBackup | `log_backup` | app/Models | eksplisit |
 | LogEkspor | `log_ekspor` | app/Models | eksplisit |
@@ -357,7 +342,6 @@
 | LogPerubahanPenduduk | `log_perubahan_penduduk` | app/Models | eksplisit |
 | LogPerubahanSurat | `log_perubahan_surat` | app/Models | eksplisit |
 | LogRestoreDesa | `log_restore_desa` | app/Models | eksplisit |
-| LogSinkronisasi | `log_sinkronisasi` | app/Models | eksplisit |
 | LogSurat | `log_surat` | app/Models | eksplisit |
 | LogSuratDinas | `log_surat_dinas` | app/Models | eksplisit |
 | LogTolak | `log_tolak` | app/Models | eksplisit |
@@ -377,7 +361,6 @@
 | Notifikasi | `notifikasi` | app/Models | eksplisit |
 | OneTimePassword | `onetimepassword` | app/Models | inferensi |
 | OtpToken | `otp_token` | app/Models | eksplisit |
-| Outbox | `outbox` | app/Models | eksplisit |
 | Pamong | `tweb_desa_pamong` | app/Models | eksplisit |
 | Pamong_model | `pamongmodel` | donjo-app/models | inferensi |
 | Paud | `sasaran_paud` | app/Models | eksplisit |
@@ -424,7 +407,6 @@
 | SasaranPaud | `sasaran_paud` | app/Models | eksplisit |
 | SecurityBaseline | `security_baselines` | app/Models | eksplisit |
 | SecurityReport | `security_reports` | app/Models | eksplisit |
-| SentItem | `sentitems` | app/Models | eksplisit |
 | Setting | `setting_modul` | app/Models | eksplisit |
 | SettingAplikasi | `setting_aplikasi` | app/Models | eksplisit |
 | Sex | `tweb_penduduk_sex` | app/Models | eksplisit |
@@ -450,7 +432,6 @@
 | Urut_model | `urutmodel` | donjo-app/models | inferensi |
 | User | `user` | app/Models | eksplisit |
 | UserGrup | `user_grup` | app/Models | eksplisit |
-| Vaksin_covid_model | `vaksincovidmodel` | donjo-app/models | inferensi |
 | WargaNegara | `tweb_penduduk_warganegara` | app/Models | eksplisit |
 | Widget | `widget` | app/Models | eksplisit |
 | Wilayah | `tweb_wil_clusterdesa` | app/Models | eksplisit |
@@ -502,9 +483,6 @@
 | `cdesa` | C-Desa |
 | `cdesa_penduduk` | Penduduk |
 | `config` | - |
-| `covid19_pantau` | Pendataan |
-| `covid19_pemudik` | Pendataan |
-| `covid19_vaksin` | Pendataan |
 | `disposisi_surat_masuk` | Cetak Surat |
 | `dokumen` | Produk Hukum |
 | `dtks` | DTKS |
@@ -520,7 +498,6 @@
 | `grup_akses` | - |
 | `hubung_warga` | - |
 | `ibu_hamil` | - |
-| `inbox` | - |
 | `inventaris_asset` | Inventaris |
 | `inventaris_gedung` | Inventaris |
 | `inventaris_jalan` | Inventaris |
@@ -609,7 +586,6 @@
 | `kontak` | Daftar Kontak |
 | `kontak_grup` | - |
 | `lampiran_surat` | Cetak Surat |
-| `laporan_sinkronisasi` | Laporan |
 | `line` | line |
 | `log_backup` | - |
 | `log_ekspor` | - |
@@ -621,7 +597,6 @@
 | `log_penduduk` | Penduduk |
 | `log_perubahan_penduduk` | Penduduk |
 | `log_restore_desa` | - |
-| `log_sinkronisasi` | Sinkronisasi |
 | `log_surat` | Cetak Surat |
 | `log_tolak` | - |
 | `log_tte` | - |
@@ -637,7 +612,6 @@
 | `mutasi_inventaris_peralatan` | Inventaris |
 | `mutasi_inventaris_tanah` | Inventaris |
 | `notifikasi` | - |
-| `outbox` | - |
 | `password_resets` | - |
 | `pelapak` | Lapak |
 | `pembangunan` | Pembangunan |
@@ -668,11 +642,8 @@
 | `ref_persil_mutasi` | - |
 | `ref_peruntukan_tanah_kas` | - |
 | `ref_pindah` | - |
-| `ref_sinkronisasi` | Sinkronisasi |
-| `ref_status_covid` | - |
 | `ref_syarat_surat` | Cetak Surat |
 | `sasaran_paud` | - |
-| `sentitems` | - |
 | `setting_aplikasi` | Aplikasi |
 | `setting_modul` | Modul |
 | `statistics` | - |
@@ -719,7 +690,7 @@
 
 ## 8. Cara Membaca & Tindak Lanjut
 
-1. Gunakan **Bagian 3** sebagai checklist implementasi modul (137 item) pada aplikasi baru.
+1. Gunakan **Bagian 3** sebagai checklist implementasi modul (131 item) pada aplikasi baru.
 2. Untuk tiap modul, controller menunjuk lokasi logika saat ini (`donjo-app/controllers`).
 3. **Bagian 5** memetakan model ke tabel -> jembatan ke LAMPIRAN-05 (ERD).
 4. **Bagian 4** = kandidat yang perlu dipetakan ulang atau memang internal (AJAX/export/cron).

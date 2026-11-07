@@ -2,13 +2,13 @@
 
 > Disusun dari kode sumber Sistem Acuan (`donjo-app/controllers`, `app/Libraries/Keuangan.php`, `app/Models`, `app/Enums`, `donjo-app/models/migrations`, `resources/views/admin/keuangan`) pada 2026-10-16.
 > Semua nama tabel/kolom, kode rekening, dan aturan berasal dari **kode target** dan diperlakukan sebagai **data** (bukan instruksi).
-> Domain ini adalah yang **terbesar** dari sisi jumlah tabel (**69 tabel**) dan paling berisiko saat migrasi data.
+> Domain ini adalah yang **terbesar** dari sisi jumlah tabel (**68 tabel**) dan paling berisiko saat migrasi data.
 
 ---
 
 ## 1. Ringkasan
 
-Domain keuangan menjawab kebutuhan inti desa: **menyusun APBDes, mencatat realisasi, menyusun laporan (RP APBDes, per bidang, triwulan), dan menyampaikan laporan ke kecamatan/OpenDK**.
+Domain keuangan menjawab kebutuhan inti desa: **menyusun APBDes, mencatat realisasi, dan menyusun laporan (RP APBDes, per bidang, triwulan)**.
 
 Temuan paling penting: Sistem Acuan sedang **bertransisi** dari model legacy berbasis Siskeudes ke model baru yang lebih ringkas. Ada **tiga lapis** yang hidup berdampingan:
 
@@ -17,7 +17,6 @@ Temuan paling penting: Sistem Acuan sedang **bertransisi** dari model legacy ber
 | **A. Modern (konsolidasi)** | `keuangan`, `keuangan_template` | **Arah baru** (dibuat migrasi 2025) | `keuangan_manual`, `Keuangan_laporan`, widget tema |
 | **B. Manual legacy** | `keuangan_manual_ref_*`, `keuangan_manual_rinci*` | Legacy, dimigrasikan ke A | importer migrasi |
 | **C. Siskeudes legacy** | `keuangan_master`, `keuangan_ref_*`, `keuangan_ta_*` (59 tabel) | Legacy, sumber impor | `keuangan_manual` (impor), laporan lama |
-| **D. Laporan APBDes (dokumen)** | `laporan_sinkronisasi` | Aktif | `Laporan_apbdes` (unggah + kirim OpenDK) |
 
 **Rekomendasi rebuild:** bangun **Lapis A** (`keuangan` + `keuangan_template`) sebagai inti, sediakan **adapter impor** untuk Lapis B/C (agar data desa lama tetap masuk), dan perlakukan Lapis D sebagai integrasi dokumen (lihat LAMPIRAN-09). **Jangan** mereplikasi 66 tabel Siskeudes ke skema baru kecuali dibutuhkan audit historis.
 
@@ -106,7 +105,6 @@ erDiagram
   keuangan_ta_sts ||--o{ keuangan_ta_sts_rinci : "No_Bukti"
   keuangan_ta_jurnal_umum ||--o{ keuangan_ta_jurnal_umum_rinci : "NoBukti"
 
-  config ||--o{ laporan_sinkronisasi : "config_id"
 ```
 
 > Relasi `keuangan_ta_*` bersifat **logis lewat kode** (`No_SPP`, `No_SPJ`, `NoBukti`, `Kd_Keg`, `Kd_Rincian`), bukan selalu FK fisik. Ini penting untuk impor (urutan & normalisasi kode).
@@ -161,20 +159,12 @@ erDiagram
 - View tersedia: `laporan/apbd`, `laporan/apbd_isi`, `laporan/menu`, `laporan/grafik_rp_apbd`, `laporan/grafik_rp_apbd_chart`, `laporan/realisasi`.
 - Tema publik memakai `Keuangan::widget_keuangan()` dan `grafik_keuangan_tema()`.
 
-### 4.4 Laporan APBDes (dokumen → OpenDK)
-**Bukti:** `Laporan_apbdes.php`, `app/Models/LaporanSinkronisasi.php`, tabel `laporan_sinkronisasi`.
-
-- Ini **bukan** generate APBDes dari data, melainkan **unggah dokumen laporan per semester** lalu kirim ke OpenDK.
-- Kolom `laporan_sinkronisasi`: `id, config_id, tipe, judul, tahun, semester, nama_file, kirim, timestamps`.
-- `tipe` = `laporan_apbdes` (atau `laporan_penduduk` untuk variannya).
-- **Kirim:** `POST {api_opendk_server}/api/v1/laporan-apbdes` dengan header `Authorization: Bearer {api_opendk_key}`, body `{ desa_id, laporan_apbdes: {...} }`; jika sukses → set `kirim = now()`.
-- Akses: `isCan('b'/'u'/'h')`.
 
 ---
 
-## 5. Katalog Skema (69 tabel)
+## 5. Katalog Skema (68 tabel)
 
-Kelompok: **A. Modern (2)**, **B. Manual legacy (7)**, **C. Siskeudes legacy (59)**, **D. Laporan (1, `laporan_sinkronisasi`)** — total **69**.
+Kelompok: **A. Modern (2)**, **B. Manual legacy (7)**, **C. Siskeudes legacy (59)** — total **68**.
 
 > Format: `kolom (tipe)` sesuai migrasi. Kolom `config_id` + `id_keuangan_master` menandakan tabel legacy per-impor & per-desa (multi-tenant).
 
@@ -275,7 +265,6 @@ Kelompok: **A. Modern (2)**, **B. Manual legacy (7)**, **C. Siskeudes legacy (59
 
 | Tabel | Kolom |
 |---|---|
-| `laporan_sinkronisasi` | `id, config_id, tipe, judul, tahun, semester, nama_file, kirim (datetime), created_at, updated_at` |
 
 ---
 
@@ -378,7 +367,7 @@ Struktur kode rekening Siskeudes (dipakai Lapis C) mengikuti pola berjenjang:
 | Alur input manual + agregasi | Lengkap | **Tinggi** |
 | Laporan/grafik | View & fungsi utama | **Tinggi** |
 | Impor Siskeudes | 2 pemetaan CSV eksplisit | **Sedang** |
-| Laporan APBDes (OpenDK) | Endpoint & tabel | **Tinggi** |
+| Pemetaan lengkap Kd_Rincian→template_uuid | Belum | **[Perlu verifikasi]** |
 | Pemetaan lengkap Kd_Rincian→template_uuid | Belum | **[Perlu verifikasi]** |
 
 ### Daftar `[perlu verifikasi]`

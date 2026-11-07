@@ -41,7 +41,6 @@ export const users = mysqlTable(
     lastLoginAt: timestamp("last_login_at"),
     mustChangePin: boolean("must_change_pin").notNull().default(true),
     otpLoginAktif: boolean("otp_login_aktif").notNull().default(false),
-    totpSecret: varchar("totp_secret", { length: 255 }),
     residentId: int("resident_id").references(() => residents.id, { onDelete: "set null" }),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -126,22 +125,6 @@ export const verifications = mysqlTable(
   (t) => [index("verifications_identifier_idx").on(t.identifier)],
 );
 
-export const totp = mysqlTable(
-  "totp",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    userId: varchar("user_id", { length: 36 })
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
-    kodeHash: varchar("kode_hash", { length: 64 }).notNull(),
-    kedaluwarsa: timestamp("kedaluwarsa").notNull(),
-    percobaan: int("percobaan").notNull().default(0),
-    terpakaiAt: timestamp("terpakai_at"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (t) => [index("totp_user_idx").on(t.userId)],
-);
-
 // --- Relasi ---------------------------------------------------------------
 
 export const usersRelations = relations(users, ({ many, one }) => ({
@@ -162,5 +145,3 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SessionRow = typeof sessions.$inferSelect;
-export type TotpRow = typeof totp.$inferSelect;
-export type NewTotp = typeof totp.$inferInsert;

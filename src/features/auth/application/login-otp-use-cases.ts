@@ -1,7 +1,7 @@
 import "server-only";
 
-import { batasiPermintaan } from "@/features/api-publik/domain/rate-limit";
 import { kirimNotifikasi } from "@/features/notifikasi/application/kirim-notifikasi";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { validationError } from "@/lib/errors";
 
 import { buatKodeOtp, hashKodeOtp, MASA_BERLAKU_OTP_MS, periksaKodeOtp } from "../domain/login-otp";
@@ -31,7 +31,7 @@ export async function mintaKodeLogin(
     return { pesan: PESAN_GENERIK, terkirim: false };
   }
 
-  const batas = batasiPermintaan(`login-otp:${context.id}`, {
+  const batas = await batasiPermintaan(`login-otp:${context.id}`, {
     batas: 3,
     jendelaMs: 5 * 60 * 1000,
   });

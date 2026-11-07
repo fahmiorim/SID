@@ -506,11 +506,12 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   bukti selesai.
 - Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
   fixture, dan command harus ada di repository serta dapat dijalankan CI.
-- E2E (25 berkas `tests/*.e2e.ts`, 103 test) sudah ada dan **dijalankan CI**
-  lewat `npx e2e run` pada job `smoke`. Sebagian besar masih memeriksa URL dan
-  elemen yang terlihat; hanya 2 berkas yang meng-assert kode status HTTP
-  eksplisit (`permohonan-warga.e2e.ts`, `sinergi.e2e.ts`). Cakupan ini perlu
-  terus diperluas.
+- Pola runner `tests/**/*.e2e.ts` di `e2e.config.ts` mencakup **40 berkas**.
+  Angka 25 berkas/103 test sebelumnya sudah usang; jumlah test case saat ini
+  belum dihitung ulang. CI mengonfigurasi `npx e2e run` pada job `smoke`, tetapi
+  keberadaan langkah CI bukan bukti run terbaru lulus. Sampel audit menunjukkan
+  sebagian test hanya memeriksa halaman/elemen; ukur kelengkapan berdasarkan
+  assertion perilaku per ID, bukan jumlah file.
 
 CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
 `npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh

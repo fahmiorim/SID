@@ -42,7 +42,11 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
       </header>
 
       <form className="flex gap-2" action="/desa/dpt">
+        <label htmlFor="dpt-search" className="sr-only">
+          Cari nama atau NIK
+        </label>
         <input
+          id="dpt-search"
           name="search"
           defaultValue={search}
           placeholder="Cari nama atau NIK"

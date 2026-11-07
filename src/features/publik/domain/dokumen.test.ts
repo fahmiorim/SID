@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DOKUMEN_API_MAX_PAGE_SIZE,
   DOKUMEN_JENIS,
   DOKUMEN_JENIS_LABELS,
   dokumenJenisLabel,
+  parsePaginasiDokumen,
   susunArsipDokumen,
+  susunPaginasiDokumen,
 } from "./dokumen";
 
 describe("dokumenJenisLabel", () => {
@@ -52,5 +55,34 @@ describe("susunArsipDokumen", () => {
 
   it("mengembalikan daftar kosong saat tidak ada dokumen", () => {
     expect(susunArsipDokumen([])).toEqual([]);
+  });
+});
+
+describe("susunPaginasiDokumen", () => {
+  it("membatasi ukuran halaman dan halaman yang diminta ke hasil terakhir", () => {
+    expect(susunPaginasiDokumen(205, 9, DOKUMEN_API_MAX_PAGE_SIZE + 1)).toEqual({
+      page: 3,
+      pageSize: DOKUMEN_API_MAX_PAGE_SIZE,
+      offset: 200,
+      totalPages: 3,
+    });
+  });
+
+  it("memakai nilai aman untuk masukan halaman tidak valid dan hasil kosong", () => {
+    expect(susunPaginasiDokumen(0, Number.NaN, 0)).toEqual({
+      page: 1,
+      pageSize: 20,
+      offset: 0,
+      totalPages: 0,
+    });
+  });
+});
+
+describe("parsePaginasiDokumen", () => {
+  it("memakai bawaan dan menolak parameter di luar batas", () => {
+    expect(parsePaginasiDokumen(null, null)).toEqual({ page: 1, pageSize: 20 });
+    expect(parsePaginasiDokumen("2", "100")).toEqual({ page: 2, pageSize: 100 });
+    expect(parsePaginasiDokumen("0", "20")).toBeNull();
+    expect(parsePaginasiDokumen("1", "101")).toBeNull();
   });
 });

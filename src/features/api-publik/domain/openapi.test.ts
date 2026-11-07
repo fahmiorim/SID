@@ -18,8 +18,11 @@ describe("buatSpesifikasiOpenApi", () => {
   });
 
   it("mendokumentasikan parameter kueri yang dipakai route", () => {
-    expect(spec.paths[JALUR_API_PUBLIK.dokumen].get.parameters?.map((p) => p.name)).toContain(
-      "kategori",
+    const parameterDokumen =
+      spec.paths[JALUR_API_PUBLIK.dokumen].get.parameters?.map((p) => p.name) ?? [];
+    expect(parameterDokumen).toEqual(expect.arrayContaining(["kategori", "page", "pageSize"]));
+    expect(spec.paths[JALUR_API_PUBLIK.informasi].get.parameters?.map((p) => p.name)).toEqual(
+      expect.arrayContaining(["page", "pageSize"]),
     );
     expect(spec.paths[JALUR_API_PUBLIK.inventaris].get.parameters?.map((p) => p.name)).toContain(
       "search",
@@ -27,6 +30,14 @@ describe("buatSpesifikasiOpenApi", () => {
     expect(spec.paths[JALUR_API_PUBLIK.surat].get.parameters?.map((p) => p.name)).toContain(
       "limit",
     );
+  });
+
+  it("mendokumentasikan metadata halaman pada endpoint dokumen", () => {
+    const response = spec.paths[JALUR_API_PUBLIK.dokumen].get.responses["200"];
+    const schema = response.content["application/json"].schema as {
+      properties: Record<string, unknown>;
+    };
+    expect(schema.properties.pagination).toBeDefined();
   });
 
   it("mendokumentasikan bentuk galat yang seragam", () => {

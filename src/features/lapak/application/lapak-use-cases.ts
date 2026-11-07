@@ -12,7 +12,10 @@ import {
   updateLapak,
 } from "../infrastructure/lapak-repository";
 
-export async function daftarLapak(villageId: number, opts?: { kategori?: string; q?: string }) {
+export async function daftarLapak(
+  villageId: number,
+  opts?: { kategori?: string; q?: string; page?: number; pageSize?: number },
+) {
   await requirePermission(LAPAK_RESOURCE, "read");
   return listLapak(villageId, opts);
 }

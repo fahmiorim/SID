@@ -35,7 +35,7 @@ test(
   },
 );
 
-// Katalog: OS-OPS-005 — Pusat notifikasi + mailbox email/SMS.
+// Katalog: OS-OPS-005 — Pusat notifikasi + kotak masuk email.
 test(
   "pusat notifikasi menampilkan riwayat dan kotak masuk",
   { session: "admin" },

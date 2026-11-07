@@ -31,6 +31,9 @@ export async function restoreSqlDump(
     child.stderr.on("data", (chunk) => {
       error += chunk.toString();
     });
+    child.stdin.on("error", (err) => {
+      if ((err as NodeJS.ErrnoException).code !== "EPIPE") reject(err);
+    });
     child.on("error", (err) => reject(err));
     child.on("close", (code) => {
       if (code !== 0) {

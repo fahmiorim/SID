@@ -20,7 +20,7 @@ Modul PERSURATAN mengelola seluruh siklus hidup surat desa (layanan/surat ketera
 4. **Permohonan surat oleh warga** melalui Layanan Mandiri (kategori "warga" atau "non-warga/penduduk luar"), termasuk unggah syarat.
 5. **Pengisian & rendering surat** oleh operator (form isian dinamis → HTML → PDF), dengan penggantian *kode isian* (placeholder).
 6. **Verifikasi berjenjang** (operator → sekdes → kades) dan **Tanda Tangan Elektronik (TTE)** via BSRE.
-7. **Arsip layanan** (surat masuk, surat keluar, arsip digital/fisik), **QR code verifikasi**, dan **arsip ke kecamatan (OpenDK)**.
+- **Arsip layanan** (surat masuk, surat keluar, arsip digital/fisik) dan **QR code verifikasi**.
 
 ### 1.1 Peta komponen utama
 
@@ -32,7 +32,7 @@ Modul PERSURATAN mengelola seluruh siklus hidup surat desa (layanan/surat ketera
 | Route API | `donjo-app/Routes/api.php` | `internal_api/verifikasi-surat`, `external_api/tte/*`, `external_api/sign/pdf` |
 | Controller inti cetak | `donjo-app/controllers/Surat.php` | form/pratinjau/pdf/konsep/cetak/nomor_surat_duplikat |
 | Controller template | `donjo-app/controllers/Surat_master.php` | CRUD template, kode isian, pengaturan, impor/ekspor, salin |
-| Controller arsip | `donjo-app/controllers/Keluar.php` | arsip layanan, verifikasi, tolak, TTE, kembalikan, QR, kecamatan |
+| Controller arsip | `donjo-app/controllers/Keluar.php` | arsip layanan, verifikasi, tolak, TTE, kembalikan, QR |
 | Controller mandiri | `donjo-app/controllers/fmandiri/Surat.php` | permohonan warga |
 | Controller permohonan admin | `donjo-app/controllers/Permohonan_surat_admin.php` | periksa/proses/konfirmasi permohonan |
 | Controller daftar syarat | `donjo-app/controllers/Surat_mohon.php` | CRUD `ref_syarat_surat` |
@@ -77,7 +77,6 @@ CREATE TABLE tweb_surat_format (
   qr_code                 BOOL,
   qr_code_tte             BOOL,
   logo_garuda             BOOL,
-  kecamatan               BOOL,
   syarat_surat            LONGTEXT NULL,             -- JSON array ref_syarat_id
   template                LONGTEXT NULL,             -- badan surat (RTF/base)
   template_desa           LONGTEXT NULL,             -- badan surat TinyMCE
@@ -136,7 +135,6 @@ CREATE TABLE log_surat (
   verifikasi_kades   BOOL NULL,
   verifikasi_sekdes  BOOL NULL,
   isi_surat          LONGTEXT NULL,       -- salinan konten/berkas
-  kecamatan          BOOL DEFAULT TRUE,   -- status kirim ke kecamatan
   deleted_at         DATETIME NULL,       -- soft delete
   pemohon           VARCHAR(200) NULL
 );
@@ -555,11 +553,6 @@ Controller: `donjo-app/controllers/Keluar.php`. Route grup `keluar` (admin.php b
   - `.../verifikasi-surat-dinas/...` → `decodeSuratDinas`.
 - API internal: `internal_api/verifikasi-surat` → `internal_api\LogSurat@verifikasi` (dipakai aplikasi/eksternal untuk cek keaslian surat).
 
-### 5.6 Arsip ke kecamatan (OpenDK)
-
-- `Keluar@kecamatan()` / `data_kecamatan()` menarik surat dari API OpenDK `/api/v1/surat?desa_id={desa}`.
-- Kolom `log_surat.kecamatan`: `0/1` (default), `2` siap dikirim, `3` sudah dikirim.
-- Setting terkait: `sinkronisasi_opendk`, `api_opendk_server`, `api_opendk_key`.
 
 ---
 
@@ -799,7 +792,6 @@ export const suratFormat = mysqlTable("tweb_surat_format", {
   qrCode: boolean("qr_code"),
   qrCodeTte: boolean("qr_code_tte"),
   logoGaruda: boolean("logo_garuda"),
-  kecamatan: boolean("kecamatan"),
   syaratSurat: text("syarat_surat"),      // JSON array ref_syarat_id
   template: text("template"),
   templateDesa: text("template_desa"),

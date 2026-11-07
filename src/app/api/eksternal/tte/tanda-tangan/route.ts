@@ -1,9 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { authenticateApiKey } from "@/features/api-eksternal/domain/auth";
-import { isRateLimited } from "@/features/api-eksternal/domain/rate-limit";
 import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { tandatanganiPdfTte } from "@/features/surat/application/tte-use-cases";
 import { adalahPdf } from "@/features/surat/domain/tte";
 
@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(apiKeyHeader);
   if (!auth.ok) return galat(auth.status, auth.message);
 
-  if (isRateLimited(auth.apiKey.id)) return galat(429, "Rate limit exceeded");
+  if ((await batasiPermintaan(`api-eksternal:${auth.apiKey.id}`, { batas: 100 })).dibatasi)
+    return galat(429, "Rate limit exceeded");
 
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.includes("multipart/form-data")) {

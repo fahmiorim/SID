@@ -6,19 +6,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { daftarLapakPublik } from "@/features/lapak/application/lapak-publik";
-import { listProdukPublik } from "@/features/lapak/infrastructure/lapak-produk-repository";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Lapak Desa",
-  description: "Produk dan UMKM Desa",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const identitas = await getIdentitasFromRequest();
+  const namaDesa = identitas?.namaDesa ?? "Desa";
+  return {
+    title: `Lapak Desa ${namaDesa}`,
+    description: `Jelajahi lapak UMKM dan produk warga Desa ${namaDesa}.`,
+  };
+}
 
-function buatHref(opts: { kategori?: string; q?: string }) {
+function buatHref(opts: { kategori?: string; q?: string; page?: number }) {
   const params = new URLSearchParams();
   if (opts.kategori) params.set("kategori", opts.kategori);
   if (opts.q) params.set("q", opts.q);
+  if (opts.page && opts.page > 1) params.set("page", String(opts.page));
   const query = params.toString();
   return query ? `/desa/lapak?${query}` : "/desa/lapak";
 }
@@ -26,7 +30,7 @@ function buatHref(opts: { kategori?: string; q?: string }) {
 export default async function LapakPublicPage({
   searchParams,
 }: {
-  searchParams: Promise<{ kategori?: string; q?: string }>;
+  searchParams: Promise<{ kategori?: string; q?: string; page?: string | string[] }>;
 }) {
   const identitas = await getIdentitasFromRequest();
   const villageId = identitas?.id;
@@ -35,22 +39,17 @@ export default async function LapakPublicPage({
   const params = await searchParams;
   const kategori = typeof params.kategori === "string" ? params.kategori.trim() : "";
   const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
+  const pageValue = Array.isArray(params.page) ? params.page[0] : params.page;
+  const requestedPage = Number(pageValue);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
 
-  const { items, kategori: kategoriList } = await daftarLapakPublik(villageId, {
+  const listing = await daftarLapakPublik(villageId, {
     kategori: kategori || undefined,
     q: q || undefined,
+    page,
   });
 
-  // Fetch products for each lapak in parallel
-  const itemsWithProducts = await Promise.all(
-    items.map(async (item) => {
-      const products = await listProdukPublik(villageId, item.id, {
-        q: q || undefined,
-      });
-      return { ...item, produkCount: products.length };
-    }),
-  );
-
+  const { items, kategori: kategoriList, total, page: currentPage, pageCount } = listing;
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <header className="mb-6">
@@ -62,7 +61,11 @@ export default async function LapakPublicPage({
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         {kategori ? <input type="hidden" name="kategori" value={kategori} /> : null}
+        <label htmlFor="lapak-search" className="sr-only">
+          Cari lapak berdasarkan nama, pemilik, atau alamat
+        </label>
         <input
+          id="lapak-search"
           type="search"
           name="q"
           defaultValue={q}
@@ -115,7 +118,7 @@ export default async function LapakPublicPage({
       )}
 
       <p className="mb-3 text-sm text-muted-foreground">
-        {items.length} lapak ditemukan{kategori ? ` pada kategori "${kategori}"` : ""}.
+        {total} lapak ditemukan{kategori ? ` pada kategori "${kategori}"` : ""}.
       </p>
 
       {items.length === 0 ? (
@@ -126,7 +129,7 @@ export default async function LapakPublicPage({
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {itemsWithProducts.map((item) => (
+          {items.map((item) => (
             <Card key={item.id} className="flex flex-col">
               <CardContent className="flex flex-1 flex-col p-4">
                 <h3 className="truncate font-semibold">{item.nama}</h3>
@@ -163,6 +166,46 @@ export default async function LapakPublicPage({
             </Card>
           ))}
         </div>
+      )}
+      {pageCount > 1 && (
+        <nav
+          aria-label="Navigasi halaman lapak"
+          className="mt-6 flex items-center justify-center gap-4 text-sm"
+        >
+          {currentPage > 1 ? (
+            <Link
+              href={buatHref({
+                kategori: kategori || undefined,
+                q: q || undefined,
+                page: currentPage - 1,
+              })}
+              rel="prev"
+              className="underline underline-offset-4"
+            >
+              Sebelumnya
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">Sebelumnya</span>
+          )}
+          <span>
+            Halaman {currentPage} dari {pageCount}
+          </span>
+          {currentPage < pageCount ? (
+            <Link
+              href={buatHref({
+                kategori: kategori || undefined,
+                q: q || undefined,
+                page: currentPage + 1,
+              })}
+              rel="next"
+              className="underline underline-offset-4"
+            >
+              Berikutnya
+            </Link>
+          ) : (
+            <span className="text-muted-foreground">Berikutnya</span>
+          )}
+        </nav>
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetBatasPermintaan } from "../domain/rate-limit";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
+
 import { jalankanApiPublik } from "./public-api";
 
 vi.mock("@/features/publik/api/middleware", () => ({
@@ -9,6 +10,9 @@ vi.mock("@/features/publik/api/middleware", () => ({
 
 vi.mock("@/features/audit/application/audit-use-cases", () => ({
   recordAuditEvent: vi.fn(),
+}));
+vi.mock("@/features/rate-limit/application/rate-limit", () => ({
+  batasiPermintaan: vi.fn(),
 }));
 
 const middleware = await import("@/features/publik/api/middleware");
@@ -22,8 +26,7 @@ function permintaan(ip = "10.0.0.1"): Request {
 
 describe("jalankanApiPublik", () => {
   beforeEach(() => {
-    resetBatasPermintaan();
-    vi.mocked(audit.recordAuditEvent).mockReset();
+    vi.mocked(batasiPermintaan).mockResolvedValue({ dibatasi: false, sisa: 59, resetMs: 60_000 });
   });
 
   it("mengembalikan data dan mencatat audit saat berhasil", async () => {
@@ -49,6 +52,29 @@ describe("jalankanApiPublik", () => {
     );
   });
 
+  it("menambahkan metadata pagination tanpa mengubah data array", async () => {
+    vi.mocked(middleware.getTenantFromRequest).mockResolvedValueOnce({
+      id: 7,
+      namaDesa: "Desa Uji",
+    } as Awaited<ReturnType<typeof middleware.getTenantFromRequest>>);
+
+    const respons = await jalankanApiPublik(
+      permintaan(),
+      "dokumen",
+      async () => ({ rows: [{ id: 1 }], total: 21, page: 2, pageSize: 20 }),
+      ({ rows, total, page, pageSize }) => ({
+        data: rows,
+        pagination: { page, pageSize, totalItems: total, totalPages: Math.ceil(total / pageSize) },
+      }),
+    );
+
+    expect(await respons.json()).toEqual({
+      success: true,
+      data: [{ id: 1 }],
+      pagination: { page: 2, pageSize: 20, totalItems: 21, totalPages: 2 },
+    });
+  });
+
   it("membalas 400 saat host tidak dikenali", async () => {
     vi.mocked(middleware.getTenantFromRequest).mockRejectedValueOnce(new Error("invalid host"));
 
@@ -59,23 +85,17 @@ describe("jalankanApiPublik", () => {
     expect(audit.recordAuditEvent).not.toHaveBeenCalled();
   });
 
-  it("membalas 429 setelah batas per IP tercapai", async () => {
-    vi.mocked(middleware.getTenantFromRequest).mockResolvedValue({
-      id: 7,
-      namaDesa: "Desa Uji",
-    } as Awaited<ReturnType<typeof middleware.getTenantFromRequest>>);
+  it("membalas 429 saat limiter bersama menolak permintaan", async () => {
+    vi.mocked(batasiPermintaan).mockResolvedValueOnce({
+      dibatasi: true,
+      sisa: 0,
+      resetMs: 60_000,
+    });
 
-    let statusTerakhir = 0;
-    for (let i = 0; i < 61; i += 1) {
-      const respons = await jalankanApiPublik(
-        permintaan("10.9.9.9"),
-        "inventaris",
-        async () => ({}),
-      );
-      statusTerakhir = respons.status;
-    }
+    const respons = await jalankanApiPublik(permintaan("10.9.9.9"), "inventaris", async () => ({}));
 
-    expect(statusTerakhir).toBe(429);
+    expect(respons.status).toBe(429);
+    expect(audit.recordAuditEvent).not.toHaveBeenCalled();
   });
 
   it("membalas 500 tanpa membocorkan detail saat pengambilan data gagal", async () => {

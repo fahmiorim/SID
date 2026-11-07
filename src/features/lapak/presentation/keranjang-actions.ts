@@ -1,6 +1,6 @@
 "use server";
 
-import { createHash } from "crypto";
+import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
@@ -11,6 +11,7 @@ import {
   updateJumlahKeranjang,
 } from "@/features/lapak/application/keranjang-use-cases";
 import { errorState, successState, type ActionState } from "@/lib/action-state";
+import { env } from "@/lib/env";
 import { AppError, isAppError } from "@/lib/errors";
 
 /** Buat session key untuk keranjang belanja. */
@@ -18,8 +19,14 @@ async function getSessionKey(): Promise<string> {
   const cookieStore = await cookies();
   let key = cookieStore.get("lapak_session")?.value;
   if (!key) {
-    key = createHash("sha256").update(`${Date.now()}-${Math.random()}`).digest("hex");
-    cookieStore.set("lapak_session", key, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 });
+    key = randomBytes(32).toString("hex");
+    cookieStore.set("lapak_session", key, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      secure: env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60,
+    });
   }
   return key;
 }

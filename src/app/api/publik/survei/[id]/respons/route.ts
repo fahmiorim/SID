@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 import { alamatIp, BATAS_PER_MENIT } from "@/features/api-publik/application/public-api";
-import { batasiPermintaan } from "@/features/api-publik/domain/rate-limit";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { simpanResponsPublikData } from "@/features/survey/application/use-cases";
 import { verifikasiTokenFormEksternal } from "@/features/survey/domain/form-eksternal";
 import { respondenFormSchema } from "@/features/survey/domain/survey";
@@ -22,7 +22,7 @@ function galat(status: number, message: string) {
  * token dibuat server-side oleh halaman tersebut.
  */
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const batas = batasiPermintaan(`survei-eksternal:${alamatIp(request)}`, {
+  const batas = await batasiPermintaan(`survei-eksternal:${alamatIp(request)}`, {
     batas: BATAS_PER_MENIT,
   });
   if (batas.dibatasi) return galat(429, "Terlalu banyak permintaan. Coba lagi beberapa saat.");

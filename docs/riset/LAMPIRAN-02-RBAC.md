@@ -114,7 +114,6 @@ Dari seeder `app/database/seeders/DataAwal/DataAwalSeeder.php` → `tambah_grup_
 | 2 | Operator | `operator` | 1 | Sistem | Tidak |
 | 3 | Redaksi | `redaksi` | 1 | Sistem | Tidak |
 | 4 | Kontributor | `kontributor` | 1 | Sistem | Tidak |
-| 5 | Satgas Covid-19 | `satgas-covid-19` | 2 | Desa | Ya |
 
 Konstanta slug & jenis di `app/Models/UserGrup.php` (baris 54–61):
 
@@ -141,27 +140,17 @@ Legenda: **7** = hapus, **3** = ubah, **1** = baca, **0** = tanpa akses, **∅**
 
 Bukan dari `grup_akses`, melainkan **wildcard 7** pada semua modul via `Gate::before` + `super_admin()`.
 
-#### Operator (156 baris eksplisit)
+#### Operator (154 baris eksplisit)
 
 Hak akses Operator = **3 (ubah)** pada hampir semua modul operasional, dengan pengecualian **0** pada modul-modul administratif (induk) tertentu:
 
 | `akses` | Modul (slug) |
 |:--:|---|
 | **0** (tanpa akses) | `kependudukan`, `statistik`, `layanan-surat`, `analisis`, `pertanahan`, `pemetaan`, `hubung-warga`, `pengaturan`, `admin-web`, `layanan-mandiri`, `sekretariat`, `info-desa`, `keuangan`, `kesehatan`, `buku-administrasi-desa` |
-| **7** (hapus) | `pendataan`, `pemantauan` |
 | **3** (ubah) | Seluruh sisa (mis. `home`, `identitas-desa`, `penduduk`, `keluarga`, `artikel`, `surat-masuk`, `surat-keluar`, `keuangan`-nya anak seperti `impor-data`, `laporan`, dll.) |
 
 > Meskipun parent bernilai `0`, menu tetap tampil bagi Operator karena **warisan parent→child** menaikkan parent menjadi 7 bila punya anak ber-akses>0 (lihat §4.1). Jadi praktis Operator dapat mengakses hampir semua modul kecuali yang benar-benar tidak punya anak ber-akses>0.
 
-#### Satgas Covid-19 (5 baris)
-
-| Modul (slug) | `akses` |
-|---|:--:|
-| `statistik` | 0 |
-| `statistik-kependudukan` | 3 |
-| `kesehatan` | 0 |
-| `pendataan` | 7 |
-| `pemantauan` | 7 |
 
 #### Redaksi (13 baris)
 
@@ -193,7 +182,7 @@ Hak akses Operator = **3 (ubah)** pada hampir semua modul operasional, dengan pe
 
 > **Dua sumber otorisasi berbeda** — perlu dibedakan:
 > - `app/database/seeders/DataAwal/GrupAkses.php` → matrix **data awal** di atas (per-modul eksplisit).
-> - `app/Services/Install/CreateGrupAksesService.php` → matrix **saat instalasi** (`handle()`), memakai pendekatan ringkas: `administrator => ['*' => 7]`, `operator => ['*' => 3]`, plus definisi eksplisit untuk `kontributor`, `redaksi`, `satgas-covid-19` (sama seperti tabel di atas kecuali operator disederhanakan jadi wildcard `*` = 3).
+> - `app/Services/Install/CreateGrupAksesService.php` → matrix **saat instalasi** (`handle()`), memakai pendekatan ringkas: `administrator => ['*' => 7]`, `operator => ['*' => 3]`, plus definisi eksplisit untuk `kontributor`, `redaksi` (sama seperti tabel di atas kecuali operator disederhanakan jadi wildcard `*` = 3).
 >
 > Keduanya konsisten secara semantik: Operator efektif = "ubah di semua modul", Administrator = "hapus di semua modul".
 
@@ -223,7 +212,7 @@ Model: `app/Models/Modul.php` (tabel `setting_modul`, `$timestamps = false`). Ko
 
 Konstanta `App\Models\Modul`: `PARENT=0`, `LOCK=0`, `UNLOCK=1`, `SHOW=0`, `SHOW_S=1`, `HIDDEN=2`, `SELALU_AKTIF=['beranda','notif','pengguna']` (baris 50–56).
 
-### 3.2 Katalog modul daun (child) — 137 entri
+### 3.2 Katalog modul daun (child) — 131 entri
 
 Sumber: `app/database/seeders/DataAwal/SettingModul.php` → array `$data` (baris 55–1700). Kolom **parent** = id induk (lihat peta §3.3).
 
@@ -246,7 +235,6 @@ Sumber: `app/database/seeders/DataAwal/SettingModul.php` → array `$data` (bari
 | Pengaturan Surat | `pengaturan-surat` | `surat_master` | 1 | fa-cog | 1 | 2 | 0 | 4 |
 | Cetak Surat | `cetak-surat` | `surat` | 1 | fa-files-o | 2 | 2 | 0 | 4 |
 | Arsip Layanan | `arsip-layanan` | `keluar/clear/masuk` | 1 | fa-folder-open | 4 | 2 | 0 | 4 |
-| Kirim Pesan | `kirim-pesan` | `sms` | 1 | fa-envelope-open-o | 1 | 2 | 0 | 10 |
 | Daftar Kontak | `daftar-kontak` | `daftar_kontak` | 1 | fa-id-card-o | 2 | 2 | 0 | 10 |
 | Modul | `modul` | `modul/clear` | 1 | fa-tags | 1 | 1 | 0 | 11 |
 | Aplikasi | `aplikasi` | `setting` | 1 | fa-codepen | 2 | 1 | 0 | 11 |
@@ -308,8 +296,6 @@ Sumber: `app/database/seeders/DataAwal/SettingModul.php` → array `$data` (bari
 | Impor Data | `impor-data` | `keuangan/impor_data` | 1 | fa-cloud-upload | 1 | 2 | 0 | 201 |
 | Laporan | `laporan` | `keuangan/laporan` | 1 | fa-bar-chart | 2 | 2 | 0 | 201 |
 | Pengunjung | `pengunjung` | `pengunjung/clear` | 1 | fa-bar-chart | 10 | 4 | 0 | 13 |
-| Pendataan | `pendataan` | `covid19` | 1 | fa-list | 1 | 2 | 0 | 206 |
-| Pemantauan | `pemantauan` | `covid19/pantau` | 1 | fa-check | 2 | 2 | 0 | 206 |
 | Input Data | `input-data` | `keuangan_manual/manual_apbdes` | 1 | fa-keyboard-o | 3 | 2 | 0 | 201 |
 | Laporan Manual | `laporan-manual` | `keuangan_manual/laporan_manual` | 1 | fa-bar-chart | 4 | 2 | 0 | 201 |
 | Pengaturan | `pengaturan-web` | `setting/web` | 1 | fa-gear | 11 | 4 | 0 | 13 |
@@ -335,7 +321,6 @@ Sumber: `app/database/seeders/DataAwal/SettingModul.php` → array `$data` (bari
 | Buku Rencana Kerja Pembangunan | `buku-rencana-kerja-pembangunan` | `bumindes_rencana_pembangunan` | 1 | fa-files-o | 19 | 0 | 2 | 301 |
 | Lapak | `lapak` | `lapak_admin` | 1 | fa-cart-plus | 122 | 2 | 0 | 0 |
 | Laporan APBDes | `laporan-apbdes` | `laporan_apbdes` | 1 | fa-file-text-o | 5 | 2 | 0 | 201 |
-| Sinkronisasi | `sinkronisasi` | `sinkronisasi` | 1 | fa-random | 125 | 2 | 0 | 343 |
 | Lembaga [Desa] | `lembaga-desa` | `lembaga/clear` | 1 | fa-list | 4 | 2 | 0 | 200 |
 | Kategori Lembaga | `kategori-lembaga` | `lembaga_master` | 1 | — | 6 | 2 | 2 | 200 |
 | Bumindes Kegiatan Pembangunan | `bumindes-kegiatan-pembangunan` | `bumindes_kegiatan_pembangunan` | 1 | — | null | 2 | 2 | 301 |
@@ -344,13 +329,11 @@ Sumber: `app/database/seeders/DataAwal/SettingModul.php` → array `$data` (bari
 | Kader Pemberdayaan Masyarakat | `bumindes-kader` | `bumindes_kader` | 1 | — | null | 2 | 2 | 301 |
 | Buku Inventaris Hasil-Hasil Pembangunan | `bumindes-hasil-pembangunan` | `bumindes_hasil_pembangunan` | 1 | — | null | 2 | 2 | 301 |
 | Pengaduan | `pengaduan` | `pengaduan_admin` | 1 | fa-info | 124 | 2 | 0 | 0 |
-| Vaksin | `vaksin` | `vaksin_covid/clear` | 1 | fa-medkit | 2 | 2 | 0 | 206 |
 | Arsip [Desa] | `arsip-desa` | `bumindes_arsip` | 1 | fa-archive | 5 | 2 | 0 | 301 |
 | Jam Kerja | `jam-kerja` | `kehadiran_jam_kerja` | 1 | fa-clock-o | 2 | 0 | 0 | 337 |
 | Hari Libur | `hari-libur` | `kehadiran_hari_libur` | 1 | fa-calendar | 2 | 0 | 0 | 337 |
 | Rekapitulasi | `rekapitulasi` | `kehadiran_rekapitulasi` | 1 | fa-list | 2 | 0 | 0 | 337 |
 | Pengaduan | `kehadiran-pengaduan` | `kehadiran_pengaduan` | 1 | fa-exclamation | 2 | 0 | 0 | 337 |
-| Pesan | `pesan` | `opendk_pesan/clear` | 1 | fa-envelope | 124 | 2 | 0 | 343 |
 | Grup Kontak | `grup-kontak` | `grup_kontak` | 1 | fa-list | 2 | 2 | 2 | 10 |
 | Stunting | `stunting` | `stunting` | 1 | fa-stethoscope | 4 | 0 | 0 | 206 |
 | Daftar Anjungan | `daftar-anjungan` | `anjungan` | 1 | fa-list | 1 | 2 | 0 | 312 |
@@ -396,7 +379,6 @@ Dua sumber:
 | 324 | `lapak` |
 | 334 | `pengaduan` |
 | 337 | `kehadiran` |
-| 343 | `opendk` |
 | 352 | `satu-data` |
 | 354 | `buku-tamu` |
 
@@ -423,7 +405,6 @@ Dua sumber:
 | 301 | Buku Administrasi [Desa] | `buku-administrasi-desa` | | fa-paste | 70 | 2 | 0 |
 | 312 | Anjungan | `anjungan` | | fa-desktop | 180 | 2 | 0 |
 | 337 | Kehadiran | `kehadiran` | | fa-calendar-check-o | 41 | 0 | 0 |
-| 343 | OpenDK | `opendk` | | fa-university | 124 | 2 | 0 |
 | 352 | Satu Data | `satu-data` | | fa-globe | 180 | 1 | 0 |
 | 354 | Buku Tamu | `buku-tamu` | | fa-book | 180 | 2 | 0 |
 

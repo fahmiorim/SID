@@ -44,7 +44,7 @@
 | Multi-desa | Kolom `config_id` (tabel `config`) di hampir seluruh tabel + `ConfigIdScope` (tenant scoping) |
 | Frontend assets | jQuery + **AdminLTE/Bootstrap** (skin `skin-purple`), **DataTables** (`yajra/laravel-datatables-oracle`), **TinyMCE 7**, Select2, dll. |
 | Export/PDF | `spipu/html2pdf`, `karriere/pdf-merge`, `openspout/openspout`, `rap2hpoutre/fast-excel` |
-| Integrasi | Google API (Drive/Script), Firebase FCM, Telegram, WhatsApp/OTP, TTE (tanda tangan elektronik), SMS |
+| Integrasi | Google API (Drive/Script), Firebase FCM, Telegram, WhatsApp/OTP, TTE (tanda tangan elektronik) |
 | Auth | Komponen Laravel `illuminate/auth` + 2FA, OTP, layanan mandiri (pin) |
 | Tooling | php-cs-fixer, Rector, PHPUnit 9, Prettier (blade), Playwright (e2e) |
 | Skala | ~438 file migrasi tabel, ratusan tabel domain |
@@ -131,10 +131,10 @@ Daftar modul dari seeder `SettingModul` (dan controller terkait), dikelompokkan:
 - **Artikel**, **Kategori**, **Menu**, **Widget**, **Slider**, **Galeri**, **Media Sosial**, **Komentar**, **Teks Berjalan**, **Produk Hukum**, **Informasi Publik**, **Pengaduan**, **Statistik Web**, **Peta (GIS)**, **Lembaga Desa**, **Sinergi Program**, **Pendapat**, **Bantuan**.
 
 **H. Bantuan Sosial & Kesehatan**
-- **Program Bantuan**, **Peserta Bantuan** (DTKS), **Stunting**, **Vaksin Covid**, **Posyandu/PAUD/Kader** (sasaran).
+- **Program Bantuan**, **Peserta Bantuan** (DTKS), **Stunting**, **Posyandu/PAUD/Kader** (sasaran).
 
 **I. Pengguna & Sistem**
-- **Pengguna**, **Pengaturan Grup** (role & hak akses), **Modul**, **Aplikasi** (setting), **Database** (backup/restore), **Info Sistem**, **Periksa** (health check), **Sinkronisasi**, **Impor Data**, **Optimasi Gambar**, **QR Code**.
+- **Pengguna**, **Pengaturan Grup** (role & hak akses), **Modul**, **Aplikasi** (setting), **Database** (backup/restore), **Info Sistem**, **Periksa** (health check), **Impor Data**, **Optimasi Gambar**, **QR Code**.
 
 **J. Layanan Mandiri & Anjungan**
 - **Layanan Mandiri** warga: login PIN/e-KTP, profil, ajukan surat, pesan, bantuan, cetak biodata/KK, pendapat.
@@ -456,7 +456,7 @@ erDiagram
      - **3** = satu seri gabungan surat layanan + masuk + keluar.
   5. **Simpan konsep (`log_surat.status=0`)/cetak (=1)** dengan `no_surat`, `bulan`, `tahun`, `id_format_surat`, `id_pamong`, `id_user`.
   6. **Verifikasi & TTE:** `verifikasi_operator`, `verifikasi_sekdes`, `verifikasi_kades`, `tte`, `log_verifikasi`; QR code/list penomoran.
-  7. **Cetak/Arsip PDF** dan simpan `lokasi_arsip`; opsional kirim ke kecamatan (`external_api/surat_kecamatan`).
+  7. **Cetak/Arsip PDF** dan simpan `lokasi_arsip`.
 - **Post-condition:** Surat bernomor unik tersimpan di arsip (`log_surat`), dapat diverifikasi publik via `internal_api/verifikasi-surat`, jejak dari permohonan → terbit.
 
 ### 6.3 Pembuatan Laporan Desa
@@ -481,10 +481,10 @@ erDiagram
 - Admin (SITEMAN): `https://desa.id/index.php/siteman` (login) → modul: `/index.php/penduduk`, `/index.php/keluarga/clear`, `/index.php/surat_master`, `/index.php/keuangan_laporan`, dll. (gaya CI3 `controller/method/param`, sering dengan segmen `clear`).
 - Layanan mandiri: `/layanan-mandiri/{beranda|surat|pesan|...}`.
 - Internal API: `internal_api/{wilayah|inventaris|statistik|kelompok|...}` (JSON untuk web publik/statistik).
-- External API: `external_api/{surat_kecamatan|tte|sign/pdf}`.
+- External API: `external_api/{tte|sign/pdf}`.
 - API publik versi: `api/v1/sdgs` (baru satu endpoint).
 
-**Apakah ada REST API?** Ada **JSON API internal** (untuk konsumsi web desa/anak aplikasi) dan **external API** (kecamatan/TTE), tetapi **bukan RESTful penuh** untuk CRUD data inti (CRUD masih form POST + DataTables server-side). Belum ada kontrak OpenAPI.
+**Apakah ada REST API?** Ada **JSON API internal** (untuk konsumsi web desa/anak aplikasi) dan **external API** (TTE), tetapi **bukan RESTful penuh** untuk CRUD data inti (CRUD masih form POST + DataTables server-side). Belum ada kontrak OpenAPI.
 
 **Kontrak RESTful yang direkomendasikan (versi modern)** — ringkas:
 - `POST /api/v1/auth/login`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`
@@ -1170,11 +1170,10 @@ Catatan: contoh di atas menggabungkan `paths` + `components`; saat dipakai, gabu
 
 - Keuangan penuh (Siskeudes-grade) → mulai ringkasan APBDes read-only, atau integrasi impor.
 - Bumindes (semua buku) → tunda; cukup rekap inti.
-- GIS/peta kompleks, analisis partisipatif, DTKS, stunting, vaksin, lapak, anjungan, kehadiran → tunda.
-- Multi-channel notifikasi (Telegram/WA/SMS/FCM) → mulai email/in-app saja.
+- GIS/peta kompleks, analisis partisipatif, DTKS, stunting, lapak, anjungan, kehadiran → tunda.
 - TTE (tanda tangan elektronik) → tunda; simpan flag saja.
 - Multi-desa (`config_id`) → MVP boleh single-desa dulu, tapi **rancang skema tetap kompatibel multi-tenant** agar tak migrasi ulang.
-- Sinkronisasi OpenDK/kecamatan → tunda.
+
 
 ### 11.3 Modul prioritas implementasi (urutan)
 
@@ -1238,14 +1237,14 @@ Analisis ini dilengkapi 13 dokumen lampiran teknis (semua di root project `D:\la
 | No | Dokumen | Isi |
 |---|---|---|
 | 01 | [`LAMPIRAN-01-PERSURATAN.md`](./LAMPIRAN-01-PERSURATAN.md) | Spesifikasi lengkap mesin persuratan: tabel, 43 surat sistem, mesin template/kode-isian TinyMCE, syarat surat, alur permohonan→verifikasi→TTE, penomoran 4 mode, QR, edge cases, implikasi Next.js. |
-| 02 | [`LAMPIRAN-02-RBAC.md`](./LAMPIRAN-02-RBAC.md) | RBAC menyeluruh: model otorisasi (1/3/7), role bawaan + permission matrix, katalog 137 modul, warisan parent→child, wilayah scoping, autentikasi/OTP/2FA, desain better-auth. |
-| 03 | [`LAMPIRAN-03-ENUM-REFERENSI.md`](./LAMPIRAN-03-ENUM-REFERENSI.md) | Inventaris ±76 enum (nilai→label) + semua tabel referensi & isinya + magic number di model + rekomendasi seed Drizzle. |
-| 05 | [`LAMPIRAN-05-ERD-LENGKAP.md`](./LAMPIRAN-05-ERD-LENGKAP.md) | ERD & katalog skema **seluruh ±260 tabel** (243 snapshot + 17 tambahan), 282 relasi FK, diagram Mermaid per domain. |
+| 02 | [`LAMPIRAN-02-RBAC.md`](./LAMPIRAN-02-RBAC.md) | RBAC menyeluruh: model otorisasi (1/3/7), role bawaan + permission matrix, katalog 131 modul, warisan parent→child, wilayah scoping, autentikasi/OTP/2FA, desain better-auth. |
+| 03 | [`LAMPIRAN-03-ENUM-REFERENSI.md`](./LAMPIRAN-03-ENUM-REFERENSI.md) | Inventaris ±74 enum (nilai→label) + semua tabel referensi & isinya + magic number di model + rekomendasi seed Drizzle. |
+| 05 | [`LAMPIRAN-05-ERD-LENGKAP.md`](./LAMPIRAN-05-ERD-LENGKAP.md) | ERD & katalog skema **seluruh ±250 tabel** (233 snapshot + 17 tambahan), 272 relasi FK, diagram Mermaid per domain. |
 | 06 | [`LAMPIRAN-06-SPESIFIKASI-OUTPUT.md`](./LAMPIRAN-06-SPESIFIKASI-OUTPUT.md) | Semua output cetak: katalog laporan, kop/template surat, library PDF/Excel, spesifikasi visual, rekomendasi Puppeteer/React-PDF/exceljs, 5 laporan prioritas. |
-| 07 | [`LAMPIRAN-07-MATRIKS-MODUL.md`](./LAMPIRAN-07-MATRIKS-MODUL.md) | Matriks ketertelusuran: 137 modul → controller → model → tabel, hierarki menu, 71 controller orfan, tabel per prefiks domain, model→tabel. |
+| 07 | [`LAMPIRAN-07-MATRIKS-MODUL.md`](./LAMPIRAN-07-MATRIKS-MODUL.md) | Matriks ketertelusuran: 131 modul → controller → model → tabel, hierarki menu, 71 controller orfan, tabel per prefiks domain, model→tabel. |
 | 08 | [`LAMPIRAN-08-ALUR-BISNIS.md`](./LAMPIRAN-08-ALUR-BISNIS.md) | Alur bisnis per domain (keuangan/APBDes, inventaris, bantuan/DTKS, pembangunan, layanan mandiri, surat dinas, analisis, bumindes, kelompok/lembaga, website publik) + matriks alur→dokumen. |
-| 09 | [`LAMPIRAN-09-INTEGRASI-KEAMANAN.md`](./LAMPIRAN-09-INTEGRASI-KEAMANAN.md) | Integrasi (TTE/BSrE, OpenDK, Telegram, FCM, email, SMS, Google Forms, SaaS, Siskeudes, Feed) + API (publik/internal/external) + audit keamanan & rekomendasi rebuild. |
-| 10 | [`LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](./LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md) | Deep-dive domain keuangan/APBDes: 3 lapis model, kode rekening, alur, 69 tabel (kolom lengkap), aturan agregasi, impor Siskeudes, laporan, desain rebuild. |
+| 09 | [`LAMPIRAN-09-INTEGRASI-KEAMANAN.md`](./LAMPIRAN-09-INTEGRASI-KEAMANAN.md) | Integrasi (TTE/BSrE, Telegram, FCM, email, Google Forms, SaaS, Siskeudes, Feed) + API (publik/internal/external) + audit keamanan & rekomendasi rebuild. |
+| 10 | [`LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md`](./LAMPIRAN-10-DEEP-DIVE-KEUANGAN.md) | Deep-dive domain keuangan/APBDes: 3 lapis model, kode rekening, alur, 68 tabel (kolom lengkap), aturan agregasi, impor Siskeudes, laporan, desain rebuild. |
 | 11 | [`LAMPIRAN-11-DEEP-DIVE-INVENTARIS.md`](./LAMPIRAN-11-DEEP-DIVE-INVENTARIS.md) | Deep-dive inventaris/aset: 6 kategori + 5 mutasi + 2 view, alur daftar/form/mutasi/laporan, 8 temuan masalah (bug hapus terkonfirmasi), API internal, desain rebuild. |
 | 12 | [`LAMPIRAN-12-BANTUAN-DTKS.md`](./LAMPIRAN-12-BANTUAN-DTKS.md) | Deep-dive bantuan & DTKS: program bantuan, peserta & kartu, statistik, suplemen, DTKS (Satu Data) + impor Regsosek2022k/DTKS, kaitan wilayah/penduduk/keluarga/RTM, output/cetak, catatan rebuild. |
 | 13 | [`LAMPIRAN-13-DEEP-DIVE-ANALISIS.md`](./LAMPIRAN-13-DEEP-DIVE-ANALISIS.md) | Deep-dive analisis (mesin survei): 13 tabel + 3 enum, alur instrumen→entri respon→laporan/statistik, mesin skor (bobot×nilai, akumulasi act_analisis), impor Excel/Google Forms/BDT, temuan (catch tak efektif, SQL mentah), desain rebuild. |

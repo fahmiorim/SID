@@ -9,11 +9,11 @@
 
 ## 1. Ringkasan
 
-Sistem Acuan bukan sistem tertutup: ia **terhubung keluar** (TTE/BSrE, OpenDK, Telegram, FCM, email, SMS, Google Forms, layanan SaaS Sistem Acuan, Siskeudes, feed) dan **menyediakan masuk** (API publik `fweb/api/v1`, `internal_api`, `external_api` untuk TTE/surat kecamatan, serta kiosk/anjungan).
+Sistem Acuan bukan sistem tertutup: ia **terhubung keluar** (TTE/BSrE, Telegram, FCM, email, Google Forms, layanan SaaS Sistem Acuan, Siskeudes, feed) dan **menyediakan masuk** (API publik `fweb/api/v1`, `internal_api`, `external_api` untuk TTE, serta kiosk/anjungan).
 
 | Kategori | Jumlah titik integrasi | Catatan utama |
 |---|---|---|
-| Outbound (sistem desa → layanan luar) | 11 | TTE, OpenDK/Kecamatan, Telegram, FCM, Email, SMS, Google Forms, SaaS Sistem Acuan, Siskeudes, Feed, Sinkronisasi |
+| Outbound (sistem desa → layanan luar) | 8 | TTE, Telegram, FCM, Email, Google Forms, SaaS Sistem Acuan, Siskeudes, Feed |
 | Inbound (aplikasi luar → sistem desa) | 4 kelompok | API publik, internal API, external API (login), anjungan/kiosk |
 | Permukaan keamanan yang diaudit | 10 area | auth, otorisasi, password/PIN, CSRF, kredensial, unggah, integritas berkas, audit, TLS, query |
 
@@ -33,15 +33,13 @@ graph LR
   end
 
   ADM -->|sign pdf| BSrE[TTE BSrE / tte_api]
-  ADM -->|POST /api/v1/surat/kirim| ODK[OpenDK / Kecamatan]
+
   ADM -->|kirim pesan| TG[Telegram Bot API]
   ADM -->|push notifikasi| FCM[Firebase FCM]
   ADM -->|email verifikasi| SMTP[SMTP / Mail]
-  ADM -->|SMS warga| GW[SMS Gateway Gammu]
   ADM -->|impor analisis| GF[Google Forms/Sheets]
   ADM -->|impor CSV zip| SKD[Siskeudes]
   ADM <-->|registrasi & faktur| SAAS[server_layanan Sistem Acuan]
-  ADM -->|impor/sinkron| ODK
 
   WEB -->|GET api/v1/sdgs, internal_api/*| API[API Layer]
   MAN -->|ajukan surat| ADM
@@ -71,17 +69,8 @@ graph LR
 
 > Catatan rebuild: jangan menyimpan passphrase; perlakukan berkas hasil TTE sebagai *attachment* immutable, dan simpan hash berkas + metadata tanda tangan (bukan salinan diam-diam).
 
-### 3.2 Surat Kecamatan / OpenDK
-**Bukti:** `donjo-app/controllers/external_api/Surat_kecamatan.php`, `app/Libraries/Sinkronisasi.php`, `donjo-app/controllers/Sinkronisasi.php`.
 
-- **Setting:** `api_opendk_server`, `api_opendk_key`, `api_opendk_user`, `api_opendk_password` (kategori `opendk`).
-- **Kirim surat:** `base_uri = setting('api_opendk_server') . '/api/v1/surat/'`, header `Authorization: Bearer <api_opendk_key>`; rute `POST external_api/surat_kecamatan/kirim` dan `GET external_api/surat_kecamatan/download/{nomor?}`.
-- **Sinkronisasi data:** library `Sinkronisasi` + controller `Sinkronisasi` (tukar data penduduk/desa dengan OpenDK). [Terverifikasi keberadaan; alur detail perlu verifikasi]
-- **Enum terkait:** `StatusSuratKecamatanEnum`.
-
-> Catatan rebuild: integrasi ini bergantung pada format API OpenDK (di luar repo) — perlakukan sebagai *adapter* terpisah dan uji dengan sandbox.
-
-### 3.3 Notifikasi Telegram
+### 3.2 Notifikasi Telegram
 **Bukti:** `app/Services/MasaAktifAkunService.php`, `app/Listeners/Surat/*`, setting `telegram_token`, `telegram_notifikasi`.
 
 - Kirim via `Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", ...)`.
@@ -89,7 +78,7 @@ graph LR
 - Prioritas: Telegram diutamakan, email sebagai cadangan.
 - **[Perlu verifikasi]** Alur *webhook* masuk (bot menerima pesan) tidak ditemukan; sepertinya hanya keluar (outbound).
 
-### 3.4 Firebase Cloud Messaging (FCM)
+### 3.3 Firebase Cloud Messaging (FCM)
 **Bukti:** `app/Enums/FirebaseEnum.php`, `app/Models/FcmToken.php`, `app/Models/FcmTokenMandiri.php`, `app/Listeners/Surat/SendPermohonanSuratVerificationNotification.php`.
 
 - `FirebaseEnum::API_URL = https://fcm.googleapis.com/fcm/send`; klien `\Fcm\FcmClient(FirebaseEnum::SERVER_KEY, FirebaseEnum::SENDER_ID)`.
@@ -98,24 +87,18 @@ graph LR
 
 > Catatan rebuild: **jangan** pakai kunci ini. Gunakan FCM HTTP v1 + *service account* per-instalasi, simpan di rahasia server.
 
-### 3.5 Email
+### 3.4 Email
 - Mail Laravel (SMTP) untuk verifikasi akun & reset sandi; `PendudukMandiri::sendEmailVerificationNotification()`.
 - Setting SMTP standar Laravel (`MAIL_*`) + `MasaAktifAkunService` (email fallback).
 
-### 3.6 SMS Gateway (Gammu)
-**Bukti:** `donjo-app/controllers/Sms.php`; model `Inbox`, `Outbox`, `SentItem`; setting `aktifkan_sms`.
 
-- Pola tabel `inbox` / `outbox` / `sentitems` konsisten dengan **Gammu SMS Daemon**.
-- Fitur: kotak masuk, kirim/balas SMS ke warga (nomor HP penduduk), hapus pesan.
-- **[Perlu verifikasi]** Nama/konfigurasi gateway tidak muncul di `config/*.php` yang diperiksa; koneksi ke modem/daemon berada di luar aplikasi.
-
-### 3.7 Google Forms / Sheets
+### 3.5 Google Forms / Sheets
 **Bukti:** `app/Libraries/AnalisisImport.php` (`importGform`), `donjo-app/controllers/First.php`, setting `api_gform_id_script`, `api_gform_credential`, `api_gform_redirect_uri`.
 
 - Impor data **analisis** (survei) dari Google Form/Sheet melalui Google Apps Script (`scriptId`).
 - Memerlukan kredensial OAuth/redirect (google form credential).
 
-### 3.8 Layanan SaaS Sistem Acuan ("server_layanan")
+### 3.6 Layanan SaaS Sistem Acuan ("server_layanan")
 **Bukti:** `Modules/Pelanggan/` (Views + `Services/CekService.php`), `app/Libraries/Saas.php`.
 
 - Endpoint eksternal: `<server_layanan>/api/v1/pelanggan/{terdaftar,register,form-register,pemesanan,pemesanan/faktur,deskripsi-faktur,daftarhitam}`.
@@ -124,21 +107,17 @@ graph LR
 
 > Catatan rebuild: modul berbayar/kemitraan bersifat opsional; pisahkan sebagai *integration*, jangan bagian inti domain desa.
 
-### 3.9 Siskeudes (Impor Keuangan)
+### 3.7 Siskeudes (Impor Keuangan)
 **Bukti:** `donjo-app/controllers/Keuangan_manual.php` (`$data_siskeudes`, `get_csv(LOKASI_KEUANGAN_ZIP ...)`), `resources/views/admin/keuangan/impor_data.blade.php`.
 
 - Unggah **ZIP berisi CSV Siskeudes** → dipetakan ke tabel `keuangan_ta_*` (mis. `keuangan_ta_rab`, `keuangan_ta_jurnal_umum`, `..._rinci`).
 - Ada migrasi yang memindahkan hasil impor Siskeudes ke struktur keuangan baru (`Migrasi_2025010171`).
 
-### 3.10 Feed RSS
+### 3.8 Feed RSS
 **Bukti:** `app/Libraries/FeedParser.php`, `FeedReader.php`, `app/Services/Feed.php`, controller `Feed`.
 
 - Menarik & menampilkan feed eksternal di website desa (agregasi berita).
 
-### 3.11 Sinkronisasi OpenDK
-**Bukti:** `app/Libraries/Sinkronisasi.php`, `donjo-app/controllers/Sinkronisasi.php`.
-
-- Pertukaran data antara Sistem Acuan dan OpenDK (kecamatan) memakai kredensial `api_opendk_*` (§3.2).
 
 ---
 
@@ -148,7 +127,7 @@ graph LR
 **Bukti:** `donjo-app/Routes/api.php` (baris 159-164), `donjo-app/controllers/fweb/*`.
 
 - `GET api/v1/sdgs` (`Sdgs@api_sdgs`) — **tanpa autentikasi**; dipakai indikator SDGs desa.
-- Keluarga `fweb` (frontend web) juga mengekspos data publik: `Statistik`, `Peta`, `Kelompok`, `Lembaga`, `ProdukHukum`, `InformasiPublik`, `Pengaduan`, `Inventaris`, `Dpt`, `Vaksin`, `Kesehatan`, `Sotk`, dll.
+- Keluarga `fweb` (frontend web) juga mengekspos data publik: `Statistik`, `Peta`, `Kelompok`, `Lembaga`, `ProdukHukum`, `InformasiPublik`, `Pengaduan`, `Inventaris`, `Dpt`, `Kesehatan`, `Sotk`, dll.
 
 ### 4.2 Internal API — `internal_api/*`
 **Bukti:** `donjo-app/controllers/internal_api/` (30 controller), rute di `donjo-app/Routes/api.php` (baris 38-139).
@@ -159,9 +138,9 @@ graph LR
 ### 4.3 External API — `external_api/*`
 **Bukti:** `donjo-app/core/MY_Controller.php:372-381` (`Tte_Controller`), `Routes/api.php:141-157`.
 
-- Controller `Sign`, `Tte`, `Surat_kecamatan` semuanya `extends Tte_Controller`, yang konstruktornya memanggil `ci_auth()`; bila gagal → `redirect('siteman')`.
-- **Kesimpulan:** endpoint TTE/sign/surat-kecamatan **wajib sesi login** (tidak terbuka untuk publik).
-- Rute: `GET sign/pdf`, `POST surat_kecamatan/kirim`, `GET surat_kecamatan/download/{nomor?}`, `GET tte/periksa_status/{nik?}`, `POST tte/sign_invisible`, `POST tte/sign_visible`.
+- Controller `Sign` dan `Tte` `extends Tte_Controller`, yang konstruktornya memanggil `ci_auth()`; bila gagal → `redirect('siteman')`.
+- **Kesimpulan:** endpoint TTE/sign **wajib sesi login** (tidak terbuka untuk publik).
+- Rute: `GET sign/pdf`, `GET tte/periksa_status/{nik?}`, `POST tte/sign_invisible`, `POST tte/sign_visible`.
 
 ### 4.4 Anjungan / Kiosk
 **Bukti:** `MY_Controller::cekAnjungan()`; `Modules/Anjungan`.
@@ -221,7 +200,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 ```
 
 - CSRF **aktif** secara global, **tetapi dikecualikan** untuk seluruh `api.*`, `external_api.*`, `internal_api.*`, `playwright.*`, dan `pelanggan/pemesanan`.
-- ⚠️ **Risiko:** `external_api` (termasuk `tte/sign_invisible`, `tte/sign_visible`, `surat_kecamatan/kirim`) hanya dilindungi sesi login tanpa token CSRF → potensi **CSRF** (aksi state-changing) bila sesi aktif. `playwright.*` juga terbuka (diduga untuk pengujian).
+- ⚠️ **Risiko:** `external_api` (termasuk `tte/sign_invisible`, `tte/sign_visible`) hanya dilindungi sesi login tanpa token CSRF → potensi **CSRF** (aksi state-changing) bila sesi aktif. `playwright.*` juga terbuka (diduga untuk pengujian).
 
 ### 5.5 Kredensial Ter-hardcode / Statis
 
@@ -232,7 +211,6 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 | Sandi admin default `sid304` | `app/database/seeders/DataAwal/DataAwalSeeder.php:226` | Akun default lemah | Paksa ganti saat instalasi/first-login |
 | Sesi `md5(now())` | `DataAwalSeeder.php:237` | Token mudah diprediksi | Gunakan CSPRNG |
 | PIN mandiri `md5($pin)` | `donjo-app/helpers/donjolib_helper.php:573` | PIN warga lemah | Migrasi ke bcrypt/argon2 |
-| Token OpenDK sempat dinonaktifkan (komentar) | `app/Libraries/Sinkronisasi.php` | Risiko permintaan tak terautentikasi | Pastikan selalu pakai Bearer `api_opendk_key` |
 
 > **Rekomendasi umum:** semua rahasia via **environment/secret manager**; tidak ada kredensial di kode atau seed.
 
@@ -256,8 +234,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 - `Tracker` (statistik pengunjung web), `LogViewer` (penampil log), `QueryDetector` (mendeteksi query berat/N+1 di mode debug).
 
 ### 5.9 Transport & TLS
-- `verify => setting('ssl_tte')` (TTE), Guzzle untuk OpenDK/SaaS; URL layanan dikonfigurasi.
-- **[Perlu verifikasi]** Kebijakan TLS untuk Telegram/SMTP/SMS bergantung lingkungan.
+- `verify => setting('ssl_tte')` (TTE), Guzzle untuk SaaS; URL layanan dikonfigurasi.
 
 ### 5.10 Lain-lain
 - CAPTCHA / NoCAPTCHA (`app/Libraries/Captcha.php`, `NoCaptcha.php`) untuk form publik (pengaduan, komentar, pendaftaran).
@@ -287,11 +264,10 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 | Integrasi | Cara di Sistem Acuan | Padanan Next.js 15 (rekomendasi) |
 |---|---|---|
 | TTE/BSrE | Guzzle + Basic Auth, multipart | Route Handler `/api/integrations/tte/*` + `fetch`; simpan artefak immutable di storage |
-| OpenDK/Kecamatan | Guzzle Bearer | HTTP client (`undici`/`ky`) + adapter terisolasi, retry & idempotency key |
+
 | Telegram | `Http::post` bot API | Outbound job/queue; token via env |
 | FCM | FcmClient + hardcoded key | `firebase-admin` (HTTP v1), service account via secret manager |
 | Email | Laravel Mail/SMTP | `nodemailer`/Resend + template React Email |
-| SMS (Gammu) | tabel inbox/outbox/sentitems | Adapter gateway (HTTP API modem/penyedia), tabel outbound queue |
 | Google Forms | Apps Script import | OAuth Google + Sheets API; impor tervalidasi Zod |
 | SaaS Sistem Acuan | REST + token domain | Service klien terpisah (opsional), feature-flag |
 | Siskeudes | unggah ZIP→CSV ke `keuangan_ta_*` | Parser ZIP/CSV di server (stream), validasi & staging sebelum commit |
@@ -308,11 +284,9 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 | Area | Cakupan di lampiran ini | Keyakinan |
 |---|---|---|
 | TTE/BSrE | Endpoint, auth, 2 mode, passphrase | Tinggi |
-| Surat Kecamatan/OpenDK | Endpoint, Bearer, setting | Tinggi (format OpenDK perlu verifikasi) |
 | Telegram | Token, pemakaian notifikasi | Tinggi |
 | FCM | Enum, model token, listener; **temuan rahasia** | Tinggi |
 | Email | Verifikasi/reset | Sedang |
-| SMS | Model inbox/outbox/sentitems (Gammu) | Sedang |
 | Google Forms | `importGform`, setting | Sedang–Tinggi |
 | SaaS Sistem Acuan | Modul Pelanggan, endpoint | Sedang |
 | Siskeudes | Unggah ZIP→CSV→`keuangan_ta_*` | Sedang–Tinggi |
@@ -330,11 +304,10 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 
 ### Item `[Perlu verifikasi]` terkumpul
 1. Penyedia TTE default & dokumentasi endpoint `api/sign/pdf`.
-2. Format API & alur lengkap OpenDK (di luar repo).
-3. Alur webhook Telegram (kemungkinan hanya outbound).
-4. Migrasi PIN lama (`md5`) → hash modern.
-5. Validasi unggah menyeluruh (MIME/isi/ukuran/penyimpanan).
-6. Kebijakan TLS untuk Telegram/SMTP/SMS.
+2. Alur webhook Telegram (kemungkinan hanya outbound).
+3. Migrasi PIN lama (`md5`) → hash modern.
+4. Validasi unggah menyeluruh (MIME/isi/ukuran/penyimpanan).
+
 
 ---
 
@@ -342,7 +315,7 @@ $config['csrf_exclude_uris'] = ['api.*+', 'external_api.*+', 'internal_api.*+', 
 1. **Jangan warisi rahasia:** Firebase, `encryption_key`, sandi default, PIN MD5 → ganti semua pada implementasi baru.
 2. **Perketat inbound:** beri autentikasi/otorisasi & rate-limit untuk `internal_api` publik; pisahkan field publik vs privat.
 3. **CSRF & same-site:** manfaatkan Server Actions + cookie `SameSite=Lax/Strict`; hindari pengecualian CSRF yang luas.
-4. **Secret management:** semua token (TTE, OpenDK, Telegram, SMTP, SMS, Google) via env/secret manager, bukan tabel setting polos.
+4. **Secret management:** semua token (TTE, Telegram, SMTP, Google) via env/secret manager, bukan tabel setting polos.
 5. **Pertahankan & tingkatkan:** pemindai integritas berkas dan audit log — jadikan terjadwal + notifikasi.
 6. **Adapter pattern:** setiap integrasi luar sebagai modul adapter teruji (kontrak + mock), agar tidak memblokir domain inti.
 

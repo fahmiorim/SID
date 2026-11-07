@@ -9,11 +9,11 @@ import { listKategoriLapak, listLapak } from "../infrastructure/lapak-repository
  */
 export async function daftarLapakPublik(
   villageId: number,
-  opts?: { kategori?: string; q?: string },
+  opts?: { kategori?: string; q?: string; page?: number; pageSize?: number },
 ) {
-  const [items, kategori] = await Promise.all([
+  const [lapakPage, kategori] = await Promise.all([
     listLapak(villageId, opts),
     listKategoriLapak(villageId),
   ]);
-  return { items, kategori };
+  return { ...lapakPage, items: lapakPage.rows, kategori };
 }

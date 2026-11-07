@@ -143,3 +143,38 @@ export function susunArsipDokumen(rows: readonly BarisArsipDokumen[]): KelompokA
 }
 
 export const DOKUMEN_PAGE_SIZE = 20;
+export const DOKUMEN_API_MAX_PAGE_SIZE = 100;
+
+export function susunPaginasiDokumen(
+  total: number,
+  requestedPage: number,
+  requestedPageSize = DOKUMEN_PAGE_SIZE,
+) {
+  const validPageSize =
+    Number.isSafeInteger(requestedPageSize) && requestedPageSize > 0
+      ? requestedPageSize
+      : DOKUMEN_PAGE_SIZE;
+  const pageSize = Math.min(DOKUMEN_API_MAX_PAGE_SIZE, validPageSize);
+  const totalPages = Math.ceil(Math.max(0, total) / pageSize);
+  const lastPage = Math.max(1, totalPages);
+  const page = Math.min(
+    Math.max(1, Math.floor(Number.isFinite(requestedPage) ? requestedPage : 1)),
+    lastPage,
+  );
+
+  return { page, pageSize, offset: (page - 1) * pageSize, totalPages };
+}
+
+export function parsePaginasiDokumen(
+  pageParameter: string | null,
+  pageSizeParameter: string | null,
+): { page: number; pageSize: number } | null {
+  const page = pageParameter === null ? 1 : Number(pageParameter);
+  const pageSize = pageSizeParameter === null ? DOKUMEN_PAGE_SIZE : Number(pageSizeParameter);
+  if (!Number.isSafeInteger(page) || page < 1) return null;
+  if (!Number.isSafeInteger(pageSize) || pageSize < 1 || pageSize > DOKUMEN_API_MAX_PAGE_SIZE) {
+    return null;
+  }
+
+  return { page, pageSize };
+}

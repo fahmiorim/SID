@@ -48,7 +48,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-leaflet": "^5.0.0",
-    "resend": "^3.5.0",
+    "resend": "^6.37.0",
     "sanitize-html": "^2.18.1",
     "server-only": "^0.0.1",
     "sonner": "^2.0.8",

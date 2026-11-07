@@ -17,23 +17,26 @@ import {
 export async function daftarProdukLapak(
   villageId: number,
   lapakId: number,
-  opts?: { q?: string; aktif?: boolean },
-): Promise<LapakProdukDTO[]> {
+  opts?: { q?: string; aktif?: boolean; page?: number; pageSize?: number },
+) {
   await requirePermission(LAPAK_RESOURCE, "read");
   const produk = await listProdukLapak(villageId, lapakId, opts);
-  return produk.map((p) => ({
-    id: p.id,
-    villageId: p.villageId,
-    lapakId: p.lapakId,
-    nama: p.nama,
-    deskripsi: p.deskripsi,
-    harga: p.harga,
-    stok: p.stok,
-    gambar: p.gambar,
-    aktif: Boolean(p.aktif),
-    latitude: p.latitude,
-    longitude: p.longitude,
-  }));
+  return {
+    ...produk,
+    rows: produk.rows.map((p) => ({
+      id: p.id,
+      villageId: p.villageId,
+      lapakId: p.lapakId,
+      nama: p.nama,
+      deskripsi: p.deskripsi,
+      harga: p.harga,
+      stok: p.stok,
+      gambar: p.gambar,
+      aktif: Boolean(p.aktif),
+      latitude: p.latitude,
+      longitude: p.longitude,
+    })),
+  };
 }
 
 /** Tambah produk baru. */

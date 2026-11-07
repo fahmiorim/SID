@@ -69,4 +69,23 @@ describe("parseEnv", () => {
 
     expect(env.RESEND_FROM).toBe("SID Desa <notifikasi@example.test>");
   });
+  it("menolak token webhook email yang terlalu pendek", () => {
+    expect(() =>
+      parseEnv({
+        DATABASE_URL: "mysql://x",
+        BETTER_AUTH_SECRET: SECRET,
+        EMAIL_WEBHOOK_TOKEN: "pendek",
+      }),
+    ).toThrow(/EMAIL_WEBHOOK_TOKEN minimal 32 karakter/);
+  });
+
+  it("menerima token webhook email yang kuat", () => {
+    const env = parseEnv({
+      DATABASE_URL: "mysql://x",
+      BETTER_AUTH_SECRET: SECRET,
+      EMAIL_WEBHOOK_TOKEN: "w".repeat(32),
+    });
+
+    expect(env.EMAIL_WEBHOOK_TOKEN).toBe("w".repeat(32));
+  });
 });

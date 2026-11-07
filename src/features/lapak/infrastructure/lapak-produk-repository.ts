@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, like, sql } from "drizzle-orm";
+import { and, count, desc, eq, like, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { keranjang, type NewKeranjang } from "@/db/schema/keranjang";
@@ -9,12 +9,22 @@ import { lapakProduk, type LapakProduk, type NewLapakProduk } from "@/db/schema/
 
 import type { KeranjangItemDTO } from "../domain/lapak-produk";
 
+export const LAPAK_PRODUK_PAGE_SIZE = 20;
+
+export interface LapakProdukPage {
+  rows: LapakProduk[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
+}
+
 /** Daftar produk untuk satu lapak (admin). */
 export async function listProdukLapak(
   villageId: number,
   lapakId: number,
-  opts?: { q?: string; aktif?: boolean },
-): Promise<LapakProduk[]> {
+  opts?: { q?: string; aktif?: boolean; page?: number; pageSize?: number },
+): Promise<LapakProdukPage> {
   const where = [eq(lapakProduk.villageId, villageId), eq(lapakProduk.lapakId, lapakId)];
   if (opts?.aktif !== undefined) {
     where.push(eq(lapakProduk.aktif, opts.aktif ? 1 : 0));
@@ -22,20 +32,30 @@ export async function listProdukLapak(
   if (opts?.q) {
     where.push(like(lapakProduk.nama, `%${opts.q}%`));
   }
-
-  return db
+  const pageSize = Math.min(Math.max(opts?.pageSize ?? LAPAK_PRODUK_PAGE_SIZE, 1), 100);
+  const [totalRows] = await db
+    .select({ value: count() })
+    .from(lapakProduk)
+    .where(and(...where));
+  const total = totalRows?.value ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(opts?.page ?? 1, 1), pageCount);
+  const rows = await db
     .select()
     .from(lapakProduk)
     .where(and(...where))
-    .orderBy(desc(lapakProduk.id));
+    .orderBy(desc(lapakProduk.id))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+  return { rows, total, page, pageSize, pageCount };
 }
 
 /** Daftar produk aktif untuk publik. */
 export async function listProdukPublik(
   villageId: number,
   lapakId: number,
-  opts?: { q?: string },
-): Promise<LapakProduk[]> {
+  opts?: { q?: string; page?: number; pageSize?: number },
+): Promise<LapakProdukPage> {
   const where = [
     eq(lapakProduk.villageId, villageId),
     eq(lapakProduk.lapakId, lapakId),
@@ -44,12 +64,22 @@ export async function listProdukPublik(
   if (opts?.q) {
     where.push(like(lapakProduk.nama, `%${opts.q}%`));
   }
-
-  return db
+  const pageSize = Math.min(Math.max(opts?.pageSize ?? LAPAK_PRODUK_PAGE_SIZE, 1), 100);
+  const [totalRows] = await db
+    .select({ value: count() })
+    .from(lapakProduk)
+    .where(and(...where));
+  const total = totalRows?.value ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(opts?.page ?? 1, 1), pageCount);
+  const rows = await db
     .select()
     .from(lapakProduk)
     .where(and(...where))
-    .orderBy(desc(lapakProduk.id));
+    .orderBy(desc(lapakProduk.id))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+  return { rows, total, page, pageSize, pageCount };
 }
 
 /** Temukan satu produk. */

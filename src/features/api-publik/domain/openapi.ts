@@ -24,7 +24,10 @@ const responsGalat = {
   },
 } as const;
 
-function respons(dataSchema: Record<string, unknown>) {
+function respons(
+  dataSchema: Record<string, unknown>,
+  additionalProperties: Record<string, unknown> = {},
+) {
   return {
     "200": {
       description: "Berhasil.",
@@ -36,6 +39,7 @@ function respons(dataSchema: Record<string, unknown>) {
             properties: {
               success: { type: "boolean", const: true },
               data: dataSchema,
+              ...additionalProperties,
             },
           },
         },
@@ -62,21 +66,46 @@ export function buatSpesifikasiOpenApi(serverUrl: string) {
     paths: {
       [JALUR_API_PUBLIK.informasi]: {
         get: {
-          summary: "Profil desa, berita terbaru, dan dokumen aktif",
+          summary: "Profil desa, berita terbaru, dan satu halaman dokumen aktif",
           operationId: "getInformasiPublik",
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, default: 1 },
+              description: "Halaman dokumen.",
+            },
+            {
+              name: "pageSize",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+              description: "Jumlah dokumen per halaman.",
+            },
+          ],
           responses: respons({
             type: "object",
             properties: {
               profilDesa: { type: ["object", "null"] },
               berita: { type: "array", items: { type: "object" } },
               dokumen: { type: "array", items: { type: "object" } },
+              dokumenPagination: {
+                type: "object",
+                properties: {
+                  page: { type: "integer" },
+                  pageSize: { type: "integer" },
+                  totalItems: { type: "integer" },
+                  totalPages: { type: "integer" },
+                },
+              },
             },
           }),
         },
       },
       [JALUR_API_PUBLIK.dokumen]: {
         get: {
-          summary: "Daftar dokumen publik aktif",
+          summary: "Daftar dokumen publik aktif per halaman",
           operationId: "getDokumenPublik",
           parameters: [
             {
@@ -86,8 +115,35 @@ export function buatSpesifikasiOpenApi(serverUrl: string) {
               schema: { type: "string" },
               description: "Filter kategori dokumen.",
             },
+            {
+              name: "page",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, default: 1 },
+              description: "Nomor halaman.",
+            },
+            {
+              name: "pageSize",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+              description: "Jumlah dokumen per halaman.",
+            },
           ],
-          responses: respons({ type: "array", items: { type: "object" } }),
+          responses: respons(
+            { type: "array", items: { type: "object" } },
+            {
+              pagination: {
+                type: "object",
+                properties: {
+                  page: { type: "integer" },
+                  pageSize: { type: "integer" },
+                  totalItems: { type: "integer" },
+                  totalPages: { type: "integer" },
+                },
+              },
+            },
+          ),
         },
       },
       [JALUR_API_PUBLIK.inventaris]: {

@@ -59,7 +59,6 @@ lanjutan di `donjo-app/models/migrations/Migrasi_2024*.php`/`Migrasi_2025*.php`.
 | Statistik Bantuan | `program`, `program_peserta` (+ join penduduk/kk/rtm/kelompok) | `Statistik_bantuan` | `statistik-kependudukan` |
 | Suplemen | `suplemen`, `suplemen_terdata` | `Suplemen` | `data-suplemen` |
 | DTKS | `dtks`, `dtks_anggota`, `dtks_lampiran`, `dtks_ref_lampiran`, `dtks_pengaturan_program`, `tweb_rtm` | `Dtks` + `App\Services\DTKSRegsosEk2022k` | `dtks` |
-| Sinkronisasi OpenDK | (via model) `program`, `program_peserta` | `Sinkronisasi` | `sinkronisasi` |
 
 > **Caveat sumber:** sebagian kelas induk (`donjo-app/core/Admin_Controller.php`, `helpers/core_helper.php`, dsb.)
 > ter-*obfuscate* (base64 + `gzuncompress` + `eval`). Ini adalah **hasil build normal** dari `make_obfuscate.php`
@@ -236,7 +235,7 @@ program.
 
 - **Cetak daftar peserta** per program (HTML→Blade `admin.program_bantuan.peserta.cetak`).
 - **Unduh kartu** per peserta (streaming berkas gambar) — `Program_bantuan::unduh_kartu_peserta()`.
-- Ekspor peserta ke OpenDK (`.xlsx`) — lihat §8.
+
 
 ### Catatan rebuild Next.js
 
@@ -448,7 +447,7 @@ pemetaan program bantuan.
 | Aset | `kd_tabung_gas_3_kg, kd_tabung_gas_5_5_kg, kd_tabung_gas_12_kg, kd_lemari_es, kd_ac, kd_pemanas_air, kd_telepon_rumah, kd_televisi, kd_perhiasan_10_gr_emas, kd_rek_aktif, kd_komputer_laptop, kd_sepeda_motor, kd_mobil, kd_perahu, kd_kapal_perahu_motor, kd_featured_phone, kd_smartphone, kd_sepeda, kd_lahan, luas_lahan, kd_ada_sertiv_lahan, kd_rumah_ditempat_lain` |
 | Ternak | `jumlah_sapi, jumlah_kerbau, jumlah_kuda, jumlah_babi, jumlah_kambing_domba, jumlah_unggas, jumlah_ikan, jumlah_lainnya` |
 | Lainnya | `kd_ada_art_usaha_sendiri_bersama, kd_internet_sebulan, kd_pengeluaran_pulsa_dan_data, kd_ada_art_lanjut_usia` |
-| Program (501a–501g) | tiap program punya trio `kd_<x>`, `bulan_<x>`, `tahun_<x>`: `bss_bnpt, pkh, bst_covid19, blt_dana_desa, subsidi_listrik, asuransi_lain, bantuan_pemprov, bantuan_pemkabkot, bantuan_pemdes, bantuan_pemda, bantuan_masyarakat, subsidi_pupuk, subsidi_lpg` |
+| Program (501a–501g) | tiap program punya trio `kd_<x>`, `bulan_<x>`, `tahun_<x>`: `bss_bnpt, pkh, blt_dana_desa, subsidi_listrik, asuransi_lain, bantuan_pemprov, bantuan_pemkabkot, bantuan_pemdes, bantuan_pemda, bantuan_masyarakat, subsidi_pupuk, subsidi_lpg` |
 | Konsumsi & bahasa | `kd_konsumsi_daging, kd_makan, kd_beli_pakaian_baru, kd_bayar_biaya_pengobatan, kd_bahasa_wawancara, tulis_bahasa_daerah` |
 
 - FK (`..._add_foreign_keys_to_dtks_table.php:51-53`): `id_keluarga`→`tweb_keluarga` CASCADE;
@@ -644,13 +643,13 @@ Tidak ada cetak khusus di lapisan ini; memengaruhi isi cetak DTKS (§5) dan stat
 
 ### Ringkasan
 
-Ringkasan keluaran domain bantuan/DTKS: ekspor `.xlsx` (program, peserta, suplemen, DTKS, OpenDK), cetak daftar
+Ringkasan keluaran domain bantuan/DTKS: ekspor `.xlsx` (program, peserta, suplemen, DTKS), cetak daftar
 peserta & suplemen, kartu peserta, dan cetak PDF DTKS.
 
 ### Aktor & hak akses
 
 Mengikuti controller asal: `expor` (`Program_bantuan`), `ekspor` (`Suplemen`), `ekspor`/`cetak2` (`Dtks`),
-`cetak` (`Statistik_bantuan`), dan sinkronisasi OpenDK (`Sinkronisasi`).
+`cetak` (`Statistik_bantuan`), dan keluaran lainnya dari controller masing-masing.
 
 ### Alur langkah
 
@@ -659,16 +658,13 @@ Mengikuti controller asal: `expor` (`Program_bantuan`), `ekspor` (`Suplemen`), `
    (header: Peserta, No. Peserta, NIK, Nama, Tempat Lahir, Tanggal Lahir, Alamat); `sasaran=4` memetakan id → `kelompok.kode`.
 2. **Ekspor suplemen** — `Suplemen::ekspor()` (`:593`) → sheet `'Peserta'` + kolom dinamis `form_isian`.
 3. **Ekspor DTKS** — `DTKSRegsosEk2022k::ekspor()` (`:378`) → sheet `Keluarga` & `Anggota Keluarga`.
-4. **Ekspor OpenDK** — `Sinkronisasi` (`donjo-app/controllers/Sinkronisasi.php`) mengirim `.xlsx`/`.zip`;
-   `PesertaBantuanOpendkExport` menambah `desa_id` di depan + `sasaran` dari `bantuan.sasaran`; zip disimpan di
-   `LOKASI_SINKRONISASI_ZIP` (`desa/upload/sinkronisasi/`, `constants.php:224`).
 5. **Cetak** — daftar peserta (`Peserta_bantuan::daftar`), daftar suplemen (`Suplemen::daftar`), statistik
    (`Statistik_bantuan::cetak`), dan PDF DTKS (`Dtks::cetak2`).
 
 ### Tabel & kolom kunci
 
 Sumber data = tabel di §1–§5. Lokasi berkas: `LOKASI_DOKUMEN` (kartu, `desa/upload/dokumen/`),
-`LOKASI_FOTO_DTKS` (`desa/upload/dtks/`), `LOKASI_SINKRONISASI_ZIP` (`desa/upload/sinkronisasi/`).
+`LOKASI_FOTO_DTKS` (`desa/upload/dtks/`).
 
 ### Aturan bisnis/penting
 
@@ -689,7 +685,6 @@ Sumber data = tabel di §1–§5. Lokasi berkas: `LOKASI_DOKUMEN` (kartu, `desa/
 | DTKS banyak | `.zip` (PDF banyak) | `cetakZip` + `Dtks::cetak2` | `:350`, `Dtks.php:235` |
 | Kartu peserta | gambar (stream) | `unduh_kartu_peserta` | `:360` |
 | Daftar peserta/suplemen/statistik | HTML→PDF/cetak | `daftar`/`cetak` | controller terkait |
-| OpenDK program bantuan | `.xlsx`/`.zip` | `Sinkronisasi` | `app/Exports/PesertaBantuanOpendkExport.php` |
 
 ### Catatan rebuild Next.js
 
@@ -764,7 +759,6 @@ agar interoperabel dengan template lama.
 | Pengaturan Program DTKS | `dtks_pengaturan_program` | `DTKSRegsosEk2022k` | `id_bantuan → program.id`; unique `(config_id, versi_kuisioner, kode)` |
 | RTM | `tweb_rtm` | `Rtm` / `Dtks` | unique `(config_id, no_kk)`; `terdaftar_dtks` |
 | Wilayah | `tweb_wil_clusterdesa` | (lintas) | `tweb_penduduk.id_cluster` |
-| Sinkronisasi OpenDK | (via model) `program`, `program_peserta` | `Sinkronisasi` | LogSinkronisasi `modul` = `program-bantuan` / `program-bantuan-peserta` |
 
 ---
 
@@ -783,8 +777,8 @@ agar interoperabel dengan template lama.
 
 **Hitungan cakupan:** 10 tabel inti (`program`, `program_peserta`, `suplemen`, `suplemen_terdata`, `dtks`,
 `dtks_anggota`, `dtks_lampiran`, `dtks_ref_lampiran`, `dtks_pengaturan_program`, `tweb_rtm`); 5 controller utama
-(`Program_bantuan`, `Peserta_bantuan`, `Statistik_bantuan`, `Suplemen`, `Dtks`) + 1 controller integrasi
-(`Sinkronisasi`) + 2 service (`DTKSRegsosEk2022k`, `DtksService`).
+(`Program_bantuan`, `Peserta_bantuan`, `Statistik_bantuan`, `Suplemen`, `Dtks`) + 2 service
+(`DTKSRegsosEk2022k`, `DtksService`).
 
 ### Butir `[perlu verifikasi]`
 

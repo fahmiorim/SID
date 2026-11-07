@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { listLapakPublikSitemap } from "@/features/lapak/infrastructure/lapak-repository";
 import {
   daftarAlbumGaleri,
   daftarSlugBerita,
@@ -56,6 +57,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // tidak boleh membuat seluruh sitemap gagal.
   try {
     const desa = await getIdentitasFromRequest();
+    const marketplaceLapak = await listLapakPublikSitemap(
+      desa.id,
+      Math.max(0, 50_000 - dasar.length),
+    );
     const [slugBerita, album, slugHalaman] = await Promise.all([
       daftarSlugBerita(desa.id),
       daftarAlbumGaleri(desa.id),
@@ -64,6 +69,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
       ...dasar,
+      ...marketplaceLapak.map((item) => ({
+        url: `${base}/desa/lapak/${item.id}/produk`,
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      })),
       ...slugBerita.map((slug) => ({
         url: `${base}/desa/berita/${slug}`,
         changeFrequency: "weekly" as const,
@@ -79,7 +89,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly" as const,
         priority: 0.5,
       })),
-    ];
+    ].slice(0, 50_000);
   } catch {
     return dasar;
   }

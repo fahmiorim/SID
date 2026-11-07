@@ -1,16 +1,44 @@
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
-import { listDokumenPublik } from "@/features/publik/infrastructure/content-repository";
+import { parseDokumenKategoriFilter, parsePaginasiDokumen } from "@/features/publik/domain/dokumen";
+import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 
 /**
  * GET /api/publik/dokumen
  *
- * Daftar dokumen publik aktif. Query: `kategori` (opsional).
+ * Dokumen aktif dengan filter `kategori` dan paginasi `page`/`pageSize`.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const kategori = searchParams.get("kategori")?.trim() || undefined;
+  const kategoriInput = searchParams.get("kategori")?.trim() ?? "";
+  const kategori = parseDokumenKategoriFilter(kategoriInput || undefined);
+  const paginasi = parsePaginasiDokumen(searchParams.get("page"), searchParams.get("pageSize"));
 
-  return jalankanApiPublik(request, "dokumen", async (desa) => {
-    return listDokumenPublik(desa.id, kategori);
-  });
+  if (kategoriInput && kategori === "semua") {
+    return Response.json(
+      { success: false, error: "Kategori dokumen tidak valid." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  if (!paginasi) {
+    return Response.json(
+      { success: false, error: "Parameter page atau pageSize tidak valid." },
+      { status: 400, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
+  return jalankanApiPublik(
+    request,
+    "dokumen",
+    (desa) =>
+      cariDokumenPublik(desa.id, {
+        search: "",
+        category: kategori,
+        page: paginasi.page,
+        pageSize: paginasi.pageSize,
+      }),
+    ({ rows, total, page, pageSize }) => ({
+      data: rows,
+      pagination: { page, pageSize, totalItems: total, totalPages: Math.ceil(total / pageSize) },
+    }),
+  );
 }

@@ -18,7 +18,7 @@ import {
   slider,
   widget,
 } from "@/db/schema";
-import { DOKUMEN_PAGE_SIZE, type DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
+import { susunPaginasiDokumen, type DokumenKategoriFilter } from "@/features/publik/domain/dokumen";
 import { polaLike } from "@/features/publik/domain/pencarian";
 
 /**
@@ -450,6 +450,8 @@ export interface CariDokumenPublikFilter {
   /** Jenis produk hukum (OS-WEB-005); kosong berarti semua jenis. */
   jenis?: string;
   page: number;
+  /** Batas opsional; default 20, maksimum 100. */
+  pageSize?: number;
 }
 
 export interface DokumenPublikPage {
@@ -489,9 +491,7 @@ export async function cariDokumenPublik(
   const where = and(...conditions) ?? eq(dokumenPublik.villageId, -1);
   const [totalRow] = await db.select({ value: count() }).from(dokumenPublik).where(where);
   const total = totalRow?.value ?? 0;
-  const requestedPage = Math.max(1, Math.floor(Number.isFinite(filter.page) ? filter.page : 1));
-  const lastPage = Math.max(1, Math.ceil(total / DOKUMEN_PAGE_SIZE));
-  const page = Math.min(requestedPage, lastPage);
+  const { page, pageSize, offset } = susunPaginasiDokumen(total, filter.page, filter.pageSize);
   const rows = await db
     .select({
       id: dokumenPublik.id,
@@ -509,14 +509,14 @@ export async function cariDokumenPublik(
     .from(dokumenPublik)
     .where(where)
     .orderBy(desc(dokumenPublik.tahun), asc(dokumenPublik.nama), asc(dokumenPublik.id))
-    .limit(DOKUMEN_PAGE_SIZE)
-    .offset((page - 1) * DOKUMEN_PAGE_SIZE);
+    .limit(pageSize)
+    .offset(offset);
 
   return {
     rows,
     total,
     page,
-    pageSize: DOKUMEN_PAGE_SIZE,
+    pageSize,
   };
 }
 

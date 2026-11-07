@@ -700,12 +700,6 @@ Pemetaan nama referensi → nama tabel.
 | 0 | Tidak |
 | 2 | Tanpa Kepala Keluarga |
 
-### StatusSuratKecamatanEnum — `app\Enums\StatusSuratKecamatanEnum.php`
-| Nilai | Label |
-|---|---|
-| 1 | Tidak Aktif |
-| 2 | Belum Dikirim |
-| 3 | Sudah Dikirim |
 
 ### SukuEnum — `app\Enums\SukuEnum.php` (262 nilai; key=value keduanya string)
 Nilai const → value (label suku). Dipakai pada field `suku` (disimpan sebagai **string**, bukan id).
@@ -863,7 +857,6 @@ Berisi `['key','slug','label']` per jenis statistik penduduk:
 | 17 | akta-kelahiran | Akta Kelahiran |
 | 18 | kepemilikan-ktp | Kepemilikan KTP |
 | 19 | asuransi-kesehatan | Asuransi Kesehatan |
-| 'covid' | status-covid | Status Covid |
 | 'suku' | suku-etnis | Suku / Etnis |
 | 'marga' | marga | Marga |
 | 'adat' | adat | Adat |
@@ -1204,17 +1197,6 @@ Sumber: insert manual (StrukturTabelSeeder.php:676–680)
 | 2 | SK Kades |
 | 3 | Perdes |
 
-### ref_status_covid — kolom: `id` (int PK), `nama` (varchar 100)
-Sumber: insert manual (StrukturTabelSeeder.php:583–591)
-| id | nama |
-|---|---|
-| 1 | Kasus Suspek |
-| 2 | Kasus Probable |
-| 3 | Kasus Konfirmasi |
-| 4 | Kontak Erat |
-| 5 | Pelaku Perjalanan |
-| 6 | Discarded |
-| 7 | Selesai Isolasi |
 
 ### ref_persil_kelas — kolom: `id` (int PK), `tipe` (varchar 20), `kode` (varchar 20), `ndesc` (text, null)
 Sumber: insert manual (StrukturTabelSeeder.php:514–563)
@@ -1237,12 +1219,6 @@ Sumber: insert manual (StrukturTabelSeeder.php:565–581)
 | 2 | Hibah | Didapat dari proses Hibah |
 | 3 | Waris | Didapat dari proses Waris |
 
-### ref_sinkronisasi — kolom: `tabel`, `server`, `jenis_update`, `tabel_hapus`
-Sumber: insert manual (StrukturTabelSeeder.php:1270–1283)
-| tabel | server | jenis_update | tabel_hapus |
-|---|---|---|---|
-| tweb_keluarga | 6 | 1 | log_keluarga |
-| tweb_penduduk | 6 | 1 | log_hapus_penduduk |
 
 ### ref_jabatan — kolom: `id` (int PK), `config_id`, `nama` (varchar 100), `tupoksi` (longtext, null), `jenis` (bool)
 Sumber: `DataAwalSeeder.php:355–368` (`tambah_jabatan()`)
@@ -1536,7 +1512,6 @@ Sumber: konstanta `app\Models\*.php`.
 | `FormatSurat::ATTRIBUTES` | text/number/email/url/date/time/textarea/select-manual/select-otomatis/hari/... | Tipe atribut isian form surat |
 | `LampiranSurat::JENIS_LAMPIRAN` | 1 Lampiran Sistem; 2 Lampiran Desa | Jenis lampiran surat |
 | `DerajatSuratEnum` / `KarakterSuratEnum` | lihat Bagian 1 | Sifat surat |
-| `StatusSuratKecamatanEnum` | 1 Tidak Aktif; 2 Belum Dikirim; 3 Sudah Dikirim | Status kirim ke kecamatan |
 
 ## 3.3 Umum / modul
 | Model / konstanta | Nilai | Arti |
@@ -1602,7 +1577,6 @@ Sumber: konstanta `app\Models\*.php`.
 | ref_asal_tanah_kas | ref_asal_tanah_kas | lookup |
 | ref_peruntukan_tanah_kas | ref_peruntukan_tanah_kas | lookup |
 | ref_dokumen | ref_dokumen | lookup |
-| ref_status_covid | ref_status_covid | lookup |
 | ref_persil_kelas / ref_persil_mutasi | ref_persil_kelas / ref_persil_mutasi | lookup |
 | tweb_penduduk_umur | ref_rentang_umur | lookup (dari,tos,status) |
 | ref_jabatan | ref_jabatan | lookup |
@@ -1712,7 +1686,7 @@ app\Enums\BidangBelanjaEnum.php                             app\Enums\StatusPend
 app\Enums\CacatEnum.php                                     app\Enums\StatusPengaduanEnum.php
 app\Enums\CaraKBEnum.php                                    app\Enums\StatusRekamEnum.php
 app\Enums\DerajatSuratEnum.php                              app\Enums\StatusRTMEnum.php
-app\Enums\DokumenEnum.php                                   app\Enums\StatusSuratKecamatanEnum.php
+app\Enums\DokumenEnum.php
 app\Enums\FirebaseEnum.php                                  app\Enums\SukuEnum.php
 app\Enums\GolonganDarahEnum.php                             app\Enums\SumberDanaEnum.php
 app\Enums\HamilEnum.php                                     app\Enums\TampilanArtikelEnum.php

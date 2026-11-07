@@ -63,13 +63,12 @@ Dua dunia kode hidup berdampingan:
 | 5 | Laporan kelompok rentan | **HTML cetak** / **`.xls` palsu** | Blade | `donjo-app/Controllers/Laporan_rentan.php`, `resources/views/admin/laporan/rentan/cetak.blade.php` |
 | 6 | Laporan statistik kependudukan per kategori | **HTML cetak** / **`.xls` palsu** | Blade | `donjo-app/Controllers/Statistik.php:157`, `resources/views/admin/statistik/cetak.blade.php` |
 | 7 | Laporan Inventaris & Kekayaan Desa (Permendagri 47) | **HTML cetak** | Blade | `donjo-app/Controllers/Laporan_inventaris.php`, `resources/views/admin/inventaris/laporan/cetak.blade.php` |
-| 8 | Laporan APBDes / Keuangan | **HTML/grafik**, sinkron ke OpenDK (upload **PDF** manual) | Blade + `App\Libraries\Keuangan` | `donjo-app/Controllers/Keuangan_laporan.php`, `Laporan_apbdes.php` |
+| 8 | Laporan APBDes / Keuangan | **HTML/grafik**, unggah **PDF** manual | Blade + `App\Libraries\Keuangan` | `donjo-app/Controllers/Keuangan_laporan.php`, `Laporan_apbdes.php` |
 | 9 | Buku Administrasi Desa (Bumindes) | **HTML cetak**, **1 laporan ber-PDF asli** | Blade; `buat_pdf()` | `donjo-app/Controllers/Bumindes_*.php`, `Bumindes_penduduk_rekapitulasi.php:155` |
 | 10 | Kartu Keluarga (KK) / Biodata Penduduk | **HTML cetak** | Blade | `resources/views/admin/penduduk/keluarga/cetak_kk.blade.php` |
 | 11 | Ekspor Penduduk massal | **`.xlsx` asli** | OpenSpout | `donjo-app/Controllers/Penduduk.php:1446` (`ekspor()`) |
 | 12 | Ekspor Stunting (Ibu Hamil / Anak / PAUD) | **`.xlsx` asli** | OpenSpout | `donjo-app/Controllers/Stunting.php:615/817/1022` |
 | 13 | Ekspor Suplemen / Program Bantuan | **`.xlsx` asli** | OpenSpout | `Suplemen.php:610`, `Program_bantuan.php:293` |
-| 14 | Ekspor OpenDK (Penduduk, Program Bantuan, Pembangunan) | **`.xlsx`/`.zip`** | FastExcel | `app/Exports/*.php` |
 | 15 | Ekspor dokumen / arsip | **CSV** | helper `tulis_csv`/`get_csv` | `donjo-app/helpers/database_helper.php`, `Dokumen.php:289` |
 | 16 | Dokumentasi Pembangunan | **Word `.doc`** | HTML + header Word | `Pembangunan_dokumentasi.php:205` |
 | 17 | Template ekspor RTF (KK, F-1.09) | **RTF** | Template statis | `storage/app/template/ekspor/kk.rtf`, `kk-f1.09.rtf` |
@@ -137,7 +136,7 @@ Dua dunia kode hidup berdampingan:
 | Library | `App\Libraries\Keuangan` (`lap_rp_apbd()`, `grafik_keuangan_tema()`) |
 | View | `resources/views/admin/keuangan/laporan/{realisasi,grafik_rp_apbd}.blade.php` |
 | Parameter | `tahun`, `jenis` (`grafik-RP-APBD-manual`, `rincian_realisasi_bidang_manual`) |
-| Catatan | `Laporan_apbdes` justru untuk **unggah manual PDF** + sinkron ke OpenDK (bukan generate) |
+| Catatan | `Laporan_apbdes` untuk **unggah manual PDF** |
 
 ### 2.6 Buku Administrasi Desa (Bumindes)
 
@@ -170,11 +169,6 @@ Banyak controller `donjo-app/Controllers/Bumindes_*.php` dengan view
 | PAUD | `Stunting.php:1022` `eksporPaud()` | OpenSpout | `.xlsx` |
 | Suplemen | `Suplemen.php:610` | OpenSpout | `.xlsx` |
 | Program Bantuan | `Program_bantuan.php:293` | OpenSpout | `.xlsx` |
-| Penduduk → OpenDK | `app/Exports/PendudukOpendkExport.php` | FastExcel | `.xlsx` (36 kolom + kolom tambahan OpenDK: `id, foto, status_dasar, created_at, updated_at, desa_id`); juga `.zip` |
-| Program Bantuan → OpenDK | `app/Exports/ProgramBantuanOpendkExport.php` | FastExcel | `.xlsx` |
-| Peserta Bantuan → OpenDK | `app/Exports/PesertaBantuanOpendkExport.php` | FastExcel | `.xlsx` |
-| Pembangunan → OpenDK | `app/Exports/PembangunanOpendkExport.php` | FastExcel | `.xlsx` |
-| Dokumentasi Pembangunan → OpenDK | `app/Exports/DokumentasiPembangunanOpendkExport.php` | FastExcel | `.xlsx` |
 | Klasifikasi Surat | `app/Exports/KlasifikasiSuratExport.php` | FastExcel | `.xlsx` |
 
 ### 2.9 Laporan lain (pola `.xls` palsu) — daftar lokasi header
@@ -772,56 +766,6 @@ export function KopSurat(props: {
 - **TTD:** Kiri “KEPALA KELUARGA” (nama kepala KK); Kanan “&lt;sebutan kepala desa + nama desa&gt;”
   (nama kepala desa).
 
-### 7.5 PRIORITAS 5 — Ekspor Penduduk (.xlsx) untuk OpenDK
-
-- **Sumber:** `app/Exports/PendudukOpendkExport.php`
-- **Format:** `.xlsx` asli via FastExcel (bisa juga `.zip` bila dipaket).
-- **Kolom (36 + 6 tambahan):**
-
-| # | Header | Key |
-|---|---|---|
-| 1 | Alamat | alamat |
-| 2 | Dusun | dusun |
-| 3 | RW | rw |
-| 4 | RT | rt |
-| 5 | Nama | nama |
-| 6 | Nomor KK | nomor_kk |
-| 7 | Nomor NIK | nomor_nik |
-| 8 | Jenis Kelamin | jenis_kelamin |
-| 9 | Tempat Lahir | tempat_lahir |
-| 10 | Tanggal Lahir | tanggal_lahir |
-| 11 | Agama | agama |
-| 12 | Pendidikan (dlm KK) | pendidikan_dlm_kk |
-| 13 | Pendidikan (sdg ditempuh) | pendidikan_sdg_ditempuh |
-| 14 | Pekerjaan | pekerjaan |
-| 15 | Kawin | kawin |
-| 16 | Hub. Keluarga | hubungan_keluarga |
-| 17 | Kewarganegaraan | kewarganegaraan |
-| 18 | Nama Ayah | nama_ayah |
-| 19 | Nama Ibu | nama_ibu |
-| 20 | Gol. Darah | gol_darah |
-| 21 | Akta Lahir | akta_lahir |
-| 22 | Nomor Dokumen Paspor | nomor_dokumen_pasport |
-| 23 | Tanggal Akhir Paspor | tanggal_akhir_pasport |
-| 24 | Nomor Dokumen KITAS | nomor_dokumen_kitas |
-| 25 | NIK Ayah | nik_ayah |
-| 26 | NIK Ibu | nik_ibu |
-| 27 | Nomor Akta Perkawinan | nomor_akta_perkawinan |
-| 28 | Tanggal Perkawinan | tanggal_perkawinan |
-| 29 | Nomor Akta Perceraian | nomor_akta_perceraian |
-| 30 | Tanggal Perceraian | tanggal_perceraian |
-| 31 | Cacat | cacat |
-| 32 | Cara KB | cara_kb |
-| 33 | Hamil | hamil |
-| 34 | KTP-el | ktp_el |
-| 35 | Status Rekam | status_rekam |
-| 36 | Alamat Sekarang | alamat_sekarang |
-| 37 | id | id |
-| 38 | foto | foto |
-| 39 | status_dasar | status_dasar |
-| 40 | created_at | created_at |
-| 41 | updated_at | updated_at |
-| 42 | desa_id | desa_id |
 
 ---
 

@@ -26,12 +26,6 @@ export const PLUGIN_MANIFEST: readonly PluginManifest[] = [
     deskripsi: "Kirim email transaksional melalui Resend.",
     envKeys: ["RESEND_API_KEY", "RESEND_FROM"],
   },
-  {
-    slug: "sms-gateway",
-    nama: "SMS Gateway",
-    deskripsi: "Kirim notifikasi SMS melalui penyedia SMS.",
-    envKeys: ["SMS_API_URL", "SMS_TOKEN"],
-  },
 ] as const;
 
 export const PLUGIN_SLUGS = PLUGIN_MANIFEST.map((plugin) => plugin.slug);
