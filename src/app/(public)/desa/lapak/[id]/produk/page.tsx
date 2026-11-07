@@ -75,9 +75,11 @@ export default async function ProdukLapakPage({
             <Card key={item.id} className="flex flex-col">
               <CardContent className="flex flex-1 flex-col p-4">
                 {item.gambar && (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={item.gambar}
                     alt={item.nama}
+                    loading="lazy"
                     className="mb-3 h-40 w-full rounded object-cover"
                   />
                 )}

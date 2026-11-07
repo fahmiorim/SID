@@ -11,7 +11,7 @@ import {
   removeFromCartAction,
   updateCartQuantityAction,
 } from "@/features/lapak/presentation/keranjang-actions";
-import { createIdleActionState } from "@/lib/action-state";
+import { createIdleActionState, type ActionState } from "@/lib/action-state";
 
 interface KeranjangClientProps {
   items: KeranjangItemDTO[];
@@ -33,8 +33,15 @@ export default function KeranjangClient({ items }: KeranjangClientProps) {
   );
 }
 
+function statusMessage(state: ActionState<unknown>): string | undefined {
+  if (state.status !== "idle" && "message" in state) {
+    return state.message as string;
+  }
+  return undefined;
+}
+
 function KeranjangItem({ item }: { item: KeranjangItemDTO }) {
-  const [state, formAction, isPending] = useActionState(
+  const [state, updateAction, isPending] = useActionState(
     updateCartQuantityAction,
     createIdleActionState(),
   );
@@ -42,45 +49,22 @@ function KeranjangItem({ item }: { item: KeranjangItemDTO }) {
   const [deleteState, deleteAction] = useActionState(removeFromCartAction, createIdleActionState());
 
   useEffect(() => {
-    if (state.status === "success") {
-      toast.success("Jumlah berhasil diperbarui.");
-    } else if (state.status === "error") {
-      toast.error(state.message);
+    const message = statusMessage(state);
+    if (state.status === "success" && message) {
+      toast.success(message);
+    } else if (state.status === "error" && message) {
+      toast.error(message);
     }
-  }, [state.status]);
+  }, [state]);
 
   useEffect(() => {
-    if (deleteState.status === "success") {
-      toast.success("Produk berhasil dihapus.");
-    } else if (deleteState.status === "error") {
-      toast.error(deleteState.message);
+    const message = statusMessage(deleteState);
+    if (deleteState.status === "success" && message) {
+      toast.success(message);
+    } else if (deleteState.status === "error" && message) {
+      toast.error(message);
     }
-  }, [deleteState.status]);
-
-  const handleKurang = () => {
-    const fd = new FormData();
-    fd.set("id", String(item.id));
-    if (item.jumlah <= 1) {
-      deleteAction(fd);
-      return;
-    }
-    fd.set("jumlah", String(item.jumlah - 1));
-    formAction(fd);
-  };
-
-  const handleTambah = () => {
-    const fd = new FormData();
-    fd.set("id", String(item.id));
-    fd.set("jumlah", String(item.jumlah + 1));
-    formAction(fd);
-  };
-
-  const handleHapus = (e: React.FormEvent) => {
-    e.preventDefault();
-    const fd = new FormData();
-    fd.set("id", String(item.id));
-    deleteAction(fd);
-  };
+  }, [deleteState]);
 
   return (
     <Card key={item.id}>
@@ -93,7 +77,13 @@ function KeranjangItem({ item }: { item: KeranjangItemDTO }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <form onSubmit={handleKurang} className="flex items-center gap-1">
+          <form action={updateAction} className="flex items-center gap-1">
+            <input type="hidden" name="id" value={String(item.id)} />
+            {item.jumlah <= 1 ? (
+              <input type="hidden" name="jumlah" value="0" />
+            ) : (
+              <input type="hidden" name="jumlah" value={String(item.jumlah - 1)} />
+            )}
             <Button
               type="submit"
               variant="outline"
@@ -105,7 +95,9 @@ function KeranjangItem({ item }: { item: KeranjangItemDTO }) {
             </Button>
           </form>
           <span className="w-8 text-center font-medium">{item.jumlah}</span>
-          <form onSubmit={handleTambah} className="flex items-center gap-1">
+          <form action={updateAction} className="flex items-center gap-1">
+            <input type="hidden" name="id" value={String(item.id)} />
+            <input type="hidden" name="jumlah" value={String(item.jumlah + 1)} />
             <Button
               type="submit"
               variant="outline"
@@ -122,7 +114,8 @@ function KeranjangItem({ item }: { item: KeranjangItemDTO }) {
           Rp {(Number(item.produkHarga) * item.jumlah).toLocaleString("id-ID")}
         </p>
 
-        <form onSubmit={handleHapus}>
+        <form action={deleteAction}>
+          <input type="hidden" name="id" value={String(item.id)} />
           <Button
             type="submit"
             variant="ghost"
