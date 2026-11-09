@@ -68,6 +68,11 @@ test(
 
       await screen.getByLabel("Cari kelompok").fill(nama);
       await screen.getByRole("button", { name: "Cari" }).tap();
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+
+      // Server Action di atas memicu refresh daftar; buka ulang agar menu aksi
+      // tidak tertutup oleh refresh yang masih berjalan.
+      await app.open(`/kelompok?tipe=kelompok&q=${encodeURIComponent(nama)}`);
       await screen
         .getByRole("row")
         .filter({ hasText: nama })

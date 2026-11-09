@@ -7,6 +7,21 @@ import { buatRtmDenganKepalaUji, hapusRtmUji } from "./support/database";
 
 const KATALOG = "OS-POP-006";
 
+/** Chrome di Windows kadang masih memegang handle berkas unggahan saat cleanup. */
+async function hapusBerkasSementara(berkas: string): Promise<void> {
+  for (let percobaan = 0; percobaan < 20; percobaan++) {
+    try {
+      await rm(berkas, { force: true });
+      return;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "EBUSY") throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+
+  await rm(berkas, { force: true }).catch(() => undefined);
+}
+
 /**
  * Katalog: OS-POP-006 — Impor DTKS dari CSV.
  *
@@ -99,7 +114,7 @@ test(
         timeout: 15_000,
       });
     } finally {
-      await rm(berkas, { force: true });
+      await hapusBerkasSementara(berkas);
       if (rtmId !== null) await hapusRtmUji(rtmId);
     }
   },

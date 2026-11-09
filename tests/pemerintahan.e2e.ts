@@ -32,6 +32,10 @@ test(
       const baris = screen.getByRole("row").filter({ hasText: nama });
       await expect(baris).toBeVisible();
 
+      // Server Action memicu refresh daftar; buka ulang agar menu aksi tidak
+      // tertutup oleh refresh yang masih berjalan.
+      await app.open(`/kelompok?tipe=lembaga&q=${encodeURIComponent(nama)}`);
+
       // --- Anggota ---------------------------------------------------------
       await baris.getByRole("button", { name: `Aksi untuk ${nama}` }).tap();
       await screen.getByRole("menuitem", { name: "Anggota" }).tap();
@@ -44,6 +48,7 @@ test(
       await screen.getByLabel("Keterangan").fill("Keterangan lembaga uji");
       await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
       await expect(screen.getByText("Kelompok diperbarui.")).toBeVisible();
+      await app.open(`/kelompok?tipe=lembaga&q=${encodeURIComponent(nama)}`);
 
       // --- Hapus -----------------------------------------------------------
       await screen

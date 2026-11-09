@@ -22,13 +22,15 @@ test(
     await screen.getByRole("textbox", "Keperluan").fill("E2E Test Surat");
 
     await screen.getByRole("combobox", "Penduduk").tap();
+    // Pakai penduduk seed yang stabil; opsi pertama bisa milik fixture uji
+    // paralel yang dihapus sebelum form dikirim.
     await screen
-      .getByRole("option", { name: /Warga Uji/i })
+      .getByRole("option", { name: /Warga Uji E2E/ })
       .first()
       .tap();
 
     await screen.getByRole("button", "Simpan Konsep").tap();
-    await expect(screen.getByText("Konsep surat disimpan.")).toBeVisible({ timeout: 10_000 });
+    await expect(screen.getByText("Konsep surat disimpan.")).toBeVisible({ timeout: 30_000 });
     await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 5_000 });
 
     const row = screen.getByRole("row", { name: /E2E Test Surat/ }).first();

@@ -36,6 +36,9 @@ test(
       const baris = screen.getByRole("row").filter({ hasText: nomor });
       await expect(baris).toBeVisible();
 
+      // Server Action di atas memicu refresh daftar; buka ulang agar menu aksi
+      // tidak tertutup oleh refresh yang masih berjalan.
+      await app.open(`/keluarga?q=${nomor}`);
       await baris.getByRole("button", { name: /Aksi untuk/ }).tap();
       await expect(screen.getByRole("menuitem", { name: "Detail" })).toHaveAttribute(
         "href",
@@ -58,6 +61,7 @@ test(
       await screen.getByLabel("Alamat").fill(`${alamat} baru`);
       await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
       await expect(screen.getByText("Kartu Keluarga diperbarui.")).toBeVisible();
+      await app.open(`/keluarga?q=${nomor}`);
 
       await screen
         .getByRole("row")

@@ -2,7 +2,7 @@
 
 Tanggal audit: 9 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID yang tersimpan di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/). Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
-Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026; hasil dan perbaikannya dicatat di bagian [Pembaruan 9 November 2026](#pembaruan-9-november-2026--eksekusi-suite-e2e).
+Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026 dan 10 November 2026; hasil terbaru dicatat di bagian [Pembaruan 10 November 2026](#pembaruan-10-november-2026--suite-e2e-hijau-pada-build-produksi).
 
 ## Metode audit
 
@@ -71,6 +71,12 @@ Contoh smoke yang masih tersisa pada 9 November 2026 (berkas yang sudah ditulis 
 | `modul-tambahan` | 4 | 3 | CRUD anjungan/buku tamu belum dijalankan penuh |
 | `kesehatan` | 2 | 0 | Tidak menguji input data kesehatan |
 
+## Pembaruan 10 November 2026 — suite E2E hijau pada build produksi
+
+Suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start -- --port 3000`, bukan `next dev`): **56 berkas, 178 test, 178 lulus** dalam **146,68 detik** dengan 6 worker. Kegagalan yang semula berpindah-pindah pada dev server hilang setelah pindah ke server produksi. Uji yang memilih `option` penduduk pertama diganti penduduk seed `Warga Uji E2E` agar tidak bertabrakan dengan fixture paralel yang dibersihkan. Dialog pembatalan permohonan warga (`OS-WGA-004`) kini menutup setelah Server Action sukses, dan penantian simpan pada tema, inventaris, bantuan, RTM, serta pengaduan tidak lagi memotong request.
+
+Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 177 berkas/1.446 test lulus, `npm run check` lulus, dan `npm run build` lulus.
+
 ## Pembaruan 9 November 2026 — eksekusi suite E2E
 
 Suite dijalankan pada dev server lokal: **56 berkas, 194 test, 190 lulus** dalam 335 detik (run 23:02, sebelum batch keempat; setelah batch keempat total 189 test). Empat kegagalan: `kelompok-laporan` (assertion bergantung nama penduduk seed; sudah diperbaiki) dan `keluarga`, `rtm-dpt`, `permohonan-warga` yang hanya gagal saat suite paralel dan lulus ketika dijalankan sendiri. Setelah perbaikan assertion, `kelompok-laporan` lulus 4/4; suite penuh belum dijalankan ulang setelah perbaikan terakhir.
@@ -119,7 +125,7 @@ Bug produksi yang ditemukan dan diperbaiki:
 - Pendapat publik menampilkan pesan "Terjadi kesalahan pada server" saat sesi sudah pernah memilih: `ER_DUP_ENTRY` dibungkus Drizzle di `error.cause`, bukan `error.code`. Deteksi kini menelusuri rantai `cause` sehingga pesan duplikat yang ramah tampil.
 - Halaman SDGs admin mengabaikan `?tahun=` dan selalu memakai tahun terbaru, sehingga tautan dari halaman IDM tidak konsisten. `ringkasanIdmPublik` kini menerima tahun pilihan admin.
 
-Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. `npm run build` dan ulangan suite penuh belum dijalankan.
+Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. `npm run build` dan ulangan suite penuh kemudian dijalankan pada 10 November 2026 (178/178 lulus).
 
 Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
 

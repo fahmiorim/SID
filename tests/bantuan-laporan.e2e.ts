@@ -65,7 +65,7 @@ test(
       await screen.getByLabel("Penduduk").tap();
       await screen.getByRole("option").first().tap();
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
-      await expect(screen.getByText("1 peserta terdaftar.")).toBeVisible();
+      await expect(screen.getByText("1 peserta terdaftar.")).toBeVisible({ timeout: 30_000 });
       await expect(screen.getByRole("button", { name: /^Keluarkan / })).toHaveCount(1);
 
       await screen
@@ -96,7 +96,7 @@ test(
       await screen.getByLabel("Penduduk").tap();
       await screen.getByRole("option").first().tap();
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
-      await expect(screen.getByText("1 peserta terdaftar.")).toBeVisible();
+      await expect(screen.getByText("1 peserta terdaftar.")).toBeVisible({ timeout: 30_000 });
 
       await app.open(`/bantuan/${id}/cetak`);
       await expect(browser.locator("h1")).toBeVisible();

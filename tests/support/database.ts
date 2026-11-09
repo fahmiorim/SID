@@ -295,6 +295,17 @@ export async function ambilPengaduanTerbaruDariJudul(
   });
 }
 
+/** Status pengaduan uji berdasarkan judul (untuk menunggu commit E2E). */
+export async function ambilStatusPengaduanDariJudul(judul: string): Promise<string | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT status FROM pengaduan WHERE judul = ? ORDER BY id DESC LIMIT 1",
+      [judul],
+    );
+    return rows[0] ? String(rows[0].status) : null;
+  });
+}
+
 /** Hapus pengaduan uji berdasarkan judul. */
 export async function hapusPengaduanDariJudul(judul: string): Promise<void> {
   await denganPool(async (pool) => {

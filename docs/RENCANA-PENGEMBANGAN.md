@@ -20,13 +20,15 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 - Hitung ulang 9 November 2026: 56 berkas, 192 `test()`, **142** memuat aksi UI, 50 non-interaktif. Pola hitungnya berbeda dari AST audit awal (251 test/61 interaktif), jadi angka lama tidak dibandingkan langsung.
 - 8 ID berstatus ✅ historis punya E2E interaktif, 8 ID hanya smoke, 32 ID berstatus ✅ historis tanpa rujukan E2E.
 - 0 impor infrastruktur di `src/app/**` dan `src/features/*/presentation/**`; route publik desa, API publik, dan sitemap juga 0.
-- Tidak ada ID yang dinyatakan selesai penuh. Suite E2E sudah dijalankan 9 November 2026 (**190/194 lulus**); pengujian provider nyata, `npm run build`, dan pemeriksaan visual seluruh halaman belum dilakukan.
+- Tidak ada ID yang dinyatakan selesai penuh. Suite E2E dijalankan 10 November 2026 terhadap build produksi (**178/178 lulus**); `npm run build` lulus. Pengujian provider nyata dan pemeriksaan visual seluruh halaman belum dilakukan.
 - **Tampilan publik (9 November 2026):** menu header dikelompokkan dari 11 tautan datar menjadi 7 menu teratas dengan dropdown; header publik dirombak menjadi bilah kontak, identitas pemerintah desa, dan navigasi berwarna yang menempel; beranda memakai hero berita utama, akses cepat, kolom berita, dan sidebar data/agenda/kontak; footer menjadi empat kolom; menu mobile bertingkat; overflow horizontal pada lebar 1024 px dihilangkan; duplikasi bagian Kontak di beranda dihapus. Bukti: `src/features/publik/domain/menu.test.ts`, `src/themes/esensi/pages/home.tsx`, `src/themes/esensi/layout.tsx`, dan pemeriksaan render 1440/1024/390 px. Status `OS-WEB-001`/`OS-WEB-016` tetap **Sebagian** karena E2E perilaku belum ada.
 - **Anjungan (9 November 2026):** UUID kosong tidak lagi ditolak; schema menormalisasi string kosong menjadi `null` dan use case mengisi `randomUUID()`. Halaman publik memakai `daftarAnjunganPublik`, bukan repository langsung. Test domain/use case 7 lulus. Daftar publik hanya menampilkan `status = aktif`; browser kiosk membuat UUID sendiri di `localStorage`, mencerminkannya ke cookie `anjungan_uuid`, dan halaman menampilkan nama perangkat terdaftar. Orientasi layar memilih tata letak (potret lebih sempit). Permohonan surat tanpa akun selesai: halaman `permohonan` digerbangi perangkat + `permohonanSuratTanpaAkun`, login NIK + tanggal lahir, sesi guest token HMAC (cookie HttpOnly 30 menit), keyboard virtual, dan pengajuan berbagi `simpanPermohonanSurat` dengan warga; unit test anjungan 31 lulus. Status `OS-MOD-001` tetap **Sebagian** sampai E2E CRUD/tenant dan E2E kiosk berjalan.
 
 ### E2E perilaku (9 November 2026)
 
-Suite penuh: 56 berkas, 194 test, 190 lulus, 335 detik (run sebelum batch keempat; setelah batch keempat total 189 test). Empat kegagalan: satu assertion rapuh di `kelompok-laporan` (nama penduduk seed, sudah diganti bukti struktural) dan tiga kegagalan yang hanya muncul saat paralel (`keluarga`, `rtm-dpt`, `permohonan-warga`, semuanya lulus saat dijalankan sendiri). Setelah perbaikan, `kelompok-laporan` lulus 4/4.
+**Pembaruan 10 November 2026:** suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start`, bukan `next dev`) dengan 6 worker: **56 berkas, 178 test, 178 lulus dalam 146,68 detik**. Kegagalan yang berpindah-pindah pada dev server hilang setelah pindah ke server produksi. Uji yang memilih penduduk `option` pertama diganti penduduk seed `Warga Uji E2E` agar tidak bertabrakan dengan fixture paralel. Dialog pembatalan permohonan warga (`OS-WGA-004`) menutup setelah Server Action sukses; penantian simpan tema/inventaris/bantuan/RTM/pengaduan diperbaiki agar tidak memotong request.
+
+Suite penuh 9 November 2026 (historis): 56 berkas, 194 test, 190 lulus, 335 detik (run sebelum batch keempat; setelah batch keempat total 189 test). Empat kegagalan: satu assertion rapuh di `kelompok-laporan` (nama penduduk seed, sudah diganti bukti struktural) dan tiga kegagalan yang hanya muncul saat paralel (`keluarga`, `rtm-dpt`, `permohonan-warga`, semuanya lulus saat dijalankan sendiri). Setelah perbaikan, `kelompok-laporan` lulus 4/4.
 
 Berkas yang ditulis ulang/diperbaiki: `penduduk` (8 test/32 aksi), `keluarga` (1/19), `rtm-dpt` (2/20), `keuangan` (5/18), `pemerintahan` (3/19), `kelompok-laporan` (3/22), `wilayah-pemerintahan` (3/14), `pembangunan-buku` (1/17), `pemilihan` (2/3), `bantuan-laporan` (3/25), `statistik-bantuan` (3/5), `ekspor-statistik` (6/0), `analisis-survei` (7/34), `survei-publik` (2/1), `gis-pertanahan` (7/30), `web-publik` (15/4), `web-berita-galeri` (3/16), `umpan-balik` (2/8), `verifikasi-berjenjang` (8/77), `pengaduan` (1/15), `inventaris-bumindes` (2/10), `tema` (1/6), `plugin` (1/2), `warga-mandiri` (1/24), `dtks-impor` (1/8), `keuangan-lanjutan` (2/21), `bantuan-warga` (1/1), `pendapat` (2/7), `idm` (3/16). Data uji dibersihkan lewat helper di `tests/support/database.ts` pada blok `finally`.
 
@@ -96,9 +98,10 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 
 ## Verifikasi dokumen ini
 
-- `prettier --check tests src`: lulus (9 November 2026).
+- `prettier --check .`: lulus (10 November 2026).
 - `npm run lint`: 0 error, 2 warning `no-console` di `tests/umpan-balik.e2e.ts`.
-- `npm run check` (typegen + tsc + ESLint): lulus.
-- Suite E2E penuh: 56 berkas / 194 test, **190 lulus** dalam 335 detik. Empat kegagalan dirinci di `STATUS-MODUL.md`; setelah perbaikan terakhir, berkas terkait lulus sendiri (`verifikasi-berjenjang` 7/7, `pemilihan` 2/2, `umpan-balik` 2/2, `kelompok-laporan` 3/3).
-- `npm run build` dan ulangan suite penuh setelah perbaikan terakhir **belum** dijalankan. Angka unit test tidak diukur ulang pada pembaruan ini.
+- `npm run test`: 177 berkas / 1.446 test lulus.
+- `npm run check` (typegen + tsc + ESLint + format + unit): lulus.
+- Suite E2E penuh: 56 berkas / 178 test, **178 lulus** dalam 146,68 detik terhadap build produksi (`npm run build` + `npm start`).
+- `npm run build`: lulus.
 

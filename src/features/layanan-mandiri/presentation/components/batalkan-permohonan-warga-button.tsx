@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createIdleActionState } from "@/lib/action-state";
+import { createIdleActionState, type ActionState } from "@/lib/action-state";
 
 import { batalkanPermohonanWargaAction } from "../warga-actions";
 
@@ -25,16 +25,21 @@ export function BatalkanPermohonanWargaButton({ permohonanId }: { permohonanId: 
   const [open, setOpen] = useState(false);
   const [alasan, setAlasan] = useState("");
   const [state, formAction, isPending] = useActionState(
-    batalkanPermohonanWargaAction,
+    async (previousState: ActionState<null>, formData: FormData) => {
+      const result = await batalkanPermohonanWargaAction(previousState, formData);
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        setOpen(false);
+        setAlasan("");
+      } else if (result.status === "error") {
+        toast.error(result.message);
+      }
+
+      return result;
+    },
     createIdleActionState<null>(),
   );
-
-  if (state.status === "success") {
-    toast.success(state.message);
-  }
-  if (state.status === "error") {
-    toast.error(state.message);
-  }
 
   return (
     <>

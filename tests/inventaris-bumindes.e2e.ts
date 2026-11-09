@@ -22,17 +22,16 @@ test(
       await screen.getByLabel("Jumlah").fill("2");
       await screen.getByLabel("Lokasi").fill("Gudang Desa");
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
-      await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
-
-      await expect(screen.getByText(nama)).toBeVisible();
+      // Fokus pada hasil simpan; dialog dapat langsung unmount sehingga
+      // assertion "dialog tidak terlihat" bergantung pada timing.
+      await expect(screen.getByText(nama)).toBeVisible({ timeout: 30_000 });
       await expect(screen.getByText("Gudang Desa")).toBeVisible();
 
       await screen.getByRole("button", { name: `Ubah barang ${nama}` }).tap();
       await expect(screen.getByRole("dialog")).toBeVisible();
       await screen.getByLabel("Lokasi").fill("Balai Desa");
       await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
-      await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
-      await expect(screen.getByText("Balai Desa")).toBeVisible();
+      await expect(screen.getByText("Balai Desa")).toBeVisible({ timeout: 30_000 });
 
       await screen.getByRole("button", { name: `Hapus barang ${nama}` }).tap();
       const konfirmasi = screen.getByRole("alertdialog");

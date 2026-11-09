@@ -502,15 +502,15 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   otorisasi, isolasi tenant, media, dan siklus akun warga.
 - Cakupan E2E: alur publik, admin, warga, pengajuan surat, verifikasi
   berjenjang, cetak/PDF, unggah/unduh, isolasi kepemilikan berkas,
-  impor/ekspor, serta error/permission utama. Suite penuh **48 berkas /
-  223 test lulus** pada 9 November 2026 terhadap build produksi
+  impor/ekspor, serta error/permission utama. Suite penuh **56 berkas /
+  178 test lulus** pada 10 November 2026 terhadap build produksi
   (`npm run build` + `npm start`), bukan `next dev`.
 - Test integrasi DB boleh skip hanya saat lingkungan lokal memang tidak memiliki
   MySQL; CI wajib menyediakan MariaDB dan tidak boleh menganggap skip sebagai
   bukti selesai.
 - Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
   fixture, dan command harus ada di repository serta dapat dijalankan CI.
-- Pola runner `tests/**/*.e2e.ts` di `e2e.config.ts` mencakup **48 berkas**.
+- Pola runner `tests/**/*.e2e.ts` di `e2e.config.ts` mencakup **56 berkas**.
   Fixture akun (admin, warga, operator, sekdes, kades) dibuat idempoten oleh
   `npm run e2e:seed`; login memakai captcha-aware `tests/support/login.ts`.
   `assertionTimeout` diset 15 detik karena login warga (scrypt) dapat melewati

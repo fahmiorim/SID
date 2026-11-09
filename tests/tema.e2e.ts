@@ -26,6 +26,9 @@ test(
       await screen.getByLabel("Teks berjalan").fill(teks);
       await screen.getByLabel("Facebook").fill(facebook);
       await screen.getByRole("button", { name: "Simpan pengaturan tema" }).tap();
+      // Tunggu Server Action selesai sebelum navigasi; suite paralel dapat
+      // memperlambat respons dan navigasi terlalu cepat membatalkan simpan.
+      await expect(screen.getByText("Pengaturan tema disimpan.")).toBeVisible({ timeout: 30_000 });
 
       await app.open("/konten/tema");
       await expect(screen.getByLabel("Teks berjalan")).toHaveValue(teks);
@@ -43,6 +46,9 @@ test(
       await screen.getByLabel("Teks berjalan").fill(asli.teks);
       await screen.getByLabel("Facebook").fill(asli.facebook);
       await screen.getByRole("button", { name: "Simpan pengaturan tema" }).tap();
+      // Pastikan nilai awal benar-benar dipulihkan agar ulangan suite tidak
+      // mewarisi teks uji dari percobaan sebelumnya.
+      await expect(screen.getByText("Pengaturan tema disimpan.")).toBeVisible({ timeout: 30_000 });
     }
   },
 );

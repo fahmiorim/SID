@@ -1,7 +1,11 @@
 import { test } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
-import { ambilPengaduanTerbaruDariJudul, hapusPengaduanDariJudul } from "./support/database";
+import {
+  ambilPengaduanTerbaruDariJudul,
+  ambilStatusPengaduanDariJudul,
+  hapusPengaduanDariJudul,
+} from "./support/database";
 import { masukDenganKredensial } from "./support/login";
 
 const KATALOG = "OS-WEB-009";
@@ -60,19 +64,23 @@ test(
         .tap();
       await screen.getByRole("menuitem", { name: /Detail/ }).tap();
       await expect(screen.getByRole("dialog")).toBeVisible();
-      // Kontrol status memakai Radix Select; isi <select> tersembunyinya agar
-      // form action menerima nilai tanpa bergantung pada portal dropdown.
-      const diisi = await browser.evaluate(() => {
-        const select = document.querySelector<HTMLSelectElement>(
-          '[role="dialog"] select[name="status"]',
-        );
-        if (!select) return false;
-        select.value = "diproses";
-        return true;
-      });
-      expect(diisi).toBe(true);
+      // Radix Select menyimpan nilainya di state React; pilih lewat UI agar
+      // form action menerima status yang benar.
+      await screen.getByRole("dialog").getByRole("combobox").tap();
+      await screen.getByRole("option", { name: "Diproses" }).tap();
+      await expect(screen.getByRole("dialog").getByRole("combobox")).toContainText("Diproses");
       await screen.getByLabel("Tanggapan").fill(tanggapan);
       await screen.getByRole("button", { name: "Simpan tanggapan" }).tap();
+
+      // Tunggu Server Action benar-benar commit sebelum pindah halaman; tabel
+      // di belakang dialog yang masih terbuka belum tentu ikut ter-refresh.
+      let statusDb: string | null = null;
+      for (let percobaan = 0; percobaan < 30; percobaan++) {
+        statusDb = await ambilStatusPengaduanDariJudul(judul);
+        if (statusDb === "diproses") break;
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+      expect(statusDb).toBe("diproses");
 
       // 4. Status dan tanggapan bertahan di tabel admin.
       await app.open(`/pengaduan?q=${encodeURIComponent(nomorTiket)}`);

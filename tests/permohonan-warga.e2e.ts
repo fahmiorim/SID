@@ -389,16 +389,14 @@ test(
       await screen.getByLabel("Alasan pembatalan").fill(`Alasan pembatalan otomatis ${Date.now()}`);
       await expect(tombolSubmit).toBeEnabled();
 
-      // Konfirmasi pembatalan
+      // Konfirmasi pembatalan dan tunggu Server Action selesai sebelum pindah
+      // halaman, agar permintaan tidak terpotong oleh navigasi berikutnya.
       await tombolSubmit.tap();
-      // Halaman kembali ke /layanan-mandiri/surat; status Dibatalkan muncul di kartu.
-      await expect(screen.getByText(/Dibatalkan/i)).toBeVisible({ timeout: 10_000 });
-
-      // Tutup dialog jika masih terbuka
-      const tombolDialogClose = screen.getByRole("button", { name: /tutup|batal/i });
-      if (await tombolDialogClose.isVisible().catch(() => false)) {
-        await tombolDialogClose.tap();
-      }
+      // Dialog hanya ditutup oleh komponen setelah Server Action sukses.
+      await expect(screen.getByRole("alertdialog")).not.toBeVisible({ timeout: 15_000 });
+      await expect(screen.getByText("Dibatalkan", { exact: true })).toBeVisible({
+        timeout: 10_000,
+      });
 
       // Verifikasi operator: login operator, buka /permohonan-surat
       await app.clearState();
@@ -416,8 +414,13 @@ test(
         timeout: 10_000,
       });
 
-      // Cari baris permohonan warga yang sudah dibatalkan
-      const barisOperator = screen.getByRole("row").filter({ hasText: alur.warga.nik }).first();
+      // Cari baris unik: NIK pemohon + jenis surat fixture (tabel rekap juga
+      // memuat nama jenis, tetapi tanpa NIK).
+      const barisOperator = screen
+        .getByRole("row")
+        .filter({ hasText: alur.warga.nik })
+        .filter({ hasText: alur.namaJenis })
+        .first();
       await expect(barisOperator).toBeVisible({ timeout: 5_000 });
 
       // Status Dibatalkan muncul di kolom status

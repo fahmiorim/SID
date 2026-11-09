@@ -34,6 +34,10 @@ test(
       const baris = screen.getByRole("row").filter({ hasText: bdt });
       await expect(baris).toBeVisible();
 
+      // Server Action memicu refresh daftar; buka ulang agar menu aksi tidak
+      // tertutup oleh refresh yang masih berjalan.
+      await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);
+
       // --- Ubah ------------------------------------------------------------
       await baris.getByRole("button", { name: /Aksi untuk RTM/ }).tap();
       await screen.getByRole("menuitem", { name: "Ubah" }).tap();
@@ -54,11 +58,29 @@ test(
       await expect(screen.getByText(/Anggota RTM/)).toBeVisible();
 
       await screen.getByLabel("Penduduk").tap();
-      await screen.getByRole("option").first().tap();
+      // Penduduk seed stabil; opsi pertama dapat berasal dari fixture paralel
+      // yang dihapus saat uji lain selesai.
+      await screen
+        .getByRole("option", { name: /Warga Uji E2E/ })
+        .first()
+        .tap();
       await screen.getByRole("button", { name: "Tautkan" }).tap();
       await expect(screen.getByText("Anggota rumah tangga disimpan.")).toBeVisible();
 
-      await screen.getByRole("button", { name: /^Keluarkan / }).tap();
+      // Buka ulang dialog dari data server agar daftar anggota yang baru
+      // tersimpan langsung tampil sebelum dikeluarkan.
+      await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);
+      await screen
+        .getByRole("row")
+        .filter({ hasText: bdt })
+        .getByRole("button", { name: /Aksi untuk RTM/ })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Anggota" }).tap();
+      await expect(screen.getByText(/Anggota RTM/)).toBeVisible();
+
+      const tombolKeluarkan = screen.getByRole("button", { name: /^Keluarkan / });
+      await expect(tombolKeluarkan).toBeVisible({ timeout: 30_000 });
+      await tombolKeluarkan.tap();
       await expect(screen.getByText("Anggota dikeluarkan dari rumah tangga.")).toBeVisible();
       await screen.getByRole("button", { name: "Close" }).first().tap();
 

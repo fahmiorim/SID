@@ -26,6 +26,10 @@ const appCommand = process.env.APP_URL
 
 export default {
   tests: "tests/**/*.e2e.ts",
+  // 16 worker default membuat 56 berkas UI berebut satu dev server dan database,
+  // sehingga Server Action kadang melewati deadline assertion. Enam worker tetap
+  // paralel tetapi cukup stabil untuk suite penuh.
+  workers: 6,
   // Login warga memakai scrypt (better-auth) di server. Saat seluruh suite
   // berjalan paralel, satu proses masuk dapat melewati 5 detik bawaan e2e
   // sehingga assertion URL gagal padahal kredensial valid. Beri ruang lebih
