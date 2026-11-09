@@ -64,7 +64,7 @@ Urutan berdasarkan risiko dan jumlah ID yang bergantung pada berkas tersebut.
 
 | # | Berkas E2E | Kondisi sekarang | ID yang terdampak | Skenario minimum |
 |---|---|---|---|---|
-| 1 | `tests/penduduk.e2e.ts` | **Selesai 10 November 2026:** 8 test (CRUD, detail/cetak, filter, CSV, DPT aktif/filter/ekspor/rekap, suplemen, DTKS) | `OS-POP-001`, `OS-POP-002`, `OS-POP-005` | Tambah → cari/filter → detail → ubah → ekspor/cetak |
+| 1 | `tests/penduduk.e2e.ts` | **Selesai 10 November 2026:** 9 test (CRUD, detail/cetak, filter, CSV, DPT aktif/filter/ekspor/rekap, suplemen, DTKS, aksesibilitas shell/tabel) | `OS-POP-001`, `OS-POP-002`, `OS-POP-005` | Tambah → cari/filter → detail → ubah → ekspor/cetak |
 | 2 | `tests/rtm-dpt.e2e.ts` | **RTM selesai 9 November 2026:** 2 test/22 aksi; alur DPT ditutup di `penduduk` | `OS-POP-004`, `OS-POP-005`, `OS-POP-007` | CRUD RTM, anggota, DPT, rekap, tolak duplikat |
 | 3 | `tests/keuangan.e2e.ts` | **Selesai 9 November 2026:** 5 test/18 aksi (APBDes, laporan + filter bidang, triwulan, SiLPA, rekonsiliasi) | `OS-FIN-001`–`OS-FIN-003` | Input pagu/realisasi → laporan → ekspor; nilai tersimpan dicek dari UI/DB |
 | 4 | `tests/warga-mandiri.e2e.ts` | **Selesai 10 November 2026:** 1 test/24 aksi (login captcha, pesan, lapak, izin, verifikasi surat, registrasi mandiri) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` | Login, kirim pesan, verifikasi surat, CRUD lapak, ajukan izin |
