@@ -103,13 +103,18 @@ export async function hapusSdgs(villageId: number, tahun: number, goal: number) 
  * dan tahun mengikuti data terbaru yang tersedia agar situs tidak kosong pada
  * awal tahun anggaran.
  */
-export async function ringkasanIdmPublik(villageId: number) {
+export async function ringkasanIdmPublik(villageId: number, tahunDiminta?: number) {
   const [tahunIdm, tahunSdgs] = await Promise.all([
     listTahunIdm(villageId),
     listTahunSdgs(villageId),
   ]);
 
-  const tahun = Math.max(tahunIdm[0] ?? 0, tahunSdgs[0] ?? 0) || new Date().getFullYear();
+  // Admin yang membuka tahun tertentu (dari tautan IDM) harus melihat tahun itu,
+  // bukan selalu tahun terbaru. Tanpa pilihan tahun, publik memakai data terbaru.
+  const tahun =
+    ((tahunDiminta && tahunDiminta > 2000 ? tahunDiminta : undefined) ??
+      Math.max(tahunIdm[0] ?? 0, tahunSdgs[0] ?? 0)) ||
+    new Date().getFullYear();
   const [indikator, sdgs] = await Promise.all([
     listIdm(villageId, tahun),
     listSdgs(villageId, tahun),

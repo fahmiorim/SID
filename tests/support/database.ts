@@ -485,6 +485,127 @@ export async function hapusRtmUji(id: number): Promise<void> {
   });
 }
 
+/** Buat baris pendapat uji langsung di DB untuk alur moderasi admin. */
+export async function buatPendapatUji(pengguna: string, pilihan: number): Promise<number> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO pendapat (village_id, pengguna, pilihan, session_key) VALUES (?, ?, ?, ?)",
+      [
+        villageId,
+        pengguna,
+        pilihan,
+        `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      ],
+    );
+    return hasil.insertId;
+  });
+}
+
+/**
+ * Hapus pendapat anonim dari satu alamat IP.
+ *
+ * Kunci sesi jajak pendapat = hash(`anon:<ip>`), jadi submit pertama dari IP
+ * yang sama akan tertolak bila baris smoke lama masih tersisa. Fixture ini
+ * memakai IP loopback yang sama dengan browser E2E.
+ */
+export async function hapusPendapatAnonimDariIp(ip: string): Promise<void> {
+  const sessionKey = createHash("sha256").update(`anon:${ip}`).digest("hex").slice(0, 64);
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM pendapat WHERE resident_id IS NULL AND session_key = ?", [
+      sessionKey,
+    ]);
+  });
+}
+
+/** Hitung pendapat uji dari nama pengirim (membersihkan juga memakai nama ini). */
+export async function hitungPendapatDariPengguna(pengguna: string): Promise<number> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT COUNT(*) AS total FROM pendapat WHERE pengguna = ?",
+      [pengguna],
+    );
+    return Number(rows[0]?.total ?? 0);
+  });
+}
+
+/** Hapus pendapat uji berdasarkan nama pengirim. */
+export async function hapusPendapatDariPengguna(pengguna: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM pendapat WHERE pengguna = ?", [pengguna]);
+  });
+}
+
+/** Buat indikator IDM uji langsung di DB (fixture tampilan publik). */
+export async function buatIdmUji(input: {
+  tahun: number;
+  kode: string;
+  nama: string;
+  skor: number;
+}): Promise<number> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO idm_indikator (village_id, tahun, kode, nama, skor) VALUES (?, ?, ?, ?, ?)",
+      [villageId, input.tahun, input.kode, input.nama, input.skor],
+    );
+    return hasil.insertId;
+  });
+}
+
+/** Simpan capaian SDGs uji langsung di DB (fixture tampilan publik). */
+export async function buatSdgsUji(input: {
+  tahun: number;
+  goal: number;
+  skor: number;
+  keterangan: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    await pool.execute(
+      `INSERT INTO idm_sdgs (village_id, tahun, goal, skor, keterangan)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE skor = VALUES(skor), keterangan = VALUES(keterangan)`,
+      [villageId, input.tahun, input.goal, input.skor, input.keterangan],
+    );
+  });
+}
+
+/** Hapus seluruh indikator IDM serta capaian SDGs uji pada satu tahun. */
+export async function hapusIdmTahun(tahun: number): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    await pool.execute("DELETE FROM idm_indikator WHERE village_id = ? AND tahun = ?", [
+      villageId,
+      tahun,
+    ]);
+    await pool.execute("DELETE FROM idm_sdgs WHERE village_id = ? AND tahun = ?", [
+      villageId,
+      tahun,
+    ]);
+  });
+}
+
 /** Hapus dokumen laporan uji berdasarkan judul (fallback bila UI gagal). */
 export async function hapusLaporanDokumenDariJudul(judul: string): Promise<void> {
   await denganPool(async (pool) => {

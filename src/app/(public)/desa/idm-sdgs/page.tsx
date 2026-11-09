@@ -15,7 +15,11 @@ import { getCurrentUser } from "@/lib/dal";
 export const metadata = { title: "IDM & SDGs Desa" };
 export const dynamic = "force-dynamic";
 
-export default async function IdmSdgsPage() {
+export default async function IdmSdgsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tahun?: string }>;
+}) {
   // Detect admin session (if any). `getCurrentUser` returns null when
   // unauthenticated, so the public page stays safe without a session.
   const user = await getCurrentUser();
@@ -23,7 +27,10 @@ export default async function IdmSdgsPage() {
 
   const desa = await getIdentitasFromRequest();
   const villageId = isAdmin && user?.villageId ? user.villageId : desa.id;
-  const { tahun, indikator, sdgs } = await ringkasanIdmPublik(villageId);
+  const params = await searchParams;
+  const tahunParam = Number(params.tahun ?? "");
+  const tahunDiminta = Number.isInteger(tahunParam) && tahunParam > 2000 ? tahunParam : undefined;
+  const { tahun, indikator, sdgs } = await ringkasanIdmPublik(villageId, tahunDiminta);
   const rekap = hitungRekapIdm(indikator);
   const rekapSdgs = hitungRekapSdgs(sdgs);
 

@@ -28,13 +28,27 @@ function generateSessionKey(residentId: number | null, ipAddress: string): strin
   return createHash("sha256").update(key).digest("hex").slice(0, 64);
 }
 
+/**
+ * Kode error MySQL, termasuk yang dibungkus Drizzle.
+ *
+ * Drizzle melempar `DrizzleQueryError` dan menaruh error driver asli di
+ * `cause`, sehingga memeriksa `error.code` saja tidak pernah mendeteksi
+ * pelanggaran indeks unik.
+ */
+function kodeError(error: unknown): string | undefined {
+  let current: unknown = error;
+  for (let depth = 0; depth < 4 && current; depth++) {
+    if (typeof current !== "object") break;
+    const code = (current as { code?: unknown }).code;
+    if (typeof code === "string") return code;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return undefined;
+}
+
 /** Kesalahan MySQL untuk pelanggaran indeks unik. */
 function isDuplicate(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    (error as { code?: string }).code === "ER_DUP_ENTRY"
-  );
+  return kodeError(error) === "ER_DUP_ENTRY";
 }
 
 export async function submitPendapatPublikAction(

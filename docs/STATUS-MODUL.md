@@ -58,7 +58,8 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `web-berita-galeri` | 3 | 2 | 16 | `OS-WEB-002`, `OS-WEB-004` |
 | `web-dokumen` | 1 | 1 | 16 | `OS-WEB-005` |
 | `dokumen-publik` | 2 | 2 | 14 | `OS-GOV-010` |
-| `idm` | 4 | 2 | 13 | `OS-GOV-006` |
+| `idm` | 3 | 3 | 16 | `OS-GOV-006` |
+| `pendapat` | 2 | 2 | 7 | `OS-POP-014` |
 | `lapak-keranjang` | 1 | 1 | 13 | `OS-MOD-004` |
 | `arsip-nomor-surat` | 1 | 1 | 12 | `OS-SUR-006` |
 | `pelanggan-kerjasama` | 1 | 1 | 12 | `OS-MOD-005` |
@@ -104,6 +105,8 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `bantuan-warga` | 1 | 1 | Login warga, buka menu Bantuan dari beranda, program aktif/selesai tampil, program tanpa peserta tidak bocor | `OS-WGA-008` |
 | `dtks-impor` | 1 | 8 | Impor CSV menautkan nomor RTM, menyalin anggota, verifikasi status, dan impor ulang idempoten | `OS-POP-006` |
 | `warga-mandiri` | 1 | 24 | Login warga (captcha), pesan, lapak tambah/ubah/hapus + katalog publik, izin, verifikasi surat via token, dan registrasi mandiri yang disetujui admin (PIN tampil sekali) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
+| `pendapat` | 2 | 7 | Kirim publik tercatat, kiriman kedua ditolak, rekap + ekspor CSV, hapus admin | `OS-POP-014` |
+| `idm` | 3 | 16 | Indikator tiga dimensi + rekap, ekspor CSV, capaian SDGs isi/ubah/hapus, halaman publik tanpa sesi | `OS-GOV-006` |
 | `verifikasi-berjenjang` | 7 | 74 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
 
 Bug produksi yang ditemukan dan diperbaiki:
@@ -113,10 +116,12 @@ Bug produksi yang ditemukan dan diperbaiki:
 - `bidang-filter.tsx` baru; form SiLPA tidak lagi bersarang; agregasi `saveKeuanganNilai` menyimpan nilai dengan benar; filter `status=semua` pada pembangunan; perbaikan cetak tema (`print-button.tsx`, `themes/ui.tsx`).
 - Impor dokumen laporan tidak pernah mengirim aksi: FormData memakai nama `berkas[i]`/`judul[i]` sementara aksi membaca `berkas`/`judul-i`, dan aksi dipanggil di luar transition. Kini aksi server dipanggil dalam `useTransition` dengan nama field yang sama.
 - Pencarian DTKS (`/penduduk/dtks?search=...`) tidak lagi 500: filter nama/NIK memakai `EXISTS` sehingga query hitung tidak merujuk tabel yang tidak di-join dan baris tidak terduplikasi.
+- Pendapat publik menampilkan pesan "Terjadi kesalahan pada server" saat sesi sudah pernah memilih: `ER_DUP_ENTRY` dibungkus Drizzle di `error.cause`, bukan `error.code`. Deteksi kini menelusuri rantai `cause` sehingga pesan duplikat yang ramah tampil.
+- Halaman SDGs admin mengabaikan `?tahun=` dan selalu memakai tahun terbaru, sehingga tautan dari halaman IDM tidak konsisten. `ringkasanIdmPublik` kini menerima tahun pilihan admin.
 
 Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. `npm run build` dan ulangan suite penuh belum dijalankan.
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `pendapat`, `idm`, `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
 
 Gap domain yang dicatat tetapi belum diubah: `verifySuratData` tidak memanggil `validateVerification`, sehingga aturan own-submission di `src/features/surat/domain/verifikasi.ts` tidak ditegakkan oleh aksi verifikasi.
 
@@ -138,7 +143,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-POP-011 | Sebagian | E2E laporan resmi belum ada. | tidak dirujuk |
 | OS-POP-012 | Sebagian | E2E impor peserta. | tidak dirujuk |
 | OS-POP-013 | Sebagian | E2E ekspor PDF. | tidak dirujuk |
-| OS-POP-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-POP-014 | Struktur lengkap; ada E2E interaktif | — | `pendapat` 2 test/7 beraksi |
 | OS-POP-015 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-WIL-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-WIL-002 | Sebagian | E2E cetak peta. | tidak dirujuk |
@@ -153,7 +158,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-GOV-003 | Sebagian | E2E bagan SOTK/cetak belum ada | tidak dirujuk |
 | OS-GOV-004 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
 | OS-GOV-005 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
-| OS-GOV-006 | Sebagian | E2E ekspor laporan belum ada. | `idm` 4 test/2 interaktif |
+| OS-GOV-006 | Struktur lengkap; ada E2E interaktif | — | `idm` 3 test/16 beraksi |
 | OS-GOV-007 | Sebagian | E2E admin + publik ada; kandidat publik memakai data DB, bukan input UI | `pemilihan` 2 test/2 beraksi |
 | OS-GOV-008 | Struktur lengkap; ada E2E interaktif | — | `sinergi` 4 test/1 interaktif |
 | OS-GOV-009 | Struktur lengkap; ada E2E interaktif | — | `pembangunan-buku` 1 test/1 beraksi |
