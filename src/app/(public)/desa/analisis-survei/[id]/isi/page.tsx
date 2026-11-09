@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
-import { listSurveiPublik } from "@/features/publik/infrastructure/survey-repository";
+import { listSurveiPublik } from "@/features/publik/application/survei-publik";
 import { IsiSurveiForm } from "@/features/survey/presentation/components/isi-survei-form";
 import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 

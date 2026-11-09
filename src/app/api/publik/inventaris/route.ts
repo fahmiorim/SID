@@ -1,5 +1,5 @@
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
-import { listInventaris } from "@/features/inventaris/infrastructure/inventaris-repository";
+import { cariInventarisPublik } from "@/features/inventaris/application/inventaris-publik-use-cases";
 
 /**
  * GET /api/publik/inventaris
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const search = searchParams.get("search")?.trim() ?? "";
 
   return jalankanApiPublik(request, "inventaris", async (desa) => {
-    const { rows, total } = await listInventaris(desa.id, search);
+    const { rows, total } = await cariInventarisPublik(desa.id, search);
     return { items: rows, total };
   });
 }

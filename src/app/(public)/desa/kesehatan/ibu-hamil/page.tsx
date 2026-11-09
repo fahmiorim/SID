@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { listIbuHamil } from "@/features/kesehatan/infrastructure/kesehatan-repository";
+import { daftarIbuHamilPublik } from "@/features/kesehatan/application/kesehatan-publik-use-cases";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function IbuHamilPublikPage() {
   const { desa } = await siapkanTema();
-  const rows = await listIbuHamil(desa.id);
+  const rows = await daftarIbuHamilPublik(desa.id);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">

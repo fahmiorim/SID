@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { getDptPublik } from "@/features/penduduk/application/dpt-use-cases";
 import { DEFAULT_DPT_PER_PAGE } from "@/features/penduduk/domain/dpt";
-import { getActiveElection, listDpt } from "@/features/penduduk/infrastructure/dpt-repository";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +18,11 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
   const page = Math.max(1, Number(params.page ?? 1));
   const search = typeof params.search === "string" ? params.search.trim() : "";
 
-  const [election, result] = await Promise.all([
-    getActiveElection(desa.id),
-    listDpt(desa.id, { page, perPage: DEFAULT_DPT_PER_PAGE, search }),
-  ]);
+  const { election, result } = await getDptPublik(desa.id, {
+    page,
+    perPage: DEFAULT_DPT_PER_PAGE,
+    search,
+  });
 
   const pageHref = (target: number) => {
     const query = new URLSearchParams();

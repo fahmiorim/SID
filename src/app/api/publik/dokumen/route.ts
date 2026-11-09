@@ -1,6 +1,6 @@
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
+import { cariHalamanDokumenPublik } from "@/features/publik/application/dokumen-publik";
 import { parseDokumenKategoriFilter, parsePaginasiDokumen } from "@/features/publik/domain/dokumen";
-import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 
 /**
  * GET /api/publik/dokumen
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     request,
     "dokumen",
     (desa) =>
-      cariDokumenPublik(desa.id, {
+      cariHalamanDokumenPublik(desa.id, {
         search: "",
         category: kategori,
         page: paginasi.page,

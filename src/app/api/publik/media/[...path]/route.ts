@@ -1,6 +1,6 @@
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
+import { bacaBerkasMediaPublik } from "@/features/publik/application/media-publik";
 import { isKategoriMediaPublik } from "@/features/publik/domain/media";
-import { bacaMedia, jalurAbsolutMedia } from "@/features/publik/infrastructure/media-storage";
 import { isAppError } from "@/lib/errors";
 
 /**
@@ -66,9 +66,8 @@ export async function GET(
   }
 
   try {
-    // Pastikan jalur tidak keluar dari akar penyimpanan.
-    jalurAbsolutMedia(relatif);
-    const isi = await bacaMedia(relatif);
+    // Wrapper application memvalidasi jalur agar tidak keluar dari akar penyimpanan.
+    const isi = await bacaBerkasMediaPublik(relatif);
 
     return new Response(Buffer.from(isi), {
       headers: {

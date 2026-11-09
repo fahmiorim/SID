@@ -37,9 +37,9 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | Test E2E yang berinteraksi UI | 61 (24%) | Sisanya hanya memuat halaman, heading, body, atau HTTP |
 | Test E2E non-interaktif | 190 (76%) | Belum membuktikan aksi pengguna |
 | Aksi UI di E2E | 425 | Terpusat di sedikit berkas |
-| Impor infrastruktur langsung | 49 impor di 47 berkas | Dari `src/app/**` dan `src/features/*/presentation/**`; ditambah 4 impor langsung `@/db` pada 2 berkas |
+| Impor infrastruktur langsung | 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas | Sisa dari `src/app/**` dan `src/features/*/presentation/**`; route `(public)/desa`, `api/publik`, dan `sitemap.ts` sudah 0 dan dijaga `lapisan-publik.test.ts` |
 
-Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. `ARCHITECTURE.md` masih menyebut 38 baris impor langsung; pengukuran runtime saat ini menemukan 49 pada 47 berkas, sehingga angka dokumen arsitektur perlu diperbarui pada pekerjaan terpisah.
+Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Setelah pembersihan route publik, pengukuran ulang menemukan 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -202,32 +202,32 @@ Catatan tabel:
 
 ### 1. Batas lapisan masih bocor
 
-Terdapat **49 impor runtime** dari `src/app/**` atau `src/features/*/presentation/**` langsung ke `features/*/infrastructure` pada 47 berkas, ditambah 4 impor langsung ke `@/db` pada 2 berkas. Ini melewati use case, sehingga otorisasi dan tenant tidak selalu ditegakkan di satu tempat.
+Terdapat **31 impor infrastruktur + 2 impor `@/db`** dari `src/app/**` atau `src/features/*/presentation/**` pada 33 berkas. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan `src/app/sitemap.ts` sudah **0** dan dijaga `src/features/publik/application/lapisan-publik.test.ts`; sisa berada di admin/warga/API internal dan presentation. Ini melewati use case, sehingga otorisasi dan tenant tidak selalu ditegakkan di satu tempat.
 
 Sebaran terbesar:
 
 | Lokasi | Impor langsung |
 |---|---:|
-| `src/app/(public)/desa/**` | 12 |
-| `src/app/(admin)/kesehatan/**` | 5 |
-| `src/app/api/publik/**` | 4 |
+| `src/app/(public)/desa/**`, `src/app/api/publik/**`, `src/app/sitemap.ts` | **0** |
+| `src/app/(admin)/kesehatan/**` | 4 |
+| `src/app/(admin)/statistik/**` | 4 (2 `@/db`) |
 | `src/features/kesehatan/presentation/**` | 4 |
 | `src/app/(admin)/penduduk/**` | 3 |
-| `src/app/api/eksternal/**` | 2 |
-| `src/app/(warga)/layanan-mandiri/**` | 2 |
-| `src/app/(admin)/statistik/**` | 2 |
 | `src/app/(admin)/hubung-warga/**` | 2 |
+| `src/app/(warga)/layanan-mandiri/**` | 2 |
 | `src/features/penduduk/presentation/**` | 2 |
-| Sisanya (11 impor tersebar) | 11 |
+| `src/app/(admin)/keluarga`, `layout`, `pengaturan`, `permohonan-surat`, `persuratan` | 5 |
+| `src/app/api/eksternal`, `api/penduduk`, `api/pengaduan` | 4 |
+| `src/features/{kontak,pendapat,survey}/presentation` | 3 |
 
-Halaman `src/app/(public)/desa/anjungan/page.tsx` adalah salah satu contoh yang memanggil repository langsung. Pembatasan lapisan ini harus diselesaikan sebelum klaim otorisasi seragam dapat dibuat.
+Route publik desa, API publik, dan `sitemap.ts` sudah bersih; sisa pelanggaran berada di admin/warga/API internal dan presentation. Pembatasan lapisan ini harus diselesaikan sebelum klaim otorisasi seragam dapat dibuat.
 
 ### 2. Tenant dan otorisasi
 
 - Halaman admin yang diperiksa mengambil `villageId` dari sesi, bukan dari input klien.
 - Halaman publik yang diperiksa menyelesaikan desa dari host.
 - Use case pada modul yang diaudit memanggil `requirePermission`; halaman warga memakai `requireWarga`.
-- Namun 49 impor langsung di atas berarti tidak semua route melewati use case. Route tersebut **Belum diaudit** satu per satu untuk izin dan isolasi tenant, sehingga tidak boleh dianggap aman hanya karena halaman admin lain sudah benar.
+- Namun 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas sisa berarti tidak semua route melewati use case. Route tersebut **Belum diaudit** satu per satu untuk izin dan isolasi tenant, sehingga tidak boleh dianggap aman hanya karena halaman admin lain sudah benar.
 
 ### 3. Provider eksternal
 
@@ -259,7 +259,7 @@ Hanya 61 dari 251 test E2E yang menjalankan aksi UI. Sebaliknya, beberapa alur b
 1. **Eksekusi suite E2E**: tidak dijalankan dalam audit ini karena memerlukan build produksi, server, dan seed. Hasil E2E historis tidak diverifikasi ulang.
 2. **Pemeriksaan visual seluruh 202 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
 3. **Provider eksternal nyata**: tidak diuji tanpa kredensial.
-4. **Isolasi tenant pada 49 berkas dengan impor langsung**: belum diperiksa route per route.
+4. **Isolasi tenant pada 33 berkas sisa impor langsung**: belum diperiksa route per route; route publik desa/API publik/sitemap sudah 0.
 5. **Persentase paritas**: tidak dihitung; jumlah ID atau test bukan ukuran paritas.
 
 ## Kesimpulan

@@ -16,6 +16,11 @@ export interface DokumenPublikHasil {
   arsip: KelompokArsipDokumen[];
 }
 
+/** Satu halaman dokumen untuk API publik tanpa query arsip tambahan. */
+export async function cariHalamanDokumenPublik(villageId: number, filter: CariDokumenPublikFilter) {
+  return cariDokumenPublik(villageId, filter);
+}
+
 /** Daftar dokumen publik tersaring; villageId wajib berasal dari host pemanggil. */
 export async function daftarDokumenPublik(
   villageId: number,

@@ -1,7 +1,7 @@
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
+import { cariHalamanDokumenPublik } from "@/features/publik/application/dokumen-publik";
 import { daftarBerita, profilDesaPublik } from "@/features/publik/application/konten-publik";
 import { parsePaginasiDokumen } from "@/features/publik/domain/dokumen";
-import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 
 /**
  * GET /api/publik/informasi
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const [profil, berita, dokumen] = await Promise.all([
       profilDesaPublik(desa.id),
       daftarBerita(desa.id),
-      cariDokumenPublik(desa.id, {
+      cariHalamanDokumenPublik(desa.id, {
         search: "",
         category: "semua",
         page: paginasi.page,

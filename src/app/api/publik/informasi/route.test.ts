@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getTenantFromRequest } from "@/features/publik/api/middleware";
+import { cariHalamanDokumenPublik } from "@/features/publik/application/dokumen-publik";
 import { daftarBerita, profilDesaPublik } from "@/features/publik/application/konten-publik";
-import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
 import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 
 import { GET } from "./route";
@@ -17,8 +17,8 @@ vi.mock("@/features/publik/application/konten-publik", () => ({
   daftarBerita: vi.fn(),
   profilDesaPublik: vi.fn(),
 }));
-vi.mock("@/features/publik/infrastructure/content-repository", () => ({
-  cariDokumenPublik: vi.fn(),
+vi.mock("@/features/publik/application/dokumen-publik", () => ({
+  cariHalamanDokumenPublik: vi.fn(),
 }));
 vi.mock("@/features/rate-limit/application/rate-limit", () => ({
   batasiPermintaan: vi.fn(),
@@ -37,7 +37,7 @@ describe("GET /api/publik/informasi", () => {
     vi.mocked(getTenantFromRequest).mockResolvedValue({ id: 18 } as never);
     vi.mocked(daftarBerita).mockResolvedValue([]);
     vi.mocked(profilDesaPublik).mockResolvedValue(null);
-    vi.mocked(cariDokumenPublik).mockResolvedValue({
+    vi.mocked(cariHalamanDokumenPublik).mockResolvedValue({
       rows: [{ id: 4 }],
       total: 25,
       page: 1,
@@ -58,7 +58,7 @@ describe("GET /api/publik/informasi", () => {
         dokumenPagination: { page: 1, pageSize: 20, totalItems: 25, totalPages: 2 },
       },
     });
-    expect(cariDokumenPublik).toHaveBeenCalledWith(18, {
+    expect(cariHalamanDokumenPublik).toHaveBeenCalledWith(18, {
       search: "",
       category: "semua",
       page: 1,

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getTenantFromRequest } from "@/features/publik/api/middleware";
-import { cariDokumenPublik } from "@/features/publik/infrastructure/content-repository";
+import { cariHalamanDokumenPublik } from "@/features/publik/application/dokumen-publik";
 import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 
 import { GET } from "./route";
@@ -15,8 +15,8 @@ vi.mock("@/features/publik/api/middleware", () => ({
 vi.mock("@/features/audit/application/audit-use-cases", () => ({
   recordAuditEvent: vi.fn(),
 }));
-vi.mock("@/features/publik/infrastructure/content-repository", () => ({
-  cariDokumenPublik: vi.fn(),
+vi.mock("@/features/publik/application/dokumen-publik", () => ({
+  cariHalamanDokumenPublik: vi.fn(),
 }));
 
 function request(query = ""): Request {
@@ -33,7 +33,7 @@ describe("GET /api/publik/dokumen", () => {
   });
 
   it("returns a bounded page with pagination metadata and keeps data as an array", async () => {
-    vi.mocked(cariDokumenPublik).mockResolvedValueOnce({
+    vi.mocked(cariHalamanDokumenPublik).mockResolvedValueOnce({
       rows: [{ id: 3 }],
       total: 21,
       page: 2,
@@ -48,7 +48,7 @@ describe("GET /api/publik/dokumen", () => {
       data: [{ id: 3 }],
       pagination: { page: 2, pageSize: 10, totalItems: 21, totalPages: 3 },
     });
-    expect(cariDokumenPublik).toHaveBeenCalledWith(17, {
+    expect(cariHalamanDokumenPublik).toHaveBeenCalledWith(17, {
       search: "",
       category: "produk_hukum",
       page: 2,
@@ -60,6 +60,6 @@ describe("GET /api/publik/dokumen", () => {
     const response = await GET(request("?kategori=unknown&page=1&pageSize=101"));
 
     expect(response.status).toBe(400);
-    expect(cariDokumenPublik).not.toHaveBeenCalled();
+    expect(cariHalamanDokumenPublik).not.toHaveBeenCalled();
   });
 });

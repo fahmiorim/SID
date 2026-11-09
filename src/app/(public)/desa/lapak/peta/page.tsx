@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { listProdukDenganKoordinat } from "@/features/lapak/infrastructure/lapak-produk-repository";
+import { daftarProdukPetaPublik } from "@/features/lapak/application/lapak-publik";
 import PetaProdukMap from "@/features/lapak/presentation/components/peta-produk-map";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function PetaLapakPage() {
   const villageId = identitas?.id;
   if (!villageId) notFound();
 
-  const produkList = await listProdukDenganKoordinat(villageId);
+  const produkList = await daftarProdukPetaPublik(villageId);
 
   const namaDesa = identitas?.namaDesa ?? "Desa";
 

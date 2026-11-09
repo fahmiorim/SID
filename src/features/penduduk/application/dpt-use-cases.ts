@@ -141,6 +141,18 @@ export async function deleteElection(id: number): Promise<void> {
   await db.delete(elections).where(and(eq(elections.id, id), eq(elections.villageId, villageId)));
 }
 
+/** DPT publik: pemilihan aktif dan satu halaman daftar dari desa host. */
+export async function getDptPublik(
+  villageId: number,
+  params: ListDptParams,
+): Promise<{ election: ElectionDTO | null; result: ListDptResult }> {
+  const [election, result] = await Promise.all([
+    getActiveElection(villageId),
+    listDpt(villageId, params),
+  ]);
+  return { election, result };
+}
+
 /** Daftar DPT dengan filter + pagination. */
 export async function getDpt(params: ListDptParams): Promise<ListDptResult> {
   const user = await requirePermission(PENDUDUK_RESOURCE, "read");

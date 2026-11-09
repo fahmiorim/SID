@@ -4,8 +4,7 @@ import { notFound } from "next/navigation";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { listProdukPublik } from "@/features/lapak/infrastructure/lapak-produk-repository";
-import { findLapak } from "@/features/lapak/infrastructure/lapak-repository";
+import { daftarProdukLapakPublik, getLapakPublik } from "@/features/lapak/application/lapak-publik";
 import { TambahKeranjangButton } from "@/features/lapak/presentation/components/tambah-keranjang-button";
 
 // Audit prioritas 2 (halaman produk lapak):
@@ -117,7 +116,7 @@ export async function generateMetadata({
   if (!Number.isInteger(lapakId) || lapakId < 1) return { title: "Lapak UMKM" };
   const identitas = await getIdentitasFromRequest();
   if (!identitas?.id) return { title: "Lapak UMKM" };
-  const lapak = await findLapak(identitas.id, lapakId);
+  const lapak = await getLapakPublik(identitas.id, lapakId);
   if (!lapak) return { title: "Lapak UMKM" };
   const description =
     lapak.keterangan?.trim() ||
@@ -140,13 +139,13 @@ export default async function ProdukLapakPage({
   const villageId = identitas?.id;
   if (!villageId) notFound();
 
-  const lapak = await findLapak(villageId, lapakId);
+  const lapak = await getLapakPublik(villageId, lapakId);
   if (!lapak) notFound();
   const paramsSearch = await searchParams;
   const pageValue = Array.isArray(paramsSearch.page) ? paramsSearch.page[0] : paramsSearch.page;
   const requestedPage = Number(pageValue);
   const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
-  const productsPage = await listProdukPublik(villageId, lapakId, { page });
+  const productsPage = await daftarProdukLapakPublik(villageId, lapakId, { page });
   const { rows: products, total, page: currentPage, pageCount } = productsPage;
 
   return (

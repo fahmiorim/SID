@@ -31,6 +31,11 @@ export interface InventarisPublik {
  * lokasi, tahun, kata kunci) diterapkan sebelum rekap dihitung agar ringkasan
  * selalu cocok dengan daftar yang tampil.
  */
+/** Daftar inventaris mentah untuk API publik; tenant dari host. */
+export async function cariInventarisPublik(villageId: number, search = "") {
+  return listInventaris(villageId, search);
+}
+
 export async function getInventarisPublik(
   villageId: number,
   filter: FilterInventarisPublik = FILTER_INVENTARIS_KOSONG,

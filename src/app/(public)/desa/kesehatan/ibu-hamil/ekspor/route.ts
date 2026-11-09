@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
-import { listIbuHamil } from "@/features/kesehatan/infrastructure/kesehatan-repository";
+import { daftarIbuHamilPublik } from "@/features/kesehatan/application/kesehatan-publik-use-cases";
 
 /**
  * Ekspor publik data Ibu Hamil ke halaman HTML.
@@ -11,7 +11,7 @@ import { listIbuHamil } from "@/features/kesehatan/infrastructure/kesehatan-repo
  */
 export async function GET() {
   const desa = await getIdentitasFromRequest();
-  const rows = await listIbuHamil(desa.id);
+  const rows = await daftarIbuHamilPublik(desa.id);
 
   const namaDesa =
     (desa.namaDesa ?? "desa")

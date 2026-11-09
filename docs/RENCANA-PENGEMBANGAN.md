@@ -19,7 +19,7 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 - 51 folder fitur, 154 file test unit/integrasi, 202 `page.tsx`, 78 `route.ts`, 55 berkas E2E.
 - 251 test E2E; hanya **61** yang menjalankan aksi UI, 190 hanya smoke/URL/heading/body.
 - 8 ID berstatus ✅ historis punya E2E interaktif, 8 ID hanya smoke, 32 ID berstatus ✅ historis tanpa rujukan E2E.
-- 49 impor infrastruktur langsung di 47 berkas (plus 4 impor `@/db`) melanggar batas lapisan.
+- 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas tersisa (route publik desa, API publik, dan sitemap sudah 0) melanggar batas lapisan.
 - Tidak ada ID yang dinyatakan selesai penuh. Eksekusi suite E2E, pengujian provider, dan pemeriksaan visual seluruh halaman belum dilakukan.
 - **Tampilan publik (9 November 2026):** menu header dikelompokkan dari 11 tautan datar menjadi 7 menu teratas dengan dropdown; header publik dirombak menjadi bilah kontak, identitas pemerintah desa, dan navigasi berwarna yang menempel; beranda memakai hero berita utama, akses cepat, kolom berita, dan sidebar data/agenda/kontak; footer menjadi empat kolom; menu mobile bertingkat; overflow horizontal pada lebar 1024 px dihilangkan; duplikasi bagian Kontak di beranda dihapus. Bukti: `src/features/publik/domain/menu.test.ts`, `src/themes/esensi/pages/home.tsx`, `src/themes/esensi/layout.tsx`, dan pemeriksaan render 1440/1024/390 px. Status `OS-WEB-001`/`OS-WEB-016` tetap **Sebagian** karena E2E perilaku belum ada.
 - **Anjungan (9 November 2026):** UUID kosong tidak lagi ditolak; schema menormalisasi string kosong menjadi `null` dan use case mengisi `randomUUID()`. Halaman publik memakai `daftarAnjunganPublik`, bukan repository langsung. Test domain/use case 7 lulus. Status `OS-MOD-001` tetap **Sebagian** sampai alur kiosk, konfigurasi perangkat, dan E2E CRUD/tenant selesai.
@@ -31,7 +31,7 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 | # | ID | Perilaku target | Path terdampak | Bukti yang harus ditambahkan |
 |---|---|---|---|---|
 | 1 | `OS-MOD-001` | Form Anjungan bisa disimpan dengan UUID kosong (generate/normalisasi ke `null`); alur kiosk publik berfungsi; konfigurasi perangkat dipakai | `src/features/anjungan/domain/anjungan.ts`, `presentation/anjungan-actions.ts`, `src/app/(public)/desa/anjungan/page.tsx`, `tests/modul-tambahan.e2e.ts` | **UUID kosong selesai 9 November 2026:** normalisasi schema + generate otomatis; test domain (4) dan use case (3) lulus. Halaman publik memakai use case. E2E buat + tampil publik ditambahkan, belum dijalankan. Sisa: E2E ubah/aktif/nonaktif/tenant dan alur kiosk |
-| 2 | Lintas-ID (`OS-WEB-*`, `OS-WIL-*`, `OS-POP-008`, `OS-OPS-011`) | Semua route memakai use case; halaman publik tidak memanggil repository | 49 impor di `src/app/(public)/desa/**`, `src/app/api/publik/**`, `src/app/(admin)/kesehatan/**`, `src/features/kesehatan/presentation/**`, `src/app/api/eksternal/**`, `src/app/(warga)/layanan-mandiri/**`, `src/app/sitemap.ts` | Use case per route; test otorisasi dan isolasi tenant; daftar impor langsung turun ke 0 |
+| 2 | Lintas-ID (`OS-WEB-*`, `OS-WIL-*`, `OS-POP-008`, `OS-OPS-011`) | Semua route memakai use case; halaman publik tidak memanggil repository | 31 impor infrastruktur + 2 `@/db` di `src/app/(admin)/**`, `src/app/(warga)/**`, `src/app/api/**`, dan `src/features/*/presentation/**` | **Route publik selesai 9 November 2026:** `(public)/desa/**`, `api/publik/**`, dan `sitemap.ts` 0 impor; guard `lapisan-publik.test.ts` lulus. Sisa: use case per route admin/warga/API + test otorisasi/tenant hingga 0 |
 | 3 | `OS-WGA-009`, `OS-SUR-013` | Pengiriman provider nyata atau mode nonaktif yang aman terdokumentasi | adapter notifikasi dan TTE | Test adapter dengan server tiruan; dokumentasi env; hasil uji dengan kredensial bila tersedia |
 
 ### P1 — E2E perilaku untuk alur inti yang masih smoke
@@ -62,8 +62,8 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 
 ### P3 — konsistensi dokumen dan alat
 
-- Perbarui `ARCHITECTURE.md`: angka impor langsung 38 → 49 pada 47 berkas (plus 4 impor `@/db`), sertakan cara mengukurnya.
-- Tambahkan pemeriksaan CI yang menolak impor runtime baru dari `src/app/**` ke `src/features/*/infrastructure/**`.
+- `ARCHITECTURE.md` sudah disinkronkan: 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas; route publik 0. Pertahankan angka ini saat menyentuh berkas sisa.
+- Pertahankan guard `src/features/publik/application/lapisan-publik.test.ts` yang menolak impor infrastruktur baru dari route publik, dan perluas cakupannya ke admin/warga saat migrasi berjalan.
 - Pertahankan `src/db/paritas-register.test.ts` sebagai pengunci frasa dokumen; tambahkan pemeriksaan bahwa setiap ID katalog punya baris di `STATUS-MODUL.md`.
 
 ## Rencana pengujian
@@ -77,8 +77,8 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 
 ## Verifikasi dokumen ini
 
-- `npm run typecheck` dan ESLint pada berkas Anjungan yang diubah: lulus.
-- `npm run test`: **171 file / 1.413 test** pada 9 November 2026 — **1.380 lulus, 33 dilewati, 1 suite gagal** (`verifikasi-restore.integration.test.ts`) karena MySQL lokal tidak tersedia. Test Anjungan 7/7 lulus, termasuk `src/db/paritas-register.test.ts` (4/4) dan `src/features/publik/domain/menu.test.ts` (4/4).
+- `npm run typecheck` dan ESLint pada berkas Anjungan serta layer publik yang diubah: lulus.
+- `npm run test`: **172 file / 1.414 test** pada 9 November 2026 — **1.381 lulus, 33 dilewati, 1 suite gagal** (`verifikasi-restore.integration.test.ts`) karena MySQL lokal tidak tersedia. Test Anjungan 7/7 lulus; guard layer publik dan 2 route API publik 4/4 lulus; termasuk `src/db/paritas-register.test.ts` (4/4) dan `src/features/publik/domain/menu.test.ts` (4/4).
 - Prettier `--check` pada `docs/STATUS-MODUL.md`, `docs/RENCANA-PENGEMBANGAN.md`, dan `docs/README.md`: lulus.
 - `npm run lint` penuh, `npm run check`, `npm run build`, dan suite E2E **belum** dijalankan; E2E terarah tidak dapat start karena MySQL lokal tidak tersedia.
 
