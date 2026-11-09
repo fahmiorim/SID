@@ -189,10 +189,10 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | ID | Hasil audit | Gap tersisa | E2E yang dirujuk |
 |---|---|---|---|
 | OS-POP-001 | Struktur lengkap; ada E2E interaktif | Alur CRUD, detail, filter, ekspor CSV, suplemen, DTKS; audit aksesibilitas admin: tautan lewati + `main#konten-utama`, tabel ber-`aria-label`, header kolom `scope="col"`, tombol aksi berlabel | `penduduk` 9 test/9 beraksi |
-| OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 8 test/8 beraksi |
+| OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 9 test (termasuk audit aksesibilitas) |
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
-| OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap | `penduduk` 8 test/8 beraksi |
+| OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap | `penduduk` 9 test (termasuk audit aksesibilitas) |
 | OS-POP-006 | Struktur terverifikasi | Impor CSV menautkan RTM, menyalin anggota, dan idempoten | `dtks-impor` 1 test/1 beraksi |
 | OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-POP-008 | Struktur lengkap; ada E2E interaktif | Posyandu, KIA, ibu hamil, anak, ekspor CSV | `kesehatan` 2 test/1 beraksi |
