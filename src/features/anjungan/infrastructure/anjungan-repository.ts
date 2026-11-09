@@ -7,7 +7,10 @@ import { anjungan, type Anjungan, type NewAnjungan } from "@/db/schema/anjungan"
 
 export async function listAnjungan(villageId: number, aktifOnly = false): Promise<Anjungan[]> {
   const conditions = [eq(anjungan.villageId, villageId)];
-  if (aktifOnly) conditions.push(eq(anjungan.aktif, 1));
+  if (aktifOnly) {
+    // Perangkat yang sedang diperbaiki atau dinonaktifkan tidak tampil di halaman publik.
+    conditions.push(eq(anjungan.aktif, 1), eq(anjungan.status, "aktif"));
+  }
   return db
     .select()
     .from(anjungan)
