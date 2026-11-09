@@ -180,6 +180,35 @@ export async function findPendudukById(villageId: number, id: number): Promise<P
   return row ? toDto(row) : null;
 }
 
+/**
+ * Penduduk berstatus hidup dengan NIK tertentu di satu desa.
+ *
+ * Dipakai verifikasi tanpa akun pada anjungan kiosk; hanya kolom yang aman
+ * untuk ditampilkan di layar publik yang dikembalikan.
+ */
+export async function findPendudukHidupByNik(
+  villageId: number,
+  nationalId: string,
+): Promise<{ id: number; nama: string; nik: string | null; tanggalLahir: string | null } | null> {
+  const [row] = await db
+    .select({
+      id: residents.id,
+      nama: residents.name,
+      nik: residents.nationalId,
+      tanggalLahir: residents.birthDate,
+    })
+    .from(residents)
+    .where(
+      and(
+        eq(residents.villageId, villageId),
+        eq(residents.nationalId, nationalId),
+        eq(residents.lifeStatus, "alive"),
+      ),
+    )
+    .limit(1);
+  return row ?? null;
+}
+
 export async function insertPenduduk(villageId: number, input: PendudukFormInput): Promise<number> {
   const [inserted] = await db
     .insert(residents)

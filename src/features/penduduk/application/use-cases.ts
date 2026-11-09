@@ -14,6 +14,7 @@ import {
 import {
   deletePenduduk as deletePendudukRow,
   findPendudukById,
+  findPendudukHidupByNik,
   getPendudukDetailById,
   headOfFamilyExists,
   insertPenduduk,
@@ -174,4 +175,14 @@ export async function deletePenduduk(id: number): Promise<void> {
     sesudah: null,
     actorId: user.id,
   });
+}
+
+/**
+ * Penduduk hidup berdasarkan NIK pada satu desa.
+ *
+ * Tanpa pemeriksaan izin karena dipanggil dari alur anjungan kiosk yang sudah
+ * memverifikasi perangkat; `villageId` berasal dari host/sesi, bukan input klien.
+ */
+export async function cariPendudukHidupByNikData(villageId: number, nik: string) {
+  return findPendudukHidupByNik(villageId, nik);
 }
