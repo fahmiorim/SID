@@ -17,6 +17,7 @@ import {
   getPendudukDetailById,
   headOfFamilyExists,
   insertPenduduk,
+  listPendudukOptions,
   listPenduduk as listPendudukRows,
   nationalIdExists,
   updatePenduduk as updatePendudukRow,
@@ -50,6 +51,14 @@ export async function listPenduduk(params: ListPendudukParams): Promise<Penduduk
   const villageId = await resolveVillageId(user);
 
   return listPendudukRows({ villageId, ...params });
+}
+
+/** Opsi penduduk desa untuk pencarian NIK; villageId dari sesi, izin baca modul penduduk. */
+export async function listPendudukOptionsData() {
+  const user = await requirePermission(PENDUDUK_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  return listPendudukOptions(villageId);
 }
 
 /** Data referensi untuk mengisi formulir (butuh izin baca modul penduduk). */

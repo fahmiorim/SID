@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { listPendudukOptions } from "@/features/penduduk/infrastructure/penduduk-repository";
+import { listPendudukOptionsData } from "@/features/penduduk/application/use-cases";
 import { verifySession } from "@/lib/dal";
 
 export async function GET(request: Request) {
@@ -15,8 +14,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, message: "NIK harus 16 digit." }, { status: 400 });
     }
 
-    const villageId = await resolveVillageId(user);
-    const all = await listPendudukOptions(villageId);
+    const all = await listPendudukOptionsData();
     const matched = all.find((p) => p.nationalId === nik);
 
     if (!matched) {
