@@ -10,7 +10,9 @@ test(
   "pembangunan: tambah proyek, ubah progres, dan hapus",
   { session: "admin", timeout: 180_000 },
   async ({ app, screen, browser }) => {
-    const judul = `Proyek Uji ${Date.now()}`;
+    const cap = Date.now().toString().slice(-8);
+    const judul = `Proyek Uji ${cap}`;
+    const judulLama = `Proyek Lama ${cap}`;
 
     try {
       await app.open("/pembangunan");
@@ -24,11 +26,45 @@ test(
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
       await expect(screen.getByText("Proyek pembangunan ditambahkan.")).toBeVisible();
 
+      // Proyek kedua pada tahun berbeda membuktikan filter tahun publik.
+      await screen.getByRole("button", { name: "Tambah Proyek" }).tap();
+      await screen.getByLabel("Judul Proyek").fill(judulLama);
+      await screen.getByLabel("Tahun Anggaran").fill("2098");
+      await screen.getByLabel("Anggaran (Rp)").fill("90000000");
+      await screen.getByLabel("Lokasi").fill("Dusun Uji Lama");
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Proyek pembangunan ditambahkan.")).toBeVisible();
+
       // Proyek baru langsung tampil pada halaman publik dan bisa difilter tahun.
       await app.open("/desa/pembangunan?tahun=2099");
       await expect(browser.locator("h1")).toContainText("Pembangunan Desa");
       await expect(screen.getByText(judul)).toBeVisible();
+      await expect(screen.getByText(judulLama)).not.toBeVisible();
       await expect(screen.getByLabel("Tahun anggaran")).toHaveValue("2099");
+
+      // Filter lewat pilihan tahun di halaman publik, bukan hanya URL.
+      await app.open("/desa/pembangunan");
+      await expect(screen.getByRole("option", { name: "2099" })).toBeAttached();
+      await expect(screen.getByRole("option", { name: "2098" })).toBeAttached();
+      await screen.getByLabel("Tahun anggaran").selectOption({ label: "2099" });
+      await screen.getByRole("button", { name: "Terapkan" }).tap();
+      await expect(browser).toHaveURL(/tahun=2099/);
+      await expect(screen.getByText(judul)).toBeVisible();
+      await expect(screen.getByText(judulLama)).not.toBeVisible();
+
+      // "Semua tahun" mengembalikan daftar penuh; formulir GET mengirim
+      // parameter kosong dan halaman memperlakukannya sebagai tanpa filter.
+      await screen.getByLabel("Tahun anggaran").selectOption({ label: "Semua tahun" });
+      await screen.getByRole("button", { name: "Terapkan" }).tap();
+      await expect(browser).toHaveURL(/\?tahun=$/);
+      await expect(screen.getByText(judul)).toBeVisible();
+      await expect(screen.getByText(judulLama)).toBeVisible();
+
+      // Tahun tidak valid jatuh ke daftar semua tahun, bukan halaman kosong.
+      await app.open("/desa/pembangunan?tahun=abc");
+      await expect(screen.getByText(judul)).toBeVisible();
+      await expect(screen.getByText(judulLama)).toBeVisible();
+      await expect(screen.getByLabel("Tahun anggaran")).toHaveValue("");
 
       await app.open("/pembangunan");
       await screen.getByLabel("Cari proyek pembangunan").fill(judul);
@@ -89,6 +125,7 @@ test(
       await expect(screen.getByText("Proyek pembangunan dihapus.")).toBeVisible();
     } finally {
       await hapusProyekDariJudul(judul);
+      await hapusProyekDariJudul(judulLama);
     }
   },
 );

@@ -64,7 +64,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       daftarSlugHalaman(desa.id),
     ]);
 
-    return [
+    return unikkan([
       ...dasar,
       ...marketplaceLapak.map((item) => ({
         url: `${base}/desa/lapak/${item.id}/produk`,
@@ -86,8 +86,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         changeFrequency: "monthly" as const,
         priority: 0.5,
       })),
-    ].slice(0, 50_000);
+    ]).slice(0, 50_000);
   } catch {
-    return dasar;
+    return unikkan(dasar);
   }
+}
+
+/**
+ * Buang URL ganda tanpa mengubah urutan.
+ *
+ * Menu publik dan daftar halaman eksplisit dapat menunjuk alamat yang sama
+ * (mis. `/desa/kontak` dan `/desa/lapak`), dan sitemap tidak boleh memuat
+ * `<loc>` berulang karena dapat menurunkan kualitas indeks.
+ */
+function unikkan(daftar: MetadataRoute.Sitemap): MetadataRoute.Sitemap {
+  const unik = new Map<string, MetadataRoute.Sitemap[number]>();
+  for (const item of daftar) {
+    if (!unik.has(item.url)) unik.set(item.url, item);
+  }
+  return [...unik.values()];
 }

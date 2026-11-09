@@ -768,6 +768,167 @@ export async function hapusLapakPublikUji(input: {
 }
 
 /** Hapus barang inventaris uji berdasarkan nama. */
+/**
+ * Buat satu penduduk hidup beserta dusun unik pada desa admin.
+ *
+ * Dipakai E2E statistik publik `OS-WEB-006` untuk membuktikan sebaran dusun
+ * dan unduhan CSV hanya memuat penduduk desa pemilik host.
+ */
+export async function buatPendudukStatistikUji(input: {
+  nama: string;
+  nik: string;
+  dusun: string;
+}): Promise<{ id: number; regionId: number }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [wilayah] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO regions (village_id, dusun) VALUES (?, ?)",
+      [villageId, input.dusun],
+    );
+    const [penduduk] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO residents (village_id, national_id, name, gender, region_id)
+       VALUES (?, ?, ?, 'male', ?)`,
+      [villageId, input.nik, input.nama, wilayah.insertId],
+    );
+    return { id: penduduk.insertId, regionId: wilayah.insertId };
+  });
+}
+
+/**
+ * Buat penduduk + dusun pada desa fixture tersendiri.
+ *
+ * Dipakai untuk membuktikan isolasi tenant statistik publik: angka desa lain
+ * tidak boleh muncul di halaman maupun CSV desa admin.
+ */
+export async function buatPendudukDesaLainStatistikUji(input: {
+  nama: string;
+  nik: string;
+  dusun: string;
+}): Promise<{ id: number; regionId: number; villageId: number }> {
+  return denganPool(async (pool) => {
+    const kode = `ST${Date.now().toString().slice(-8)}`;
+    const [desa] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO villages (name, code, slug) VALUES (?, ?, ?)",
+      [`Desa Statistik Lain ${kode}`, kode, `desa-statistik-${kode.toLowerCase()}`],
+    );
+    const [wilayah] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO regions (village_id, dusun) VALUES (?, ?)",
+      [desa.insertId, input.dusun],
+    );
+    const [penduduk] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO residents (village_id, national_id, name, gender, region_id)
+       VALUES (?, ?, ?, 'female', ?)`,
+      [desa.insertId, input.nik, input.nama, wilayah.insertId],
+    );
+    return { id: penduduk.insertId, regionId: wilayah.insertId, villageId: desa.insertId };
+  });
+}
+
+/** Hapus penduduk statistik uji, dusunnya, dan desa fixture bila ada. */
+export async function hapusPendudukStatistikUji(input: {
+  id: number;
+  regionId: number;
+  villageId?: number;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM resident_mutations WHERE resident_id = ?", [input.id]);
+    await pool.execute("DELETE FROM residents WHERE id = ?", [input.id]);
+    await pool.execute("DELETE FROM regions WHERE id = ?", [input.regionId]);
+    if (input.villageId) {
+      await pool.execute("DELETE FROM villages WHERE id = ?", [input.villageId]);
+    }
+  });
+}
+
+/** Satu set layer peta uji pada desa admin (OS-WEB-007). */
+export interface LayerPetaUji {
+  polygonId: number;
+  areaId: number;
+  garisId: number;
+  pointId: number;
+}
+
+/**
+ * Buat layer polygon, area, garis, dan titik pada desa admin.
+ *
+ * Dipakai E2E peta publik `OS-WEB-007` untuk membuktikan kontrol layer
+ * menampilkan/menyembunyikan setiap kelompok geometri dan peta cetak memuat
+ * legendanya.
+ */
+export async function buatLayerPetaUji(input: {
+  polygon: string;
+  area: string;
+  garis: string;
+  titik: string;
+}): Promise<LayerPetaUji> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [polygon] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO polygon (village_id, nama, color, tipe, enabled) VALUES (?, ?, '#2563eb', 0, 1)",
+      [villageId, input.polygon],
+    );
+    const areaPath = JSON.stringify({
+      type: "Polygon",
+      coordinates: [
+        [
+          [110.4, -7.2],
+          [110.5, -7.2],
+          [110.5, -7.3],
+          [110.4, -7.3],
+          [110.4, -7.2],
+        ],
+      ],
+    });
+    const [area] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO area (village_id, nama, path, ref_polygon, enabled) VALUES (?, ?, ?, ?, 1)",
+      [villageId, input.area, areaPath, polygon.insertId],
+    );
+    const garisPath = JSON.stringify({
+      type: "LineString",
+      coordinates: [
+        [110.41, -7.21],
+        [110.49, -7.29],
+      ],
+    });
+    const [garis] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO garis (village_id, nama, path, enabled) VALUES (?, ?, ?, 1)",
+      [villageId, input.garis, garisPath],
+    );
+    const titikPath = JSON.stringify({ type: "Point", coordinates: [110.45, -7.25] });
+    const [point] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO point (village_id, nama, path, tipe, enabled) VALUES (?, ?, ?, 1, 1)",
+      [villageId, input.titik, titikPath],
+    );
+
+    return {
+      polygonId: polygon.insertId,
+      areaId: area.insertId,
+      garisId: garis.insertId,
+      pointId: point.insertId,
+    };
+  });
+}
+
+/** Hapus satu set layer peta uji beserta polygon induknya. */
+export async function hapusLayerPetaUji(layer: LayerPetaUji): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM area WHERE id = ?", [layer.areaId]);
+    await pool.execute("DELETE FROM garis WHERE id = ?", [layer.garisId]);
+    await pool.execute("DELETE FROM point WHERE id = ?", [layer.pointId]);
+    await pool.execute("DELETE FROM polygon WHERE id = ?", [layer.polygonId]);
+  });
+}
+
 export async function hapusInventarisDariNama(namaBarang: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM inventaris WHERE nama_barang = ?", [namaBarang]);

@@ -1,3 +1,5 @@
+import { Download } from "lucide-react";
+
 import { formatRupiah } from "@/features/keuangan/domain/keuangan";
 import type { StatistikProps } from "@/themes/types";
 import { ThemeCard, ThemeEmpty, ThemePageHeader, ThemeStatGrid } from "@/themes/ui";
@@ -10,6 +12,20 @@ export function EsensiStatistik({ ctx, statistik, periode }: StatistikProps) {
         title="Statistik Desa"
         description={`Data kependudukan dan ringkasan program ${ctx.desa.namaDesa ?? "desa"} yang bersumber dari basis data desa.`}
       />
+
+      {/* OS-WEB-006: unduhan mengikuti tenant host, bukan input pengguna. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <a
+          href="/desa/statistik/ekspor"
+          className="tema-link-primary inline-flex min-h-10 items-center gap-2 border px-4 text-sm font-medium hover:underline"
+        >
+          <Download className="size-4" aria-hidden="true" />
+          Unduh CSV
+        </a>
+        <p className="text-xs text-muted-foreground">
+          Ringkasan yang sama dengan tabel di bawah, tanpa data pribadi penduduk.
+        </p>
+      </div>
 
       <ThemeStatGrid
         items={[

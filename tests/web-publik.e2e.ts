@@ -5,12 +5,17 @@ import {
   buatInventarisDesaLainUji,
   buatInventarisPublikUji,
   buatLapakPublikUji,
+  buatLayerPetaUji,
+  buatPendudukDesaLainStatistikUji,
+  buatPendudukStatistikUji,
   buatProfilDanPerangkatPublikUji,
   buatSuplemenPublikUji,
   buatSurveiAnalisisPublikUji,
   buatSurveiDesaLainUji,
   hapusInventarisUji,
   hapusLapakPublikUji,
+  hapusLayerPetaUji,
+  hapusPendudukStatistikUji,
   hapusProfilDanPerangkatUji,
   hapusSuplemenPublikUji,
   hapusSurveiDesaLainUji,
@@ -18,17 +23,60 @@ import {
 } from "./support/database";
 
 /**
- * Katalog: OS-WEB-001 — Beranda publik
+ * Katalog: OS-WEB-001 — Kerangka publik: header tujuh menu bergrup dengan
+ * dropdown yang dapat dibuka, bilah kontak, akses cepat beranda, dan footer
+ * empat kolom.
  */
 test(
-  "beranda publik: judul desa dan navigasi utama tampil",
-  { timeout: 60_000 },
+  "beranda publik: menu bergrup, bilah kontak, akses cepat, dan footer",
+  { timeout: 90_000 },
   async ({ app, screen, browser }) => {
     await app.open("/");
     await expect(browser).toHaveURL("/");
     await expect(browser.locator("h1")).toContainText("Desa Contoh");
-    await expect(screen.getByRole("navigation").first()).toBeVisible();
-    await expect(screen.getByRole("link", { name: /profil/i }).first()).toBeVisible();
+
+    const menu = screen.getByRole("navigation", { name: "Menu utama" });
+    await expect(menu).toBeVisible();
+    for (const label of [
+      "Beranda",
+      "Profil",
+      "Informasi",
+      "Transparansi",
+      "Potensi",
+      "Partisipasi",
+      "Kontak",
+    ]) {
+      await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+
+    // Dropdown hanya muncul saat induk di-hover/fokus; tautan turunannya nyata.
+    await menu.getByRole("link", { name: "Informasi", exact: true }).hover();
+    for (const anak of ["Berita", "Galeri", "Informasi Publik"]) {
+      await expect(menu.getByRole("link", { name: anak, exact: true })).toBeVisible();
+    }
+    await menu.getByRole("link", { name: "Galeri", exact: true }).tap();
+    await expect(browser).toHaveURL(/\/desa\/galeri$/);
+
+    // Bilah kontak header dan tautan akses cepat beranda.
+    await app.open("/");
+    await expect(screen.getByRole("link", { name: "desa@contoh.id" }).first()).toBeVisible();
+    // Nama aksesibel tautan memuat judul dan keterangannya, mis.
+    // "Layanan Surat Ajukan surat online", jadi dicocokkan dengan regex.
+    for (const label of [/^Layanan Surat/, /^APBDes/, /^Statistik/, /^Lapak Desa/]) {
+      await expect(screen.getByRole("link", { name: label }).first()).toBeVisible();
+    }
+
+    // Footer empat kolom: identitas, Jelajahi, Transparansi, dan Kontak.
+    const footer = screen.getByRole("contentinfo");
+    await expect(footer).toBeVisible();
+    for (const judul of ["Jelajahi", "Transparansi", "Kontak"]) {
+      await expect(footer.getByRole("heading", { name: judul, exact: true })).toBeVisible();
+    }
+    await expect(footer.getByRole("link", { name: "Profil Desa" })).toHaveAttribute(
+      "href",
+      "/desa/profil",
+    );
+    await expect(footer).toContainText("Desa Contoh");
   },
 );
 
@@ -54,6 +102,15 @@ test(
     expect(struktur.tautan).toBe("Lewati ke konten utama");
     expect(struktur.tabindex).toBe("-1");
     expect(struktur.jumlahMain).toBe(1);
+
+    // Grup menu yang memuat halaman aktif ditandai aria-current.
+    await app.open("/desa/statistik");
+    const aktif = await browser.evaluate(() =>
+      Array.from(
+        document.querySelectorAll('nav[aria-label="Menu utama"] a[aria-current="page"]'),
+      ).map((item) => item.textContent?.trim()),
+    );
+    expect(aktif).toContain("Transparansi");
   },
 );
 
@@ -189,26 +246,99 @@ test(
 );
 
 /**
- * Katalog: OS-WEB-006 — Peta publik dan cetak peta.
+ * Katalog: OS-WEB-007 — Peta publik: layer polygon (area), garis, dan titik
+ * tampil di kontrol layer, dapat disembunyikan/ditampilkan kembali, dan ikut
+ * tercetak pada legenda peta.
  */
 test(
-  "peta publik: peta Leaflet dan cetak peta",
-  { timeout: 60_000 },
+  "peta publik: layer polygon, garis, dan titik dapat diatur dan dicetak",
+  { timeout: 90_000 },
   async ({ app, screen, browser }) => {
-    await app.open("/desa/peta");
-    await expect(browser.locator("h1")).toContainText("Peta Desa");
-    await expect(browser.locator(".leaflet-container")).toBeVisible();
-    await expect(browser.locator("body")).toContainText(/layer polygon|area|garis|titik/);
+    const cap = Date.now().toString().slice(-8);
+    const nama = {
+      polygon: `Layer Peta ${cap}`,
+      area: `Area Peta ${cap}`,
+      garis: `Garis Peta ${cap}`,
+      titik: `Titik Peta ${cap}`,
+    };
+    const layer = await buatLayerPetaUji(nama);
 
-    await screen.getByRole("link", { name: "Cetak Peta" }).tap();
-    await expect(browser).toHaveURL(/\/desa\/peta\/cetak$/);
-    await expect(browser.locator("h1")).toContainText("Peta Desa");
-    await expect(screen.getByRole("link", { name: "Kembali ke peta" })).toBeVisible();
+    try {
+      await app.open("/desa/peta");
+      await expect(browser.locator("h1")).toContainText("Peta Desa");
+      await expect(browser.locator(".leaflet-container")).toBeVisible();
+
+      // Kontrol layer hanya dirender setelah Leaflet selesai dimuat; tunggu
+      // sampai labelnya ada sebelum menyentuh checkbox.
+      const teksKontrol = await browser.evaluate(async (namaPolygon: string) => {
+        for (let i = 0; i < 100; i += 1) {
+          const kontrol = document.querySelector(".leaflet-control-layers");
+          if (kontrol?.textContent?.includes(namaPolygon)) return kontrol.textContent;
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        return document.querySelector(".leaflet-control-layers")?.textContent ?? "";
+      }, nama.polygon);
+      expect(teksKontrol).toContain(nama.polygon);
+      expect(teksKontrol).toContain("Garis");
+      expect(teksKontrol).toContain("Titik");
+
+      const sebelum = await browser.evaluate(() => ({
+        garis: document.querySelectorAll('path[stroke="#f59e0b"]').length,
+        penanda: document.querySelectorAll(".leaflet-marker-icon").length,
+      }));
+      expect(sebelum.garis).toBeGreaterThan(0);
+      expect(sebelum.penanda).toBeGreaterThan(0);
+
+      // Ikon marker memakai aset hasil bundling dan benar-benar termuat,
+      // bukan menebak path halaman (`/desa/marker-icon.png`) yang 404.
+      const ikon = await browser.evaluate(() => {
+        const gambar = document.querySelector<HTMLImageElement>(".leaflet-marker-icon");
+        return gambar ? { src: gambar.src, lebar: gambar.naturalWidth } : null;
+      });
+      expect(ikon?.src).toContain("/_next/static/media/");
+      expect(ikon?.lebar ?? 0).toBeGreaterThan(0);
+
+      // Toggle lewat checkbox asli Leaflet. Kontrol dapat tertutup atau sudah
+      // terbuka tergantung posisi hover, jadi klik diarahkan langsung ke input
+      // agar tidak bergantung pada tombol buka/tutup.
+      const toggleLayer = (label: string) =>
+        browser.evaluate((namaLayer: string) => {
+          const item = Array.from(
+            document.querySelectorAll<HTMLLabelElement>(".leaflet-control-layers-overlays label"),
+          ).find((el) => el.textContent?.trim() === namaLayer);
+          item?.querySelector<HTMLInputElement>("input")?.click();
+        }, label);
+
+      await toggleLayer("Garis");
+      await expect(browser.locator('path[stroke="#f59e0b"]')).toHaveCount(0);
+      await toggleLayer("Garis");
+      await expect(browser.locator('path[stroke="#f59e0b"]')).toHaveCount(sebelum.garis);
+
+      // Kelompok titik juga dapat disembunyikan dan dimunculkan lagi.
+      await toggleLayer("Titik");
+      await expect(browser.locator(".leaflet-marker-icon")).toHaveCount(0);
+      await toggleLayer("Titik");
+      await expect(browser.locator(".leaflet-marker-icon")).toHaveCount(sebelum.penanda);
+
+      // Peta cetak memuat geometri SVG dan legenda untuk area, garis, dan titik.
+      await screen.getByRole("link", { name: "Cetak Peta" }).tap();
+      await expect(browser).toHaveURL(/\/desa\/peta\/cetak$/);
+      await expect(browser.locator("h1")).toContainText("Peta Desa");
+      await expect(browser.locator('svg[role="img"]')).toBeVisible();
+      await expect(browser.locator("body")).toContainText(/\d+ layer/);
+      await expect(screen.getByText("Legenda")).toBeVisible();
+      await expect(browser.locator("body")).toContainText(nama.polygon);
+      await expect(browser.locator("body")).toContainText("Garis / Jalan");
+      await expect(browser.locator("body")).toContainText("Titik Lokasi");
+      await expect(screen.getByRole("link", { name: "Kembali ke peta" })).toBeVisible();
+    } finally {
+      await hapusLayerPetaUji(layer);
+    }
   },
 );
 
 /**
- * Katalog: OS-WEB-007 — Pembangunan publik
+ * Katalog: OS-WEB-008 — Pembangunan publik
  */
 test("pembangunan publik: daftar proyek", { timeout: 60_000 }, async ({ app, browser }) => {
   await app.open("/desa/pembangunan");
@@ -556,5 +686,61 @@ test(
       document.querySelector('meta[property="og:title"]')?.getAttribute("content"),
     );
     expect(ogTitle).toBeTruthy();
+  },
+);
+
+/**
+ * Katalog: OS-WEB-006 — Statistik publik hanya memuat angka desa pemilik host,
+ * dan unduhan CSV mengikuti tenant yang sama.
+ */
+test(
+  "statistik publik: sebaran dusun dan ekspor CSV terbatas pada desa sendiri",
+  { timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const cap = Date.now().toString().slice(-8);
+    const dusun = `Dusun Statistik ${cap}`;
+    const dusunLain = `Dusun Tenant Lain ${cap}`;
+    const penduduk = await buatPendudukStatistikUji({
+      nama: `Penduduk Statistik ${cap}`,
+      nik: `3201${cap}0001`,
+      dusun,
+    });
+    const desaLain = await buatPendudukDesaLainStatistikUji({
+      nama: `Penduduk Tenant ${cap}`,
+      nik: `3202${cap}0002`,
+      dusun: dusunLain,
+    });
+
+    try {
+      await app.open("/desa/statistik");
+      await expect(screen.getByText("Total Penduduk")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: dusun, exact: true })).toBeVisible();
+      await expect(browser.locator("body")).not.toContainText(dusunLain);
+
+      await expect(screen.getByRole("link", { name: /Unduh CSV/ })).toHaveAttribute(
+        "href",
+        "/desa/statistik/ekspor",
+      );
+
+      const csv = await browser.evaluate(async () => {
+        const res = await fetch("/desa/statistik/ekspor");
+        return {
+          status: res.status,
+          tipe: res.headers.get("content-type") ?? "",
+          disposisi: res.headers.get("content-disposition") ?? "",
+          isi: await res.text(),
+        };
+      });
+      expect(csv.status).toBe(200);
+      expect(csv.tipe).toContain("text/csv");
+      expect(csv.disposisi).toContain("statistik-");
+      expect(csv.isi).toContain("Kategori;Keterangan;Nilai");
+      expect(csv.isi).toContain("Total penduduk");
+      expect(csv.isi).toContain(dusun);
+      expect(csv.isi).not.toContain(dusunLain);
+    } finally {
+      await hapusPendudukStatistikUji(penduduk);
+      await hapusPendudukStatistikUji(desaLain);
+    }
   },
 );

@@ -1,11 +1,41 @@
 "use client";
 
 import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import { useEffect, useRef } from "react";
 
 import "leaflet/dist/leaflet.css";
 
 import type { AreaDTO, GarisDTO, PointDTO, PolygonDTO } from "@/features/gis/domain/gis";
+
+/**
+ * URL aset gambar hasil impor. Bergantung versi bundler, impor aset dapat
+ * menghasilkan string URL langsung atau objek `StaticImageData`; keduanya
+ * harus ditangani agar ikon tidak jatuh ke path tebakan Leaflet.
+ */
+function urlAset(modul: unknown): string {
+  if (typeof modul === "string") return modul;
+  if (modul && typeof modul === "object" && "src" in modul) {
+    const src = (modul as { src?: unknown }).src;
+    if (typeof src === "string") return src;
+  }
+  return "";
+}
+
+/**
+ * Arahkan ikon marker bawaan Leaflet ke aset hasil bundling.
+ *
+ * Tanpa ini Leaflet menebak path dari stylesheet dan meminta
+ * `/desa/marker-icon.png` (404). Impor aset membuat Next menyajikan berkasnya
+ * dari `/_next/static/media/...` sehingga marker tampil utuh.
+ */
+L.Icon.Default.mergeOptions({
+  iconUrl: urlAset(markerIcon),
+  iconRetinaUrl: urlAset(markerIcon2x),
+  shadowUrl: urlAset(markerShadow),
+});
 
 export interface PetaMapProps {
   areas: AreaDTO[];

@@ -56,7 +56,7 @@ test(
 test(
   "anggota kelompok: tambah dengan jabatan lalu keluarkan",
   { session: "admin", timeout: 180_000 },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     const nama = namaUnik("Kelompok Anggota");
 
     try {
@@ -87,6 +87,33 @@ test(
       await screen.getByLabel("No. Anggota").fill("A-001");
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
       await expect(screen.getByText("Anggota kelompok ditambahkan.")).toBeVisible();
+
+      // OS-WEB-010 — alur cetak publik: kelompok dan daftar anggotanya tampil di
+      // halaman publik, lalu tombol cetak benar-benar memanggil window.print().
+      await app.open("/desa/kelompok?tipe=kelompok");
+      await expect(screen.getByText(nama)).toBeVisible();
+      await browser.evaluate(() => {
+        (window as unknown as { __cetakAnggota?: boolean }).__cetakAnggota = false;
+        window.print = () => {
+          (window as unknown as { __cetakAnggota?: boolean }).__cetakAnggota = true;
+        };
+      });
+      await expect(screen.getByText("Daftar anggota (1)")).toBeVisible();
+      await screen.getByRole("button", { name: "Cetak daftar anggota" }).tap();
+      const memanggilCetak = await browser.evaluate(() =>
+        Boolean((window as unknown as { __cetakAnggota?: boolean }).__cetakAnggota),
+      );
+      expect(memanggilCetak).toBe(true);
+
+      // Kembali ke tab Anggota untuk mengeluarkan anggota uji.
+      await app.open(`/kelompok?tipe=kelompok&q=${encodeURIComponent(nama)}`);
+      await screen
+        .getByRole("row")
+        .filter({ hasText: nama })
+        .getByRole("button", { name: `Aksi untuk ${nama}` })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Anggota" }).tap();
+
       // Nama penduduk berasal dari data seed, jadi keberadaan anggota dibuktikan
       // lewat tombol Keluarkan yang hanya dirender pada baris anggota.
       await screen

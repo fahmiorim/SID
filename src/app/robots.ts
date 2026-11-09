@@ -21,6 +21,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
         "/inventaris",
         "/bumindes",
         "/permohonan-surat",
+        "/layanan-mandiri",
         "/api/",
       ],
     },
