@@ -1,5 +1,7 @@
 import "server-only";
 
+import { randomUUID } from "node:crypto";
+
 import { requirePermission } from "@/lib/dal";
 import { AppError } from "@/lib/errors";
 
@@ -21,16 +23,21 @@ export async function daftarAnjungan(villageId: number, aktifOnly = false) {
   }));
 }
 
+export async function daftarAnjunganPublik(villageId: number) {
+  return listAnjungan(villageId, true);
+}
+
 export async function tambahAnjungan(villageId: number, input: unknown) {
   await requirePermission(ANJUNGAN_RESOURCE, "update");
   const parsed = anjunganFormSchema.parse(input);
+  const uuid = parsed.uuid ?? randomUUID();
   const id = await createAnjungan({
     villageId,
     nama: parsed.nama,
     deskripsi: parsed.deskripsi ?? null,
     aktif: parsed.aktif,
     urutan: parsed.urutan,
-    uuid: parsed.uuid ?? null,
+    uuid,
     ipAddress: parsed.ipAddress ?? null,
     macAddress: parsed.macAddress ?? null,
     ipAddressPortPrinter: parsed.ipAddressPortPrinter ?? null,
@@ -45,12 +52,13 @@ export async function tambahAnjungan(villageId: number, input: unknown) {
 export async function ubahAnjungan(villageId: number, id: number, input: unknown) {
   await requirePermission(ANJUNGAN_RESOURCE, "update");
   const parsed = anjunganFormSchema.parse(input);
+  const uuid = parsed.uuid ?? randomUUID();
   await updateAnjungan(id, villageId, {
     nama: parsed.nama,
     deskripsi: parsed.deskripsi ?? null,
     aktif: parsed.aktif,
     urutan: parsed.urutan,
-    uuid: parsed.uuid ?? null,
+    uuid,
     ipAddress: parsed.ipAddress ?? null,
     macAddress: parsed.macAddress ?? null,
     ipAddressPortPrinter: parsed.ipAddressPortPrinter ?? null,

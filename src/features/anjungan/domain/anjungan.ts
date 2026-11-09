@@ -8,7 +8,13 @@ export const anjunganFormSchema = z.object({
   aktif: z.coerce.number().int().min(0).max(1).default(1),
   urutan: z.coerce.number().int().default(0),
   // Kiosk device fields
-  uuid: z.string().uuid("UUID tidak valid.").optional().nullable(),
+  uuid: z
+    .string()
+    .trim()
+    .nullable()
+    .optional()
+    .transform((value) => (value === "" ? null : value))
+    .pipe(z.string().uuid("UUID tidak valid.").nullable().optional()),
   ipAddress: z.string().max(45).optional().nullable(),
   macAddress: z.string().max(17).optional().nullable(),
   ipAddressPortPrinter: z.string().max(100).optional().nullable(),

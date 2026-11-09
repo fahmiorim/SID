@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listAnjungan } from "@/features/anjungan/infrastructure/anjungan-repository";
+import { daftarAnjunganPublik } from "@/features/anjungan/application/anjungan-use-cases";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function AnjunganPublicPage() {
   if (!villageId) notFound();
 
   // Show only active items, ordered by urutan then id
-  const items = await listAnjungan(villageId, true);
+  const items = await daftarAnjunganPublik(villageId);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">

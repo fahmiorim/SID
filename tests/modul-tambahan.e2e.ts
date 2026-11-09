@@ -3,11 +3,25 @@ import { expect } from "e2e";
 
 // Katalog: OS-MOD-001 — Anjungan: CRUD kiosk device + publik layanan aktif.
 test(
-  "anjungan admin: CRUD kiosk device dengan field lengkap",
+  "anjungan admin: simpan UUID kosong lalu tampil di halaman publik",
   { session: "admin" },
   async ({ app, screen }) => {
+    const nama = `Anjungan E2E ${Date.now()}`;
+
     await app.open("/anjungan");
     await expect(screen.getByRole("heading", { name: /anjungan|kiosk/i })).toBeVisible();
+    await screen.getByRole("button", { name: "Tambah Anjungan" }).tap();
+    await expect(screen.getByRole("dialog", { name: "Tambah Anjungan" })).toBeVisible();
+    await screen.getByLabel("Nama").fill(nama);
+    // UUID sengaja dikosongkan: use case harus menghasilkan UUID perangkat baru.
+    await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+    await expect(screen.getByText("Anjungan berhasil ditambahkan.")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+
+    await app.open("/desa/anjungan");
+    await expect(screen.getByText(nama, { exact: true })).toBeVisible();
   },
 );
 
