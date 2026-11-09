@@ -1,9 +1,6 @@
 import "server-only";
 
-import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
-import { getPendudukReferenceData } from "@/features/penduduk/infrastructure/reference-repository";
-import { requirePermission } from "@/lib/dal";
+import { getPendudukReference } from "@/features/penduduk/application/use-cases";
 
 import { DptFilterClient } from "./dpt-filter-client";
 
@@ -25,9 +22,7 @@ interface DptFilterWrapperProps {
 }
 
 export async function DptFilterWrapper({ activeElection, defaultParams }: DptFilterWrapperProps) {
-  const user = await requirePermission(PENDUDUK_RESOURCE, "read");
-  const villageId = await resolveVillageId(user);
-  const ref = await getPendudukReferenceData(villageId);
+  const ref = await getPendudukReference();
 
   return (
     <DptFilterClient

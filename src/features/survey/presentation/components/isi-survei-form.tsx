@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { type SurveiPublikRow } from "@/features/publik/infrastructure/survey-repository";
+import { type SurveiPublik } from "@/features/publik/application/survei-publik";
 import { kirimSurveiPublikAction } from "@/features/survey/presentation/publik-actions";
 import { createIdleActionState } from "@/lib/action-state";
 
-export function IsiSurveiForm({ survei }: { survei: SurveiPublikRow }) {
+export function IsiSurveiForm({ survei }: { survei: SurveiPublik }) {
   const [state, formAction, isPending] = useActionState(
     kirimSurveiPublikAction,
     createIdleActionState<null>(),

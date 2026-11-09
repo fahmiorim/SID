@@ -93,7 +93,7 @@ export function ThemeButton({
     <a
       href={href}
       style={gaya}
-      className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-90 ${
+      className={`inline-flex shrink-0 items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-90 ${
         variant === "outline" ? "border" : ""
       }`}
     >

@@ -15,11 +15,13 @@
 }
 
 [data-theme="esensi"] .tema-esensi-hero {
-  background-image: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--pub-primary) 12%, transparent),
-    transparent 60%
-  );
+  background-image:
+    radial-gradient(
+      circle at 0% 0%,
+      color-mix(in srgb, var(--pub-primary) 13%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(120deg, color-mix(in srgb, var(--pub-primary) 5%, transparent), transparent 65%);
 }
 
 [data-theme="esensi"] .tema-esensi-header[data-varian="berwarna"] {
@@ -32,7 +34,15 @@
 }
 
 [data-theme="esensi"] .tema-esensi-footer {
-  background-color: color-mix(in srgb, var(--pub-primary) 6%, var(--background));
+  background-color: color-mix(in srgb, var(--pub-primary) 5%, var(--background));
+}
+
+[data-theme="esensi"] .tema-esensi-header[data-varian="berwarna"] {
+  background-image: radial-gradient(
+    circle at 8% 0%,
+    color-mix(in srgb, white 12%, transparent),
+    transparent 45%
+  );
 }
 
 /** Kelas kecil yang dipakai bersama beberapa bagian tema. */

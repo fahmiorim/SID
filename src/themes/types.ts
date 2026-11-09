@@ -7,6 +7,7 @@ import type { TriwulanBaris, TriwulanTotal } from "@/features/keuangan/domain/la
 import type { HasilSurveiPublik, SurveiPublik } from "@/features/publik/application/survei-publik";
 import type { DokumenKategoriFilter, KelompokArsipDokumen } from "@/features/publik/domain/dokumen";
 import type { FilterInventarisPublik } from "@/features/publik/domain/inventaris-publik";
+import type { PublicNavItem } from "@/features/publik/domain/menu";
 import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
@@ -28,7 +29,7 @@ import type { JenisSuratPublik } from "@/features/surat/application/surat-publik
 /** Konteks desa + navigasi yang tersedia di setiap komponen tema. */
 export interface ThemeContext {
   desa: IdentitasDesa;
-  menu: { href: string; label: string }[];
+  menu: PublicNavItem[];
   /** Opsi tema tervalidasi (warna, font, hero, widget). */
   opsi: ThemeOptions;
   tema: {

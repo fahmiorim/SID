@@ -22,6 +22,7 @@ export function PermohonanDetailButton({
 }) {
   const [open, setOpen] = useState(false);
 
+  if (permohonan.status === 5) return null;
   return (
     <>
       <Button type="button" size="sm" variant="outline" onClick={() => setOpen(true)}>

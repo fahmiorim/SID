@@ -1,4 +1,4 @@
-import { Mail, MapPin, Menu, Phone } from "lucide-react";
+import { ChevronDown, Mail, MapPin, Menu, Phone } from "lucide-react";
 import Link from "next/link";
 
 import { SOSMED_LABELS } from "@/features/publik/domain/theme";
@@ -28,17 +28,45 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
             <span className="max-w-44 truncate text-sm font-semibold sm:text-base">{nama}</span>
           </Link>
 
+          <div className="flex-1" />
+
           {opsi.tampilMenu ? (
-            <nav className="ml-auto hidden items-center gap-1 lg:flex" aria-label="Menu utama">
-              {menu.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-md px-3 py-2 text-sm font-medium opacity-90 transition-opacity hover:opacity-100"
-                >
-                  {item.label}
-                </Link>
-              ))}
+            <nav className="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
+              {menu.map((item) =>
+                item.children && item.children.length > 0 ? (
+                  <div key={item.href} className="group relative">
+                    <Link
+                      href={item.href}
+                      className="inline-flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium opacity-90 transition-opacity hover:opacity-100"
+                    >
+                      {item.label}
+                      <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
+                    </Link>
+                    <div className="invisible absolute top-full left-0 z-50 pt-1.5 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
+                      <ul className="min-w-52 rounded-lg border bg-background p-1.5 text-foreground shadow-lg">
+                        {item.children.map((anak) => (
+                          <li key={anak.href}>
+                            <Link
+                              href={anak.href}
+                              className="block rounded-md px-3 py-2 text-sm hover:bg-accent"
+                            >
+                              {anak.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ) : (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="rounded-md px-3 py-2 text-sm font-medium opacity-90 transition-opacity hover:opacity-100"
+                  >
+                    {item.label}
+                  </Link>
+                ),
+              )}
             </nav>
           ) : (
             <div className="flex-1" />
@@ -61,15 +89,35 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
                 className="absolute right-0 z-50 mt-2 w-64 rounded-lg border bg-background p-2 text-foreground shadow-lg"
                 aria-label="Menu utama"
               >
-                {menu.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {menu.map((item) =>
+                  item.children && item.children.length > 0 ? (
+                    <details key={item.href} className="border-b border-border/60 last:border-b-0">
+                      <summary className="flex cursor-pointer list-none items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent">
+                        {item.label}
+                        <ChevronDown className="size-4 opacity-60" aria-hidden="true" />
+                      </summary>
+                      <div className="mb-1 ml-2 border-l pl-2">
+                        {item.children.map((anak) => (
+                          <Link
+                            key={anak.href}
+                            href={anak.href}
+                            className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+                          >
+                            {anak.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </details>
+                  ) : (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                    >
+                      {item.label}
+                    </Link>
+                  ),
+                )}
                 <Link
                   href="/layanan-mandiri"
                   className="mt-1 block rounded-md px-3 py-2 text-sm font-semibold hover:bg-accent"
