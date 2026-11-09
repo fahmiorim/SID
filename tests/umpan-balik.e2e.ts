@@ -58,27 +58,46 @@ test(
     const tabel = screen.getByRole("table");
     await expect(tabel).toBeVisible({ timeout: 10_000 });
 
-    // Tunggu hingga baris ada (item dari submissions di atas)
-    const barisPertama = screen.getByRole("row").first();
-    await expect(barisPertama).toBeVisible({ timeout: 5_000 });
+    // Cari baris milik pengirim ini (urutan daftar tidak dijamin).
+    const barisPertama = screen.getByRole("row").filter({ hasText: nama });
+    await expect(barisPertama).toBeVisible({ timeout: 10_000 });
 
-    // Verifikasi baris mengandung teks yang kita kirim
-    await expect(barisPertama.getByText(nama)).toBeVisible({ timeout: 5_000 });
+    // Ubah status ke "Dibaca" lalu "Ditindaklanjuti". Kontrolnya <select>
+    // native di dalam form, jadi diisi lewat DOM lalu disubmit tombol Simpan.
+    const ubahStatus = async (status: string, label: string) => {
+      const diisi = await browser.evaluate(
+        ({ namaPengirim, nilai }: { namaPengirim: string; nilai: string }) => {
+          const baris = Array.from(document.querySelectorAll("tr")).find((tr) =>
+            tr.textContent?.includes(namaPengirim),
+          );
+          const select = baris?.querySelector("select");
+          if (!select) return false;
+          select.value = nilai;
+          return true;
+        },
+        { namaPengirim: nama, nilai: status },
+      );
+      expect(diisi).toBe(true);
+      await barisPertama.getByRole("button", { name: "Simpan" }).tap();
+      // Form action tidak menampilkan toast; status baru terlihat setelah
+      // halaman di-revalidate, jadi muat ulang lalu periksa badge baris.
+      await app.open("/umpan-balik");
+      await expect(
+        screen.getByRole("row").filter({ hasText: nama }).getByText(label, { exact: true }).first(),
+      ).toBeVisible();
+    };
 
-    // Ubah status ke "Dibaca" lalu "Ditindaklanjuti"
-    const selectStatus = barisPertama.getByRole("combobox", { name: /Status umpan balik/i });
-    await selectStatus.selectOption("dibaca");
-    await expect(barisPertama.getByText("Dibaca")).toBeVisible({ timeout: 10_000 });
-
-    await selectStatus.selectOption("ditindaklanjuti");
-    await expect(barisPertama.getByText("Ditindaklanjuti")).toBeVisible({ timeout: 10_000 });
+    await ubahStatus("dibaca", "Dibaca");
+    await ubahStatus("ditindaklanjuti", "Ditindaklanjuti");
 
     // Filter tab berfungsi
-    await screen.getByRole("button", { name: "Ditindaklanjuti" }).tap();
+    await screen.getByRole("link", { name: "Ditindaklanjuti" }).tap();
     await expect(screen.getByRole("table")).toBeVisible({ timeout: 5_000 });
-    await expect(screen.getByText("Ditindaklanjuti")).toBeVisible({ timeout: 5_000 });
+    await expect(
+      screen.getByRole("row").filter({ hasText: nama }).getByText("Ditindaklanjuti").first(),
+    ).toBeVisible();
 
-    await screen.getByRole("button", { name: "Semua" }).tap();
+    await screen.getByRole("link", { name: "Semua", exact: true }).tap();
     await expect(screen.getByRole("table")).toBeVisible({ timeout: 5_000 });
   },
 );

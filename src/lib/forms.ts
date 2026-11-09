@@ -46,11 +46,18 @@ export const optionalIsoDate = z.preprocess(
   z.iso.date("Tanggal tidak valid.").nullable(),
 );
 
-/** NIK / Nomor KK: tepat `length` angka, boleh dikosongkan → string atau `null`. */
+/**
+ * NIK / Nomor KK: tepat `length` angka, boleh dikosongkan → string atau `null`.
+ *
+ * Nilai `null` diterima agar skema dapat diparse ulang atas hasil parse sebelumnya
+ * (use case menerima input yang sudah divalidasi action).
+ */
 export function optionalDigits(length: number) {
   return z
     .string()
     .trim()
+    .nullable()
+    .transform((value) => value ?? "")
     .refine(
       (value) => value === "" || new RegExp(`^\\d{${length}}$`).test(value),
       `Harus ${length} angka.`,

@@ -2,7 +2,7 @@
 
 Tanggal audit: 9 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID yang tersimpan di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/). Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
-Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Eksekusi seluruh suite E2E, pengujian provider eksternal nyata, dan pemeriksaan manual setiap halaman **belum dilakukan**.
+Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026; hasil dan perbaikannya dicatat di bagian [Pembaruan 9 November 2026](#pembaruan-9-november-2026--eksekusi-suite-e2e).
 
 ## Metode audit
 
@@ -32,11 +32,11 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | File test unit/integrasi di fitur | 154 | Bukan jumlah skenario |
 | Halaman `page.tsx` | 202 | Belum dikelompokkan admin/publik/warga |
 | Route handler `route.ts` | 78 | Termasuk API publik/eksternal |
-| Berkas E2E | 55 | `tests/**/*.e2e.ts` |
-| Test E2E | 251 | Hasil AST seluruh berkas |
-| Test E2E yang berinteraksi UI | 61 (24%) | Sisanya hanya memuat halaman, heading, body, atau HTTP |
-| Test E2E non-interaktif | 190 (76%) | Belum membuktikan aksi pengguna |
-| Aksi UI di E2E | 425 | Terpusat di sedikit berkas |
+| Berkas E2E | 56 | `tests/**/*.e2e.ts` |
+| Test E2E | 182 | Hitung ulang 9 November 2026 dengan pola `^test(`; angka AST pada audit awal 251 |
+| Test E2E yang berinteraksi UI | 148 (81%) | Memuat minimal satu aksi UI (`.fill`, `.tap`, `.click`, `.selectOption`, dst.) |
+| Test E2E non-interaktif | 34 (19%) | Belum membuktikan aksi pengguna |
+| Aksi UI di E2E | Meningkat dari 425 | Kini tersebar di lebih banyak berkas alur; lihat pembaruan di bawah |
 | Impor infrastruktur langsung | 0 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Route lampiran pengaduan memakai `bacaLampiranPengaduan` (validasi jalur ada di use case); `api/penduduk/nik` memakai use case penduduk |
 
 Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
@@ -63,17 +63,59 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `arsip-nomor-surat` | 1 | 1 | 12 | `OS-SUR-006` |
 | `pelanggan-kerjasama` | 1 | 1 | 12 | `OS-MOD-005` |
 
-Contoh smoke yang sering dikutip sebagai bukti CRUD, tetapi tidak menjalankan satu pun aksi UI:
+Contoh smoke yang masih tersisa pada 9 November 2026 (berkas yang sudah ditulis ulang tidak lagi ada di tabel ini):
 
 | Berkas E2E | Test | Test beraksi | Temuan |
 |---|---:|---:|---|
-| `rtm-dpt` | 18 | 0 | Hanya memuat halaman/heading dan memeriksa teks |
-| `keuangan` | 11 | 0 | Tidak membuat/mengubah data keuangan |
-| `pemerintahan` | 8 | 0 | Tidak menguji CRUD pemerintahan |
-| `warga-mandiri` | 8 | 0 | Tidak menguji login, pesan, izin, atau lapak warga |
-| `penduduk` | 7 | 0 | Tidak menguji CRUD/impor/ekspor penduduk |
-| `modul-tambahan` | 4 | 0 | Disebut uji CRUD, tetapi hanya memeriksa heading/body |
+| `modul-tambahan` | 4 | 3 | CRUD anjungan/buku tamu belum dijalankan penuh |
 | `kesehatan` | 2 | 0 | Tidak menguji input data kesehatan |
+| `dtks-impor` | 3 | 4 | Impor DTKS belum membuktikan hasil penyimpanan |
+| `keuangan-lanjutan` | 4 | 3 | Impor keuangan belum membuktikan hasil penyimpanan |
+
+## Pembaruan 9 November 2026 — eksekusi suite E2E
+
+Suite dijalankan pada dev server lokal: **56 berkas, 194 test, 190 lulus** dalam 335 detik (run 23:02, sebelum batch keempat; setelah batch keempat total 189 test). Empat kegagalan: `kelompok-laporan` (assertion bergantung nama penduduk seed; sudah diperbaiki) dan `keluarga`, `rtm-dpt`, `permohonan-warga` yang hanya gagal saat suite paralel dan lulus ketika dijalankan sendiri. Setelah perbaikan assertion, `kelompok-laporan` lulus 4/4; suite penuh belum dijalankan ulang setelah perbaikan terakhir.
+
+Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
+
+| Berkas E2E | Test | Aksi UI | Bukti perilaku | ID |
+|---|---:|---:|---|---|
+| `penduduk` | 8 | 32 | CRUD, detail/cetak, catat kelahiran, filter + tautan CSV, DPT, suplemen, DTKS, laporan kependudukan | `OS-POP-001`–`OS-POP-007` |
+| `keluarga` | 1 | 19 | Tambah KK, detail, ubah alamat, hapus | `OS-POP-003` |
+| `rtm-dpt` | 2 | 20 | CRUD rumah tangga + tautkan anggota, laporan rekap | `OS-POP-004` |
+| `keuangan` | 5 | 18 | Pagu/realisasi APBDes tersimpan, laporan + filter bidang, triwulan, SiLPA, rekonsiliasi | `OS-FIN-001`–`OS-FIN-003` |
+| `pemerintahan` | 3 | 19 | Lembaga CRUD + anggota, kelompok tersimpan di laporan, SOTK admin/publik | `OS-GOV-002`–`OS-GOV-005` |
+| `kelompok-laporan` | 3 | 22 | Kategori kelompok, anggota + jabatan, keluarkan anggota, ekspor CSV | `OS-GOV-004`, `OS-GOV-005` |
+| `wilayah-pemerintahan` | 3 | 14 | Dusun CRUD + pencarian, rekap wilayah, referensi wilayah | `OS-WIL-001` |
+| `pembangunan-buku` | 1 | 17 | Tambah proyek, ubah progres, hapus | `OS-GOV-009` |
+| `pemilihan` | 2 | 3 | Admin membuat pemilihan; publik menampilkan kandidat, suara, pemenang (data disiapkan lewat DB, dibersihkan di `finally`) | `OS-GOV-007` |
+| `bantuan-laporan` | 3 | 25 | Program CRUD, peserta dari dialog, laporan resmi + CSV | `OS-POP-011` |
+| `statistik-bantuan` | 3 | 5 | Filter umur/sasaran, tautan ekspor, CSV | `OS-POP-010`, `OS-POP-013` |
+| `ekspor-statistik` | 6 | 0 | PDF penduduk/bantuan, kind tak dikenal, filter pada tautan, penolakan tanpa sesi/warga | `OS-POP-010`, `OS-POP-013` |
+| `analisis-survei` | 7 | 34 | Kategori/indikator/survei CRUD, jawaban warga → rekap admin, ekspor, token API | `OS-ANA-001`–`OS-ANA-006` |
+| `survei-publik` | 2 | 1 | Survei aktif tampil + dapat dibuka; survei nonaktif disembunyikan | `OS-ANA-006` |
+| `gis-pertanahan` | 7 | 30 | Area/garis/point/polygon, persil/CDESA/mutasi, peta cetak, simbol | `OS-WIL-006` |
+| `web-publik` | 15 | 4 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak | `OS-WEB-001`–`OS-WEB-019` |
+| `web-berita-galeri` | 3 | 16 | Berita buat/tampil/detail/cari, galeri album + detail | `OS-WEB-002`, `OS-WEB-004` |
+| `umpan-balik` | 2 | 8 | Warga kirim umpan balik; admin menandai baru → dibaca → ditindaklanjuti | `OS-WEB-009`, `OS-WEB-015` |
+| `pengaduan` | 1 | 15 | Kirim pengaduan tanpa akun, lacak dengan nomor tiket + identitas, operator menanggapi, status dan tanggapan terlihat pelapor | `OS-WEB-009` |
+| `inventaris-bumindes` | 2 | 10 | Tambah barang, ubah lokasi, hapus lewat dialog konfirmasi; pintu masuk Bumindes | `OS-INV-001`, `OS-BUM-001` |
+| `tema` | 1 | 6 | Simpan teks berjalan + tautan Facebook, nilai bertahan setelah muat ulang dan tampil di beranda publik, lalu dipulihkan | `OS-WEB-016`, `OS-WEB-017` |
+| `plugin` | 1 | 2 | Nonaktivasi plugin tersimpan; aktivasi ditolak saat environment wajib belum diisi | `OS-OPS-008` |
+| `warga-mandiri` | 1 | 24 | Login warga (captcha), pesan, lapak tambah/ubah/hapus + katalog publik, izin, verifikasi surat via token, dan registrasi mandiri yang disetujui admin (PIN tampil sekali) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
+| `verifikasi-berjenjang` | 7 | 74 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
+
+Bug produksi yang ditemukan dan diperbaiki:
+
+- `src/lib/forms.ts`: `optionalDigits` menangani input opsional tanpa memaksa digit.
+- Dialog anggota memuat ulang terus-menerus (`rumah-tangga-members-dialog.tsx`, `anggota-dialog.tsx`, `peserta-dialog.tsx`); penghapusan anggota/peserta kini memanggil `onChanged` agar daftar induk ikut menyegarkan.
+- `bidang-filter.tsx` baru; form SiLPA tidak lagi bersarang; agregasi `saveKeuanganNilai` menyimpan nilai dengan benar; filter `status=semua` pada pembangunan; perbaikan cetak tema (`print-button.tsx`, `themes/ui.tsx`).
+
+Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. `npm run build` dan ulangan suite penuh belum dijalankan.
+
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `dtks-impor`, `keuangan-lanjutan`, `pendapat`, `idm`, `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `bantuan-warga`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
+
+Gap domain yang dicatat tetapi belum diubah: `verifySuratData` tidak memanggil `validateVerification`, sehingga aturan own-submission di `src/features/surat/domain/verifikasi.ts` tidak ditegakkan oleh aksi verifikasi.
 
 ## Status per ID (111 ID)
 
@@ -81,10 +123,10 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 
 | ID | Hasil audit | Gap tersisa | E2E yang dirujuk |
 |---|---|---|---|
-| OS-POP-001 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `penduduk` 7 test/smoke |
-| OS-POP-002 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `penduduk` 7 test/smoke |
-| OS-POP-003 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `keluarga` 4 test/smoke |
-| OS-POP-004 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `rtm-dpt` 18 test/smoke |
+| OS-POP-001 | Struktur lengkap; ada E2E interaktif | Alur CRUD, detail, filter, ekspor CSV, suplemen, DTKS | `penduduk` 8 test/8 beraksi |
+| OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 8 test/8 beraksi |
+| OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
+| OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
 | OS-POP-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-POP-006 | Sebagian | E2E impor sukses. | `dtks-impor` 3 test/2 interaktif |
 | OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -100,18 +142,18 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WIL-003 | Sebagian | E2E. | tidak dirujuk |
 | OS-WIL-004 | Sebagian | E2E. | tidak dirujuk |
 | OS-WIL-005 | Sebagian | E2E GIS lebih luas. | tidak dirujuk |
-| OS-WIL-006 | Sebagian | E2E CRUD pertanahan. | tidak dirujuk |
+| OS-WIL-006 | Struktur lengkap; ada E2E interaktif | — | `gis-pertanahan` 7 test/7 beraksi |
 | OS-WIL-007 | Sebagian | E2E halaman cetak peta. | `peta-publik` 1 test/smoke |
 | OS-WIL-008 | Sebagian | E2E. | tidak dirujuk |
 | OS-GOV-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-GOV-002 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-GOV-003 | Sebagian | E2E bagan SOTK/cetak belum ada | tidak dirujuk |
-| OS-GOV-004 | Sebagian | E2E halaman laporan/ekspor belum ada. | tidak dirujuk |
-| OS-GOV-005 | Sebagian | E2E halaman laporan/ekspor belum ada. | tidak dirujuk |
+| OS-GOV-004 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
+| OS-GOV-005 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
 | OS-GOV-006 | Sebagian | E2E ekspor laporan belum ada. | `idm` 4 test/2 interaktif |
-| OS-GOV-007 | Sebagian | E2E pemilihan. | tidak dirujuk |
+| OS-GOV-007 | Sebagian | E2E admin + publik ada; kandidat publik memakai data DB, bukan input UI | `pemilihan` 2 test/2 beraksi |
 | OS-GOV-008 | Struktur lengkap; ada E2E interaktif | — | `sinergi` 4 test/1 interaktif |
-| OS-GOV-009 | Sebagian | E2E buku pembangunan belum ada. | tidak dirujuk |
+| OS-GOV-009 | Struktur lengkap; ada E2E interaktif | — | `pembangunan-buku` 1 test/1 beraksi |
 | OS-GOV-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-001 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-002 | Sebagian | E2E. | `surat-flow` 6 test/5 interaktif; `permohonan-warga` 5 test/5 interaktif |
@@ -119,7 +161,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-SUR-004 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-005 | Sebagian | E2E rekap/notifikasi. | `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-006 | Struktur lengkap; ada E2E interaktif | — | `arsip-nomor-surat` 1 test/1 interaktif; `surat-lengkap` 4 test/4 interaktif |
-| OS-SUR-007 | Struktur lengkap; ada E2E interaktif | — | `verifikasi-berjenjang` 7 test/7 interaktif |
+| OS-SUR-007 | Struktur lengkap; ada E2E interaktif | Status dicek di DB + badge; nomor surat dan catatan penolakan terlihat pengguna | `verifikasi-berjenjang` 7 test/7 beraksi |
 | OS-SUR-008 | Sebagian | E2E cetak per varian template. | `publik-verifikasi` 2 test/1 interaktif |
 | OS-SUR-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -127,9 +169,9 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-SUR-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-013 | Sebagian | verifikasi terhadap provider BSrE nyata dan E2E. | tidak dirujuk |
 | OS-SUR-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-002 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-003 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-FIN-001 | Struktur lengkap; ada E2E interaktif | Pagu/realisasi APBDes tersimpan | `keuangan` 5 test/5 beraksi |
+| OS-FIN-002 | Struktur lengkap; ada E2E interaktif | Laporan + filter bidang | `keuangan` 5 test/5 beraksi |
+| OS-FIN-003 | Struktur lengkap; ada E2E interaktif | Realisasi triwulan tersimpan | `keuangan` 5 test/5 beraksi |
 | OS-FIN-004 | Sebagian | E2E impor belum membuktikan hasil penyimpanan | `keuangan-lanjutan` 4 test/2 interaktif |
 | OS-FIN-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-006 | Sebagian | E2E filter periode dan data laporan belum dibuktikan | tidak dirujuk |
@@ -141,41 +183,41 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-FIN-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-013 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-WEB-001 | Sebagian | E2E beranda belum ada; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. | tidak dirujuk |
-| OS-WEB-002 | Sebagian | E2E belum ada. | tidak dirujuk |
+| OS-WEB-002 | Struktur lengkap; ada E2E interaktif | — | `web-berita-galeri` 3 test/3 beraksi |
 | OS-WEB-003 | Sebagian | E2E profil/pemerintahan/SOTK publik belum ada | tidak dirujuk |
-| OS-WEB-004 | Sebagian | E2E galeri dan cetak album belum ada | tidak dirujuk |
+| OS-WEB-004 | Sebagian | Album + detail sudah; cetak album belum | `web-berita-galeri` 3 test/3 beraksi |
 | OS-WEB-005 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-006 | Sebagian | E2E belum ada. | tidak dirujuk |
 | OS-WEB-007 | Sebagian | E2E hanya memuat halaman; coverage layer belum diperluas. | tidak dirujuk |
 | OS-WEB-008 | Sebagian | E2E. | tidak dirujuk |
-| OS-WEB-009 | Sebagian | E2E alur pengaduan lengkap. | tidak dirujuk |
+| OS-WEB-009 | Struktur lengkap; ada E2E interaktif | — | `pengaduan` 1 test/1 beraksi; `umpan-balik` 2 test/2 beraksi |
 | OS-WEB-010 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-011 | Sebagian | E2E filter/ekspor. | tidak dirujuk |
 | OS-WEB-012 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-013 | Sebagian | E2E publik/isolasi tenant. | tidak dirujuk |
 | OS-WEB-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-WEB-015 | Sebagian | E2E. | tidak dirujuk |
-| OS-WEB-016 | Sebagian | E2E. | tidak dirujuk |
+| OS-WEB-015 | Struktur lengkap; ada E2E interaktif | — | `umpan-balik` 2 test/2 beraksi |
+| OS-WEB-016 | Struktur lengkap; ada E2E interaktif | — | `tema` 1 test/1 beraksi |
 | OS-WEB-017 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-018 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `sitemap` 2 test/smoke |
 | OS-WEB-019 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-WGA-002 | Struktur terverifikasi | Login `/masuk`, sesi warga, PIN, OTP faktor kedua, rate limit; test `warga.test.ts`, `integrasi-warga.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-WGA-003 | Struktur terverifikasi | Beranda/profil/ringkasan layanan warga di `/layanan-mandiri`; test `integrasi-warga.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-WGA-004 | Sebagian | E2E pembatalan permohonan oleh warga (sebelum diambil, alasan wajib). | `permohonan-warga` 5 test/5 interaktif |
+| OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-002 | Struktur terverifikasi | Login `/masuk`, sesi warga, PIN, OTP faktor kedua, rate limit; test `warga.test.ts`, `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-003 | Struktur terverifikasi | Beranda/profil/ringkasan layanan warga di `/layanan-mandiri`; test `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-004 | Struktur lengkap; ada E2E interaktif | Pembatalan oleh warga sebelum diambil, alasan wajib | `permohonan-warga` 5 test/5 beraksi |
 | OS-WGA-005 | Struktur lengkap; ada E2E interaktif | — | `permohonan-warga` 5 test/5 interaktif |
-| OS-WGA-006 | Struktur terverifikasi | Pesan dua arah `/layanan-mandiri/pesan` + `/pesan-warga`; test `pesan-warga.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-WGA-007 | Struktur terverifikasi | Verifikasi surat area warga `/layanan-mandiri/verifikasi-surat`; test `verifikasi.test.ts` | `warga-mandiri` 8 test/smoke |
+| OS-WGA-006 | Struktur terverifikasi | Pesan dua arah `/layanan-mandiri/pesan` + `/pesan-warga`; test `pesan-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-007 | Struktur terverifikasi | Verifikasi surat area warga `/layanan-mandiri/verifikasi-surat`; test `verifikasi.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-008 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `bantuan-warga` 1 test/smoke |
 | OS-WGA-009 | Sebagian | bukti pengiriman ke provider nyata (kredensial belum tersedia) dan E2E alur lengkap. | tidak dirujuk |
-| OS-WGA-010 | Struktur terverifikasi | Lapak warga `/layanan-mandiri/lapak` + katalog publik; test `lapak.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-WGA-011 | Struktur terverifikasi | Kehadiran `/kehadiran`, izin warga `/layanan-mandiri/izin`, keputusan `/kehadiran/izin`; test `kehadiran.test.ts` | `warga-mandiri` 8 test/smoke |
-| OS-ANA-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-WGA-010 | Struktur terverifikasi | Lapak warga `/layanan-mandiri/lapak` + katalog publik; test `lapak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-011 | Struktur terverifikasi | Kehadiran `/kehadiran`, izin warga `/layanan-mandiri/izin`, keputusan `/kehadiran/izin`; test `kehadiran.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-ANA-001 | Struktur lengkap; ada E2E interaktif | Kategori analisis CRUD | `analisis-survei` 7 test/7 beraksi |
 | OS-ANA-002 | Sebagian | E2E. | tidak dirujuk |
 | OS-ANA-003 | Sebagian | E2E. | tidak dirujuk |
 | OS-ANA-004 | Sebagian | E2E. | tidak dirujuk |
 | OS-ANA-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-ANA-006 | Sebagian | E2E. | tidak dirujuk |
+| OS-ANA-006 | Struktur lengkap; ada E2E interaktif | — | `analisis-survei` 7 test/7; `survei-publik` 2 test/2 |
 | OS-MOD-001 | Sebagian | Konfigurasi admin + daftar publik ada; UUID kosong kini dinormalisasi dan diisi otomatis, dengan test domain/use case. Daftar publik kini hanya menampilkan perangkat dengan `status = aktif` (perbaikan/nonaktif disembunyikan). Halaman publik mengenali perangkat dari cookie `anjungan_uuid` (`cariPerangkatKiosk`, test unit) dan menampilkan orientasi layar. Browser kiosk kini membuat UUID sendiri di `localStorage`, mencerminkannya ke cookie, dan memuat ulang sekali (helper `device-uuid`, 5 test). Orientasi layar mengubah tata letak: potret memakai kolom lebih sedikit (`tata-letak-kiosk`, 3 test). Permohonan surat tanpa akun: `/desa/anjungan/permohonan` hanya terbuka untuk perangkat terdaftar dengan `permohonanSuratTanpaAkun = 1`, login memakai NIK 16 angka + tanggal lahir, sesi guest berupa token HMAC di cookie HttpOnly `kiosk_guest` (30 menit), keyboard virtual, dan pengajuan memakai `simpanPermohonanSurat` yang sama dengan warga. Unit test anjungan 31 lulus. Belum ada: E2E CRUD/tenant dan E2E kiosk (MySQL lokal mati). | `modul-tambahan` 4 test/1 interaktif; unit anjungan 31 |
 | OS-MOD-002 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-MOD-003 | Struktur terverifikasi | Rekap kehadiran `/kehadiran/rekap` + ekspor; use case memakai repository yang ada; test `kehadiran.test.ts` | tidak dirujuk |
@@ -188,7 +230,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-OPS-005 | Sebagian | E2E penerimaan webhook, alur inbox/balasan dan filter kanal. | tidak dirujuk |
 | OS-OPS-006 | Sebagian | E2E. | tidak dirujuk |
 | OS-OPS-007 | Sebagian | Gap: E2E restore. | `backup-database` 1 test/smoke |
-| OS-OPS-008 | Sebagian | Gap: E2E plugin. | tidak dirujuk |
+| OS-OPS-008 | Struktur lengkap; ada E2E interaktif | Aktivasi ditolak saat env wajib kosong | `plugin` 1 test/1 beraksi |
 | OS-OPS-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-OPS-011 | Sebagian | E2E. | tidak dirujuk |
 | OS-OPS-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -239,7 +281,7 @@ Route publik desa, API publik, dan `sitemap.ts` sudah bersih; sisa pelanggaran b
 
 ### 4. Cakupan E2E tidak merata
 
-Hanya 61 dari 251 test E2E yang menjalankan aksi UI. Sebaliknya, beberapa alur berisiko tinggi sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, GIS layer/pertanahan, survei publik, dan lapak/keranjang. Klaim "sudah diuji E2E" pada ID lain perlu diperiksa terhadap kolom E2E di atas.
+Pada hitung ulang 9 November 2026, 148 dari 182 test E2E memuat aksi UI; suite dijalankan dan 190 dari 194 test lulus. Alur berisiko tinggi yang sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, penduduk/keluarga/RTM, keuangan, pemerintahan/kelompok, bantuan, analisis/survei, GIS, berita/galeri, umpan balik, dan pemilihan. Klaim "sudah diuji E2E" pada ID lain tetap perlu diperiksa terhadap kolom E2E di atas.
 
 ## Audit vertikal: Anjungan (`OS-MOD-001`)
 
@@ -260,7 +302,7 @@ Hanya 61 dari 251 test E2E yang menjalankan aksi UI. Sebaliknya, beberapa alur b
 
 ## Hal yang belum bisa disimpulkan
 
-1. **Eksekusi suite E2E**: tidak dijalankan dalam audit ini karena memerlukan build produksi, server, dan seed. Hasil E2E historis tidak diverifikasi ulang.
+1. **Eksekusi suite E2E**: sudah dijalankan 9 November 2026 (190/194 lulus) dengan dev server dan seed lokal; ulangan suite penuh setelah perbaikan terakhir dan eksekusi terhadap build produksi belum dilakukan.
 2. **Pemeriksaan visual seluruh 202 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
 3. **Provider eksternal nyata**: tidak diuji tanpa kredensial.
 4. **Isolasi tenant pada route yang dipindahkan**: belum diperiksa route per route dengan test; route publik desa/API publik/sitemap sudah 0.
@@ -268,4 +310,4 @@ Hanya 61 dari 251 test E2E yang menjalankan aksi UI. Sebaliknya, beberapa alur b
 
 ## Kesimpulan
 
-Audit struktur selesai untuk seluruh 111 ID. Tidak ada ID yang dinyatakan selesai penuh. Delapan ID berstatus ✅ historis memiliki E2E interaktif (beberapa ID sebagian juga memilikinya) dan delapan lainnya hanya smoke; 32 ID berstatus ✅ historis tidak merujuk E2E sama sekali. Prioritas berikutnya adalah menutup kebocoran lapisan yang tersisa, melanjutkan alur kiosk Anjungan, dan menambah E2E perilaku untuk alur inti yang masih smoke. Daftar kerja berurutan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
+Audit struktur selesai untuk seluruh 111 ID. Tidak ada ID yang dinyatakan selesai penuh. Per 9 November 2026, 148 dari 182 test E2E menjalankan aksi UI dan suite lulus 190/194; belasan ID yang sebelumnya hanya smoke (penduduk, keluarga, RTM, keuangan, pemerintahan, kelompok, pembangunan, bantuan, analisis, berita/galeri, umpan balik) kini punya bukti interaktif. Prioritas berikutnya adalah menutup kebocoran lapisan yang tersisa, melanjutkan alur kiosk Anjungan, dan menulis ulang berkas yang masih smoke (`warga-mandiri`, `kesehatan`, `modul-tambahan`, dan daftar di bagian pembaruan). Daftar kerja berurutan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).

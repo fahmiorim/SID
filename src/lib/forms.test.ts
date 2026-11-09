@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 
-import { todayIsoDate } from "./forms";
+import { optionalDigits, todayIsoDate } from "./forms";
+
+describe("optionalDigits", () => {
+  it("menerima hasil parse sebelumnya yang sudah bernilai null", () => {
+    const schema = optionalDigits(16);
+
+    const pertama = schema.parse("");
+    expect(pertama).toBeNull();
+    expect(schema.parse(pertama)).toBeNull();
+  });
+
+  it("menolak NIK yang bukan 16 angka", () => {
+    expect(optionalDigits(16).safeParse("123").success).toBe(false);
+  });
+});
 
 describe("todayIsoDate", () => {
   it("memakai komponen tanggal lokal, bukan UTC", () => {

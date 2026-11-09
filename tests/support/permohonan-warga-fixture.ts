@@ -33,6 +33,16 @@ export interface PermohonanWargaFixture {
     number: string | null;
     verificationToken: string | null;
   } | null>;
+  /** Status verifikasi surat terbaru untuk jenis uji (draft/verifikasi/issued/cancelled). */
+  ambilSuratTerbaru(): Promise<{
+    id: number;
+    number: string | null;
+    status: string;
+    verifikasiOperator: boolean | null;
+    verifikasiSekdes: boolean | null;
+    verifikasiKades: boolean | null;
+    createdBy: string | null;
+  } | null>;
   /** Nilai isian dinamis permohonan terakhir pada jenis variasi. */
   ambilIsianPermohonan(): Promise<Record<string, string> | null>;
   hapus(): Promise<void>;
@@ -138,6 +148,38 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
       verificationToken: row.verification_token,
     };
   }
+  async function ambilSuratTerbaru(): Promise<{
+    id: number;
+    number: string | null;
+    status: string;
+    verifikasiOperator: boolean | null;
+    verifikasiSekdes: boolean | null;
+    verifikasiKades: boolean | null;
+    createdBy: string | null;
+  } | null> {
+    if (desaId === null || jenisId === null) return null;
+    const [rows] = await pool.execute<RowDataPacket[]>(
+      `SELECT id, number, status, verifikasi_operator, verifikasi_sekdes, verifikasi_kades, created_by
+       FROM letters
+       WHERE village_id = ? AND type_id = ?
+       ORDER BY id DESC
+       LIMIT 1`,
+      [desaId, jenisId],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      id: Number(row.id),
+      number: (row.number as string | null) ?? null,
+      status: String(row.status),
+      verifikasiOperator:
+        row.verifikasi_operator === null ? null : Boolean(row.verifikasi_operator),
+      verifikasiSekdes: row.verifikasi_sekdes === null ? null : Boolean(row.verifikasi_sekdes),
+      verifikasiKades: row.verifikasi_kades === null ? null : Boolean(row.verifikasi_kades),
+      createdBy: (row.created_by as string | null) ?? null,
+    };
+  }
+
   async function ambilIsianPermohonan(): Promise<Record<string, string> | null> {
     if (desaId === null || jenisVariasiId === null) return null;
     const [rows] = await pool.execute<IsianRow[]>(
@@ -280,6 +322,7 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
       warga,
       wargaLain,
       ambilSuratTerbit,
+      ambilSuratTerbaru,
       ambilIsianPermohonan,
       hapus,
     };

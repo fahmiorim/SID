@@ -1,51 +1,48 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-WEB-016 — Tema: teks berjalan (≤300 char) + sosial media (FB, IG, YT, X, TikTok, WA, Telegram)
-// ============================================================================
+/**
+ * Katalog: OS-WEB-016 — Tema: teks berjalan dan tautan sosial media disimpan
+ * lalu tampil di situs publik; OS-WEB-017 — daftar tema terpasang terlihat.
+ */
 test(
-  "tema admin: halaman pengaturan menampilkan opsi teks berjalan dan sosial media",
-  { session: "admin" },
-  async ({ app, screen }) => {
-    await app.open("/konten/tema");
-    await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible();
-    // Input teks berjalan
-    await expect(screen.getByLabel(/teks berjalan/i)).toBeVisible();
-    // Input sosial media - minimal FB, IG, YT, X, TikTok, WA, Telegram
-    const platforms = [
-      "facebook",
-      "instagram",
-      "youtube",
-      "twitter",
-      "tiktok",
-      "whatsapp",
-      "telegram",
-    ];
-    for (const platform of platforms) {
-      const input = screen.getByLabel(new RegExp(platform, "i"));
-      if (await input.isVisible({ timeout: 3000 })) {
-        // Lanjut
-      }
-    }
-  },
-);
+  "OS-WEB-016/017 — tema: simpan teks berjalan + sosmed dan tampil di publik",
+  { session: "admin", timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const teks = `Layanan darurat desa 24 jam — uji E2E ${Date.now()}`;
+    const facebook = "https://facebook.com/desa-contoh-e2e";
 
-// ============================================================================
-// OS-WEB-017 — Pemindaian manifest tema build-time: slug semver, nama, slot dikenal/tidak ganda/lengkap;
-// kartu tema menampilkan masalah dan tema tidak valid tidak dapat diaktifkan (validasi ulang di use case).
-// Registry tetap build-time, tanpa unggah/eksekusi kode. Test `tema-scan.test.ts`.
-// ============================================================================
-test(
-  "tema: halaman pengaturan manifest scan divisualisasikan",
-  { session: "admin" },
-  async ({ app, screen }) => {
     await app.open("/konten/tema");
     await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible();
-    // Daftar tema: kartu tema dengan tombol pilih/status aktif
     await expect(screen.getByText("Tema terpasang")).toBeVisible();
-    await expect(screen.getByText(/Pakai tema ini|Sedang dipakai/).first()).toBeVisible({
-      timeout: 5000,
+
+    const asli = await browser.evaluate(() => {
+      const teksEl = document.querySelector<HTMLTextAreaElement>("#teksBerjalan");
+      const fbEl = document.querySelector<HTMLInputElement>("#sosmed_facebook");
+      return { teks: teksEl?.value ?? "", facebook: fbEl?.value ?? "" };
     });
+
+    try {
+      await screen.getByLabel("Teks berjalan").fill(teks);
+      await screen.getByLabel("Facebook").fill(facebook);
+      await screen.getByRole("button", { name: "Simpan pengaturan tema" }).tap();
+
+      await app.open("/konten/tema");
+      await expect(screen.getByLabel("Teks berjalan")).toHaveValue(teks);
+      await expect(screen.getByLabel("Facebook")).toHaveValue(facebook);
+
+      // Nilai yang disimpan terpakai oleh tema publik.
+      await app.open("/");
+      await expect(screen.getByText(teks)).toBeVisible({ timeout: 10_000 });
+      await expect(screen.getByRole("link", { name: /facebook/i }).first()).toHaveAttribute(
+        "href",
+        facebook,
+      );
+    } finally {
+      await app.open("/konten/tema");
+      await screen.getByLabel("Teks berjalan").fill(asli.teks);
+      await screen.getByLabel("Facebook").fill(asli.facebook);
+      await screen.getByRole("button", { name: "Simpan pengaturan tema" }).tap();
+    }
   },
 );

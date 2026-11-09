@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Eye, EyeOff, Loader2, Plus, UserMinus } from "lucide-react";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -97,6 +97,7 @@ function AnggotaRow({
       const state = await removeAnggotaAction(idleActionState, formData);
       if (state.status === "success") {
         toast.success(state.message);
+        onChanged();
       } else if (state.status === "error") {
         toast.error(state.message);
       }
@@ -257,6 +258,8 @@ function AddForm({
 function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
   const [state, setState] = useState<AnggotaState>({ status: "loading" });
   const [reloadKey, setReloadKey] = useState(0);
+  // Identitas stabil: `AddForm` memakainya sebagai dependensi effect.
+  const muatUlang = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -330,11 +333,7 @@ function AnggotaContent({ kelompok }: { kelompok: KelompokListRow }) {
         </div>
       )}
 
-      <AddForm
-        kelompokId={kelompok.id}
-        kandidat={state.kandidat}
-        onAdded={() => setReloadKey((key) => key + 1)}
-      />
+      <AddForm kelompokId={kelompok.id} kandidat={state.kandidat} onAdded={muatUlang} />
     </div>
   );
 }

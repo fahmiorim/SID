@@ -75,7 +75,17 @@ test(
     await expect(screen.getByRole("alertdialog")).toBeVisible();
     await screen.getByRole("button", { name: "Verifikasi" }).tap();
     await expect(screen.getByText("Surat diverifikasi.")).toBeVisible();
-    await app.open(urlSurat);
+
+    // Pesan sukses saja tidak cukup: pastikan status tersimpan dan terlihat.
+    const setelahOperator = await alur.ambilSuratTerbaru();
+    expect(setelahOperator?.status).toBe("verifikasi");
+    expect(setelahOperator?.verifikasiOperator).toBe(true);
+    expect(setelahOperator?.verifikasiSekdes ?? false).toBe(false);
+
+    await app.open(`/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`);
+    await expect(
+      screen.getByRole("row").filter({ hasText: alur.namaJenis }).getByText("Menunggu Verifikasi"),
+    ).toBeVisible();
 
     // 3. Login sekdes: verifikasi step 2
     await app.clearState();
@@ -92,7 +102,12 @@ test(
     await expect(screen.getByRole("alertdialog")).toBeVisible();
     await screen.getByRole("button", { name: "Verifikasi" }).tap();
     await expect(screen.getByText("Surat diverifikasi.")).toBeVisible();
-    await app.open(urlSurat);
+
+    const setelahSekdes = await alur.ambilSuratTerbaru();
+    expect(setelahSekdes?.verifikasiOperator).toBe(true);
+    expect(setelahSekdes?.verifikasiSekdes).toBe(true);
+    expect(setelahSekdes?.verifikasiKades ?? false).toBe(false);
+    expect(setelahSekdes?.status).toBe("verifikasi");
 
     // 4. Login kades: verifikasi step 3 → surat terbit
     await app.clearState();
@@ -115,10 +130,35 @@ test(
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Unduh PDF" })).toBeVisible();
 
-    // 6. Verifikasi DB: surat terbit dengan token
+    // 6. Verifikasi DB + pesan yang terlihat pengguna
     const surat = await alur.ambilSuratTerbit();
     expect(surat?.number).toBeDefined();
     expect(surat?.verificationToken).toBeDefined();
+
+    const terbit = await alur.ambilSuratTerbaru();
+    expect(terbit?.status).toBe("issued");
+    expect(terbit?.verifikasiKades).toBe(true);
+
+    // Admin melihat nomor surat dan status Terbit di daftar.
+    await app.open(`/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`);
+    const barisTerbit = screen.getByRole("row").filter({ hasText: alur.namaJenis });
+    await expect(barisTerbit.getByText("Terbit", { exact: true })).toBeVisible();
+    await expect(barisTerbit.getByText(surat!.number!)).toBeVisible();
+
+    // Warga melihat nomor surat dan status Siap Diambil di riwayat permohonan.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
+    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText(/Nomor surat:/)).toBeVisible();
+    await expect(screen.getByText(surat!.number!).first()).toBeVisible();
+    await expect(screen.getByText("Siap Diambil").first()).toBeVisible();
   },
 );
 
@@ -184,9 +224,15 @@ test(
       screen.getByRole("menuitem", { name: "Verifikasi Kepala Desa" }),
     ).not.toBeVisible();
 
-    // Verifikasi via DB: step operator belum selesai
+    // Verifikasi via DB: menu tersembunyi bukan satu-satunya bukti —
+    // state surat harus tetap menunggu verifikasi operator.
     const surat = await alur.ambilSuratTerbit();
     expect(surat).toBeNull(); // Surat belum terbit
+    const belumDiverifikasi = await alur.ambilSuratTerbaru();
+    expect(belumDiverifikasi?.status).toBe("verifikasi");
+    expect(belumDiverifikasi?.verifikasiOperator ?? false).toBe(false);
+    expect(belumDiverifikasi?.verifikasiSekdes ?? false).toBe(false);
+    expect(belumDiverifikasi?.verifikasiKades ?? false).toBe(false);
   },
 );
 
@@ -251,7 +297,7 @@ test(
 );
 
 test(
-  "verifikasi berjenjang: restriksi — approve own submission ditolak",
+  "verifikasi berjenjang: warga tanpa izin tidak melihat aksi verifikasi",
   { timeout: 180_000 },
   async ({ app, screen, browser, alur }) => {
     await app.clearState();
@@ -292,7 +338,10 @@ test(
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
 
-    // Login warga (pemohon): tidak bisa verifikasi surat sendiri
+    // CATATAN: ini menguji RBAC halaman admin, bukan aturan domain
+    // "pembuat tidak boleh memverifikasi surat sendiri" (`validateVerification`)
+    // yang saat ini tidak dipanggil oleh `verifySuratData`. Alur operator tetap
+    // sah karena operator memang pembuat konsep dari permohonan warga.
     await app.clearState();
     await app.open("/masuk");
     await masukDenganKredensial(
@@ -362,10 +411,31 @@ test(
     await screen.getByRole("button", { name: "Tolak" }).tap();
     await expect(screen.getByText("Surat ditolak.")).toBeVisible();
 
-    // Verifikasi: surat kembali ke status draft
+    // Pesan penolakan harus sampai ke pemohon, bukan hanya toast admin.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
+    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText("Catatan operator: Data tidak lengkap")).toBeVisible();
+    await expect(screen.getByText("Dibatalkan").first()).toBeVisible();
+
+    // Surat kembali ke status draft dan bisa diubah operator.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
+    await expect(browser).toHaveURL("/beranda");
     await app.open(urlSurat);
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Ubah" })).toBeVisible();
+
+    const setelahTolak = await alur.ambilSuratTerbaru();
+    expect(setelahTolak?.status).toBe("draft");
   },
 );
 
@@ -436,10 +506,31 @@ test(
     await screen.getByRole("button", { name: "Tolak" }).tap();
     await expect(screen.getByText("Surat ditolak.")).toBeVisible();
 
-    // Verifikasi: surat kembali ke status draft
+    // Pesan penolakan harus sampai ke pemohon, bukan hanya toast admin.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
+    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText("Catatan operator: Format tidak sesuai")).toBeVisible();
+    await expect(screen.getByText("Dibatalkan").first()).toBeVisible();
+
+    // Surat kembali ke status draft dan bisa diubah operator.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
+    await expect(browser).toHaveURL("/beranda");
     await app.open(urlSurat);
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Ubah" })).toBeVisible();
+
+    const setelahTolak = await alur.ambilSuratTerbaru();
+    expect(setelahTolak?.status).toBe("draft");
   },
 );
 
@@ -526,9 +617,30 @@ test(
     await screen.getByRole("button", { name: "Tolak" }).tap();
     await expect(screen.getByText("Surat ditolak.")).toBeVisible();
 
-    // Verifikasi: surat kembali ke status draft
+    // Pesan penolakan harus sampai ke pemohon, bukan hanya toast admin.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
+    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    await app.open("/layanan-mandiri/surat");
+    await expect(screen.getByText("Catatan operator: Kebijakan tidak sesuai")).toBeVisible();
+    await expect(screen.getByText("Dibatalkan").first()).toBeVisible();
+
+    // Surat kembali ke status draft dan bisa diubah operator.
+    await app.clearState();
+    await app.open("/masuk");
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
+    await expect(browser).toHaveURL("/beranda");
     await app.open(urlSurat);
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Ubah" })).toBeVisible();
+
+    const setelahTolak = await alur.ambilSuratTerbaru();
+    expect(setelahTolak?.status).toBe("draft");
   },
 );

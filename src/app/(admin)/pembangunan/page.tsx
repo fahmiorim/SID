@@ -63,7 +63,9 @@ export default async function PembangunanPage({ searchParams }: PageProps<"/pemb
 
   const params = await searchParams;
   const search = typeof params.q === "string" ? params.q.trim() : "";
-  const status = typeof params.status === "string" ? params.status : "";
+  const statusParam = typeof params.status === "string" ? params.status : "";
+  // Select "Semua status" mengirim nilai literal `semua`; jangan dijadikan filter.
+  const status = statusParam === "semua" ? "" : statusParam;
   const tahunParam = Number(typeof params.tahun === "string" ? params.tahun : "");
   const tahun = Number.isInteger(tahunParam) && tahunParam > 0 ? tahunParam : null;
   const rawPage = Number(typeof params.page === "string" ? params.page : "1");

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Edit, Loader2, Plus, Printer, Trash2, UserMinus } from "lucide-react";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -63,7 +63,15 @@ type PesertaState =
   | { readonly status: "error"; readonly message: string };
 
 /** Satu baris peserta dengan tombol keluarkan + ubah kartu (aksi mandiri). */
-function PesertaRow({ programId, peserta }: { programId: number; peserta: PesertaBantuanRow }) {
+function PesertaRow({
+  programId,
+  peserta,
+  onChanged,
+}: {
+  programId: number;
+  peserta: PesertaBantuanRow;
+  onChanged: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function handleRemove() {
@@ -75,6 +83,7 @@ function PesertaRow({ programId, peserta }: { programId: number; peserta: Pesert
       const state = await removePesertaAction(idleActionState, formData);
       if (state.status === "success") {
         toast.success(state.message);
+        onChanged();
       } else if (state.status === "error") {
         toast.error(state.message);
       }
@@ -246,6 +255,8 @@ function AddForm({
 function PesertaContent({ program }: { program: BantuanListRow }) {
   const [state, setState] = useState<PesertaState>({ status: "loading" });
   const [reloadKey, setReloadKey] = useState(0);
+  // Identitas stabil: form tambah/impor memakainya sebagai dependensi effect.
+  const muatUlang = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -298,10 +309,7 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
               {state.peserta.length} peserta terdaftar.
             </p>
             <div className="flex flex-wrap items-center gap-2">
-              <PesertaImportDialog
-                program={program}
-                onImported={() => setReloadKey((key) => key + 1)}
-              />
+              <PesertaImportDialog program={program} onImported={muatUlang} />
               <form
                 action={async (formData) => {
                   const res = await deleteAllPesertaAction(idleActionState, formData);
@@ -332,18 +340,19 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
             </TableHeader>
             <TableBody>
               {state.peserta.map((peserta) => (
-                <PesertaRow key={peserta.id} programId={program.id} peserta={peserta} />
+                <PesertaRow
+                  key={peserta.id}
+                  programId={program.id}
+                  peserta={peserta}
+                  onChanged={muatUlang}
+                />
               ))}
             </TableBody>
           </Table>
         </div>
       )}
 
-      <AddForm
-        program={program}
-        reference={state.reference}
-        onAdded={() => setReloadKey((key) => key + 1)}
-      />
+      <AddForm program={program} reference={state.reference} onAdded={muatUlang} />
     </div>
   );
 }

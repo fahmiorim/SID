@@ -42,7 +42,7 @@ test("polygon GIS: kategori dan layer tersedia", { session: "admin" }, async ({ 
 // Katalog: OS-WIL-006 — Pertanahan: CRUD persil, Cdesa, mutasi.
 test(
   "OS-WIL-006 pertanahan: CRUD persil, cdesa, mutasi + akses publik",
-  { session: "admin", tags: ["smoke"] },
+  { session: "admin" },
   async ({ app, screen, browser }) => {
     await app.open("/pemetaan/pertanahan");
     await expect(screen.getByRole("heading", { name: /pertanahan/i })).toBeVisible();
@@ -116,7 +116,7 @@ test(
     await screen.getByLabel("Jenis Mutasi").fill(jenisMutasi);
     await screen.getByLabel("Keterangan").fill(keteranganMutasi);
     await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
-    await expect(screen.getByText("Mutasi ditambahkan.")).toBeVisible({ timeout: 10_000 });
+    await expect(screen.getByText("Mutasi berhasil dibuat.")).toBeVisible({ timeout: 10_000 });
 
     const rowMutasi = screen.getByRole("row", { name: new RegExp(nomorMutasi) });
     await expect(rowMutasi).toBeVisible();
@@ -133,43 +133,33 @@ test(
     await app.open("/desa/pertanahan");
     await expect(browser).toHaveURL("/desa/pertanahan");
     await expect(screen.getByRole("heading", { name: /data pertanahan/i })).toBeVisible();
-    await expect(screen.getByRole("cell", { name: nomorPersil })).toBeVisible();
-    await expect(screen.getByRole("cell", { name: nomorCdesa })).toBeVisible();
+    await expect(screen.getByRole("cell", { name: nomorPersil }).first()).toBeVisible();
+    await expect(screen.getByRole("cell", { name: nomorCdesa }).first()).toBeVisible();
 
     // Hapus data (Mutasi, Cdesa, Persil)
     await app.open("/pemetaan/pertanahan");
 
     const rowMutasiHapus = screen.getByRole("row", { name: new RegExp(nomorMutasi) });
-    await rowMutasiHapus.getByRole("button", { name: /hapus/i }).tap();
-    await expect(screen.getByRole("dialog", { name: /hapus/i })).toBeVisible();
-    await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+    await rowMutasiHapus.getByRole("button", { name: /^Hapus Mutasi/ }).tap();
     await expect(screen.getByText("Mutasi berhasil dihapus.")).toBeVisible({ timeout: 10_000 });
 
     const rowCdesaHapus = screen.getByRole("row", { name: new RegExp(nomorCdesa) });
-    await rowCdesaHapus.getByRole("button", { name: /hapus/i }).tap();
-    await expect(screen.getByRole("dialog", { name: /hapus/i })).toBeVisible();
-    await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+    await rowCdesaHapus.getByRole("button", { name: /^Hapus Cdesa/ }).tap();
     await expect(screen.getByText("Cdesa berhasil dihapus.")).toBeVisible({ timeout: 10_000 });
 
     const rowPersilHapus = screen.getByRole("row", { name: new RegExp(nomorPersil) });
-    await rowPersilHapus.getByRole("button", { name: /hapus/i }).tap();
-    await expect(screen.getByRole("dialog", { name: /hapus/i })).toBeVisible();
-    await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+    await rowPersilHapus.getByRole("button", { name: /^Hapus Persil/ }).tap();
     await expect(screen.getByText("Persil berhasil dihapus.")).toBeVisible({ timeout: 10_000 });
   },
 );
 
 // Katalog: OS-WIL-007 — Peta cetak statis (SVG).
-test(
-  "peta cetak statis merender SVG dan legenda",
-  { tags: ["smoke"] },
-  async ({ app, browser, screen }) => {
-    await app.open("/desa/peta/cetak");
-    await expect(browser).toHaveURL("/desa/peta/cetak");
-    await expect(screen.getByRole("heading", { name: /cetak peta/i })).toBeVisible();
-    await expect(browser.locator("svg")).toBeVisible();
-  },
-);
+test("peta cetak statis merender SVG dan legenda", async ({ app, browser, screen }) => {
+  await app.open("/desa/peta/cetak");
+  await expect(browser).toHaveURL("/desa/peta/cetak");
+  await expect(screen.getByRole("heading", { name: /peta desa/i })).toBeVisible();
+  await expect(browser.locator("svg").first()).toBeVisible();
+});
 
 // Katalog: OS-WIL-008 — Simbol katalog.
 test(

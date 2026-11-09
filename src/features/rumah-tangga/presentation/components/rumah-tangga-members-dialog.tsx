@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2, Plus, UserMinus } from "lucide-react";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useActionState, useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -192,6 +192,9 @@ function MembersContent({
 }) {
   const [state, setState] = useState<MembersState>({ status: "loading" });
   const [reloadKey, setReloadKey] = useState(0);
+  // Identitas stabil: `AssignForm` memakainya sebagai dependensi effect, sehingga
+  // arrow baru tiap render akan memicu muat ulang tanpa henti.
+  const muatUlang = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -261,7 +264,7 @@ function MembersContent({
         rtmId={rumahTangga.id}
         reference={reference}
         members={state.members}
-        onAssigned={() => setReloadKey((key) => key + 1)}
+        onAssigned={muatUlang}
       />
     </div>
   );

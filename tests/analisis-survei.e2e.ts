@@ -1,154 +1,184 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-ANA-001 — Kategori analisis: CRUD lewat `/analisis`.
-// ============================================================================
+import {
+  hapusIndikatorAnalisisDariKode,
+  hapusKategoriAnalisisDariNama,
+  hapusSurveyDariJudul,
+} from "./support/database";
+
+function unik(): string {
+  return `${Date.now()}-${Math.floor(Math.random() * 1_000)}`;
+}
+
+/**
+ * Katalog: OS-ANA-001 — Kategori analisis: tambah, ubah, dan hapus.
+ */
 test(
-  "kategori analisis: tambah kategori dan tampil di tabel",
-  { session: "admin", tags: ["smoke"] },
+  "kategori analisis: tambah, ubah, lalu hapus",
+  { session: "admin", timeout: 120_000 },
   async ({ app, screen }) => {
-    await app.open("/analisis");
-    await expect(screen.getByRole("heading", { name: "Analisis" })).toBeVisible();
+    const nama = `Kategori E2E ${unik()}`;
 
-    const nama = `Kategori E2E ${Date.now()}`;
-    await screen.getByRole("button", { name: "Tambah Kategori" }).tap();
-    await expect(screen.getByRole("dialog", { name: "Tambah Kategori" })).toBeVisible();
-    await screen.getByLabel("Nama kategori").fill(nama);
-    await screen.getByLabel("Keterangan").fill("Kategori uji E2E");
-    await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+    try {
+      await app.open("/analisis");
+      await expect(screen.getByRole("heading", { name: "Analisis" })).toBeVisible();
 
-    await expect(screen.getByText("Kategori berhasil ditambahkan.")).toBeVisible({
-      timeout: 10_000,
-    });
-    await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible({
-      timeout: 10_000,
-    });
+      await screen.getByRole("button", { name: "Tambah Kategori" }).tap();
+      await screen.getByLabel("Nama kategori").fill(nama);
+      await screen.getByLabel("Keterangan").fill("Kategori uji E2E");
+      await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(screen.getByText("Kategori berhasil ditambahkan.")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+
+      await screen.getByRole("button", { name: `Ubah kategori ${nama}` }).tap();
+      await screen.getByLabel("Nama kategori").fill(`${nama} ubah`);
+      await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(screen.getByText("Kategori berhasil diperbarui.")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: `${nama} ubah`, exact: true })).toBeVisible();
+
+      await screen.getByRole("button", { name: `Hapus kategori ${nama} ubah` }).tap();
+      await expect(screen.getByRole("cell", { name: `${nama} ubah`, exact: true })).toHaveCount(0);
+    } finally {
+      await hapusKategoriAnalisisDariNama(nama);
+      await hapusKategoriAnalisisDariNama(`${nama} ubah`);
+    }
   },
 );
 
-// ============================================================================
-// OS-ANA-002 — Indikator analisis: kode, nama, kategori, dan bobot 1–100.
-// ============================================================================
+/**
+ * Katalog: OS-ANA-002 — Indikator analisis: kode, nama, kategori, dan bobot 1–100.
+ */
 test(
-  "indikator analisis: tambah indikator dengan kategori dan bobot",
-  { session: "admin", tags: ["smoke"] },
+  "indikator analisis: tambah dengan kategori dan bobot lalu hapus",
+  { session: "admin", timeout: 120_000 },
   async ({ app, screen }) => {
-    await app.open("/analisis");
-    await expect(screen.getByRole("heading", { name: "Analisis" })).toBeVisible();
+    const kode = `IND${unik().replace("-", "").slice(0, 8)}`;
+    const nama = `Indikator E2E ${kode}`;
 
-    const kode = `IND${Date.now().toString().slice(-6)}`;
-    const nama = `Indikator E2E ${Date.now()}`;
-    await screen.getByRole("button", { name: "Tambah Indikator" }).tap();
-    await expect(screen.getByRole("dialog", { name: "Tambah Indikator" })).toBeVisible();
-    await expect(screen.getByLabel("Bobot (1–100)")).toBeVisible();
-    await screen.getByLabel("Kode").fill(kode);
-    await screen.getByLabel("Nama indikator").fill(nama);
-    await screen.getByLabel("Bobot (1–100)").fill("50");
-    await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+    try {
+      await app.open("/analisis");
+      await screen.getByRole("button", { name: "Tambah Indikator" }).tap();
+      await screen.getByLabel("Kode").fill(kode);
+      await screen.getByLabel("Nama indikator").fill(nama);
+      await screen.getByLabel("Bobot (1–100)").fill("50");
+      await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(screen.getByText("Indikator berhasil ditambahkan.")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: kode, exact: true })).toBeVisible();
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
 
-    await expect(screen.getByText("Indikator berhasil ditambahkan.")).toBeVisible({
-      timeout: 10_000,
-    });
-    await expect(screen.getByRole("cell", { name: kode, exact: true })).toBeVisible({
-      timeout: 10_000,
-    });
-    await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+      await screen.getByRole("button", { name: `Hapus indikator ${kode}` }).tap();
+      await expect(screen.getByRole("cell", { name: kode, exact: true })).toHaveCount(0);
+    } finally {
+      await hapusIndikatorAnalisisDariKode(kode);
+    }
   },
 );
 
-// ============================================================================
-// OS-ANA-003 — Survei: sasaran dan periode pada form, status di daftar.
-// ============================================================================
+/**
+ * Katalog: OS-ANA-003 — Survei: sasaran dan periode pada form, status di daftar.
+ */
 test(
   "survei: buat survei dengan sasaran dan periode",
-  { session: "admin", tags: ["smoke"] },
+  { session: "admin", timeout: 120_000 },
   async ({ app, screen }) => {
-    await app.open("/analisis-survei");
-    await expect(screen.getByRole("heading", { name: "Analisis & Survei" })).toBeVisible();
+    const judul = `Survei E2E ${unik()}`;
 
-    const judul = `Survei E2E ${Date.now()}`;
-    await screen.getByRole("button", { name: "Buat Survei" }).tap();
-    await expect(screen.getByRole("dialog", { name: "Buat Survei" })).toBeVisible();
+    try {
+      await app.open("/analisis-survei");
+      await expect(screen.getByRole("heading", { name: "Analisis & Survei" })).toBeVisible();
 
-    await screen.getByLabel("Judul").fill(judul);
-    await screen.getByLabel("Sasaran responden").fill("Warga usia produktif");
-    await screen.getByLabel("Mulai pengisian").fill("2026-01-01");
-    await screen.getByLabel("Akhir pengisian").fill("2026-12-31");
-    await screen.getByRole("button", { name: "Buat survei" }).tap();
+      await screen.getByRole("button", { name: "Buat Survei" }).tap();
+      await screen.getByLabel("Judul").fill(judul);
+      await screen.getByLabel("Sasaran responden").fill("Warga usia produktif");
+      await screen.getByLabel("Mulai pengisian").fill("2026-01-01");
+      await screen.getByLabel("Akhir pengisian").fill("2026-12-31");
+      await screen.getByRole("button", { name: "Buat survei" }).tap();
 
-    const baris = screen.getByRole("row").filter({ hasText: judul });
-    await expect(baris).toBeVisible({ timeout: 10_000 });
-    await expect(baris.getByText("Aktif", { exact: true })).toBeVisible();
+      const baris = screen.getByRole("row").filter({ hasText: judul });
+      await expect(baris).toBeVisible();
+      await expect(baris.getByText("Aktif", { exact: true })).toBeVisible();
+    } finally {
+      await hapusSurveyDariJudul(judul);
+    }
   },
 );
 
-// ============================================================================
-// OS-ANA-004/005 — Detail survei: rekap jawaban, ekspor, dan kartu embed+tokens.
-// ============================================================================
+/**
+ * Katalog: OS-ANA-004/005 — Detail survei: soal, responden publik, rekap, dan token embed.
+ */
 test(
-  "survei: detail menampilkan rekap jawaban, ekspor, dan token embed",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
-    await app.open("/analisis-survei");
-    await expect(screen.getByRole("heading", { name: "Analisis & Survei" })).toBeVisible();
+  "survei: pertanyaan dijawab warga lalu muncul di rekap admin",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const judul = `Survei Detail E2E ${unik()}`;
 
-    const judul = `Survei Detail E2E ${Date.now()}`;
-    await screen.getByRole("button", { name: "Buat Survei" }).tap();
-    await screen.getByLabel("Judul").fill(judul);
-    await screen.getByRole("button", { name: "Buat survei" }).tap();
-    await expect(screen.getByRole("row").filter({ hasText: judul })).toBeVisible({
-      timeout: 10_000,
-    });
+    try {
+      await app.open("/analisis-survei");
+      await screen.getByRole("button", { name: "Buat Survei" }).tap();
+      await screen.getByLabel("Judul").fill(judul);
+      await screen.getByRole("button", { name: "Buat survei" }).tap();
+      await expect(screen.getByRole("row").filter({ hasText: judul })).toBeVisible();
 
-    await screen.getByRole("link", { name: judul }).tap();
-    await expect(screen.getByRole("heading", { name: judul })).toBeVisible();
-    await expect(screen.getByText("Rekap Jawaban")).toBeVisible();
-    await expect(screen.getByText("Ekspor & Impor Respons")).toBeVisible();
-    await expect(screen.getByText("Embed di Situs Lain")).toBeVisible();
-    await expect(screen.getByText(/Token API \(berlaku 7 hari\)/i)).toBeVisible();
-    await expect(screen.getByRole("button", { name: "Salin kode embed" })).toBeVisible();
+      await screen.getByRole("link", { name: judul }).tap();
+      await expect(screen.getByRole("heading", { name: judul })).toBeVisible();
+      await expect(screen.getByText("Ekspor & Impor Respons")).toBeVisible();
+      await expect(screen.getByText("Embed di Situs Lain")).toBeVisible();
+      await expect(screen.getByRole("button", { name: "Salin kode embed" })).toBeVisible();
+
+      await screen.getByRole("button", { name: "Tambah Pertanyaan" }).tap();
+      await screen.getByLabel("Pertanyaan").fill("Bagaimana kepuasan pelayanan desa?");
+      await screen.getByLabel("Tipe jawaban").tap();
+      await screen.getByRole("option", { name: /pilihan ganda/i }).tap();
+      await screen.getByLabel("Pilihan jawaban").fill("Puas\nTidak puas");
+      await screen.getByLabel("Skor pilihan (0–5)").fill("Puas=5\nTidak puas=1");
+      await screen.getByRole("button", { name: "Tambah pertanyaan" }).tap();
+      await expect(screen.getByText("Pertanyaan ditambahkan.")).toBeVisible();
+
+      const url = await browser.url();
+      const surveyId = url.split("/analisis-survei/")[1]?.split("/")[0];
+
+      // Warga mengisi survei dari halaman publik.
+      await app.open(`/desa/analisis-survei/${surveyId}/isi`);
+      await expect(screen.getByRole("heading", { name: judul })).toBeVisible();
+      await screen.getByLabel("Nama (Opsional)").fill("Warga Survey E2E");
+      await screen.getByLabel("Puas").tap();
+      await screen.getByRole("button", { name: "Kirim Jawaban" }).tap();
+      await expect(screen.getByText(/terima kasih|berhasil/i).first()).toBeVisible();
+
+      // Admin melihat jawaban masuk di rekap.
+      await app.open(`/analisis-survei/${surveyId}`);
+      await expect(screen.getByText("Warga Survey E2E")).toBeVisible();
+      await expect(screen.getByText("Rekap Jawaban")).toBeVisible();
+    } finally {
+      await hapusSurveyDariJudul(judul);
+    }
   },
 );
 
-// ============================================================================
-// OS-ANA-004 — Ekspor laporan skor menolak id survei tidak valid.
-// ============================================================================
-test(
-  "ekspor CSV laporan survey menolak id survei tidak valid",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/analisis-survei");
-    const hasil = await browser.evaluate(async () => {
-      const respons = await fetch("/analisis-survei/0/laporan/ekspor");
-      return { status: respons.status, body: await respons.text() };
-    });
-    expect(hasil.status).toBe(400);
-    expect(hasil.body).toContain("tidak valid");
-  },
-);
+/**
+ * Katalog: OS-ANA-004 — Ekspor laporan menolak id survei tidak valid.
+ */
+test("ekspor CSV survei menolak id tidak valid", { session: "admin" }, async ({ app, browser }) => {
+  await app.open("/analisis-survei");
+  const hasil = await browser.evaluate(async () => {
+    const laporan = await fetch("/analisis-survei/0/laporan/ekspor");
+    const skor = await fetch("/analisis-survei/0/ekspor");
+    return {
+      laporan: { status: laporan.status, body: await laporan.text() },
+      skor: { status: skor.status, body: await skor.text() },
+    };
+  });
+  expect(hasil.laporan.status).toBe(400);
+  expect(hasil.laporan.body).toContain("tidak valid");
+  expect(hasil.skor.status).toBe(400);
+  expect(hasil.skor.body).toContain("tidak valid");
+});
 
-test(
-  "ekspor CSV skor formal menolak id survei tidak valid",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/analisis-survei");
-    const hasil = await browser.evaluate(async () => {
-      const respons = await fetch("/analisis-survei/0/ekspor");
-      return { status: respons.status, body: await respons.text() };
-    });
-    expect(hasil.status).toBe(400);
-    expect(hasil.body).toContain("tidak valid");
-  },
-);
-
-// ============================================================================
-// OS-ANA-005 — Endpoint formulir eksternal menolak permintaan tanpa token.
-// ============================================================================
-test("endpoint publik /api/publik/survei/[id]/respons menolak tanpa token", async ({
-  app,
-  browser,
-}) => {
+/**
+ * Katalog: OS-ANA-005 — Endpoint formulir eksternal menolak permintaan tanpa token.
+ */
+test("endpoint publik survei menolak tanpa token", async ({ app, browser }) => {
   await app.open("/desa/analisis-survei");
   const hasil = await browser.evaluate(async () => {
     const respons = await fetch("/api/publik/survei/1/respons", {
@@ -162,15 +192,10 @@ test("endpoint publik /api/publik/survei/[id]/respons menolak tanpa token", asyn
   expect(hasil.body).toMatch(/token/i);
 });
 
-// ============================================================================
-// OS-ANA-006 — Halaman publik menampilkan survei aktif.
-// ============================================================================
-test(
-  "survei publik: halaman daftar survei dapat diakses",
-  { tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/desa/analisis-survei");
-    await expect(browser).toHaveURL("/desa/analisis-survei");
-    await expect(browser.locator("h1")).toBeVisible();
-  },
-);
+/**
+ * Katalog: OS-ANA-006 — Halaman publik daftar survei dapat diakses.
+ */
+test("survei publik: daftar survei dapat diakses", async ({ app, browser }) => {
+  await app.open("/desa/analisis-survei");
+  await expect(browser.locator("h1")).toContainText("Survei");
+});

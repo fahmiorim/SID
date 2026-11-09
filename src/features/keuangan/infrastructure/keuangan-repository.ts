@@ -107,8 +107,6 @@ export async function saveKeuanganNilai(
   const template = await listTemplate();
   if (template.length === 0) return;
 
-  const parentByUuid = new Map(template.map((row) => [row.uuid, row.parentUuid]));
-
   // Nilai eksisting tahun ini, lalu ditimpa oleh input.
   const existing = await db
     .select({
@@ -147,19 +145,25 @@ export async function saveKeuanganNilai(
   );
 
   for (const item of byDepthDesc) {
-    const parent = parentByUuid.get(item.uuid);
-    if (!parent) continue;
+    const children = childrenByParent.get(item.uuid) ?? [];
+    if (children.length === 0) continue;
 
     let sumA = 0n;
     let sumR = 0n;
-    for (const child of childrenByParent.get(parent) ?? []) {
+    for (const child of children) {
       const value = agg.get(child);
       if (value) {
         sumA += value.anggaran;
         sumR += value.realisasi;
       }
     }
-    agg.set(parent, { anggaran: sumA, realisasi: sumR });
+
+    // Baris yang boleh diisi langsung (akun/bidang/kegiatan) menyimpan nilai
+    // eksplisit. Jangan timpa dengan nol saat seluruh anaknya masih kosong —
+    // mis. pengguna baru mengisi pagu di tingkat kegiatan.
+    if (sumA === 0n && sumR === 0n && agg.has(item.uuid)) continue;
+
+    agg.set(item.uuid, { anggaran: sumA, realisasi: sumR });
   }
 
   const toWrite = [...agg.entries()].map(([templateUuid, value]) => ({

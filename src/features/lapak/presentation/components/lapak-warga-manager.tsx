@@ -101,17 +101,15 @@ function LapakForm({ item, onSelesai }: { item: LapakDTO | null; onSelesai: () =
   );
 }
 
-function HapusLapakButton({ item }: { item: LapakDTO }) {
-  const [state, formAction, isPending] = useActionState(
-    hapusLapakWargaAction,
-    createIdleActionState<null>(),
-  );
-
-  useEffect(() => {
-    if (state.status === "success") toast.success(state.message);
-    else if (state.status === "error") toast.error(state.message);
-  }, [state]);
-
+function HapusLapakButton({
+  item,
+  formAction,
+  disabled,
+}: {
+  item: LapakDTO;
+  formAction: (formData: FormData) => void;
+  disabled: boolean;
+}) {
   return (
     <form action={formAction}>
       <input type="hidden" name="id" value={item.id} />
@@ -119,7 +117,7 @@ function HapusLapakButton({ item }: { item: LapakDTO }) {
         type="submit"
         size="sm"
         variant="ghost"
-        disabled={isPending}
+        disabled={disabled}
         aria-label={`Hapus ${item.nama}`}
         onClick={(event) => {
           if (!window.confirm(`Hapus lapak “${item.nama}”?`)) event.preventDefault();
@@ -134,6 +132,19 @@ function HapusLapakButton({ item }: { item: LapakDTO }) {
 export function LapakWargaManager({ items }: { items: LapakDTO[] }) {
   const [tambah, setTambah] = useState(false);
   const [diubah, setDiubah] = useState<LapakDTO | null>(null);
+
+  // Status hapus dikelola di sini, bukan di dalam tombol baris. Setelah
+  // `revalidatePath` baris yang dihapus ikut unmount, sehingga efek toast di
+  // tombol tidak pernah sempat berjalan dan warga tidak melihat konfirmasi.
+  const [hapusState, hapusAction, hapusPending] = useActionState(
+    hapusLapakWargaAction,
+    createIdleActionState<null>(),
+  );
+
+  useEffect(() => {
+    if (hapusState.status === "success") toast.success(hapusState.message);
+    else if (hapusState.status === "error") toast.error(hapusState.message);
+  }, [hapusState]);
 
   return (
     <div className="space-y-4">
@@ -179,7 +190,7 @@ export function LapakWargaManager({ items }: { items: LapakDTO[] }) {
                   >
                     <Pencil className="size-4" />
                   </Button>
-                  <HapusLapakButton item={item} />
+                  <HapusLapakButton item={item} formAction={hapusAction} disabled={hapusPending} />
                 </div>
               </div>
               {diubah?.id === item.id ? (

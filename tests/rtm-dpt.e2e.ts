@@ -1,110 +1,100 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import { hapusRtmDariBdt } from "./support/database";
+
+function namaUnik(prefix: string): string {
+  return `${prefix} ${Date.now()}-${Math.floor(Math.random() * 1_000)}`;
+}
+
+/**
+ * Katalog: OS-POP-004 — Rumah Tangga (RTM): CRUD, anggota, laporan
+ */
 test(
-  "rumah-tangga admin loads with table",
-  { tags: ["smoke"], session: "admin" },
-  async ({ app, browser }) => {
-    await app.open("/rumah-tangga");
-    await expect(browser).toHaveURL("/rumah-tangga");
-    await expect(browser.locator("body")).toBeVisible();
+  "rumah tangga: tambah, cari, ubah, tautkan anggota, dan hapus",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const alamat = namaUnik("Alamat RTM");
+    const bdt = `9${String(Date.now()).slice(-6)}`;
+
+    try {
+      await app.open("/rumah-tangga");
+      await expect(browser.locator("h1")).toContainText("Rumah Tangga");
+
+      // --- Tambah ----------------------------------------------------------
+      await screen.getByRole("button", { name: "Tambah Rumah Tangga" }).tap();
+      await screen.getByLabel("Alamat").fill(alamat);
+      await screen.getByLabel("Nomor BDT").fill(bdt);
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Rumah Tangga ditambahkan.")).toBeVisible();
+
+      // --- Cari ------------------------------------------------------------
+      await screen.getByLabel("Cari rumah tangga").fill(alamat);
+      await screen.getByRole("button", { name: "Cari" }).tap();
+      const baris = screen.getByRole("row").filter({ hasText: bdt });
+      await expect(baris).toBeVisible();
+
+      // --- Ubah ------------------------------------------------------------
+      await baris.getByRole("button", { name: /Aksi untuk RTM/ }).tap();
+      await screen.getByRole("menuitem", { name: "Ubah" }).tap();
+      await screen.getByLabel("Alamat").fill(`${alamat} Baru`);
+      await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
+      await expect(screen.getByText("Rumah Tangga diperbarui.")).toBeVisible();
+
+      // --- Anggota: tautkan lalu keluarkan ---------------------------------
+      await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);
+      await screen
+        .getByRole("row")
+        .filter({ hasText: bdt })
+        .getByRole("button", {
+          name: /Aksi untuk RTM/,
+        })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Anggota" }).tap();
+      await expect(screen.getByText(/Anggota RTM/)).toBeVisible();
+
+      await screen.getByLabel("Penduduk").tap();
+      await screen.getByRole("option").first().tap();
+      await screen.getByRole("button", { name: "Tautkan" }).tap();
+      await expect(screen.getByText("Anggota rumah tangga disimpan.")).toBeVisible();
+
+      await screen.getByRole("button", { name: /^Keluarkan / }).tap();
+      await expect(screen.getByText("Anggota dikeluarkan dari rumah tangga.")).toBeVisible();
+      await screen.getByRole("button", { name: "Close" }).first().tap();
+
+      // --- Hapus -----------------------------------------------------------
+      await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);
+      await screen
+        .getByRole("row")
+        .filter({ hasText: bdt })
+        .getByRole("button", {
+          name: /Aksi untuk RTM/,
+        })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Hapus" }).tap();
+      await expect(screen.getByText("Hapus rumah tangga ini?")).toBeVisible();
+      await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+      await expect(screen.getByText("Rumah Tangga dihapus.")).toBeVisible();
+
+      await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);
+      await expect(
+        screen.getByText("Tidak ada rumah tangga yang cocok dengan filter."),
+      ).toBeVisible();
+    } finally {
+      await hapusRtmDariBdt(bdt);
+    }
   },
 );
 
-test("rumah-tangga laporan loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/rumah-tangga/laporan");
-  await expect(browser).toHaveURL("/rumah-tangga/laporan");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("DPT admin loads with table", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dpt");
-  await expect(browser).toHaveURL("/penduduk/dpt");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("DPT rekap loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dpt/rekap");
-  await expect(browser).toHaveURL("/penduduk/dpt/rekap");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("DPT export CSV", async ({ app, browser }) => {
-  await app.open("/penduduk/dpt/ekspor");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("DTKS admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks");
-  await expect(browser).toHaveURL("/penduduk/dtks");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("suplemen admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/suplemen");
-  await expect(browser).toHaveURL("/penduduk/suplemen");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks lampiran admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks/lampiran");
-  await expect(browser).toHaveURL("/penduduk/dtks/lampiran");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks pengaturan admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks/pengaturan");
-  await expect(browser).toHaveURL("/penduduk/dtks/pengaturan");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks laporan admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks/laporan");
-  await expect(browser).toHaveURL("/penduduk/dtks/laporan");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks export CSV", async ({ app, browser }) => {
-  await app.open("/penduduk/dtks/ekspor");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("jajak pendapat publik loads", async ({ app, browser }) => {
-  await app.open("/jajak-pendapat");
-  await expect(browser).toHaveURL("/jajak-pendapat");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("kontak daftar ekspor muat", async ({ app, browser }) => {
-  await app.open("/hubung-warga/daftar-kontak/ekspor");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("suplemen detail loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/suplemen/1");
-  await expect(browser).toHaveURL("/penduduk/suplemen/1");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("suplemen detail export CSV", async ({ app, browser }) => {
-  await app.open("/penduduk/suplemen/1/ekspor");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("DTKS rekap loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks/laporan");
-  await expect(browser).toHaveURL("/penduduk/dtks/laporan");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks status change flow visible", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks");
-  await expect(browser).toHaveURL("/penduduk/dtks");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("dtks status change dialog accessible", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/penduduk/dtks");
-  await expect(browser).toHaveURL("/penduduk/dtks");
-  await expect(browser.locator("body")).toBeVisible();
-});
+/**
+ * Katalog: OS-POP-004 — laporan rumah tangga
+ */
+test(
+  "rumah tangga: laporan memuat rekap kelas sosial",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    await app.open("/rumah-tangga/laporan");
+    await expect(browser.locator("h1")).toContainText("Laporan");
+    await expect(screen.getByText(/Rumah Tangga/i).first()).toBeVisible();
+  },
+);

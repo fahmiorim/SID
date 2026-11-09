@@ -1,27 +1,43 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-OPS-008 — Registri plugin build-time + tabel `plugin_registry`; halaman `/pengaturan/plugin`
-// dan aktivasi berizin/audit tersedia. Integrasi yang terdaftar: WhatsApp dan Resend.
-// Test domain/use case tersedia. **Gap: E2E plugin.**.
-// ============================================================================
+import { pulihkanPluginUji, siapkanPluginAktifUji } from "./support/database";
+
+/**
+ * Katalog: OS-OPS-008 — Plugin: status aktif disimpan per desa. Aktivasi
+ * ditolak bila environment wajib belum diisi, sedangkan nonaktivasi tetap
+ * boleh dan langsung terlihat di daftar.
+ */
 test(
-  "plugin registry halaman aktif bisa diakses",
-  { session: "admin" },
+  "OS-OPS-008 — plugin: nonaktivasi tersimpan dan aktivasi tanpa env ditolak",
+  { session: "admin", timeout: 120_000 },
   async ({ app, screen }) => {
-    await app.open("/pengaturan/plugin");
-    await expect(screen.getByRole("heading", { name: /plugin/i })).toBeVisible();
-    // Daftar provider terdaftar
-    await expect(screen.getByText(/WhatsApp Gateway/i).first()).toBeVisible({ timeout: 5000 });
-    // Status aktif/nonaktif
-    await expect(screen.getByText(/aktif|nonaktif/i).first()).toBeVisible({ timeout: 3000 });
+    const asal = await siapkanPluginAktifUji("whatsapp-gateway");
+
+    try {
+      await app.open("/pengaturan/plugin");
+      await expect(screen.getByRole("heading", { name: /Plugin/i })).toBeVisible();
+
+      await screen.getByRole("button", { name: "Nonaktifkan", exact: true }).tap();
+      await expect(screen.getByText("Plugin dinonaktifkan.")).toBeVisible({ timeout: 15_000 });
+
+      await app.open("/pengaturan/plugin");
+      await expect(
+        screen.getByRole("button", { name: "Aktifkan", exact: true }).first(),
+      ).toBeVisible();
+
+      // Aktivasi kembali harus ditolak selama environment belum diisi; status
+      // tidak boleh berubah diam-diam.
+      await screen.getByRole("button", { name: "Aktifkan", exact: true }).first().tap();
+      await expect(screen.getByText(/belum dapat diaktifkan: environment/i)).toBeVisible({
+        timeout: 15_000,
+      });
+
+      await app.open("/pengaturan/plugin");
+      await expect(screen.getByText(/Environment belum terisi/).first()).toBeVisible();
+      await expect(screen.getByRole("button", { name: "Nonaktifkan", exact: true })).toHaveCount(0);
+    } finally {
+      await pulihkanPluginUji(asal);
+    }
   },
 );
-
-test("plugin aktivasi berizin tersedia", { session: "admin" }, async ({ app, screen }) => {
-  await app.open("/pengaturan/plugin");
-  await expect(screen.getByRole("heading", { name: /plugin/i })).toBeVisible();
-  // Tombol aktivasi/nonaktif per provider
-  await expect(screen.getByRole("button", { name: /aktifkan|nonaktifkan/i }).first()).toBeVisible();
-});

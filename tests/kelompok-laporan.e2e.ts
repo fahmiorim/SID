@@ -1,63 +1,113 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-GOV-004 — Lembaga via `kelompok` tipe `lembaga`: kategori, CRUD, anggota, jabatan, RBAC, publikasi.
-// **Cetak via browser** tersedia di halaman daftar.
-// **Laporan anggota terperinci** `/kelompok/laporan` (jabatan, NIK, nomor keanggotaan per kelompok) + ekspor CSV `/kelompok/ekspor`;
-// domain `laporan-anggota.ts` + test. **Gap: E2E halaman laporan/ekspor belum ada.** E2E admin `/kelompok?tipe=lembaga`.
-// ============================================================================
+import { hapusKategoriKelompokDariNama, hapusKelompokDariNama } from "./support/database";
+
+function namaUnik(prefix: string): string {
+  return `${prefix} ${Date.now()}-${Math.floor(Math.random() * 1_000)}`;
+}
+
+/**
+ * Katalog: OS-GOV-004/005 — Kategori kelompok & lembaga
+ */
 test(
-  "lembaga: halaman daftar dengan filter tipe lembaga",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
-    await app.open("/kelompok?tipe=lembaga");
-    await expect(screen.getByRole("heading", { name: /lembaga/i })).toBeVisible();
-    // Tabel daftar lembaga
-    await expect(screen.getByRole("table")).toBeVisible({ timeout: 5000 });
+  "kategori kelompok: tambah, ubah, dan hapus",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const nama = namaUnik("Kategori Uji");
+
+    try {
+      await app.open("/kelompok/kategori");
+      await expect(browser.locator("h1")).toContainText("Kategori");
+
+      await screen.getByRole("button", { name: "Tambah Kategori" }).tap();
+      await screen.getByLabel("Nama Kategori").fill(nama);
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Kategori ditambahkan.")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+
+      const baris = screen.getByRole("row").filter({ hasText: nama });
+      await baris.getByRole("button", { name: /Aksi untuk/ }).tap();
+      await screen.getByRole("menuitem", { name: "Ubah" }).tap();
+      await screen.getByLabel("Nama Kategori").fill(`${nama} baru`);
+      await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
+      await expect(screen.getByText("Kategori diperbarui.")).toBeVisible();
+
+      await screen
+        .getByRole("row")
+        .filter({ hasText: `${nama} baru` })
+        .getByRole("button", {
+          name: /Aksi untuk/,
+        })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Hapus" }).tap();
+      await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+      await expect(screen.getByText("Kategori dihapus.")).toBeVisible();
+    } finally {
+      await hapusKategoriKelompokDariNama(nama);
+      await hapusKategoriKelompokDariNama(`${nama} baru`);
+    }
   },
 );
 
+/**
+ * Katalog: OS-GOV-004/005 — Anggota kelompok: jabatan dan publikasi
+ */
 test(
-  "lembaga: laporan anggota terperinci dan ekspor CSV",
-  { session: "admin", tags: ["smoke"] },
+  "anggota kelompok: tambah dengan jabatan lalu keluarkan",
+  { session: "admin", timeout: 180_000 },
   async ({ app, screen }) => {
+    const nama = namaUnik("Kelompok Anggota");
+
+    try {
+      await app.open("/kelompok?tipe=kelompok");
+      await screen.getByRole("button", { name: "Tambah Kelompok" }).tap();
+      await screen.getByLabel("Nama").fill(nama);
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Kelompok ditambahkan.")).toBeVisible();
+
+      await screen.getByLabel("Cari kelompok").fill(nama);
+      await screen.getByRole("button", { name: "Cari" }).tap();
+      await screen
+        .getByRole("row")
+        .filter({ hasText: nama })
+        .getByRole("button", {
+          name: `Aksi untuk ${nama}`,
+        })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Anggota" }).tap();
+
+      await screen.getByLabel("Penduduk").tap();
+      await screen.getByRole("option").first().tap();
+      await screen.getByLabel("No. Anggota").fill("A-001");
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Anggota kelompok ditambahkan.")).toBeVisible();
+      // Nama penduduk berasal dari data seed, jadi keberadaan anggota dibuktikan
+      // lewat tombol Keluarkan yang hanya dirender pada baris anggota.
+      await screen
+        .getByRole("button", { name: /^Keluarkan / })
+        .first()
+        .tap();
+      await expect(screen.getByText("Anggota dikeluarkan dari kelompok.")).toBeVisible();
+      await expect(screen.getByText("Belum ada anggota pada kelompok ini.")).toBeVisible();
+    } finally {
+      await hapusKelompokDariNama(nama);
+    }
+  },
+);
+
+/**
+ * Katalog: OS-GOV-004/005 — Laporan anggota dan ekspor CSV
+ */
+test(
+  "laporan anggota kelompok: ekspor CSV tersedia",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, screen, browser }) => {
     await app.open("/kelompok/laporan?tipe=lembaga");
-    await expect(screen.getByRole("heading", { name: /laporan/i })).toBeVisible();
-    // Tabel jabatan, NIK, nomor keanggotaan
-    await expect(screen.getByText(/jabatan|NIK|keanggotaan/i).first()).toBeVisible({
-      timeout: 5000,
-    });
-    // Tombol ekspor CSV
-    await expect(screen.getByText(/ekspor CSV/i).first()).toBeVisible({ timeout: 3000 });
-  },
-);
-
-// ============================================================================
-// OS-GOV-005 — Kelompok masyarakat: kategori, CRUD, anggota, jabatan, publikasi.
-// **Cetak via browser** tersedia di halaman daftar.
-// **Laporan anggota terperinci** `/kelompok/laporan` (jabatan, NIK, nomor keanggotaan per kelompok) + ekspor CSV `/kelompok/ekspor`;
-// domain `laporan-anggota.ts` + test. Test `kelompok.test.ts`; E2E `/kelompok?tipe=kelompok`.
-// ============================================================================
-test(
-  "kelompok masyarakat: halaman daftar dengan filter tipe kelompok",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
-    await app.open("/kelompok?tipe=kelompok");
-    await expect(screen.getByRole("heading", { name: /kelompok/i })).toBeVisible();
-    await expect(screen.getByRole("table")).toBeVisible({ timeout: 5000 });
-  },
-);
-
-test(
-  "kelompok masyarakat: laporan anggota terperinci dan ekspor CSV",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
-    await app.open("/kelompok/laporan?tipe=kelompok");
-    await expect(screen.getByRole("heading", { name: /laporan/i })).toBeVisible();
-    await expect(screen.getByText(/jabatan|NIK|keanggotaan/i).first()).toBeVisible({
-      timeout: 5000,
-    });
-    await expect(screen.getByText(/ekspor CSV/i).first()).toBeVisible({ timeout: 3000 });
+    await expect(browser.locator("h1")).toContainText("Laporan Anggota Lembaga Desa");
+    await expect(screen.getByRole("link", { name: /Ekspor CSV/ })).toHaveAttribute(
+      "href",
+      "/kelompok/ekspor?tipe=lembaga",
+    );
   },
 );

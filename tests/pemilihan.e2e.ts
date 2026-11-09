@@ -1,50 +1,49 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-GOV-007 — Admin `/pemerintahan/pemilihan` dengan CRUD pemilihan (tahun, jenis, tanggal, keterangan),
-// otorisasi `pemilihan`, dan halaman publik `/desa/pemilihan`.
-// **Kandidat & hasil** ditambahkan lewat tabel `pemilihan_kandidat` (nomor urut unik per pemilihan, keterangan, jumlah suara),
-// CRUD berizin di dialog `/pemerintahan/pemilihan`, rekap suara + pemenang (domain `hitungRekapSuara` + test),
-// dan tampilan kandidat/hasil di publik `/desa/pemilihan`. Jumlah daftar pemilih (DPT) ditampilkan dari modul DPT aktif.
-// **Gap: E2E pemilihan.**.
-// ============================================================================
+import { buatPemilihanDenganKandidat, hapusPemilihanDariJenis } from "./support/database";
+
+/**
+ * Katalog: OS-GOV-007 — Admin membuat pemilihan desa.
+ */
 test(
-  "pemilihan admin: CRUD pemilihan dan kandidat",
-  { session: "admin", tags: ["smoke"] },
+  "pemilihan admin: buat pemilihan dan tampil di tabel",
+  { session: "admin" },
   async ({ app, screen }) => {
-    await app.open("/pemerintahan/pemilihan");
-    await expect(screen.getByRole("heading", { name: /pemilihan/i })).toBeVisible();
-
-    // Form tambah pemilihan ada di dialog; simpan satu pemilihan agar tabel tampil.
     const jenis = `Pemilihan E2E ${Date.now()}`;
-    await screen.getByRole("button", { name: "Tambah Pemilihan" }).tap();
-    await expect(screen.getByRole("dialog")).toBeVisible();
-    await expect(screen.getByLabel("Tahun", { exact: true })).toBeVisible();
-    await screen.getByLabel("Jenis", { exact: true }).fill(jenis);
-    await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
-    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
-    // Tabel pemilihan/kandidat menampilkan data yang baru disimpan.
-    await expect(screen.getByRole("cell", { name: jenis })).toBeVisible({ timeout: 10_000 });
-    await expect(screen.getByRole("table").first()).toBeVisible({ timeout: 5000 });
+    try {
+      await app.open("/pemerintahan/pemilihan");
+      await expect(screen.getByRole("heading", { name: /pemilihan/i })).toBeVisible();
+
+      await screen.getByRole("button", { name: "Tambah Pemilihan" }).tap();
+      await expect(screen.getByRole("dialog")).toBeVisible();
+      await screen.getByLabel("Jenis", { exact: true }).fill(jenis);
+      await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
+      await expect(screen.getByRole("cell", { name: jenis })).toBeVisible();
+    } finally {
+      await hapusPemilihanDariJenis(jenis);
+    }
   },
 );
 
-test(
-  "pemilihan publik: kandidat dan hasil ditampilkan di /desa/pemilihan",
-  { tags: ["smoke"] },
-  async ({ app, browser }) => {
+/**
+ * Katalog: OS-GOV-007 — Publik melihat kandidat, suara, dan pemenang.
+ */
+test("pemilihan publik: kandidat dan rekap suara ditampilkan", async ({ app, screen, browser }) => {
+  const jenis = `Pemilihan Publik E2E ${Date.now()}`;
+  const { kandidat } = await buatPemilihanDenganKandidat(jenis);
+
+  try {
     await app.open("/desa/pemilihan");
-    await expect(browser).toHaveURL("/desa/pemilihan");
-    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-    // Daftar kandidat
-    await expect(browser.locator("text=/kandidat|suhu|pemenang/i").first()).toBeVisible({
-      timeout: 5000,
-    });
-    // Jumlah daftar pemilih (DPT)
-    await expect(browser.locator("text=/DPT|pemilih|terdaftar/i").first()).toBeVisible({
-      timeout: 5000,
-    });
-  },
-);
+    await expect(browser.locator("h1")).toContainText("Pemilihan Desa");
+    await expect(screen.getByText(new RegExp(jenis)).first()).toBeVisible();
+    await expect(screen.getByText(kandidat[0])).toBeVisible();
+    await expect(screen.getByText(kandidat[1])).toBeVisible();
+    await expect(screen.getByText(/Total suara sah: 10/)).toBeVisible();
+    await expect(screen.getByText(new RegExp(`Pemenang: ${kandidat[0]}`))).toBeVisible();
+  } finally {
+    await hapusPemilihanDariJenis(jenis);
+  }
+});

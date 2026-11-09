@@ -1,55 +1,85 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import { hapusWilayahDariDusun } from "./support/database";
+
+/**
+ * Katalog: OS-WIL-001 — Wilayah administratif: CRUD dusun/RW/RT
+ */
 test(
-  "wilayah admin loads with table",
-  { tags: ["smoke"], session: "admin" },
-  async ({ app, browser }) => {
-    await app.open("/wilayah");
-    await expect(browser).toHaveURL("/wilayah");
-    await expect(browser.locator("h1")).toContainText("Wilayah");
-    await expect(browser.locator("table")).toBeVisible();
+  "wilayah: tambah dusun, cari, ubah, dan hapus",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const dusun = `Dusun Uji ${Date.now()}`;
+
+    try {
+      await app.open("/wilayah");
+      await expect(browser.locator("h1")).toContainText("Wilayah");
+
+      await screen.getByRole("button", { name: "Tambah Wilayah" }).tap();
+      await screen.getByLabel("Dusun").fill(dusun);
+      await screen.getByLabel("RW").fill("09");
+      await screen.getByLabel("RT").fill("07");
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Data wilayah ditambahkan.")).toBeVisible();
+
+      await screen.getByLabel("Cari wilayah").fill(dusun);
+      await screen.getByRole("button", { name: "Cari" }).tap();
+      const baris = screen.getByRole("row").filter({ hasText: dusun });
+      await expect(baris).toBeVisible();
+      await expect(baris).toContainText("09");
+      await expect(baris).toContainText("07");
+
+      await baris.getByRole("button", { name: /Aksi untuk/ }).tap();
+      await screen.getByRole("menuitem", { name: "Ubah" }).tap();
+      await screen.getByLabel("Urutan").fill("5");
+      await screen.getByRole("button", { name: "Simpan perubahan" }).tap();
+      await expect(screen.getByText("Data wilayah diperbarui.")).toBeVisible();
+
+      await screen
+        .getByRole("row")
+        .filter({ hasText: dusun })
+        .getByRole("button", {
+          name: /Aksi untuk/,
+        })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Hapus" }).tap();
+      await expect(screen.getByText("Hapus data wilayah?")).toBeVisible();
+      await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+      await expect(screen.getByText("Data wilayah dihapus.")).toBeVisible();
+    } finally {
+      await hapusWilayahDariDusun(dusun);
+    }
   },
 );
 
-test("pemerintahan admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/konten/perangkat");
-  await expect(browser).toHaveURL("/konten/perangkat");
-  await expect(browser.locator("body")).toBeVisible();
-});
+/**
+ * Katalog: OS-WIL-001 — rekap wilayah
+ */
+test(
+  "wilayah: rekap menampilkan ringkasan dusun/RW/RT",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, browser }) => {
+    await app.open("/wilayah/rekap");
+    await expect(browser.locator("h1")).toContainText("Rekap Wilayah");
+    await expect(browser.locator("table").first()).toBeVisible();
+  },
+);
 
-test("lembaga admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/kelompok?tipe=lembaga");
-  await expect(browser).toHaveURL("/kelompok?tipe=lembaga");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("kelompok-masyarakat admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/kelompok?tipe=kelompok");
-  await expect(browser).toHaveURL("/kelompok?tipe=kelompok");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("pendapat admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/pendapat");
-  await expect(browser).toHaveURL("/pendapat");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("kontak admin loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/hubung-warga/daftar-kontak");
-  await expect(browser).toHaveURL("/hubung-warga/daftar-kontak");
-  await expect(browser.locator("body")).toBeVisible();
-});
-
-test("pertanahan publik loads with tables", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/desa/pertanahan");
-  await expect(browser).toHaveURL("/desa/pertanahan");
-  await expect(browser.locator("h1")).toContainText("Data Pertanahan");
-});
-
-test("wilayah rekap loads", { session: "admin" }, async ({ app, browser }) => {
-  await app.open("/wilayah/rekap");
-  await expect(browser).toHaveURL("/wilayah/rekap");
-  await expect(browser.locator("h1")).toContainText("Rekap Wilayah");
-});
+/**
+ * Katalog: OS-WIL-002 — referensi wilayah pada modul lain
+ */
+test(
+  "referensi wilayah: jajak pendapat, kontak, dan pertanahan terbuka",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, browser }) => {
+    for (const [path, judul] of [
+      ["/pendapat", "Pendapat Warga"],
+      ["/hubung-warga/daftar-kontak", "Kontak"],
+      ["/desa/pertanahan", "Pertanahan"],
+    ] as const) {
+      await app.open(path);
+      await expect(browser.locator("h1")).toContainText(judul);
+    }
+  },
+);

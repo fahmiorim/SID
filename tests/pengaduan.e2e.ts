@@ -1,42 +1,94 @@
 import { test } from "@e2e-dev/web";
-import { expect } from "e2e";
+import { credentials, expect } from "e2e";
 
-// ============================================================================
-// OS-WEB-009 — Pengaduan publik `/desa/pengaduan` + pelacakan `/desa/pengaduan/lacak` + admin.
-// Email perubahan status via Resend memakai `RESEND_API_KEY` dan `RESEND_FROM`,
-// label status domain benar, serta respons error provider dicatat sebagai gagal.
-// Operator menerima toast: email diterima Resend (bukan bukti terkirim) atau peringataan bila pengiriman dilewati/gagal;
-// status pengaduan tetap tersimpan. Test `notification.test.ts`, `env.test.ts`, dan `presentation/actions.test.ts`.
-// **Ditambah notifikasi WhatsApp via provider (`notifyStatusChangeWhatsApp`), bukti pengiriman ke database (`bukti_pengiriman_notifikasi`),
-// dan konfigurasi env `WHATSAPP_API_URL`/`WHATSAPP_TOKEN`.** **Gap: E2E alur pengaduan lengkap.**.
-// ============================================================================
+import { ambilPengaduanTerbaruDariJudul, hapusPengaduanDariJudul } from "./support/database";
+import { masukDenganKredensial } from "./support/login";
+
+const KATALOG = "OS-WEB-009";
+
+/**
+ * Katalog: OS-WEB-009 — Pengaduan publik: kirim, lacak dengan nomor tiket,
+ * lalu operator menanggapi dan statusnya terlihat kembali oleh pelapor.
+ */
 test(
-  "pengaduan publik dapat diakses dan form tersedia",
-  { tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/desa/pengaduan");
-    await expect(browser).toHaveURL("/desa/pengaduan");
-    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-    // Form pengaduan
-    await expect(browser.locator('[name="judul"]')).toBeVisible({ timeout: 3000 });
-    await expect(browser.locator('[name="isi"]')).toBeVisible({ timeout: 3000 });
+  `${KATALOG} — pengaduan publik dikirim, dilacak, dan ditanggapi operator`,
+  { timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const judul = `Pengaduan E2E ${Date.now()}`;
+    const telepon = "081234567890";
+    const tanggapan = "Sudah diteruskan ke petugas kebersihan desa.";
+    let nomorTiket = "";
+
+    try {
+      // 1. Warga mengirim pengaduan tanpa akun.
+      await app.open("/desa/pengaduan");
+      await screen.getByLabel("Judul").fill(judul);
+      await screen
+        .getByLabel("Uraian pengaduan")
+        .fill("Jalan depan balai desa rusak dan berlubang sejak minggu lalu.");
+      await screen.getByLabel("Nama").fill("Warga Pengadu E2E");
+      await screen.getByLabel(/^Telepon/).fill(telepon);
+      await screen.getByRole("button", { name: "Kirim pengaduan" }).tap();
+
+      await expect(screen.getByText(/Pengaduan terkirim dengan nomor tiket PGD-/)).toBeVisible({
+        timeout: 15_000,
+      });
+      nomorTiket = (await ambilPengaduanTerbaruDariJudul(judul)).nomorTiket;
+      expect(nomorTiket).toMatch(/^PGD-/);
+
+      // 2. Warga melacak tiket dengan identitas yang dipakai saat mengirim.
+      await app.open("/desa/pengaduan/lacak");
+      await screen.getByLabel("Nomor tiket").fill(nomorTiket);
+      await screen.getByLabel(/NIK, telepon, atau email/).fill(telepon);
+      await screen.getByRole("button", { name: "Lacak pengaduan" }).tap();
+      await expect(screen.getByText(judul)).toBeVisible({ timeout: 10_000 });
+      await expect(screen.getByText("Baru")).toBeVisible();
+      await expect(screen.getByText(/Belum ada tanggapan/)).toBeVisible();
+
+      // 3. Operator menanggapi lewat dialog detail.
+      await app.clearState();
+      await app.open("/masuk");
+      const admin = credentials.user("admin");
+      await masukDenganKredensial(screen, browser, admin.username, admin.password);
+      await expect(browser).toHaveURL("/beranda");
+
+      await app.open(`/pengaduan?q=${encodeURIComponent(nomorTiket)}`);
+      await screen
+        .getByRole("row")
+        .filter({ hasText: nomorTiket })
+        .getByRole("button", { name: `Aksi pengaduan ${nomorTiket}` })
+        .tap();
+      await screen.getByRole("menuitem", { name: /Detail/ }).tap();
+      await expect(screen.getByRole("dialog")).toBeVisible();
+      // Kontrol status memakai Radix Select; isi <select> tersembunyinya agar
+      // form action menerima nilai tanpa bergantung pada portal dropdown.
+      const diisi = await browser.evaluate(() => {
+        const select = document.querySelector<HTMLSelectElement>(
+          '[role="dialog"] select[name="status"]',
+        );
+        if (!select) return false;
+        select.value = "diproses";
+        return true;
+      });
+      expect(diisi).toBe(true);
+      await screen.getByLabel("Tanggapan").fill(tanggapan);
+      await screen.getByRole("button", { name: "Simpan tanggapan" }).tap();
+
+      // 4. Status dan tanggapan bertahan di tabel admin.
+      await app.open(`/pengaduan?q=${encodeURIComponent(nomorTiket)}`);
+      const baris = screen.getByRole("row").filter({ hasText: nomorTiket });
+      await expect(baris.getByText("Diproses")).toBeVisible();
+
+      // 5. Pelapor melihat hasil yang sama saat melacak lagi.
+      await app.clearState();
+      await app.open("/desa/pengaduan/lacak");
+      await screen.getByLabel("Nomor tiket").fill(nomorTiket);
+      await screen.getByLabel(/NIK, telepon, atau email/).fill(telepon);
+      await screen.getByRole("button", { name: "Lacak pengaduan" }).tap();
+      await expect(screen.getByText("Diproses")).toBeVisible({ timeout: 10_000 });
+      await expect(screen.getByText(tanggapan)).toBeVisible();
+    } finally {
+      await hapusPengaduanDariJudul(judul);
+    }
   },
 );
-
-test(
-  "form pelacakan pengaduan via token tersedia",
-  { tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/desa/pengaduan/lacak");
-    await expect(browser).toHaveURL("/desa/pengaduan/lacak");
-    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-    // Input nomor tiket + identitas pelacakan
-    await expect(browser.locator('[name="nomorTiket"]')).toBeVisible({ timeout: 3000 });
-    await expect(browser.locator('[name="identitas"]')).toBeVisible({ timeout: 3000 });
-  },
-);
-
-// ============================================================================
-// OS-WEB-016 — Tema: teks berjalan (≤300 char) + sosial media (FB, IG, YT, X, TikTok, WA, Telegram)
-// ============================================================================
-// (Sudah diuji di web-publik.e2e.ts)

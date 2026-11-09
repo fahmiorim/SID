@@ -124,19 +124,21 @@ export function SisaLebihFormDialog({ open, onOpenChange, item }: SisaLebihFormD
 
           <DialogFooter className="flex justify-between">
             {isEdit && item ? (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <Button type="submit" variant="destructive" disabled={isDeletePending}>
-                  {isDeletePending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Menghapus...
-                    </>
-                  ) : (
-                    "Hapus"
-                  )}
-                </Button>
-              </form>
+              <Button
+                type="submit"
+                formAction={deleteAction}
+                variant="destructive"
+                disabled={isDeletePending}
+              >
+                {isDeletePending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  "Hapus"
+                )}
+              </Button>
             ) : (
               <div />
             )}

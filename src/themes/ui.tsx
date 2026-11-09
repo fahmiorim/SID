@@ -125,17 +125,7 @@ export function ThemeEmpty({ children }: { children: ReactNode }) {
   );
 }
 
-export function ThemePrintButton({ label = "Cetak" }: { label?: string }) {
-  return (
-    <button
-      type="button"
-      onClick={() => typeof window !== "undefined" && window.print()}
-      className="tema-button-primary inline-flex items-center gap-2 px-4 py-2 text-sm font-medium"
-    >
-      {label}
-    </button>
-  );
-}
+export { ThemePrintButton } from "./print-button";
 
 export function ThemeProse({ html, className }: { html: string; className?: string }) {
   return <KontenHtml html={html} className={className} />;

@@ -1,19 +1,11 @@
 import { FileDown, FileSpreadsheet, Table2 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -34,6 +26,7 @@ import {
   KEUANGAN_AKUN,
   LAPORAN_KEUANGAN_RESOURCE,
 } from "@/features/keuangan/domain/keuangan";
+import { BidangFilter } from "@/features/keuangan/presentation/components/bidang-filter";
 import { LaporanPrintButton } from "@/features/keuangan/presentation/components/laporan-print-button";
 import { RpApbdChart } from "@/features/keuangan/presentation/components/rp-apbd-chart";
 import { hasPermission } from "@/features/rbac/application/authorization";
@@ -93,27 +86,11 @@ export default async function LaporanKeuanganPage({
                 {item}
               </Link>
             ))}
-            <Select
-              value={bidangParam ?? ""}
-              onValueChange={(value) => {
-                const newParams = new URLSearchParams();
-                if (laporan.tahun) newParams.set("tahun", String(laporan.tahun));
-                if (value) newParams.set("bidang", value);
-                redirect(`/keuangan/laporan?${newParams.toString()}`);
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter Bidang" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Semua Bidang</SelectItem>
-                {bidangList.map((bidang) => (
-                  <SelectItem key={bidang.kode} value={bidang.kode}>
-                    {bidang.uraian}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <BidangFilter
+              tahun={laporan.tahun}
+              bidang={bidangParam ?? ""}
+              options={bidangList.map((bidang) => ({ kode: bidang.kode, uraian: bidang.uraian }))}
+            />
             <Button variant="outline" asChild>
               <Link href={`/keuangan/laporan/realisasi?tahun=${laporan.tahun}`}>
                 <Table2 className="size-4" />
