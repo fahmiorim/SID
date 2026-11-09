@@ -62,7 +62,7 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    menyebut gap selain E2E.
 
 Snapshot 4 November mencatat 77 ID dengan gap. Per 9 November 2026, register
-mencatat **53 ID ✅, 58 ID 🟡, dan 0 🔴** dari 111 ID katalog (snapshot
+mencatat **57 ID ✅, 54 ID 🟡, dan 0 🔴** dari 111 ID katalog (snapshot
 7 November: 51 berfungsi penuh dan 60 sebagian). Status parsial
 mencakup gap perilaku, E2E, dan bukti provider; rincian otoritatif per ID ada di
 `PARITAS-OPENSID.md`.
@@ -385,7 +385,7 @@ Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir 
 Gap non-E2E yang masih menunggu bukti provider nyata adalah `OS-WGA-009` dan
 `OS-SUR-013` (kredensial belum tersedia). Gap non-E2E `OS-OPS-005` sudah ditutup;
 yang tersisa untuk ID itu adalah E2E pengiriman/filter/inbox. Register saat ini
-memuat 58 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
+memuat 54 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
@@ -1326,7 +1326,7 @@ dokumen, mode adapter TTE, dan asumsi akun warga. Tindak lanjut hari yang sama:
 `@/db` dihapus. Urutan prioritas: web publik → admin berfungsi → scope katalog
 → multi-desa.
 
-Status dokumen per 9 November 2026: register paritas berisi **53 ✅ / 58 🟡 /
+Status dokumen per 9 November 2026: register paritas berisi **57 ✅ / 54 🟡 /
 0 🔴 / 0 ⚪** dari 111 ID. Rekonsiliasi 7 November (51 berfungsi penuh, 60
 sebagian) dan angka lama 37 ✅ / 74 🟡 adalah snapshot historis yang tidak
 berlaku. Rincian status per ID dan hitungan per domain ada di
@@ -1341,7 +1341,7 @@ berlaku. Rincian status per ID dan hitungan per domain ada di
 | 0 — Stabilisasi | ⚪ **Bukti historis** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Bukan bukti quality gate working tree saat ini. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi dan sebagian besar CMS tersedia; gap per fitur mengacu ke register paritas. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Modul inti tersedia; sisa gap perilaku/E2E dan operasional dicatat per ID pada register paritas. |
-| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 53 berfungsi penuh, 58 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
+| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 57 berfungsi penuh, 54 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Route publik tersambung ke data nyata; status dan gap keluaran/E2E per ID ada di register. |
 | 5 — Multi-desa | 🟡 **Fondasi tersedia** | Provisioning, pengelolaan status/kuota, dan resolusi host tersedia. Domain kustom + TLS dan uji isolasi lintas desa berdomain belum selesai. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | Audit keamanan/performa/aksesibilitas menyeluruh dan validasi runbook masih terbuka; CI terkonfigurasi, tetapi konfigurasi bukan bukti run terbaru lulus. |
