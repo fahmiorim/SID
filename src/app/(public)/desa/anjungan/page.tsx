@@ -8,6 +8,7 @@ import {
   cariPerangkatKiosk,
   daftarAnjunganPublik,
 } from "@/features/anjungan/application/anjungan-use-cases";
+import { AnjunganDeviceId } from "@/features/anjungan/presentation/components/anjungan-device-id";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ export default async function AnjunganPublicPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
+      <AnjunganDeviceId />
       <header className="mb-8 text-center">
         <h1 className="text-2xl font-bold">Anjungan Mandiri</h1>
         <p className="mt-1 text-sm text-muted-foreground">
