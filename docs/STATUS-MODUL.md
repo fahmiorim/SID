@@ -37,9 +37,9 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | Test E2E yang berinteraksi UI | 61 (24%) | Sisanya hanya memuat halaman, heading, body, atau HTTP |
 | Test E2E non-interaktif | 190 (76%) | Belum membuktikan aksi pengguna |
 | Aksi UI di E2E | 425 | Terpusat di sedikit berkas |
-| Impor infrastruktur langsung | 2 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Sisa: `api/pengaduan/lampiran` (validasi jalur media, dibiarkan) dan `api/penduduk/nik` (memakai `verifySession`, ditunda agar aturan izin tidak berubah) |
+| Impor infrastruktur langsung | 0 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Route lampiran pengaduan memakai `bacaLampiranPengaduan` (validasi jalur ada di use case); `api/penduduk/nik` memakai use case penduduk |
 
-Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Pengukuran ulang setelah pemindahan ke use case menemukan 2 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
+Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -202,7 +202,7 @@ Catatan tabel:
 
 ### 1. Batas lapisan masih bocor
 
-Tersisa **2 impor** dari `src/app/**` (`api/pengaduan/lampiran` dan `api/penduduk/nik`); `src/features/*/presentation/**` sudah **0**. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan `src/app/sitemap.ts` juga 0 dan dijaga `src/features/publik/application/lapisan-publik.test.ts`. Route admin/warga/API lain sudah melewati use case yang memeriksa izin dan tenant.
+Tersisa **0 impor** dari `src/app/**` dan `src/features/*/presentation/**` juga **0**; `api/pengaduan/lampiran` kini memakai use case yang memvalidasi jalur media. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan `src/app/sitemap.ts` juga 0 dan dijaga `src/features/publik/application/lapisan-publik.test.ts`. Route admin/warga/API lain sudah melewati use case yang memeriksa izin dan tenant.
 
 Sebaran terbesar:
 

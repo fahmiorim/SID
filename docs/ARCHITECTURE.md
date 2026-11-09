@@ -109,18 +109,15 @@ Fitur yang sudah dibangun saat ini:
 
 - **`infrastructure` hanya dipanggil `application`.** Halaman & aksi memanggil
   *use case*, bukan *repository*.
-  **Utang teknis terukur (per Nov 2026):** 2 impor infrastruktur/`@/db` tersisa di
-  `src/app/**` (keduanya disengaja: validasi jalur media lampiran pengaduan, dan
-  `api/penduduk/nik` yang memakai `verifySession` sehingga belum dipindah tanpa mengubah aturan
-  izin). `src/features/*/presentation/**` sudah 0.
-  Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan
-  `src/app/sitemap.ts` sudah **0** dan dijaga
-  `src/features/publik/application/lapisan-publik.test.ts`. Sisa terbanyak:
-  aksi & halaman `kesehatan` (KIA, ibu hamil, pemantauan anak, posyandu),
-  `statistik`, `penduduk`, `hubung-warga`, route warga, dan presentation
-  `kontak`/`pendapat`/`survey`. Angka ini harus **turun, bukan bertambah**;
-  ubah ke use case setiap kali berkas tersebut disentuh. Jangan menyalin pola
-  impor baru dari berkas yang masih melanggar.
+  **Status terukur (9 November 2026):** **0** impor infrastruktur/`@/db` di
+  `src/app/**` dan **0** di `src/features/*/presentation/**`. Route lampiran
+  pengaduan kini memakai use case `bacaLampiranPengaduan` yang sudah menolak
+  jalur di luar akar penyimpanan, dan `api/penduduk/nik` memakai use case
+  penduduk. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan
+  `src/app/sitemap.ts` juga 0 dan dijaga
+  `src/features/publik/application/lapisan-publik.test.ts`. Angka ini harus
+  **tetap 0**; ubah ke use case setiap kali berkas baru menyentuh repository.
+  Jangan menyalin pola impor langsung dari riwayat lama.
 - **`domain` tidak mengimpor lapisan atas atau I/O.** Dilarang (dan saat ini 0
   pelanggaran): `application`, `infrastructure`, `presentation`, `@/db`,
   `server-only`, serta API Node. Konstanta lintas lapisan diletakkan di modul
