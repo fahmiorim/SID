@@ -45,11 +45,13 @@ function whereDtks(villageId: number, params: ListDtksParams): SQL {
   if (params.dusun) filters.push(eq(regions.dusun, params.dusun));
   if (params.search) {
     const term = `%${params.search}%`;
+    // Pencarian nama/NIK anggota memakai EXISTS agar baris DTKS tidak
+    // terduplikasi (satu RTM bisa punya banyak penduduk) dan query hitung
+    // tidak merujuk tabel yang tidak di-join.
     filters.push(
       or(
         like(rumahTangga.number, term),
-        like(residents.name, term),
-        like(residents.nationalId, term),
+        sql`exists (select 1 from ${residents} where ${residents.rtmId} = ${rumahTangga.id} and (${residents.name} like ${term} or ${residents.nationalId} like ${term}))`,
       )!,
     );
   }
@@ -72,11 +74,13 @@ export async function listDtks(villageId: number, params: ListDtksParams): Promi
   }
   if (params.search) {
     const term = `%${params.search}%`;
+    // Pencarian nama/NIK anggota memakai EXISTS agar baris DTKS tidak
+    // terduplikasi (satu RTM bisa punya banyak penduduk) dan query hitung
+    // tidak merujuk tabel yang tidak di-join.
     filters.push(
       or(
         like(rumahTangga.number, term),
-        like(residents.name, term),
-        like(residents.nationalId, term),
+        sql`exists (select 1 from ${residents} where ${residents.rtmId} = ${rumahTangga.id} and (${residents.name} like ${term} or ${residents.nationalId} like ${term}))`,
       )!,
     );
   }

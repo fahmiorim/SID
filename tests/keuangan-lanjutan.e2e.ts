@@ -1,62 +1,149 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-// ============================================================================
-// OS-FIN-004 — Arsip dokumen laporan periodik, lampiran PDF, metadata, RBAC, dan impor multi-PDF
-// dengan validasi MIME/ukuran/periode melalui `imporDokumenLaporan`. Test domain
-// `laporan-dokumen-impor.test.ts`. **Gap: E2E impor belum membuktikan hasil penyimpanan**;
-// E2E di bawah memeriksa dialog impor dan metadata unggah PDF.
-// ============================================================================
-test(
-  "arsip dokumen: dialog impor multi-PDF menampilkan validasi berkas",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
-    await app.open("/keuangan/laporan-dokumen");
-    await screen.getByRole("button", { name: /impor dokumen/i }).tap();
-    await expect(screen.getByRole("heading", { name: /impor dokumen laporan/i })).toBeVisible();
-    // Form unggah hanya menerima PDF
-    await expect(screen.getByLabel(/berkas pdf/i)).toBeVisible();
-  },
-);
+import { hapusKeuanganTahun, hapusLaporanDokumenDariJudul } from "./support/database";
 
+const TAHUN_DOKUMEN = 2030;
+const TAHUN_APBDES = 2098;
+
+/**
+ * Katalog: OS-FIN-004 — Arsip dokumen laporan periodik.
+ *
+ * Impor PDF lewat dialog harus benar-benar tersimpan: baris muncul di arsip,
+ * berkas dapat diunduh sebagai PDF, tanggal penyerahan tercatat, periode yang
+ * sama ditolak saat diimpor ulang, dan penghapusan membersihkan baris.
+ */
 test(
-  "arsip dokumen: unggah PDF menampilkan metadata dan tombol impor",
-  { session: "admin", tags: ["smoke"] },
+  "dokumen laporan: impor PDF tersimpan, diserahkan, tolak duplikat, lalu dihapus",
+  { session: "admin", timeout: 180_000 },
   async ({ app, screen, browser }) => {
-    await app.open("/keuangan/laporan-dokumen");
-    await screen.getByRole("button", { name: /impor dokumen/i }).tap();
-    await expect(screen.getByRole("heading", { name: /impor dokumen laporan/i })).toBeVisible();
-    await browser.locator('input[type="file"]').setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
-    // Metadata baris muncul dan berkas lolos validasi PDF
-    await expect(screen.getByText("OK", { exact: true })).toBeVisible({ timeout: 5000 });
-    await expect(screen.getByRole("button", { name: /impor 1 berkas/i })).toBeVisible();
+    const judul = `Laporan Impor E2E ${Date.now()}`;
+    const berkas = "tests/fixtures/berkas-uji-e2e.pdf";
+
+    try {
+      await app.open(`/keuangan/laporan-dokumen?tahun=${TAHUN_DOKUMEN}`);
+      await expect(screen.getByRole("heading", { name: "Dokumen Laporan APBDes" })).toBeVisible();
+
+      // 1. Impor satu PDF dengan metadata yang unik.
+      await screen.getByRole("button", { name: "Impor Dokumen" }).tap();
+      const dialogImpor = screen.getByRole("dialog");
+      await expect(
+        dialogImpor.getByRole("heading", { name: "Impor Dokumen Laporan" }),
+      ).toBeVisible();
+      await browser.locator('input[type="file"]').setInputFiles(berkas);
+      await expect(dialogImpor.getByText("OK", { exact: true })).toBeVisible({
+        timeout: 15_000,
+      });
+      await dialogImpor.getByPlaceholder("Judul dokumen").fill(judul);
+      await dialogImpor.getByRole("button", { name: "Impor 1 Berkas" }).tap();
+      await expect(screen.getByText("1 dokumen laporan berhasil diimpor.")).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(dialogImpor).not.toBeVisible({ timeout: 15_000 });
+
+      // 2. Baris arsip memuat metadata impor dan berkasnya benar-benar PDF.
+      await app.open(`/keuangan/laporan-dokumen?tahun=${TAHUN_DOKUMEN}`);
+      const baris = () => screen.getByRole("row").filter({ hasText: judul });
+      await expect(baris()).toBeVisible({ timeout: 15_000 });
+      await expect(baris().getByText("Laporan APBDes")).toBeVisible();
+      await expect(baris().getByText("Semester I")).toBeVisible();
+
+      const tautanUnduh = await browser.evaluate(() => {
+        const tautan = [...document.querySelectorAll("a")].find(
+          (item) => item.textContent?.trim() === "Unduh PDF",
+        );
+        return tautan ? tautan.getAttribute("href") : null;
+      });
+      expect(tautanUnduh).toMatch(/^\/keuangan\/laporan-dokumen\/\d+\/berkas$/);
+
+      const pdf = await browser.evaluate(async (href) => {
+        const res = await fetch(href as string);
+        return {
+          status: res.status,
+          contentType: res.headers.get("content-type"),
+          ukuran: (await res.arrayBuffer()).byteLength,
+        };
+      }, tautanUnduh);
+      expect(pdf.status).toBe(200);
+      expect(pdf.contentType).toContain("application/pdf");
+      expect(pdf.ukuran).toBeGreaterThan(0);
+
+      // 3. Catat tanggal penyerahan.
+      await baris()
+        .getByRole("button", { name: `Aksi dokumen ${judul}` })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Catat penyerahan" }).tap();
+      const dialogSerah = screen.getByRole("dialog");
+      await expect(dialogSerah.getByRole("heading", { name: "Tanggal Penyerahan" })).toBeVisible();
+      await dialogSerah.getByLabel("Tanggal diserahkan").fill("2026-11-10");
+      await dialogSerah.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(dialogSerah).not.toBeVisible({ timeout: 15_000 });
+      await expect(baris().getByText("Diserahkan")).toBeVisible();
+
+      // 4. Periode yang sama ditolak saat diimpor ulang.
+      await screen.getByRole("button", { name: "Impor Dokumen" }).tap();
+      const dialogUlang = screen.getByRole("dialog");
+      await browser.locator('input[type="file"]').setInputFiles(berkas);
+      await dialogUlang.getByPlaceholder("Judul dokumen").fill(judul);
+      await dialogUlang.getByRole("button", { name: "Impor 1 Berkas" }).tap();
+      await expect(dialogUlang.getByText(/sudah ada/)).toBeVisible({ timeout: 15_000 });
+      await dialogUlang.getByRole("button", { name: "Batal" }).tap();
+
+      // 5. Hapus lewat aksi baris (berkas ikut dibersihkan server).
+      await baris()
+        .getByRole("button", { name: `Aksi dokumen ${judul}` })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Hapus" }).tap();
+      const konfirmasi = screen.getByRole("alertdialog");
+      await expect(konfirmasi.getByText("Hapus dokumen laporan?")).toBeVisible();
+      await konfirmasi.getByRole("button", { name: "Hapus", exact: true }).tap();
+      await expect(screen.getByText("Dokumen laporan dihapus.")).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(screen.getByText(judul)).toHaveCount(0);
+    } finally {
+      await hapusLaporanDokumenDariJudul(judul);
+    }
   },
 );
 
-// ============================================================================
-// OS-FIN-006 — Transparansi APBDes dan laporan triwulan publik tersedia melalui `/desa/apbdes`,
-// termasuk ringkasan per triwulan dan filter tahun; test `laporan-triwulan.test.ts`.
-// **Gap: E2E filter periode dan data laporan belum dibuktikan**; E2E yang ada belum memeriksa perilaku tersebut.
-// ============================================================================
+/**
+ * Katalog: OS-FIN-006 — Transparansi APBDes.
+ *
+ * Pagu, realisasi, dan realisasi triwulan yang diisi admin harus tampil di
+ * laporan publik `/desa/apbdes?tahun=...`, bukan hanya halaman yang merender.
+ */
 test(
-  "APBDes publik: halaman `/desa/apbdes` tersedia",
-  { tags: ["smoke"] },
-  async ({ app, browser }) => {
-    await app.open("/desa/apbdes");
-    await expect(browser).toHaveURL("/desa/apbdes");
-    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-  },
-);
+  "APBDes publik: pagu, realisasi, dan triwulan tampil di laporan desa",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    try {
+      await app.open(`/keuangan/anggaran?tahun=${TAHUN_APBDES}`);
+      await expect(browser.locator("h1")).toContainText("APBDes");
 
-test(
-  "APBDes filter triwulan dan data laporan",
-  { session: "admin", tags: ["smoke"] },
-  async ({ app, browser }) => {
-    // Laporan triwulan admin: kolom TW I–IV dan ekspor CSV.
-    await app.open("/keuangan/triwulan");
-    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-    const teks = await browser.locator("body").textContent();
-    expect(teks).toMatch(/TW I/);
-    expect(teks).toMatch(/Ekspor CSV/);
+      const baris = screen.getByRole("row").filter({ hasText: "HASIL USAHA" });
+      await baris.getByRole("textbox").first().fill("12000000");
+      await baris.getByRole("textbox").last().fill("3000000");
+      await expect(screen.getByText("1 baris berubah")).toBeVisible();
+      await screen.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(screen.getByText("Anggaran & realisasi disimpan.")).toBeVisible();
+
+      await app.open(`/keuangan/triwulan?tahun=${TAHUN_APBDES}`);
+      const tw1 = screen.getByLabel(/TW1$/).first();
+      await tw1.fill("1250000");
+      await screen.getByRole("button", { name: "Simpan Realisasi" }).tap();
+      await expect(screen.getByText("Realisasi triwulan disimpan.")).toBeVisible();
+
+      await app.open(`/desa/apbdes?tahun=${TAHUN_APBDES}`);
+      await expect(browser.locator("h1")).toContainText(/APBDes/i);
+      const teks = await browser.locator("body").textContent();
+      expect(teks).toContain(String(TAHUN_APBDES));
+      expect(teks).toMatch(/12\.000\.000/);
+      expect(teks).toMatch(/3\.000\.000/);
+      expect(teks).toContain("Realisasi per Periode (Triwulan)");
+      expect(teks).toMatch(/1\.250\.000/);
+    } finally {
+      await hapusKeuanganTahun(TAHUN_APBDES);
+    }
   },
 );

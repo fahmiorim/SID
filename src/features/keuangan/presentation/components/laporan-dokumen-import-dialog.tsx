@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, FileUp, Loader2, Upload, X } from "lucide-react";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -81,19 +81,11 @@ export function LaporanDokumenImportDialog({
   tahunDefault: number;
 }) {
   const [baris, setBaris] = useState<BarisImpor[]>([]);
+  const [pesanError, setPesanError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [state, formAction, isPending] = useActionState(
-    imporDokumenLaporanAction,
-    createIdleActionState(),
-  );
 
   const jenisDefault = LAPORAN_TIPE_OPTIONS[0]?.value ?? "";
-
-  useEffect(() => {
-    if (state.status === "success") {
-      toast.success(state.message);
-    }
-  }, [state]);
 
   function tambahBerkas(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -122,16 +114,29 @@ export function LaporanDokumenImportDialog({
       toast.error("Pilih minimal satu berkas.");
       return;
     }
+    // Nama field harus sama dengan yang dibaca aksi server: `berkas` untuk
+    // setiap berkas, lalu metadata bersufiks indeks (`judul-0`, dst.).
     const formData = new FormData();
-    formData.append("tahun", String(tahunDefault));
     baris.forEach((row, idx) => {
-      formData.append(`berkas[${idx}]`, row.file);
-      formData.append(`judul[${idx}]`, row.judul);
-      formData.append(`jenis[${idx}]`, row.jenis);
-      formData.append(`tahun[${idx}]`, String(row.tahun));
-      formData.append(`semester[${idx}]`, String(row.semester));
+      formData.append("berkas", row.file);
+      formData.append(`judul-${idx}`, row.judul);
+      formData.append(`jenis-${idx}`, row.jenis);
+      formData.append(`tahun-${idx}`, String(row.tahun));
+      formData.append(`semester-${idx}`, String(row.semester));
     });
-    formAction(formData);
+    // Panggil aksi server langsung di dalam transition: FormData dirakit dari
+    // state (berkas + metadata per baris), jadi tidak bisa lewat `action` form.
+    setPesanError(null);
+    startTransition(async () => {
+      const hasil = await imporDokumenLaporanAction(createIdleActionState(), formData);
+      if (hasil.status === "success") {
+        toast.success(hasil.message);
+        setBaris([]);
+        onOpenChange(false);
+        return;
+      }
+      setPesanError(hasil.status === "error" ? hasil.message : "Impor dokumen gagal.");
+    });
   }
 
   return (
@@ -282,10 +287,10 @@ export function LaporanDokumenImportDialog({
               <p className="py-8 text-center text-muted-foreground">Belum ada berkas dipilih.</p>
             )}
 
-            {state.status === "error" && state.fieldErrors === undefined ? (
+            {pesanError ? (
               <Alert variant="destructive">
                 <AlertCircle className="size-4" />
-                <AlertDescription>{state.message}</AlertDescription>
+                <AlertDescription>{pesanError}</AlertDescription>
               </Alert>
             ) : null}
           </div>

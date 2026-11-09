@@ -446,3 +446,48 @@ export async function hapusSuratDariToken(token: string): Promise<void> {
     await pool.execute("DELETE FROM letters WHERE verification_token = ?", [token]);
   });
 }
+
+/**
+ * Buat RTM uji beserta kepala rumah tangga untuk impor DTKS.
+ *
+ * Impor DTKS mencocokkan `rtm.number` dan menyalin seluruh penduduk RTM
+ * sebagai anggota, jadi fixture harus punya kepala dengan `rtm_level` 1.
+ */
+export async function buatRtmDenganKepalaUji(input: {
+  nomor: string;
+  namaKepala: string;
+}): Promise<number> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO rtm (village_id, number, address) VALUES (?, ?, 'Alamat RTM E2E')",
+      [villageId, input.nomor],
+    );
+    await pool.execute(
+      "INSERT INTO residents (village_id, name, gender, rtm_id, rtm_level) VALUES (?, ?, 'male', ?, 1)",
+      [villageId, input.namaKepala, hasil.insertId],
+    );
+    return hasil.insertId;
+  });
+}
+
+/** Hapus RTM uji beserta formulir DTKS dan anggotanya. */
+export async function hapusRtmUji(id: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM dtks WHERE rtm_id = ?", [id]);
+    await pool.execute("DELETE FROM residents WHERE rtm_id = ?", [id]);
+    await pool.execute("DELETE FROM rtm WHERE id = ?", [id]);
+  });
+}
+
+/** Hapus dokumen laporan uji berdasarkan judul (fallback bila UI gagal). */
+export async function hapusLaporanDokumenDariJudul(judul: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM keuangan_laporan WHERE judul = ?", [judul]);
+  });
+}

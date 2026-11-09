@@ -69,8 +69,6 @@ Contoh smoke yang masih tersisa pada 9 November 2026 (berkas yang sudah ditulis 
 |---|---:|---:|---|
 | `modul-tambahan` | 4 | 3 | CRUD anjungan/buku tamu belum dijalankan penuh |
 | `kesehatan` | 2 | 0 | Tidak menguji input data kesehatan |
-| `dtks-impor` | 3 | 4 | Impor DTKS belum membuktikan hasil penyimpanan |
-| `keuangan-lanjutan` | 4 | 3 | Impor keuangan belum membuktikan hasil penyimpanan |
 
 ## Pembaruan 9 November 2026 — eksekusi suite E2E
 
@@ -102,6 +100,9 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `inventaris-bumindes` | 2 | 10 | Tambah barang, ubah lokasi, hapus lewat dialog konfirmasi; pintu masuk Bumindes | `OS-INV-001`, `OS-BUM-001` |
 | `tema` | 1 | 6 | Simpan teks berjalan + tautan Facebook, nilai bertahan setelah muat ulang dan tampil di beranda publik, lalu dipulihkan | `OS-WEB-016`, `OS-WEB-017` |
 | `plugin` | 1 | 2 | Nonaktivasi plugin tersimpan; aktivasi ditolak saat environment wajib belum diisi | `OS-OPS-008` |
+| `keuangan-lanjutan` | 2 | 21 | Impor PDF tersimpan + unduh, catat penyerahan, tolak duplikat, hapus; pagu/realisasi/triwulan tampil di APBDes publik | `OS-FIN-004`, `OS-FIN-006` |
+| `bantuan-warga` | 1 | 1 | Login warga, buka menu Bantuan dari beranda, program aktif/selesai tampil, program tanpa peserta tidak bocor | `OS-WGA-008` |
+| `dtks-impor` | 1 | 8 | Impor CSV menautkan nomor RTM, menyalin anggota, verifikasi status, dan impor ulang idempoten | `OS-POP-006` |
 | `warga-mandiri` | 1 | 24 | Login warga (captcha), pesan, lapak tambah/ubah/hapus + katalog publik, izin, verifikasi surat via token, dan registrasi mandiri yang disetujui admin (PIN tampil sekali) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
 | `verifikasi-berjenjang` | 7 | 74 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
 
@@ -110,10 +111,12 @@ Bug produksi yang ditemukan dan diperbaiki:
 - `src/lib/forms.ts`: `optionalDigits` menangani input opsional tanpa memaksa digit.
 - Dialog anggota memuat ulang terus-menerus (`rumah-tangga-members-dialog.tsx`, `anggota-dialog.tsx`, `peserta-dialog.tsx`); penghapusan anggota/peserta kini memanggil `onChanged` agar daftar induk ikut menyegarkan.
 - `bidang-filter.tsx` baru; form SiLPA tidak lagi bersarang; agregasi `saveKeuanganNilai` menyimpan nilai dengan benar; filter `status=semua` pada pembangunan; perbaikan cetak tema (`print-button.tsx`, `themes/ui.tsx`).
+- Impor dokumen laporan tidak pernah mengirim aksi: FormData memakai nama `berkas[i]`/`judul[i]` sementara aksi membaca `berkas`/`judul-i`, dan aksi dipanggil di luar transition. Kini aksi server dipanggil dalam `useTransition` dengan nama field yang sama.
+- Pencarian DTKS (`/penduduk/dtks?search=...`) tidak lagi 500: filter nama/NIK memakai `EXISTS` sehingga query hitung tidak merujuk tabel yang tidak di-join dan baris tidak terduplikasi.
 
 Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. `npm run build` dan ulangan suite penuh belum dijalankan.
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `dtks-impor`, `keuangan-lanjutan`, `pendapat`, `idm`, `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `bantuan-warga`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `pendapat`, `idm`, `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
 
 Gap domain yang dicatat tetapi belum diubah: `verifySuratData` tidak memanggil `validateVerification`, sehingga aturan own-submission di `src/features/surat/domain/verifikasi.ts` tidak ditegakkan oleh aksi verifikasi.
 
@@ -128,7 +131,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
 | OS-POP-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-POP-006 | Sebagian | E2E impor sukses. | `dtks-impor` 3 test/2 interaktif |
+| OS-POP-006 | Struktur terverifikasi | Impor CSV menautkan RTM, menyalin anggota, dan idempoten | `dtks-impor` 1 test/1 beraksi |
 | OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-POP-008 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `kesehatan` 2 test/smoke |
 | OS-POP-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -172,9 +175,9 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-FIN-001 | Struktur lengkap; ada E2E interaktif | Pagu/realisasi APBDes tersimpan | `keuangan` 5 test/5 beraksi |
 | OS-FIN-002 | Struktur lengkap; ada E2E interaktif | Laporan + filter bidang | `keuangan` 5 test/5 beraksi |
 | OS-FIN-003 | Struktur lengkap; ada E2E interaktif | Realisasi triwulan tersimpan | `keuangan` 5 test/5 beraksi |
-| OS-FIN-004 | Sebagian | E2E impor belum membuktikan hasil penyimpanan | `keuangan-lanjutan` 4 test/2 interaktif |
+| OS-FIN-004 | Struktur terverifikasi | Impor PDF tersimpan, diunduh, diserahkan, duplikat ditolak, dan dihapus | `keuangan-lanjutan` 2 test/2 beraksi |
 | OS-FIN-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-006 | Sebagian | E2E filter periode dan data laporan belum dibuktikan | tidak dirujuk |
+| OS-FIN-006 | Struktur terverifikasi | Pagu, realisasi, dan triwulan tampil di `/desa/apbdes` | `keuangan-lanjutan` 2 test/2 beraksi |
 | OS-FIN-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-008 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -208,7 +211,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WGA-005 | Struktur lengkap; ada E2E interaktif | — | `permohonan-warga` 5 test/5 interaktif |
 | OS-WGA-006 | Struktur terverifikasi | Pesan dua arah `/layanan-mandiri/pesan` + `/pesan-warga`; test `pesan-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-007 | Struktur terverifikasi | Verifikasi surat area warga `/layanan-mandiri/verifikasi-surat`; test `verifikasi.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-008 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `bantuan-warga` 1 test/smoke |
+| OS-WGA-008 | Struktur terverifikasi | Program tanpa peserta tidak tampil | `bantuan-warga` 1 test/1 beraksi |
 | OS-WGA-009 | Sebagian | bukti pengiriman ke provider nyata (kredensial belum tersedia) dan E2E alur lengkap. | tidak dirujuk |
 | OS-WGA-010 | Struktur terverifikasi | Lapak warga `/layanan-mandiri/lapak` + katalog publik; test `lapak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-011 | Struktur terverifikasi | Kehadiran `/kehadiran`, izin warga `/layanan-mandiri/izin`, keputusan `/kehadiran/izin`; test `kehadiran.test.ts` | `warga-mandiri` 1 test/1 beraksi |
