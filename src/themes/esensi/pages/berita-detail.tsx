@@ -16,7 +16,7 @@ export function EsensiBeritaDetail({ berita, terkait }: BeritaDetailProps) {
         href="/desa/berita"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-4" aria-hidden="true" />
         Kembali ke daftar berita
       </Link>
 
@@ -50,7 +50,7 @@ export function EsensiBeritaDetail({ berita, terkait }: BeritaDetailProps) {
           className="inline-flex items-center gap-2 border px-4 py-2 text-sm font-medium hover:bg-accent"
           style={{ borderRadius: "var(--pub-radius)" }}
         >
-          <FileText className="size-4" />
+          <FileText className="size-4" aria-hidden="true" />
           Unduh lampiran
         </a>
       ) : null}

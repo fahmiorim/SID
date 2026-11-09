@@ -11,7 +11,7 @@ test(
     // Dialog shortcut tersedia.
     await screen.getByRole("button", { name: /atur shortcut/i }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
-    await screen.getByRole("button", { name: "Close" }).tap();
+    await screen.getByRole("button", { name: "Tutup dialog" }).tap();
     await expect(screen.getByRole("dialog")).not.toBeVisible();
   },
 );

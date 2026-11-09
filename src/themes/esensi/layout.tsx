@@ -4,6 +4,7 @@ import Link from "next/link";
 import { kontrasTeks, SOSMED_LABELS } from "@/features/publik/domain/theme";
 import { MenuUtama } from "@/themes/esensi/menu-utama";
 import type { LayoutProps } from "@/themes/types";
+import { ThemeSkipLink } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `esensi`.
@@ -30,6 +31,8 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
       className="flex min-h-full flex-col bg-background text-foreground"
       style={{ fontFamily: "var(--pub-font)" }}
     >
+      <ThemeSkipLink />
+
       <div
         className="hidden border-b text-xs sm:block"
         style={{ backgroundColor: "var(--pub-secondary)", color: warnaBilah }}
@@ -181,7 +184,13 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
         </div>
       ) : null}
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main
+        id="konten-utama"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10"
+      >
+        {children}
+      </main>
 
       <footer className="tema-esensi-footer mt-auto border-t">
         <div

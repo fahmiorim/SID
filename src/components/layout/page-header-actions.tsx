@@ -11,7 +11,7 @@ interface PrintButtonProps {
 export function PrintButton({ className = "" }: PrintButtonProps) {
   return (
     <Button type="button" variant="outline" className={className} onClick={() => window.print()}>
-      <Printer className="size-4" />
+      <Printer className="size-4" aria-hidden="true" />
       Cetak
     </Button>
   );

@@ -127,7 +127,10 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
           <form method="get" className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative min-w-56 flex-1">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <Input
                   name="q"
                   defaultValue={filter.search}
@@ -146,7 +149,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
               ) : null}
               {filterAktif > 0 ? (
                 <Badge variant="secondary" className="gap-1">
-                  <SlidersHorizontal className="size-3" />
+                  <SlidersHorizontal className="size-3" aria-hidden="true" />
                   {filterAktif} filter aktif
                 </Badge>
               ) : null}
@@ -299,7 +302,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
           </form>
 
           <div className="overflow-x-auto rounded-lg border">
-            <Table>
+            <Table aria-label="Daftar penduduk">
               <TableHeader>
                 <TableRow>
                   <TableHead>Nama</TableHead>
@@ -318,7 +321,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                   <TableRow>
                     <TableCell colSpan={columns} className="h-28 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Users className="size-5" />
+                        <Users className="size-5" aria-hidden="true" />
                         <p className="text-sm">
                           {filterAktif > 0 || filter.search
                             ? "Tidak ada penduduk yang cocok dengan filter."
@@ -378,7 +381,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
 
             {result.pageCount > 1 ? (
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild disabled={result.page <= 1}>
+                <Button variant="outline" size="sm" asChild>
                   <Link
                     href={pageHref(Math.max(1, result.page - 1))}
                     aria-disabled={result.page <= 1}
@@ -390,12 +393,7 @@ export default async function PendudukPage({ searchParams }: PageProps<"/pendudu
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {result.page} / {result.pageCount}
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                  disabled={result.page >= result.pageCount}
-                >
+                <Button variant="outline" size="sm" asChild>
                   <Link
                     href={pageHref(Math.min(result.pageCount, result.page + 1))}
                     aria-disabled={result.page >= result.pageCount}

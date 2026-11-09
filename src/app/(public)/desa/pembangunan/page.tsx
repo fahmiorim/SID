@@ -14,8 +14,10 @@ export const metadata: Metadata = {
 };
 
 function ProgresBar({ nilai }: { nilai: number }) {
+  // Batang progres hanya penguat visual; angka persentase sudah dibacakan
+  // sebagai teks di sebelahnya, jadi tidak perlu diumumkan ulang.
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-muted" aria-hidden="true">
       <div
         className="h-full rounded-full bg-primary"
         style={{ width: `${Math.min(100, Math.max(0, nilai))}%` }}
@@ -89,7 +91,7 @@ export default async function PembangunanPage({
 
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-lg border py-12 text-center text-muted-foreground">
-          <HardHat className="size-6" />
+          <HardHat className="size-6" aria-hidden="true" />
           <p className="text-sm">
             {tahun !== null
               ? "Belum ada proyek pembangunan pada tahun ini."

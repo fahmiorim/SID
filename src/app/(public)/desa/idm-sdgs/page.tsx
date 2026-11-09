@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { ringkasanIdmPublik } from "@/features/idm/application/idm-use-cases";
@@ -11,6 +10,7 @@ import {
 import { SdgsTable } from "@/features/idm/presentation/components/sdgs-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { getCurrentUser } from "@/lib/dal";
+import { ThemePageHeader } from "@/themes/ui";
 
 export const metadata = { title: "IDM & SDGs Desa" };
 export const dynamic = "force-dynamic";
@@ -39,7 +39,7 @@ export default async function IdmSdgsPage({
 
   return (
     <div className="space-y-6">
-      <PageHeader
+      <ThemePageHeader
         title={isAdmin ? "Capaian SDGs Desa" : "Indeks Desa Membangun (IDM) & SDGs"}
         description={
           isAdmin

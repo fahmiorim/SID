@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SOSMED_LABELS } from "@/features/publik/domain/theme";
 import type { LayoutProps } from "@/themes/types";
+import { ThemeSkipLink } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `natra`: header berwarna penuh dan footer
@@ -14,6 +15,8 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
 
   return (
     <div data-theme="natra" className="flex min-h-full flex-col bg-background text-foreground">
+      <ThemeSkipLink />
+
       <header className="tema-natra-header sticky top-0 z-40">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-3">
@@ -141,7 +144,13 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
         </div>
       ) : null}
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
+      <main
+        id="konten-utama"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6"
+      >
+        {children}
+      </main>
 
       <footer className="mt-auto bg-neutral-950 text-neutral-300">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">

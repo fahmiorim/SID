@@ -44,14 +44,15 @@ export function EsensiGaleri({ album, cari }: GaleriListProps) {
               <ThemeCard as="li" key={item.id} className="transition-shadow hover:shadow-md">
                 <Link href={`/desa/galeri/${item.slug}`} className="group block h-full">
                   {sampul ? (
+                    // Nama album di judul kartu sudah menjadi nama tautan, jadi
+                    // sampul diperlakukan dekoratif agar tidak diumumkan dua kali.
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={sampul}
-                      alt={item.nama}
-                      className="aspect-video w-full object-cover"
-                    />
+                    <img src={sampul} alt="" className="aspect-video w-full object-cover" />
                   ) : (
-                    <div className="flex aspect-video w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+                    <div
+                      className="flex aspect-video w-full items-center justify-center bg-muted text-sm text-muted-foreground"
+                      aria-hidden="true"
+                    >
                       Tanpa sampul
                     </div>
                   )}

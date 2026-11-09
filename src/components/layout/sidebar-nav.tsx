@@ -38,6 +38,7 @@ function NavItem({ node }: { node: MenuNode }) {
           <MenuIcon name={node.icon} className="size-4 shrink-0" />
           <span className="flex-1 text-left">{node.label}</span>
           <ChevronRight
+            aria-hidden="true"
             className={cn("size-4 shrink-0 transition-transform", open && "rotate-90")}
           />
         </button>

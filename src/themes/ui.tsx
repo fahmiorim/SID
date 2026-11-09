@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { SkipLink } from "@/components/shared/skip-link";
 import { SOSMED_LABELS, type SosmedLink } from "@/features/publik/domain/theme";
 import { sanitasiHtml } from "@/lib/sanitize";
 
@@ -29,6 +30,11 @@ export function KontenHtml({ html, className }: { html: string; className?: stri
       dangerouslySetInnerHTML={{ __html: bersih }}
     />
   );
+}
+
+/** Tautan "lewati ke konten utama" untuk tema publik. */
+export function ThemeSkipLink({ targetId = "konten-utama" }: { targetId?: string }) {
+  return <SkipLink targetId={targetId} />;
 }
 
 export function ThemePageHeader({

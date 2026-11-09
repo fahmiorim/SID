@@ -19,15 +19,15 @@ export function EsensiKontak({ ctx, captcha }: KontakProps) {
         <ThemeCard className="space-y-4 p-6 text-sm">
           <h2 className="text-base font-semibold">Alamat & Kontak</h2>
           <div className="flex gap-3">
-            <MapPin className="tema-link-primary mt-0.5 size-4 shrink-0" />
+            <MapPin className="tema-link-primary mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{desa.alamatKantor ?? "Alamat kantor desa belum diatur."}</span>
           </div>
           <div className="flex gap-3">
-            <Phone className="tema-link-primary mt-0.5 size-4 shrink-0" />
+            <Phone className="tema-link-primary mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{desa.telepon ?? "Nomor telepon belum diatur."}</span>
           </div>
           <div className="flex gap-3">
-            <Mail className="tema-link-primary mt-0.5 size-4 shrink-0" />
+            <Mail className="tema-link-primary mt-0.5 size-4 shrink-0" aria-hidden="true" />
             <span>{desa.emailDesa ?? "Email belum diatur."}</span>
           </div>
         </ThemeCard>

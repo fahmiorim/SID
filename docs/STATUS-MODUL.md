@@ -89,6 +89,45 @@ Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/keseh
 
 Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, dan `npm run build` lulus.
 
+## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
+
+Audit halaman publik yang baru diuji (beranda, berita, galeri, dokumen, peta, pembangunan, pengaduan, statistik, inventaris, bantuan, suplemen, IDM/SDGs, survei, kontak) menemukan delapan masalah dan memperbaikinya tanpa mengubah desain:
+
+1. Tidak ada jalan pintas melewati header/navigasi — `ThemeSkipLink` (`src/themes/ui.tsx`) dipasang di tema `esensi` dan `natra`, dengan `main#konten-utama` + `tabIndex={-1}` sebagai sasaran fokus.
+2. Filter kategori berita hanya membedakan pilihan aktif lewat warna — kini `aria-current="page"` pada tautan aktif ("Semua" atau kategori terpilih).
+3. Sampul berita/galeri berada di dalam tautan yang judulnya sudah menjadi nama aksesibel — `alt` judul/nama album membuatnya diumumkan dua kali; kini `alt=""`. Foto album tanpa judul tidak lagi meminjam nama album.
+4. Batang progres pembangunan hanya penguat visual — diberi `aria-hidden` karena persentase sudah tersedia sebagai teks.
+5. Peta Leaflet tidak punya nama aksesibel — kontainer kini `role="region"` + `aria-label={`Peta interaktif ${desaName}`}`.
+6. Label statistik peta memakai campuran bahasa ("layer polygon") — diseragamkan menjadi "layer poligon".
+7. Ikon dekoratif pada berita detail, galeri detail, dokumen, kontak, dan pembangunan diberi `aria-hidden`.
+8. Halaman IDM/SDGs publik memakai `PageHeader` admin (judul `text-xl`/`2xl`) sehingga lebih kecil dari halaman publik lain — kini `ThemePageHeader` (`text-3xl`/`4xl`).
+
+Bukti E2E baru pada `web-publik`: (a) tautan lewati + `main#konten-utama` `tabindex=-1` dan hanya satu `main` per halaman; (b) tepat satu tautan filter ber-`aria-current` saat tanpa filter. Test lama tidak dilonggarkan.
+
+Verifikasi: `npm run lint` 0 error (2 warning `no-console` lama), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, `npm run build` lulus. E2E terhadap build produksi (`npm start`, port 3010): `web-publik` 17/17, `web-berita-galeri` 3/3, `web-dokumen` 1/1.
+
+## Pembaruan 10 November 2026 — audit aksesibilitas admin
+
+Audit difokuskan pada kerangka admin dan halaman yang paling sering dipakai (beranda, penduduk, surat, statistik rentang umur, inventaris). Temuan dan perbaikan:
+
+1. `AppShell` tidak punya jalan pintas melewati header + sidebar, dan `<main>`-nya tanpa sasaran fokus. Kini `SkipLink` bersama (`src/components/shared/skip-link.tsx`) dipakai shell admin sekaligus tema publik (`ThemeSkipLink`), dengan `main#konten-utama` + `tabIndex={-1}`.
+2. `TableHead` tidak menetapkan `scope`, sehingga pembaca layar tidak mengaitkan sel data dengan kolomnya. Kini `scope="col"` menjadi default komponen bersama; tabel penduduk dan surat diberi `aria-label` (`Daftar penduduk`, `Daftar surat`).
+3. Tombol ikon tanpa nama pada tabel rentang umur statistik (`Pencil`/`Trash2`) kini berlabel "Ubah rentang …" dan "Hapus rentang …". Tombol aksi tabel penduduk, surat, inventaris, kelompok, dan berita memang sudah berlabel.
+4. Tombol tutup dialog memakai teks Inggris "Close" pada antarmuka berbahasa Indonesia; kini "Tutup" dan ikon `X` ditandai dekoratif.
+5. Pesan validasi field pada formulir penduduk tidak diumumkan pembaca layar; kini dibungkus `role="alert"` (`aria-invalid` per field sudah ada sebelumnya).
+6. Tombol paginasi penduduk menerima atribut `disabled` pada elemen `<a>` (tidak valid) sekaligus `aria-disabled`; atribut `disabled` dihapus, status nonaktif tetap disampaikan lewat `aria-disabled` + gaya.
+7. Ikon dekoratif pada filter penduduk, keadaan tabel kosong, tombol cetak, dan chevron sidebar ditandai `aria-hidden`.
+
+Bukti E2E baru: test `penduduk` "aksesibilitas admin: tautan lewati, landmark konten, dan header tabel" memeriksa tautan lewati, `main#konten-utama` bertabindex `-1` dengan tepat satu `main`, `aria-label` tabel, seluruh `th` ber-`scope="col"`, serta nol tombol tabel tanpa nama. Test yang sama membuka `/konten/berita` dan `/keuangan/anggaran` dan memastikan tidak ada tombol terlihat tanpa nama aksesibel.
+
+Pemindaian `src/features/konten` dan `src/features/keuangan` menemukan 13 kandidat tombol; 12 di antaranya positif palsu karena teksnya berasal dari ekspresi (`{isPending ? … : "Simpan"}`). Celah nyata hanya tombol hapus baris pada dialog impor laporan keuangan (ikon `X` tanpa nama), kini `aria-label="Hapus baris N"`. Tombol ikon tabel konten (berita, kategori, jabatan, perangkat, galeri, CMS) dan keuangan (jurnal, pembukuan, aksi dokumen) sudah memiliki `aria-label` sebelumnya.
+
+Pemindaian serupa pada `src/features/penduduk`, `src/features/surat`, dan `src/features/inventaris` (beserta rute `src/app/(admin)/penduduk`, `persuratan`, dan `inventaris`) menghasilkan 24 kandidat dan **semuanya positif palsu**: teks tombol berasal dari ekspresi (`{isPending ? … : "Simpan"}`, `{deleting ? "Menghapus..." : "Hapus"}`, `{item.label}`), sementara tombol ikon tabel (ubah/hapus barang, kategori inventaris, aksi surat) sudah ber-`aria-label`. Tidak ada perubahan kode yang diperlukan; sebagai gantinya bukti E2E diperluas agar test aksesibilitas admin juga membuka `/persuratan/surat` dan `/inventaris` dan memastikan nol tombol terlihat tanpa nama aksesibel.
+
+**Nama aksesibel saat pending (10 November 2026).** Pemindaian 177 tombol ber-spinner di `src` menemukan 6 tombol yang mengganti seluruh labelnya dengan spinner sehingga kehilangan nama tepat saat pengguna menunggu: tolak izin kehadiran (`izin-admin-panel.tsx`), hapus & simpan dokumen warga (`dokumen-warga-manager.tsx`), simpan pemilihan DPT (`dpt/election-dialog.tsx`), serta kirim kode & verifikasi kontak warga (`verifikasi-kontak-card.tsx`). Spinner kini tampil bersama label tetap, ikonnya `aria-hidden`, dan tombol menandai `aria-busy` saat pending. Tombol lain yang sudah memakai pola spinner + teks atau teks "Menyimpan…" tidak diubah. Verifikasi: pemindai ulang seluruh `src` melaporkan **0** tombol kehilangan nama dari 177 tombol ber-spinner, `npm run check` lulus (183 berkas/1.474 test), `npm run build` lulus, dan E2E build produksi `penduduk` 9/9 serta `warga-mandiri` 1/1 (11/11 termasuk auth setup).
+
+Verifikasi: `npm run lint` 0 error (2 warning `no-console` lama), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, `npm run build` lulus. E2E build produksi: `penduduk` 9/9 (termasuk test aksesibilitas baru).
+
 ## Pembaruan 9 November 2026 — eksekusi suite E2E
 
 Suite dijalankan pada dev server lokal: **56 berkas, 194 test, 190 lulus** dalam 335 detik (run 23:02, sebelum batch keempat; setelah batch keempat total 189 test). Empat kegagalan: `kelompok-laporan` (assertion bergantung nama penduduk seed; sudah diperbaiki) dan `keluarga`, `rtm-dpt`, `permohonan-warga` yang hanya gagal saat suite paralel dan lulus ketika dijalankan sendiri. Setelah perbaikan assertion, `kelompok-laporan` lulus 4/4; pada saat itu suite penuh belum dijalankan ulang setelah perbaikan terakhir.
@@ -97,7 +136,7 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 
 | Berkas E2E | Test | Aksi UI | Bukti perilaku | ID |
 |---|---:|---:|---|---|
-| `penduduk` | 8 | 26 | CRUD, detail/cetak, catat kelahiran, filter + tautan CSV, DPT, suplemen, DTKS, laporan kependudukan | `OS-POP-001`–`OS-POP-007` |
+| `penduduk` | 9 | 26 | CRUD, detail/cetak, catat kelahiran, filter + tautan CSV, DPT, suplemen, DTKS, laporan kependudukan, aksesibilitas shell/tabel admin | `OS-POP-001`–`OS-POP-007` |
 | `keluarga` | 1 | 19 | Tambah KK, detail, ubah alamat, hapus | `OS-POP-003` |
 | `rtm-dpt` | 2 | 22 | CRUD rumah tangga + tautkan anggota, laporan rekap | `OS-POP-004` |
 | `keuangan` | 5 | 18 | Pagu/realisasi APBDes tersimpan, laporan + filter bidang, triwulan, SiLPA, rekonsiliasi | `OS-FIN-001`–`OS-FIN-003` |
@@ -112,7 +151,7 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `analisis-survei` | 7 | 34 | Kategori/indikator/survei CRUD, jawaban warga → rekap admin, ekspor, token API | `OS-ANA-001`–`OS-ANA-006` |
 | `survei-publik` | 2 | 1 | Survei aktif tampil + dapat dibuka; survei nonaktif disembunyikan | `OS-ANA-006` |
 | `gis-pertanahan` | 7 | 30 | Area/garis/point/polygon, persil/CDESA/mutasi, peta cetak, simbol | `OS-WIL-006` |
-| `web-publik` | 15 | 4 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak | `OS-WEB-001`–`OS-WEB-019` |
+| `web-publik` | 17 | 6 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak; tautan lewati + `aria-current` filter kategori | `OS-WEB-001`–`OS-WEB-019` |
 | `web-berita-galeri` | 3 | 16 | Berita buat/tampil/detail/cari, galeri album + detail | `OS-WEB-002`, `OS-WEB-004` |
 | `umpan-balik` | 2 | 8 | Warga kirim umpan balik; admin menandai baru → dibaca → ditindaklanjuti | `OS-WEB-009`, `OS-WEB-015` |
 | `pengaduan` | 1 | 17 | Kirim pengaduan tanpa akun, lacak dengan nomor tiket + identitas, operator menanggapi, status dan tanggapan terlihat pelapor | `OS-WEB-009` |
@@ -149,7 +188,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 
 | ID | Hasil audit | Gap tersisa | E2E yang dirujuk |
 |---|---|---|---|
-| OS-POP-001 | Struktur lengkap; ada E2E interaktif | Alur CRUD, detail, filter, ekspor CSV, suplemen, DTKS | `penduduk` 8 test/8 beraksi |
+| OS-POP-001 | Struktur lengkap; ada E2E interaktif | Alur CRUD, detail, filter, ekspor CSV, suplemen, DTKS; audit aksesibilitas admin: tautan lewati + `main#konten-utama`, tabel ber-`aria-label`, header kolom `scope="col"`, tombol aksi berlabel | `penduduk` 9 test/9 beraksi |
 | OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 8 test/8 beraksi |
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
@@ -208,17 +247,17 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-FIN-011 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-013 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-WEB-001 | Sebagian | Cakupan E2E publik belum menyeluruh; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. | `web-publik` 15 test/2 beraksi |
-| OS-WEB-002 | Struktur lengkap; ada E2E interaktif | — | `web-berita-galeri` 3 test/2 beraksi |
+| OS-WEB-001 | Sebagian | Cakupan E2E publik belum menyeluruh; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. Audit 10 November 2026 menambahkan tautan "Lewati ke konten utama" + `main#konten-utama` pada tema `esensi` dan `natra`. | `web-publik` 17 test/6 beraksi |
+| OS-WEB-002 | Struktur lengkap; ada E2E interaktif | Filter kategori aktif ditandai `aria-current`; sampul kartu `alt=""` agar nama tautan tidak diumumkan ganda | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-003 | Sebagian | E2E profil/pemerintahan/SOTK publik belum ada | tidak dirujuk |
-| OS-WEB-004 | Struktur lengkap; ada E2E interaktif | Album, detail, dan cetak album | `web-berita-galeri` 3 test/2 beraksi |
+| OS-WEB-004 | Struktur lengkap; ada E2E interaktif | Album, detail, dan cetak album; sampul dekoratif, foto tanpa judul tidak lagi meminjam nama album sebagai `alt` | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-005 | Struktur lengkap; ada E2E interaktif | Dokumen dibuat, difilter, dicari, dan sematan sandbox | `web-dokumen` 1 test/1 beraksi |
-| OS-WEB-006 | Sebagian | E2E publik membaca statistik; cakupan tenant/ekspor belum | `web-publik` 15 test |
-| OS-WEB-007 | Sebagian | Peta Leaflet dan cetak dibuka lewat UI; cakupan layer lebih luas belum | `web-publik` 15 test |
+| OS-WEB-006 | Sebagian | E2E publik membaca statistik; cakupan tenant/ekspor belum | `web-publik` 17 test |
+| OS-WEB-007 | Sebagian | Peta Leaflet dan cetak dibuka lewat UI; cakupan layer lebih luas belum. Peta interaktif kini ber-`role="region"` dengan label desa, dan label ringkasan memakai "layer poligon". | `web-publik` 17 test |
 | OS-WEB-008 | Sebagian | Proyek baru tampil di halaman publik; filter tahun dicek | `pembangunan-buku` 1 test/1 beraksi |
 | OS-WEB-009 | Struktur lengkap; ada E2E interaktif | — | `pengaduan` 1 test/1 beraksi; `umpan-balik` 2 test/2 beraksi |
-| OS-WEB-010 | Sebagian | Daftar kelompok dan tombol cetak tampil; alur cetak penuh belum | `web-publik` 15 test |
-| OS-WEB-011 | Sebagian | Filter inventaris tanpa hasil diuji; ekspor belum | `web-publik` 15 test |
+| OS-WEB-010 | Sebagian | Daftar kelompok dan tombol cetak tampil; alur cetak penuh belum | `web-publik` 17 test |
+| OS-WEB-011 | Sebagian | Filter inventaris tanpa hasil diuji; ekspor belum | `web-publik` 17 test |
 | OS-WEB-012 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-013 | Sebagian | E2E publik/isolasi tenant. | tidak dirujuk |
 | OS-WEB-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |

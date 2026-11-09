@@ -271,10 +271,11 @@ export function LaporanDokumenImportDialog({
                               type="button"
                               variant="ghost"
                               size="icon"
+                              aria-label={`Hapus baris ${idx + 1}`}
                               onClick={() => hapusBaris(idx)}
                               className="text-destructive hover:text-destructive"
                             >
-                              <X className="size-4" />
+                              <X className="size-4" aria-hidden="true" />
                             </Button>
                           </TableCell>
                         </TableRow>

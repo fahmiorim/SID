@@ -55,7 +55,7 @@ test(
       await expect(dialogImpor.getByText(/1 peserta ditambahkan/)).toBeVisible({
         timeout: 15_000,
       });
-      await dialogImpor.getByRole("button", { name: "Close" }).first().tap();
+      await dialogImpor.getByRole("button", { name: "Tutup dialog" }).first().tap();
 
       const baris = dialogPeserta.getByRole("row").filter({ hasText: namaPeserta });
       await expect(baris).toBeVisible({ timeout: 15_000 });

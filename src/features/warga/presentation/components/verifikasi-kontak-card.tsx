@@ -84,8 +84,14 @@ export function VerifikasiKontakCard({
                 </p>
               ))}
             </div>
-            <Button type="submit" variant="outline" disabled={mintaPending}>
-              {mintaPending ? <Loader2 className="size-4 animate-spin" /> : "Kirim kode"}
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={mintaPending}
+              aria-busy={mintaPending}
+            >
+              {mintaPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+              Kirim kode
             </Button>
           </form>
 
@@ -106,8 +112,11 @@ export function VerifikasiKontakCard({
                 </p>
               ))}
             </div>
-            <Button type="submit" disabled={verifikasiPending}>
-              {verifikasiPending ? <Loader2 className="size-4 animate-spin" /> : "Verifikasi"}
+            <Button type="submit" disabled={verifikasiPending} aria-busy={verifikasiPending}>
+              {verifikasiPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Verifikasi
             </Button>
           </form>
         </CardContent>

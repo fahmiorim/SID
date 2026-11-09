@@ -37,6 +37,64 @@ async function buatPendudukLewatUi(
 }
 
 /**
+ * Katalog: OS-POP-001 — Kerangka admin: lompat ke konten dan tabel berlabel.
+ *
+ * Header + sidebar adalah jalur utama area terproteksi, jadi halaman admin
+ * menyediakan tautan lewati, satu `main` yang dapat difokuskan, serta tabel
+ * yang menghubungkan sel data dengan judul kolomnya.
+ */
+test(
+  "aksesibilitas admin: tautan lewati, landmark konten, dan header tabel",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, browser }) => {
+    await app.open("/penduduk");
+
+    const struktur = await browser.evaluate(() => ({
+      tautan: document.querySelector('a[href="#konten-utama"]')?.textContent?.trim() ?? null,
+      tabindex: document.querySelector("main#konten-utama")?.getAttribute("tabindex") ?? null,
+      jumlahMain: document.querySelectorAll("main").length,
+      labelTabel: document.querySelector("table")?.getAttribute("aria-label") ?? null,
+      semuaKolomBerscope: Array.from(document.querySelectorAll("table thead th")).every(
+        (th) => th.getAttribute("scope") === "col",
+      ),
+      tombolTanpaNama: Array.from(document.querySelectorAll("table button")).filter(
+        (tombol) =>
+          (tombol.getAttribute("aria-label") ?? tombol.textContent ?? "").trim().length === 0,
+      ).length,
+    }));
+
+    expect(struktur.tautan).toBe("Lewati ke konten utama");
+    expect(struktur.tabindex).toBe("-1");
+    expect(struktur.jumlahMain).toBe(1);
+    expect(struktur.labelTabel).toBe("Daftar penduduk");
+    expect(struktur.semuaKolomBerscope).toBe(true);
+    expect(struktur.tombolTanpaNama).toBe(0);
+
+    // Modul konten, keuangan, persuratan, dan inventaris: tidak boleh ada tombol
+    // ikon tanpa nama aksesibel.
+    for (const path of [
+      "/konten/berita",
+      "/keuangan/anggaran",
+      "/persuratan/surat",
+      "/inventaris",
+    ]) {
+      await app.open(path);
+      const tanpaNama = await browser.evaluate(
+        () =>
+          Array.from(document.querySelectorAll("button"))
+            .filter((tombol) => tombol.getClientRects().length > 0)
+            .filter(
+              (tombol) =>
+                (tombol.getAttribute("aria-label") ?? tombol.textContent ?? "").trim().length === 0,
+            ).length,
+      );
+
+      expect(tanpaNama, `${path} memiliki tombol ikon tanpa nama`).toBe(0);
+    }
+  },
+);
+
+/**
  * Katalog: OS-POP-001 — Penduduk: CRUD, pencarian, filter
  */
 test(
@@ -297,7 +355,7 @@ test(
     await screen.getByRole("button", { name: "Impor", exact: true }).tap();
     await expect(screen.getByText("Impor DTKS")).toBeVisible();
     await expect(screen.getByLabel("Berkas")).toBeVisible();
-    await screen.getByRole("button", { name: "Tutup" }).tap();
+    await screen.getByRole("button", { name: "Tutup", exact: true }).tap();
     await expect(screen.getByText("Impor DTKS")).not.toBeVisible();
 
     await app.open("/penduduk/dtks/laporan");

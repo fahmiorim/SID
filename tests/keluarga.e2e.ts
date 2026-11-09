@@ -53,7 +53,7 @@ test(
       await expect(
         screen.getByText("Belum ada penduduk yang ditautkan ke Kartu Keluarga ini."),
       ).toBeVisible();
-      await screen.getByRole("button", { name: "Close" }).first().tap();
+      await screen.getByRole("button", { name: "Tutup dialog" }).first().tap();
 
       // --- Ubah ------------------------------------------------------------
       await baris.getByRole("button", { name: /Aksi untuk/ }).tap();

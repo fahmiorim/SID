@@ -166,8 +166,9 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 Batal
               </Button>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? <Loader2 className="mr-2 size-4 animate-spin" /> : "Simpan"}
+              <Button type="submit" disabled={isPending} aria-busy={isPending}>
+                {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+                Simpan
               </Button>
             </DialogFooter>
           </form>

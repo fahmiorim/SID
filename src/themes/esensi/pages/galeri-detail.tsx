@@ -13,7 +13,7 @@ export function EsensiGaleriDetail({ album, foto }: GaleriDetailProps) {
         href="/desa/galeri"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-4" aria-hidden="true" />
         Kembali ke galeri
       </Link>
 
@@ -37,7 +37,7 @@ export function EsensiGaleriDetail({ album, foto }: GaleriDetailProps) {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={sumber}
-                    alt={item.judul ?? album.nama}
+                    alt={item.judul ?? ""}
                     className="aspect-square w-full object-cover"
                   />
                 ) : null}

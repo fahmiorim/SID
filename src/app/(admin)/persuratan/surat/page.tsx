@@ -134,7 +134,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
           </form>
 
           <div className="overflow-x-auto rounded-lg border">
-            <Table>
+            <Table aria-label="Daftar surat">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-48">Nomor</TableHead>
@@ -152,7 +152,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
                   <TableRow>
                     <TableCell colSpan={7} className="h-28 text-center">
                       <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <Mail className="size-5" />
+                        <Mail className="size-5" aria-hidden="true" />
                         <p className="text-sm">
                           {search || status ? "Tidak ada surat yang cocok." : "Belum ada surat."}
                         </p>

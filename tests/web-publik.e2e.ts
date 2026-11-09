@@ -17,6 +17,50 @@ test(
 );
 
 /**
+ * Katalog: OS-WEB-001 — Landmark dan tautan lompat ke konten utama.
+ *
+ * Header tema (kontak, logo, menu) tidak boleh menjadi satu-satunya jalan ke
+ * konten, jadi setiap halaman publik menyediakan tautan lewati + `main` yang
+ * dapat difokuskan.
+ */
+test(
+  "aksesibilitas publik: tautan lewati dan landmark konten utama",
+  { timeout: 60_000 },
+  async ({ app, browser }) => {
+    await app.open("/desa/berita");
+
+    const struktur = await browser.evaluate(() => ({
+      tautan: document.querySelector('a[href="#konten-utama"]')?.textContent?.trim() ?? null,
+      tabindex: document.querySelector("main#konten-utama")?.getAttribute("tabindex") ?? null,
+      jumlahMain: document.querySelectorAll("main").length,
+    }));
+
+    expect(struktur.tautan).toBe("Lewati ke konten utama");
+    expect(struktur.tabindex).toBe("-1");
+    expect(struktur.jumlahMain).toBe(1);
+  },
+);
+
+/**
+ * Katalog: OS-WEB-002 — Filter kategori berita menandai pilihan aktif
+ */
+test(
+  "berita publik: filter kategori aktif ditandai aria-current",
+  { timeout: 60_000 },
+  async ({ app, browser }) => {
+    await app.open("/desa/berita");
+
+    const aktif = await browser.evaluate(() =>
+      Array.from(
+        document.querySelectorAll('nav[aria-label="Filter kategori"] a[aria-current="page"]'),
+      ).map((item) => item.textContent?.trim()),
+    );
+
+    expect(aktif).toEqual(["Semua"]);
+  },
+);
+
+/**
  * Katalog: OS-WEB-003 — Profil, pemerintahan, dan perangkat desa
  */
 test(

@@ -40,7 +40,7 @@ test(
       await baris.getByRole("button", { name: `Aksi untuk ${nama}` }).tap();
       await screen.getByRole("menuitem", { name: "Anggota" }).tap();
       await expect(screen.getByText("Belum ada anggota pada kelompok ini.")).toBeVisible();
-      await screen.getByRole("button", { name: "Close" }).first().tap();
+      await screen.getByRole("button", { name: "Tutup dialog" }).first().tap();
 
       // --- Ubah ------------------------------------------------------------
       await baris.getByRole("button", { name: `Aksi untuk ${nama}` }).tap();

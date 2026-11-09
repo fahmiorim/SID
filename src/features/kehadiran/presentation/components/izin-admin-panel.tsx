@@ -46,8 +46,10 @@ function KeputusanForm({ item }: { item: IzinDTO }) {
         name="status"
         value="ditolak"
         disabled={isPending}
+        aria-busy={isPending}
       >
-        {isPending ? <Loader2 className="size-4 animate-spin" /> : "Tolak"}
+        {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+        Tolak
       </Button>
     </form>
   );

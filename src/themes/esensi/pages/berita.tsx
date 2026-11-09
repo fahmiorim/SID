@@ -37,6 +37,7 @@ export function EsensiBerita({ berita, kategori, kategoriAktif, cari }: BeritaLi
         <nav className="flex flex-wrap gap-2" aria-label="Filter kategori">
           <Link
             href={cari ? `/desa/berita?q=${encodeURIComponent(cari)}` : "/desa/berita"}
+            aria-current={kategoriAktif ? undefined : "page"}
             className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
             style={
               kategoriAktif
@@ -55,6 +56,7 @@ export function EsensiBerita({ berita, kategori, kategoriAktif, cari }: BeritaLi
               href={`/desa/berita?kategori=${encodeURIComponent(item.slug)}${
                 cari ? `&q=${encodeURIComponent(cari)}` : ""
               }`}
+              aria-current={kategoriAktif === item.slug ? "page" : undefined}
               className="rounded-full border px-3 py-1 text-sm transition-colors hover:bg-accent"
               style={
                 kategoriAktif === item.slug
@@ -85,12 +87,10 @@ export function EsensiBerita({ berita, kategori, kategoriAktif, cari }: BeritaLi
               <ThemeCard as="li" key={item.id} className="transition-shadow hover:shadow-md">
                 <Link href={`/desa/berita/${item.slug}`} className="group block h-full">
                   {sampul ? (
+                    /* Gambar hanya penguat visual; judul kartu sudah menjadi nama
+                       aksesibel tautan, jadi alt dikosongkan agar tidak diulang. */
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={sampul}
-                      alt={item.judul}
-                      className="aspect-video w-full object-cover"
-                    />
+                    <img src={sampul} alt="" className="aspect-video w-full object-cover" />
                   ) : null}
                   <div className="p-4">
                     {item.kategori ? (

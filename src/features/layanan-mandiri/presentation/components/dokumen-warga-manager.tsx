@@ -72,8 +72,9 @@ function HapusDokumenDialog({ item }: { item: DokumenWargaDTO }) {
             <Button type="button" variant="outline" onClick={() => setTerbuka(false)}>
               Batal
             </Button>
-            <Button type="submit" variant="destructive" disabled={isPending}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : "Hapus"}
+            <Button type="submit" variant="destructive" disabled={isPending} aria-busy={isPending}>
+              {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+              Hapus
             </Button>
           </DialogFooter>
         </form>
@@ -176,8 +177,9 @@ function DokumenWargaFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Batal
             </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : "Simpan"}
+            <Button type="submit" disabled={isPending} aria-busy={isPending}>
+              {isPending ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : null}
+              Simpan
             </Button>
           </DialogFooter>
         </form>

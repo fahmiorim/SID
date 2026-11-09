@@ -50,7 +50,7 @@ export default async function PetaPage() {
       />
       <div className="mt-4 grid gap-3 text-sm sm:grid-cols-4">
         <div className="rounded border p-3">
-          <span className="font-semibold">{polygons.length}</span> layer polygon
+          <span className="font-semibold">{polygons.length}</span> layer poligon
         </div>
         <div className="rounded border p-3">
           <span className="font-semibold">{areas.length}</span> area

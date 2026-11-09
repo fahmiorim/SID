@@ -159,7 +159,11 @@ export default function PetaMap({ areas, garises, points, polygons, desaName }: 
   }, [areas, garises, points, polygons, desaName]);
 
   return (
-    <div className="h-[500px] w-full overflow-hidden rounded-lg border">
+    <div
+      className="h-[500px] w-full overflow-hidden rounded-lg border"
+      role="region"
+      aria-label={`Peta interaktif ${desaName}`}
+    >
       <div ref={mapRef} className="h-full w-full" />
     </div>
   );

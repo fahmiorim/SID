@@ -82,7 +82,7 @@ test(
       await expect(tombolKeluarkan).toBeVisible({ timeout: 30_000 });
       await tombolKeluarkan.tap();
       await expect(screen.getByText("Anggota dikeluarkan dari rumah tangga.")).toBeVisible();
-      await screen.getByRole("button", { name: "Close" }).first().tap();
+      await screen.getByRole("button", { name: "Tutup dialog" }).first().tap();
 
       // --- Hapus -----------------------------------------------------------
       await app.open(`/rumah-tangga?q=${encodeURIComponent(alamat)}`);

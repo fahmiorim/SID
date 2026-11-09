@@ -71,14 +71,16 @@ function labelOptions(options: readonly RegionOption[]): SelectOption[] {
 function FieldError({ messages }: { messages?: string[] }) {
   if (!messages || messages.length === 0) return null;
 
+  // `role="alert"` membuat pesan validasi langsung diumumkan pembaca layar
+  // saat muncul, tanpa menunggu pengguna berpindah fokus.
   return (
-    <>
+    <div role="alert" className="space-y-1">
       {messages.map((message) => (
         <p key={message} className="text-xs text-destructive">
           {message}
         </p>
       ))}
-    </>
+    </div>
   );
 }
 

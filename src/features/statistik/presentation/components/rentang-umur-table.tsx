@@ -109,7 +109,7 @@ export function RentangUmurTable({ canManage, rows }: RentangUmurTableProps) {
         </Button>
       )}
 
-      <Table>
+      <Table aria-label="Rentang umur penduduk">
         <TableHeader>
           <TableRow>
             <TableHead>Nama</TableHead>
@@ -129,11 +129,21 @@ export function RentangUmurTable({ canManage, rows }: RentangUmurTableProps) {
               {canManage && (
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(row)}>
-                      <Pencil className="size-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Ubah rentang ${row.nama}`}
+                      onClick={() => openEdit(row)}
+                    >
+                      <Pencil className="size-4" aria-hidden="true" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(row.id)}>
-                      <Trash2 className="size-4" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Hapus rentang ${row.nama}`}
+                      onClick={() => handleDelete(row.id)}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </TableCell>

@@ -120,7 +120,7 @@ export function EsensiDokumen({
           type="submit"
           className="tema-button-primary inline-flex min-h-10 items-center justify-center gap-2 px-4 text-sm font-medium"
         >
-          <Search className="size-4" />
+          <Search className="size-4" aria-hidden="true" />
           Cari
         </button>
       </form>
@@ -198,7 +198,10 @@ export function EsensiDokumen({
                 style={{ borderRadius: "var(--pub-radius)" }}
               >
                 <div className="flex items-start gap-3">
-                  <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <FileText
+                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{item.nama}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -217,9 +220,9 @@ export function EsensiDokumen({
                         className="tema-link-primary mt-3 inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
                       >
                         {eksternal ? (
-                          <ExternalLink className="size-3.5" />
+                          <ExternalLink className="size-3.5" aria-hidden="true" />
                         ) : (
-                          <Download className="size-3.5" />
+                          <Download className="size-3.5" aria-hidden="true" />
                         )}
                         {eksternal ? "Buka tautan" : "Unduh"}
                       </a>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { SkipLink } from "@/components/shared/skip-link";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -153,6 +154,8 @@ export function AppShell({
 
   return (
     <div className="flex min-h-svh w-full">
+      <SkipLink />
+
       <aside className="hidden w-72 shrink-0 border-r bg-sidebar md:block">
         <Sidebar menu={menu} desa={desa} />
       </aside>
@@ -169,7 +172,9 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header user={user} onOpenSidebar={() => setMobileOpen(true)} />
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main id="konten-utama" tabIndex={-1} className="flex-1 p-4 md:p-6">
+          {children}
+        </main>
       </div>
     </div>
   );
