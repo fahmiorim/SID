@@ -20,9 +20,22 @@ function pesanField(fieldErrors: Record<string, string[]> | undefined, key: stri
   return fieldErrors?.[key]?.[0] ?? null;
 }
 
+export interface FormAjukanSuratProps {
+  jenis: JenisSuratWarga;
+  /** Aksi penyimpanan; kiosk memakai aksi bersesi guest. */
+  action?: typeof ajukanSuratWargaAction;
+  tautanRiwayat?: string;
+  tautanAjukanLain?: string;
+}
+
 /** Form ajukan surat dengan isian dinamis + unggah syarat. */
-export function FormAjukanSurat({ jenis }: { jenis: JenisSuratWarga }) {
-  const [state, formAction, isPending] = useActionState(ajukanSuratWargaAction, idleActionState);
+export function FormAjukanSurat({
+  jenis,
+  action = ajukanSuratWargaAction,
+  tautanRiwayat = "#riwayat",
+  tautanAjukanLain = "/layanan-mandiri/surat",
+}: FormAjukanSuratProps) {
+  const [state, formAction, isPending] = useActionState(action, idleActionState);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
   const fields = parseIsianFields(jenis.formIsian);
   const sukses = state.status === "success" ? state.data : null;
@@ -39,10 +52,10 @@ export function FormAjukanSurat({ jenis }: { jenis: JenisSuratWarga }) {
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild size="sm">
-              <Link href="#riwayat">Lihat riwayat</Link>
+              <Link href={tautanRiwayat}>Lihat riwayat</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/layanan-mandiri/surat">Ajukan surat lain</Link>
+              <Link href={tautanAjukanLain}>Ajukan surat lain</Link>
             </Button>
           </div>
         </AlertDescription>
