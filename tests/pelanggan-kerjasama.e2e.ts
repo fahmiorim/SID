@@ -1,6 +1,8 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import { buatPelangganDesaLainUji, hapusPelangganDesaLainUji } from "./support/database";
+
 // Katalog: OS-MOD-005 — pelanggan, status langganan, dokumen kerja sama.
 test(
   "admin mendaftarkan pelanggan, mengubah status langganan, dan mengunggah dokumen kerja sama",
@@ -51,6 +53,91 @@ test(
       .getByRole("row", { name: new RegExp(namaKerjasama) })
       .getByRole("link", { name: "Lihat dokumen" });
     await expect(tautan).toBeVisible();
-    expect(await tautan.getAttribute("href")).toMatch(/^\/pelanggan\/\d+\/dokumen$/);
+    const href = await tautan.getAttribute("href");
+    expect(href).toMatch(/^\/pelanggan\/\d+\/dokumen$/);
+
+    // 5. Unduhan benar-benar menyajikan berkas PDF yang diunggah.
+    const unduhan = await browser.evaluate(async (url: string) => {
+      const respons = await fetch(url);
+      const isi = await respons.arrayBuffer();
+      return {
+        status: respons.status,
+        tipe: respons.headers.get("content-type") ?? "",
+        disposisi: respons.headers.get("content-disposition") ?? "",
+        awal: new TextDecoder().decode(new Uint8Array(isi.slice(0, 5))),
+        ukuran: isi.byteLength,
+      };
+    }, href as string);
+    expect(unduhan.status).toBe(200);
+    expect(unduhan.tipe).toContain("application/pdf");
+    expect(unduhan.disposisi).toContain("inline");
+    expect(unduhan.awal).toBe("%PDF-");
+    expect(unduhan.ukuran).toBeGreaterThan(0);
+  },
+);
+
+// Katalog: OS-MOD-005 — unduhan menolak ID tidak valid dan baris desa lain.
+test(
+  "unduhan dokumen kerja sama menolak ID tidak valid dan pelanggan desa lain",
+  { session: "admin" },
+  async ({ app, browser }) => {
+    await app.open("/pelanggan");
+    const desaLain = await buatPelangganDesaLainUji(`Pelanggan Desa Lain ${Date.now()}`);
+
+    try {
+      const hasil = await browser.evaluate(async (idDesaLain: number) => {
+        const [tidakValid, lintasDesa, tidakAda] = await Promise.all([
+          fetch("/pelanggan/abc/dokumen"),
+          fetch(`/pelanggan/${idDesaLain}/dokumen`),
+          fetch("/pelanggan/999999999/dokumen"),
+        ]);
+        return {
+          tidakValid: { status: tidakValid.status, body: await tidakValid.text() },
+          lintasDesa: { status: lintasDesa.status, body: await lintasDesa.text() },
+          tidakAda: { status: tidakAda.status, body: await tidakAda.text() },
+        };
+      }, desaLain.id);
+
+      expect(hasil.tidakValid.status).toBe(400);
+      expect(hasil.tidakValid.body).toContain("tidak valid");
+      // Desa lain tidak terlihat meski ID pelanggannya diketahui.
+      expect(hasil.lintasDesa.status).toBe(404);
+      expect(hasil.lintasDesa.body).toContain("tidak ditemukan");
+      expect(hasil.tidakAda.status).toBe(404);
+    } finally {
+      await hapusPelangganDesaLainUji(desaLain.id, desaLain.villageId);
+    }
+  },
+);
+
+// Katalog: OS-MOD-005 — unduhan bukan jalur publik.
+test(
+  "unduhan dokumen kerja sama menolak akun tanpa izin dan permintaan tanpa sesi",
+  { session: "warga-e2e" },
+  async ({ app, browser }) => {
+    await app.open("/layanan-mandiri/beranda");
+    const hasil = await browser.evaluate(async () => {
+      const denganSesi = await fetch("/pelanggan/1/dokumen");
+      // Tanpa cookie: `redirect: "manual"` menghasilkan respons opaque (status 0),
+      // jadi redirect diikuti dan URL akhirnya yang diperiksa.
+      const tanpaSesi = await fetch("/pelanggan/1/dokumen", { credentials: "omit" });
+      return {
+        denganSesi: { status: denganSesi.status, body: await denganSesi.text() },
+        tanpaSesi: {
+          status: tanpaSesi.status,
+          akhir: tanpaSesi.url,
+          body: await tanpaSesi.text(),
+        },
+      };
+    });
+
+    // Akun warga tidak punya izin `pelanggan`; route menolak di server, bukan
+    // hanya menyembunyikan tautan di UI.
+    expect(hasil.denganSesi.status).toBe(403);
+    expect(hasil.denganSesi.body).toContain("hak akses");
+    // Tanpa cookie sesi, proxy mengalihkan ke halaman masuk dan berkas tidak tersaji.
+    expect(hasil.tanpaSesi.status).toBe(200);
+    expect(hasil.tanpaSesi.akhir).toContain("/masuk?next=");
+    expect(hasil.tanpaSesi.body).not.toContain("%PDF-");
   },
 );

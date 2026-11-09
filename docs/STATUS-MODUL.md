@@ -62,7 +62,7 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `pendapat` | 2 | 2 | 7 | `OS-POP-014` |
 | `lapak-keranjang` | 1 | 1 | 13 | `OS-MOD-004` |
 | `arsip-nomor-surat` | 1 | 1 | 12 | `OS-SUR-006` |
-| `pelanggan-kerjasama` | 1 | 1 | 12 | `OS-MOD-005` |
+| `pelanggan-kerjasama` | 3 | 1 | 12 | `OS-MOD-005` |
 
 Contoh berkas yang masih perlu diperluas (10 November 2026):
 
@@ -88,6 +88,8 @@ Bug produksi yang diperbaiki: (1) form pemilihan DPT memakai `value` tanpa `onCh
 Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/kesehatan.e2e.ts` (2/1), `tests/modul-tambahan.e2e.ts` (2/1), `tests/penduduk.e2e.ts` (DPT), `tests/web-publik.e2e.ts` (peta/statistik/inventaris), `tests/web-berita-galeri.e2e.ts` (status berita + cetak album), dan `tests/pembangunan-buku.e2e.ts` (proyek tampil publik).
 
 Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, dan `npm run build` lulus.
+
+**P2 — `OS-MOD-005` ditutup 10 November 2026.** Gap "E2E belum membuktikan unduh dokumen berhasil dan ditolak untuk akses tanpa izin/lintas desa" diselesaikan dengan tiga test di `tests/pelanggan-kerjasama.e2e.ts`: (1) tautan "Lihat dokumen" mengembalikan `200` dengan `Content-Type` PDF, `Content-Disposition: inline`, magic `%PDF-`, dan ukuran > 0; (2) `/pelanggan/abc/dokumen` → `400`, ID pelanggan milik desa lain → `404`, ID yang tidak ada → `404`; (3) sesi warga tanpa izin `pelanggan` → `403` tanpa menyajikan berkas, dan permintaan tanpa cookie sesi dialihkan ke `/masuk?next=`. Fixture desa lain dibuat dan dibersihkan lewat `tests/support/database.ts`, sehingga tidak ada baris yatim setelah test. Verifikasi: E2E berkas ini 5/5 lulus (3 test + 2 setup sesi) terhadap build produksi, `npm run build` lulus, `npm run lint` 0 error, `tsc --noEmit` lulus, dan Prettier bersih.
 
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
 
@@ -287,7 +289,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-MOD-002 | Struktur lengkap; E2E hanya smoke | Buku tamu belum diuji berinteraksi | `modul-tambahan` 4 test/1 beraksi |
 | OS-MOD-003 | Struktur terverifikasi | Rekap kehadiran `/kehadiran/rekap` + ekspor; use case memakai repository yang ada; test `kehadiran.test.ts` | tidak dirujuk |
 | OS-MOD-004 | Struktur lengkap; ada E2E interaktif | — | `lapak-keranjang` 1 test/1 interaktif |
-| OS-MOD-005 | Sebagian | E2E belum membuktikan unduh dokumen berhasil dan ditolak untuk akses tanpa izin/lintas desa. | `pelanggan-kerjasama` 1 test/1 interaktif |
+| OS-MOD-005 | Struktur terverifikasi; ada E2E interaktif | Unduhan menyajikan PDF `inline`; ID tidak valid 400, pelanggan desa lain 404, akun warga 403, dan permintaan tanpa sesi dialihkan ke `/masuk`. | `pelanggan-kerjasama` 3 test/1 interaktif |
 | OS-OPS-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-OPS-002 | Sebagian | E2E. | tidak dirujuk |
 | OS-OPS-003 | Sebagian | E2E. | tidak dirujuk |

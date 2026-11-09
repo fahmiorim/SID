@@ -782,3 +782,36 @@ export async function hapusBukuTamuDariNama(nama: string): Promise<void> {
     await pool.execute("DELETE FROM buku_tamu WHERE nama = ?", [nama]);
   });
 }
+
+/**
+ * Buat pelanggan beserta dokumennya pada desa lain.
+ *
+ * Dipakai untuk membuktikan isolasi tenant pada unduhan dokumen kerja sama:
+ * admin desa sendiri tidak boleh membaca baris milik desa lain meski ID-nya
+ * ditebak. Desa fixture dibuat khusus agar tidak mengganggu data seed.
+ */
+export async function buatPelangganDesaLainUji(
+  nama: string,
+): Promise<{ id: number; villageId: number }> {
+  return denganPool(async (pool) => {
+    const kode = `DL${Date.now().toString().slice(-8)}`;
+    const [desa] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO villages (name, code, slug) VALUES (?, ?, ?)",
+      [nama, kode, `desa-lain-${kode.toLowerCase()}`],
+    );
+    const [pelanggan] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO pelanggan (village_id, nama, dokumen_kerjasama, dokumen_nama, dokumen_mime)
+       VALUES (?, ?, 'desa-lain/dokumen.pdf', 'dokumen.pdf', 'application/pdf')`,
+      [desa.insertId, nama],
+    );
+    return { id: pelanggan.insertId, villageId: desa.insertId };
+  });
+}
+
+/** Hapus pelanggan desa lain beserta desa fixture-nya. */
+export async function hapusPelangganDesaLainUji(id: number, villageId: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM pelanggan WHERE id = ?", [id]);
+    await pool.execute("DELETE FROM villages WHERE id = ?", [villageId]);
+  });
+}

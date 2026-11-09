@@ -77,12 +77,12 @@ Urutan berdasarkan risiko dan jumlah ID yang bergantung pada berkas tersebut.
 
 Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MODUL.md`. Kelompok yang paling sering muncul:
 
-- **Keluaran P2 yang sudah diuji 10 November 2026:** impor peserta (`OS-POP-012`) diuji lewat CSV pada program kosong + impor ulang idempoten; cetak album galeri (`OS-WEB-004`) dibuktikan memanggil `window.print`. Ekspor PDF statistik, laporan bantuan, buku pembangunan, dan ekspor kelompok sudah beraksi.
+- **Keluaran P2 yang sudah diuji 10 November 2026:** impor peserta (`OS-POP-012`) diuji lewat CSV pada program kosong + impor ulang idempoten; cetak album galeri (`OS-WEB-004`) dibuktikan memanggil `window.print`; unduh dokumen kerja sama (`OS-MOD-005`) dibuktikan menyajikan PDF `inline` dan menolak ID tidak valid, desa lain, akun tanpa izin, serta permintaan tanpa sesi. Ekspor PDF statistik, laporan bantuan, buku pembangunan, dan ekspor kelompok sudah beraksi.
 - **Alur publik belum lengkap:** statistik (`OS-WEB-006`), peta (`OS-WEB-007`), pembangunan (`OS-WEB-008`), inventaris (`OS-WEB-011`), suplemen (`OS-WEB-012`), analisis publik (`OS-WEB-013`), dan cakupan tema (`OS-WEB-017`). Peta, statistik, inventaris, pembangunan, berita, galeri, dokumen, pengaduan/lacak, umpan balik, dan tema (`OS-WEB-016`) kini punya bukti interaksi; kedalaman tiap ID tetap dicatat di `STATUS-MODUL.md`.
 - **GIS:** cetak peta dan CRUD layer (`OS-WIL-002`–`OS-WIL-008`); E2E interaktif sudah mencakup layer, pertanahan (persil/CDESA/mutasi), peta cetak, dan simbol.
 - **Analisis/survei:** kategori/indikator/survei dan alur jawaban warga → rekap admin sudah beraksi (`OS-ANA-001`–`OS-ANA-006`); sisa laporan skor dan formulir eksternal.
 - **Operasional:** preferensi menu, pengaturan, OTP, inbox email, cakupan audit, restore, dan API publik (`OS-OPS-002`–`OS-OPS-007`, `OS-OPS-011`); plugin (`OS-OPS-008`) sudah beraksi.
-- **Layanan warga:** adapter provider (`OS-WGA-009`) sudah diuji dengan server lokal; bukti provider nyata masih menunggu kredensial. Unduh dokumen kerja sama yang ditolak (`OS-MOD-005`) dan pembatalan permohonan (`OS-WGA-004`) sudah beraksi.
+- **Layanan warga:** adapter provider (`OS-WGA-009`) sudah diuji dengan server lokal; bukti provider nyata masih menunggu kredensial. Unduh dokumen kerja sama (`OS-MOD-005`) kini dibuktikan E2E: PDF tersaji `inline`, ID tidak valid `400`, pelanggan desa lain `404`, akun tanpa izin `403`, dan tanpa sesi dialihkan ke `/masuk`. Pembatalan permohonan (`OS-WGA-004`) sudah beraksi.
 - **Di luar katalog:** Pemeriksaan Data `/periksa` (padanan controller `Periksa` OpenSID) selesai 9 November 2026 sebagai pemeriksaan baca-saja; belum ada E2E dan menu baru aktif setelah seed ulang.
 
 ### P3 — konsistensi dokumen dan alat
