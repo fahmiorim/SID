@@ -7,7 +7,7 @@ import "leaflet/dist/leaflet.css";
 
 import type { AreaDTO, GarisDTO, PointDTO, PolygonDTO } from "@/features/gis/domain/gis";
 
-interface PetaMapProps {
+export interface PetaMapProps {
   areas: AreaDTO[];
   garises: GarisDTO[];
   points: PointDTO[];

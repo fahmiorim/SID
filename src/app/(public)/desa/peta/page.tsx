@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { getPetaPublik } from "@/features/gis/application/use-cases";
-import PetaMap from "@/features/gis/presentation/components/peta-map";
+import PetaMap from "@/features/gis/presentation/components/peta-map-client";
 
 export const dynamic = "force-dynamic";
 
