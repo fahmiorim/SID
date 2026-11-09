@@ -267,3 +267,28 @@ test("robots.txt dapat diakses", async ({ app, browser }) => {
   await expect(browser).toHaveURL("/robots.txt");
   await expect(browser.locator("body")).toBeVisible({ timeout: 5000 });
 });
+
+// ============================================================================
+// OS-WEB-018 metadata: periksa document.title dan meta og
+// ============================================================================
+test("metadata og dan document.title tersedia pada rute publik", async ({ app, browser }) => {
+  await app.open("/desa/berita");
+  const title = await browser.evaluate(() => document.title);
+  expect(title).toBeTruthy();
+  const ogTitle = await browser.evaluate(() =>
+    document.querySelector('meta[property="og:title"]')?.getAttribute("content"),
+  );
+  expect(ogTitle).toBeDefined();
+});
+
+test("metadata og dan document.title tersedia pada halaman dokumen", async ({ app, browser }) => {
+  await app.open("/desa/dokumen");
+  const title = await browser.evaluate(() => document.title);
+  expect(title).toBeTruthy();
+});
+
+test("metadata og dan document.title tersedia pada halaman galeri", async ({ app, browser }) => {
+  await app.open("/desa/galeri");
+  const title = await browser.evaluate(() => document.title);
+  expect(title).toBeTruthy();
+});

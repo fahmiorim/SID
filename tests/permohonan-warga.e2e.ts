@@ -312,3 +312,126 @@ test(
     await expect(screen.getByText("Belum ada dokumen. Unggah dokumen pertama Anda.")).toBeVisible();
   },
 );
+
+// ============================================================================
+// OS-WGA-004 — Pembatalan permohonan oleh warga SEBELUM diambil operator.
+// Warga ajukan surat sederhana -> batalkan lewat UI /layanan-mandiri/surat
+// dengan alasan wajib -> status riwayat berubah "Dibatalkan" -> operator
+// melihat status dibatalkan di /permohonan-surat dan tidak bisa menerbitkan.
+// ============================================================================
+test(
+  "OS-WGA-004 — pembatalan permohonan oleh warga sebelum operator mengambil",
+  { timeout: 180_000 },
+  async ({ app, screen, browser, alur }) => {
+    try {
+      // Masuk sebagai warga e2e (fixture alur.warga)
+      await app.open("/masuk");
+      await masukDenganKredensial(
+        screen,
+        browser,
+        alur.warga.nik,
+        credentials.user("warga-e2e").password,
+      );
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+
+      // Ajukan permohonan jenis surat sederhana
+      await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
+      await expect(screen.getByRole("heading", { name: `Ajukan ${alur.namaJenis}` })).toBeVisible({
+        timeout: 10_000,
+      });
+      await screen.getByLabel("Keterangan").fill(`Pembatalan uji ${Date.now()}`);
+      await screen
+        .getByLabel(new RegExp(alur.syaratNama))
+        .setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
+      await screen.getByRole("button", { name: "Kirim permohonan" }).tap();
+      await expect(screen.getByText("Permohonan berhasil dikirim")).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // Buka halaman riwayat permohonan saya
+      await app.open("/layanan-mandiri/surat");
+      await expect(
+        screen.getByRole("heading", { name: /Riwayat Permohonan|Surat Saya/i }),
+      ).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // Nama jenis muncul di daftar jenis surat DAN kartu riwayat; gunakan browser.evaluate.
+      const riwayatCard = await browser.evaluate(async (namaJenis) => {
+        const all = Array.from(document.querySelectorAll("*"));
+        const matches = all.filter((el) => el.textContent?.trim() === namaJenis);
+        for (const el of matches) {
+          let p = el.parentElement;
+          for (let j = 0; j < 10; j++) {
+            if (!p) break;
+            const btn = p.querySelector("button");
+            if (btn && btn.textContent?.trim() === "Batalkan") return true;
+            p = p.parentElement;
+          }
+        }
+        return false;
+      }, alur.namaJenis);
+      expect(riwayatCard).toBe(true);
+
+      // Klik tombol Batalkan pada kartu riwayat
+      const tombolBatalkan = screen.getByRole("button", { name: "Batalkan" });
+      await expect(tombolBatalkan).toBeVisible({ timeout: 5_000 });
+      await tombolBatalkan.tap();
+      await expect(screen.getByRole("alertdialog", { name: /batalkan/i })).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // Tombol submit harus disabled ketika alasan kosong
+      const tombolSubmit = screen.getByRole("button", { name: "Batalkan permohonan" });
+      await expect(tombolSubmit).toBeDisabled();
+
+      // Isi alasan pembatalan
+      await screen.getByLabel("Alasan pembatalan").fill(`Alasan pembatalan otomatis ${Date.now()}`);
+      await expect(tombolSubmit).toBeEnabled();
+
+      // Konfirmasi pembatalan
+      await tombolSubmit.tap();
+      // Halaman kembali ke /layanan-mandiri/surat; status Dibatalkan muncul di kartu.
+      await expect(screen.getByText(/Dibatalkan/i)).toBeVisible({ timeout: 10_000 });
+
+      // Tutup dialog jika masih terbuka
+      const tombolDialogClose = screen.getByRole("button", { name: /tutup|batal/i });
+      if (await tombolDialogClose.isVisible().catch(() => false)) {
+        await tombolDialogClose.tap();
+      }
+
+      // Verifikasi operator: login operator, buka /permohonan-surat
+      await app.clearState();
+      await app.open("/masuk");
+      await masukDenganKredensial(
+        screen,
+        browser,
+        alur.operatorUsername,
+        credentials.user("warga-e2e-operator").password,
+      );
+      await expect(browser).toHaveURL("/beranda");
+
+      await app.open("/permohonan-surat");
+      await expect(screen.getByRole("heading", { name: /Permohonan Surat/i })).toBeVisible({
+        timeout: 10_000,
+      });
+
+      // Cari baris permohonan warga yang sudah dibatalkan
+      const barisOperator = screen.getByRole("row").filter({ hasText: alur.warga.nik }).first();
+      await expect(barisOperator).toBeVisible({ timeout: 5_000 });
+
+      // Status Dibatalkan muncul di kolom status
+      await expect(barisOperator.getByText(/Dibatalkan/i)).toBeVisible({ timeout: 5_000 });
+
+      // Tombol Periksa TIDAK MUNCUL untuk permohonan yang sudah dibatalkan.
+      const tombolPeriksa = barisOperator.getByRole("button", { name: "Periksa" });
+      await expect(tombolPeriksa).not.toBeVisible();
+    } finally {
+      try {
+        await alur.hapus();
+      } catch (error) {
+        console.error("Failed to clean up fixture:", error);
+      }
+    }
+  },
+);
