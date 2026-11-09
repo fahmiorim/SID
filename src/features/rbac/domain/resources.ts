@@ -78,6 +78,7 @@ export const RESOURCES = {
   registrasiWarga: "registrasi-warga",
   pesanWarga: "pesan-warga",
   umpanBalik: "umpan-balik",
+  periksa: "periksa",
 } as const;
 
 export type Resource = (typeof RESOURCES)[keyof typeof RESOURCES];

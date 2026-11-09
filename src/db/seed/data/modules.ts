@@ -442,6 +442,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     isGroup: false,
     parentSlug: "administrasi",
   },
+  {
+    slug: "periksa",
+    name: "Pemeriksaan Data",
+    url: "/periksa",
+    icon: "shield-check",
+    sortOrder: 4,
+    isGroup: false,
+    parentSlug: "administrasi",
+  },
 
   {
     slug: "inventaris-grup",

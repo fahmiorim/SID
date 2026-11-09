@@ -59,6 +59,7 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 - **Analisis/survei:** E2E untuk indikator, sasaran, laporan skor, formulir eksternal (`OS-ANA-002`–`OS-ANA-006`).
 - **Operasional:** preferensi menu, pengaturan, OTP, inbox email, cakupan audit, restore, plugin, API publik (`OS-OPS-002`–`OS-OPS-008`, `OS-OPS-011`).
 - **Layanan warga:** pembatalan permohonan (`OS-WGA-004`), bukti provider (`OS-WGA-009`), unduh dokumen kerja sama yang ditolak (`OS-MOD-005`).
+- **Di luar katalog:** Pemeriksaan Data `/periksa` (padanan controller `Periksa` OpenSID) selesai 9 November 2026 sebagai pemeriksaan baca-saja; belum ada E2E dan menu baru aktif setelah seed ulang.
 
 ### P3 — konsistensi dokumen dan alat
 

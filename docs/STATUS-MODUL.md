@@ -198,6 +198,10 @@ Catatan tabel:
 - `OS-MOD-001` dan `OS-MOD-003` tidak memiliki baris register; statusnya diisi dari pemeriksaan kode dan test pada audit ini.
 - Kolom E2E kosong berarti register tidak merujuk berkas E2E untuk ID tersebut. Itu bukan berarti tidak ada test unit/integrasi.
 
+## Modul di luar 111 ID
+
+Audit register tidak mencakup controller OpenSID `Periksa`. Sebagai gantinya dibangun modul **Pemeriksaan Data** (`/periksa`, resource RBAC `periksa`) yang bersifat baca saja: lima pemeriksaan penduduk (NIK kosong, NIK bukan 16 angka, tanggal lahir kosong, tanpa KK, tanpa hubungan keluarga), tiga pemeriksaan keluarga (KK tanpa anggota, tanpa kepala, kepala ganda), dan satu pemeriksaan menu (menu tanpa induk). Setiap temuan menautkan ke halaman perbaikan yang sudah ada (`/penduduk`, `/keluarga`, `/pengaturan/modul`). Path: `src/features/periksa/**`, halaman `src/app/(admin)/periksa/page.tsx`, seed modul di `src/db/seed/data/modules.ts`. Belum ada E2E, dan menu baru muncul setelah seed dijalankan ulang.
+
 ## Temuan lintas modul
 
 ### 1. Batas lapisan masih bocor
