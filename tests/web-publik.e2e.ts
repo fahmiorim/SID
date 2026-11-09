@@ -4,10 +4,14 @@ import { expect } from "e2e";
 import {
   buatInventarisDesaLainUji,
   buatInventarisPublikUji,
+  buatLapakPublikUji,
+  buatProfilDanPerangkatPublikUji,
   buatSuplemenPublikUji,
   buatSurveiAnalisisPublikUji,
   buatSurveiDesaLainUji,
   hapusInventarisUji,
+  hapusLapakPublikUji,
+  hapusProfilDanPerangkatUji,
   hapusSuplemenPublikUji,
   hapusSurveiDesaLainUji,
   hapusSurveyDariJudul,
@@ -84,6 +88,55 @@ test(
 
     await app.open("/desa/pemerintahan");
     await expect(browser.locator("h1")).toContainText("Pemerintahan Desa");
+  },
+);
+
+/**
+ * Katalog: OS-WEB-003 — Profil dan pemerintahan publik: visi/misi dari data
+ * desa, perangkat aktif beserta jabatannya, dan bagan SOTK.
+ */
+test(
+  "profil & pemerintahan publik: visi/misi, perangkat aktif, dan bagan SOTK",
+  { timeout: 90_000 },
+  async ({ app, screen, browser }) => {
+    const cap = Date.now();
+    const visi = `Visi E2E ${cap}`;
+    const misi = [`Misi pertama E2E ${cap}`, `Misi kedua E2E ${cap}`];
+    const namaKepala = `Kepala E2E ${cap}`;
+    const namaSekretaris = `Sekretaris E2E ${cap}`;
+    const namaStaf = `Staf E2E ${cap}`;
+    const fixture = await buatProfilDanPerangkatPublikUji({
+      visi,
+      misi,
+      perangkat: [
+        { nama: namaKepala, jabatan: "kepala" },
+        { nama: namaSekretaris, jabatan: "sekretaris" },
+        { nama: namaStaf, jabatan: "staf" },
+      ],
+    });
+
+    try {
+      await app.open("/desa/profil");
+      await expect(browser.locator("h1")).toContainText("Profil Desa");
+      await expect(screen.getByRole("heading", { name: "Identitas Wilayah" })).toBeVisible();
+      await expect(screen.getByRole("heading", { name: "Visi" })).toBeVisible();
+      await expect(screen.getByText(visi)).toBeVisible();
+      await expect(screen.getByRole("heading", { name: "Misi" })).toBeVisible();
+      for (const butir of misi) {
+        await expect(screen.getByText(butir)).toBeVisible();
+      }
+
+      await app.open("/desa/pemerintahan");
+      await expect(browser.locator("h1")).toContainText("Pemerintahan Desa");
+      await expect(screen.getByText("Bagan SOTK")).toBeVisible();
+      await expect(screen.getByRole("heading", { name: "Perangkat Desa" })).toBeVisible();
+      await expect(screen.getByText(namaKepala).first()).toBeVisible();
+      await expect(screen.getByText(namaSekretaris).first()).toBeVisible();
+      await expect(screen.getByText(namaStaf).first()).toBeVisible();
+      await expect(screen.getByText("Staf Pemerintahan", { exact: true }).first()).toBeVisible();
+    } finally {
+      await hapusProfilDanPerangkatUji(fixture);
+    }
   },
 );
 
@@ -385,6 +438,57 @@ test(
     } finally {
       await hapusSurveyDariJudul(judul);
       await hapusSurveiDesaLainUji(desaLain.id, desaLain.villageId);
+    }
+  },
+);
+
+/**
+ * Katalog: OS-WEB-014 — Lapak publik: katalog hasil pencarian, halaman produk,
+ * dan peta produk berkoordinat.
+ */
+test(
+  "lapak publik: katalog, produk, dan peta produk",
+  { timeout: 90_000 },
+  async ({ app, screen, browser }) => {
+    const cap = Date.now();
+    const namaLapak = `Lapak Publik E2E ${cap}`;
+    const namaProduk = `Produk Peta E2E ${cap}`;
+    const kategori = `Kategori E2E ${cap}`;
+    const fixture = await buatLapakPublikUji({
+      nama: namaLapak,
+      kategori,
+      produk: [
+        {
+          nama: namaProduk,
+          harga: "12500.00",
+          stok: 3,
+          latitude: "-6.200000",
+          longitude: "106.800000",
+        },
+      ],
+    });
+
+    try {
+      await app.open(`/desa/lapak?q=${encodeURIComponent(namaLapak)}`);
+      await expect(browser.locator("h1")).toContainText("Lapak Desa");
+      await expect(screen.getByText(/1 lapak ditemukan/)).toBeVisible();
+      await expect(screen.getByRole("heading", { name: namaLapak })).toBeVisible();
+      await expect(screen.getByText(/1 produk tersedia/)).toBeVisible();
+
+      await screen.getByRole("link", { name: "Lihat Produk" }).tap();
+      await expect(browser).toHaveURL(new RegExp(`/desa/lapak/${fixture.id}/produk$`));
+      await expect(screen.getByText(namaProduk, { exact: true })).toBeVisible();
+      await expect(screen.getByText("Rp 12.500").first()).toBeVisible();
+
+      await app.open("/desa/lapak/peta");
+      await expect(browser.locator("h1")).toContainText("Peta Produk UMKM");
+      await expect(browser.locator(".leaflet-container")).toBeVisible();
+      await expect(screen.getByText(namaProduk, { exact: true })).toBeVisible();
+      await expect(screen.getByText(`Lapak: ${namaLapak}`)).toBeVisible();
+      await expect(screen.getByText("Rp 12.500").first()).toBeVisible();
+      await expect(screen.getByText(/6\.200000, 106\.800000/)).toBeVisible();
+    } finally {
+      await hapusLapakPublikUji(fixture);
     }
   },
 );

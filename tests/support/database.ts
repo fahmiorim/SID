@@ -566,6 +566,207 @@ export async function hapusInventarisUji(input: {
   });
 }
 
+/**
+ * Siapkan profil desa dan perangkat untuk halaman publik `OS-WEB-003`.
+ *
+ * Profil sebelumnya dipulihkan pada pembersihan agar data seed tidak berubah.
+ * Jabatan yang sudah ada (mis. "Kepala Desa") dipakai ulang, bukan diduplikasi.
+ */
+export async function buatProfilDanPerangkatPublikUji(input: {
+  visi: string;
+  misi: string[];
+  perangkat: { nama: string; jabatan: "kepala" | "sekretaris" | "staf" }[];
+}): Promise<{
+  perangkatIds: number[];
+  jabatanIds: number[];
+  profilAwal: {
+    visi: string | null;
+    misi: string | null;
+    sejarah: string | null;
+    sambutan: string | null;
+    koordinat: string | null;
+  } | null;
+}> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [profilRows] = await pool.query<RowDataPacket[]>(
+      "SELECT visi, misi, sejarah, sambutan, koordinat FROM profil_desa WHERE village_id = ? LIMIT 1",
+      [villageId],
+    );
+    const profilAwal = profilRows[0]
+      ? {
+          visi: profilRows[0].visi ?? null,
+          misi: profilRows[0].misi ?? null,
+          sejarah: profilRows[0].sejarah ?? null,
+          sambutan: profilRows[0].sambutan ?? null,
+          koordinat: profilRows[0].koordinat ?? null,
+        }
+      : null;
+
+    if (profilAwal) {
+      await pool.execute("UPDATE profil_desa SET visi = ?, misi = ? WHERE village_id = ?", [
+        input.visi,
+        input.misi.join("\n"),
+        villageId,
+      ]);
+    } else {
+      await pool.execute("INSERT INTO profil_desa (village_id, visi, misi) VALUES (?, ?, ?)", [
+        villageId,
+        input.visi,
+        input.misi.join("\n"),
+      ]);
+    }
+
+    const namaJabatan = {
+      kepala: "Kepala Desa",
+      sekretaris: "Sekretaris Desa",
+      staf: "Staf Pemerintahan",
+    } as const;
+    const jabatanIds: number[] = [];
+    const perangkatIds: number[] = [];
+    const idJabatan = new Map<string, number>();
+
+    for (const [urutan, orang] of input.perangkat.entries()) {
+      const nama = namaJabatan[orang.jabatan];
+      let jabatanId = idJabatan.get(nama);
+      if (jabatanId === undefined) {
+        const [ada] = await pool.query<RowDataPacket[]>(
+          "SELECT id FROM jabatan_perangkat WHERE village_id = ? AND nama = ? LIMIT 1",
+          [villageId, nama],
+        );
+        if (ada[0]) {
+          jabatanId = Number(ada[0].id);
+        } else {
+          const [baru] = await pool.execute<ResultSetHeader>(
+            "INSERT INTO jabatan_perangkat (village_id, nama, slug, urut) VALUES (?, ?, ?, ?)",
+            [villageId, nama, `e2e-${orang.jabatan}-${Date.now()}-${urutan}`, urutan],
+          );
+          jabatanId = baru.insertId;
+          jabatanIds.push(baru.insertId);
+        }
+        idJabatan.set(nama, jabatanId);
+      }
+
+      const [perangkat] = await pool.execute<ResultSetHeader>(
+        "INSERT INTO perangkat_desa (village_id, jabatan_id, nama, status, urut) VALUES (?, ?, ?, 'aktif', ?)",
+        [villageId, jabatanId, orang.nama, urutan],
+      );
+      perangkatIds.push(perangkat.insertId);
+    }
+
+    return { perangkatIds, jabatanIds, profilAwal };
+  });
+}
+
+/** Pulihkan profil desa dan hapus perangkat/jabatan fixture. */
+export async function hapusProfilDanPerangkatUji(input: {
+  perangkatIds: number[];
+  jabatanIds: number[];
+  profilAwal: {
+    visi: string | null;
+    misi: string | null;
+    sejarah: string | null;
+    sambutan: string | null;
+    koordinat: string | null;
+  } | null;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+
+    for (const id of input.perangkatIds) {
+      await pool.execute("DELETE FROM perangkat_desa WHERE id = ?", [id]);
+    }
+    for (const id of input.jabatanIds) {
+      await pool.execute("DELETE FROM jabatan_perangkat WHERE id = ?", [id]);
+    }
+
+    if (input.profilAwal) {
+      await pool.execute(
+        `UPDATE profil_desa
+            SET visi = ?, misi = ?, sejarah = ?, sambutan = ?, koordinat = ?
+          WHERE village_id = ?`,
+        [
+          input.profilAwal.visi,
+          input.profilAwal.misi,
+          input.profilAwal.sejarah,
+          input.profilAwal.sambutan,
+          input.profilAwal.koordinat,
+          villageId,
+        ],
+      );
+    } else {
+      await pool.execute("DELETE FROM profil_desa WHERE village_id = ?", [villageId]);
+    }
+  });
+}
+
+/**
+ * Buat lapak UMKM uji beserta produknya di desa admin.
+ *
+ * Dipakai halaman publik `OS-WEB-014`: katalog, produk, dan peta produk.
+ */
+export async function buatLapakPublikUji(input: {
+  nama: string;
+  kategori?: string;
+  produk: { nama: string; harga: string; stok?: number; latitude?: string; longitude?: string }[];
+}): Promise<{ id: number; produkIds: number[] }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [lapak] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO lapak (village_id, nama, pemilik, kategori, alamat)
+       VALUES (?, ?, 'Warga E2E', ?, 'Jl. Lapak E2E')`,
+      [villageId, input.nama, input.kategori ?? null],
+    );
+
+    const produkIds: number[] = [];
+    for (const produk of input.produk) {
+      const [baris] = await pool.execute<ResultSetHeader>(
+        `INSERT INTO lapak_produk
+           (village_id, lapak_id, nama, harga, stok, aktif, latitude, longitude)
+         VALUES (?, ?, ?, ?, ?, 1, ?, ?)`,
+        [
+          villageId,
+          lapak.insertId,
+          produk.nama,
+          produk.harga,
+          produk.stok ?? 1,
+          produk.latitude ?? null,
+          produk.longitude ?? null,
+        ],
+      );
+      produkIds.push(baris.insertId);
+    }
+
+    return { id: lapak.insertId, produkIds };
+  });
+}
+
+/** Hapus lapak uji beserta produknya. */
+export async function hapusLapakPublikUji(input: {
+  id: number;
+  produkIds: number[];
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    for (const id of input.produkIds) {
+      await pool.execute("DELETE FROM lapak_produk WHERE id = ?", [id]);
+    }
+    await pool.execute("DELETE FROM lapak WHERE id = ?", [input.id]);
+  });
+}
+
 /** Hapus barang inventaris uji berdasarkan nama. */
 export async function hapusInventarisDariNama(namaBarang: string): Promise<void> {
   await denganPool(async (pool) => {

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, count, desc, eq, like, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNotNull, like, ne, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { keranjang, type NewKeranjang } from "@/db/schema/keranjang";
@@ -161,7 +161,18 @@ export async function listProdukDenganKoordinat(
     })
     .from(lapakProduk)
     .leftJoin(lapak, eq(lapak.id, lapakProduk.lapakId))
-    .where(and(eq(lapakProduk.villageId, villageId), eq(lapakProduk.aktif, 1)));
+    .where(
+      and(
+        eq(lapakProduk.villageId, villageId),
+        eq(lapakProduk.aktif, 1),
+        // Produk tanpa koordinat tidak boleh masuk peta: `parseFloat(null)`
+        // menjadi NaN dan membuat Leaflet melempar "Invalid LatLng object".
+        isNotNull(lapakProduk.latitude),
+        isNotNull(lapakProduk.longitude),
+        ne(lapakProduk.latitude, ""),
+        ne(lapakProduk.longitude, ""),
+      ),
+    );
 
   return items;
 }

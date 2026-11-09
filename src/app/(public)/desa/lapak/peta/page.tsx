@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { daftarProdukPetaPublik } from "@/features/lapak/application/lapak-publik";
-import PetaProdukMap from "@/features/lapak/presentation/components/peta-produk-map";
+import PetaProdukMap from "@/features/lapak/presentation/components/peta-produk-map-client";
 
 export const dynamic = "force-dynamic";
 
