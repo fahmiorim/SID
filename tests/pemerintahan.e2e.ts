@@ -51,13 +51,22 @@ test(
 test(
   "idm admin: tambah tujuan, isi indikator, dan ekspor laporan",
   { session: "admin" },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     await app.open("/desa/idm");
     await expect(screen.getByRole("heading", { name: /status desa|idm/i })).toBeVisible();
 
-    // Ekspor laporan.
-    await app.open("/desa/idm/ekspor?tahun=2026");
-    await expect(screen.getByRole("heading", { name: /ekspor|laporan/i })).toBeVisible();
+    // Ekspor laporan (unduhan, bukan halaman).
+    const ekspor = await browser.evaluate(async () => {
+      const respons = await fetch("/desa/idm/ekspor?tahun=2026");
+      return {
+        status: respons.status,
+        tipe: respons.headers.get("content-type"),
+        disposisi: respons.headers.get("content-disposition"),
+      };
+    });
+    expect(ekspor.status).toBe(200);
+    expect(ekspor.tipe).toMatch(/csv|spreadsheet|octet-stream/);
+    expect(ekspor.disposisi).toContain("attachment");
   },
 );
 
@@ -68,27 +77,40 @@ test("idm publik menampilkan ringkasan SDGs", { tags: ["smoke"] }, async ({ app,
 });
 
 // Katalog: OS-GOV-007 — Pemilihan: CRUD kandidat + rekap suara + hasil.
-test("pemilihan: CRUD kandidat dan rekap suara", { session: "admin" }, async ({ app, screen }) => {
-  await app.open("/pemerintahan/pemilihan");
-  await expect(screen.getByRole("heading", { name: /pemilihan/i })).toBeVisible();
+test(
+  "pemilihan: CRUD kandidat dan rekap suara",
+  { session: "admin" },
+  async ({ app, screen, browser }) => {
+    await app.open("/pemerintahan/pemilihan");
+    await expect(screen.getByRole("heading", { name: /pemilihan/i })).toBeVisible();
 
-  // Publik: kandidat dan hasil.
-  await app.open("/desa/pemilihan");
-  await expect(browser.locator("body")).toBeVisible();
-});
+    // Publik: kandidat dan hasil.
+    await app.open("/desa/pemilihan");
+    await expect(browser.locator("body")).toBeVisible();
+  },
+);
 
 // Katalog: OS-GOV-009 — Pembangunan: CRUD proyek + buku pembangunan + ekspor CSV.
 test(
   "pembangunan: CRUD proyek dan buku pembangunan dengan ekspor CSV",
   { session: "admin" },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     await app.open("/pembangunan");
     await expect(screen.getByRole("heading", { name: /pembangunan/i })).toBeVisible();
 
     await app.open("/pembangunan/buku");
     await expect(screen.getByRole("heading", { name: /buku pembangunan/i })).toBeVisible();
 
-    await app.open("/pembangunan/buku/ekspor");
-    await expect(screen.getByRole("heading", { name: /ekspor/i })).toBeVisible();
+    const ekspor = await browser.evaluate(async () => {
+      const respons = await fetch("/pembangunan/buku/ekspor");
+      return {
+        status: respons.status,
+        tipe: respons.headers.get("content-type"),
+        disposisi: respons.headers.get("content-disposition"),
+      };
+    });
+    expect(ekspor.status).toBe(200);
+    expect(ekspor.tipe).toMatch(/csv|spreadsheet|octet-stream/);
+    expect(ekspor.disposisi).toContain("attachment");
   },
 );

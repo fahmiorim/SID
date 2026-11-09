@@ -1,6 +1,7 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
   type PermohonanWargaFixture,
@@ -25,14 +26,12 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const admin = credentials.user("admin");
-    await screen.getByLabel("Username atau NIK").fill(admin.username);
-    await screen.getByLabel("Kata sandi / PIN").fill(admin.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, admin.username, admin.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/persuratan/surat-masuk");
-    await expect(screen.getByRole("heading", { name: "Surat Masuk" })).toBeVisible();
+    await expect(screen.getByRole("heading", { name: /surat masuk/i })).toBeVisible();
     await app.open("/persuratan/surat-keluar");
-    await expect(screen.getByRole("heading", { name: "Surat Keluar" })).toBeVisible();
+    await expect(screen.getByRole("heading", { name: /surat keluar/i })).toBeVisible();
   },
 );

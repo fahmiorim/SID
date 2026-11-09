@@ -9,7 +9,7 @@ test(
   { session: "admin" },
   async ({ app, screen }) => {
     await app.open("/konten/tema");
-    await expect(screen.getByRole("heading", { name: /tema/i })).toBeVisible();
+    await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible();
     // Input teks berjalan
     await expect(screen.getByLabel(/teks berjalan/i)).toBeVisible();
     // Input sosial media - minimal FB, IG, YT, X, TikTok, WA, Telegram
@@ -41,9 +41,10 @@ test(
   { session: "admin" },
   async ({ app, screen }) => {
     await app.open("/konten/tema");
-    await expect(screen.getByRole("heading", { name: /tema|pengaturan/i })).toBeVisible();
-    // Daftar tema dengan status valid/tidak valid
-    await expect(screen.getByText(/valid|tidak valid|masalah|slot/i)).toBeVisible({
+    await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible();
+    // Daftar tema: kartu tema dengan tombol pilih/status aktif
+    await expect(screen.getByText("Tema terpasang")).toBeVisible();
+    await expect(screen.getByText(/Pakai tema ini|Sedang dipakai/).first()).toBeVisible({
       timeout: 5000,
     });
   },

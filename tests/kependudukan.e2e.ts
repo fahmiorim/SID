@@ -18,13 +18,13 @@ test(
 test(
   "statistik penduduk: filter dan ekspor PDF tersedia",
   { session: "admin" },
-  async ({ app, screen }) => {
+  async ({ app, browser }) => {
     await app.open("/statistik/penduduk");
-    await expect(screen.getByRole("heading", { name: /statistik penduduk/i })).toBeVisible();
-
-    // Ekspor PDF.
-    await app.open("/statistik/penduduk/ekspor/pdf");
-    await expect(screen.getByRole("heading", { name: /ekspor/i })).toBeVisible();
+    const contentType = await browser.evaluate(async () => {
+      const res = await fetch("/statistik/penduduk/ekspor/pdf");
+      return res.headers.get("content-type");
+    });
+    expect(contentType).toContain("application/pdf");
   },
 );
 
@@ -34,7 +34,7 @@ test(
   { session: "admin" },
   async ({ app, screen }) => {
     await app.open("/bantuan");
-    await expect(screen.getByRole("heading", { name: /program bantuan/i })).toBeVisible();
+    await expect(screen.getByRole("heading", { name: /bantuan sosial/i })).toBeVisible();
 
     // Klik program pertama untuk membuka detail + cetak.
     const baris = screen.getByRole("row").first();
@@ -51,18 +51,21 @@ test(
 // Katalog: OS-POP-012 — Peserta bantuan: impor peserta + cetak kartu.
 test("peserta bantuan: impor peserta tersedia", { session: "admin" }, async ({ app, screen }) => {
   await app.open("/bantuan");
-  await expect(screen.getByRole("heading", { name: /program bantuan/i })).toBeVisible();
+  await expect(screen.getByRole("heading", { name: /bantuan sosial/i })).toBeVisible();
 });
 
 // Katalog: OS-POP-013 — Statistik bantuan: filter kategori sasaran + ekspor CSV/PDF.
 test(
   "statistik bantuan: filter kategori sasaran dan ekspor",
   { session: "admin" },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     await app.open("/statistik/bantuan");
     await expect(screen.getByRole("heading", { name: /statistik bantuan/i })).toBeVisible();
 
-    await app.open("/statistik/bantuan/ekspor/pdf");
-    await expect(screen.getByRole("heading", { name: /ekspor/i })).toBeVisible();
+    const contentType = await browser.evaluate(async () => {
+      const res = await fetch("/statistik/bantuan/ekspor/pdf");
+      return res.headers.get("content-type");
+    });
+    expect(contentType).toContain("application/pdf");
   },
 );

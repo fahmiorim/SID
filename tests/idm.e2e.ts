@@ -25,15 +25,19 @@ test(
     await screen.getByLabel("Skor (0–100)").fill("80");
     await screen.getByRole("button", { name: "Simpan" }).tap();
 
-    await expect(browser.locator("table")).toContainText(nama);
+    // Baris indikator lain bisa tersisa dari percobaan sebelumnya; aksi harus
+    // diarahkan ke baris yang baru dibuat, bukan `first()`.
+    const baris = () => screen.getByRole("row").filter({ hasText: nama });
+
+    await expect(baris()).toBeVisible();
     await expect(browser.locator("body")).toContainText("0,800");
 
-    await screen.getByRole("button", { name: "Ubah" }).first().tap();
+    await baris().getByRole("button", { name: "Ubah" }).tap();
     await screen.getByLabel("Skor (0–100)").fill("60");
     await screen.getByRole("button", { name: "Simpan" }).tap();
-    await expect(browser.locator("table")).toContainText("60");
+    await expect(baris()).toContainText("60");
 
-    await screen.getByRole("button", { name: "Hapus" }).first().tap();
+    await baris().getByRole("button", { name: "Hapus" }).tap();
     await expect(browser.locator("table")).not.toContainText(nama);
   },
 );

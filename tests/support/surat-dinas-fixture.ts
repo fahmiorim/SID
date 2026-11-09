@@ -1,6 +1,4 @@
 import { randomInt, randomUUID } from "node:crypto";
-import { rm } from "node:fs/promises";
-import path from "node:path";
 import { createPool, type ResultSetHeader, type RowDataPacket } from "mysql2/promise";
 
 interface LetterRow extends RowDataPacket {
@@ -51,15 +49,17 @@ export async function buatFixtureSuratDinas(): Promise<SuratDinasE2EFixture> {
     sudahDihapus = true;
     try {
       if (desaId !== null) {
-        await rm(path.join(process.cwd(), "storage", "media", String(desaId)), {
-          recursive: true,
-          force: true,
-        });
         await pool.execute("DELETE FROM users WHERE id IN (?, ?, ?)", userIds);
         if (jenisId !== null) {
           await pool.execute("DELETE FROM letters WHERE type_id = ?", [jenisId]);
+          await pool.execute("DELETE FROM letter_types WHERE id = ?", [jenisId]);
         }
-        await pool.execute("DELETE FROM villages WHERE id = ?", [desaId]);
+        if (syaratId !== null) {
+          await pool.execute("DELETE FROM letter_requirements WHERE id = ?", [syaratId]);
+        }
+        if (residentId !== null) {
+          await pool.execute("DELETE FROM residents WHERE id = ?", [residentId]);
+        }
       }
     } finally {
       await pool.end();
@@ -86,26 +86,34 @@ export async function buatFixtureSuratDinas(): Promise<SuratDinasE2EFixture> {
   }
 
   try {
-    // Create village
-    const [desaResult] = await pool.execute<ResultSetHeader>(
-      "INSERT INTO villages (name, code) VALUES (?, ?)",
-      [`Desa Surat Dinas E2E ${run}`, `SD${run}`],
+    // Pakai desa utama agar role/menu dan akun operator nyata tersedia.
+    const adminUsername = process.env.E2E_ADMIN_USERNAME ?? "admin";
+    const [adminRows] = await pool.execute<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = ? LIMIT 1",
+      [adminUsername],
     );
-    desaId = desaResult.insertId;
+    desaId = (adminRows[0]?.village_id as number | undefined) ?? null;
+    if (desaId === null) throw new Error("Desa akun admin E2E tidak ditemukan.");
 
     // Create resident
     const [wargaResult] = await pool.execute<ResultSetHeader>(
       "INSERT INTO residents (village_id, national_id, name, gender) VALUES (?, ?, ?, ?)",
       [desaId, warga.nik, warga.nama, "male"],
     );
-    residentId = wargaResult[0].insertId;
+    residentId = wargaResult.insertId;
+
+    const [operatorRoles] = await pool.execute<RowDataPacket[]>(
+      "SELECT id FROM roles WHERE slug = 'operator' AND village_id = ? LIMIT 1",
+      [desaId],
+    );
+    const operatorRoleId = (operatorRoles[0]?.id as number | undefined) ?? 3;
 
     // Create operator user
     await pool.execute(
       `INSERT INTO users
        (id, name, email, email_verified, username, display_username, village_id,
         role_id, active, must_change_pin, resident_id)
-       VALUES (?, ?, 1, ?, ?, ?, ?, NULL, 1, 0, ?)`,
+       VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 0, ?)`,
       [
         userIds[0],
         `Operator Uji ${run}`,
@@ -113,7 +121,7 @@ export async function buatFixtureSuratDinas(): Promise<SuratDinasE2EFixture> {
         operatorUsername,
         operatorUsername,
         desaId,
-        3, // operator role
+        operatorRoleId,
         residentId,
       ],
     );
@@ -141,19 +149,12 @@ export async function buatFixtureSuratDinas(): Promise<SuratDinasE2EFixture> {
     jenisId = jenisResult.insertId;
 
     // Insert surat dinas
-    await pool.execute(
-      `INSERT INTO letters (village_id, type_id, resident_id, status, number, letter_date, verification_token, content, created_by)
-       VALUES (?, ?, ?, 'verifikasi', ?, CURDATE(), UUID(), 'Isi pengujian surat dinas untuk test E2E OS-SUR-011', ?)`,
-      [desaId, jenisId, residentId, "E2E-Surat Dinas", run],
+    const [suratIdResult] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO letters (village_id, type_id, resident_id, status, number, type_name, letter_date, year, verification_token, content, created_by)
+       VALUES (?, ?, ?, 'verifikasi', ?, ?, CURDATE(), YEAR(CURDATE()), UUID(), 'Isi pengujian surat dinas untuk test E2E OS-SUR-011', NULL)`,
+      [desaId, jenisId, residentId, "E2E-Surat Dinas", namaJenis],
     );
-    const [suratIdResult] = await pool.execute<ResultSetHeader>("SELECT LAST_INSERT_ID()");
-    const suratMasukId = suratIdResult.insertId;
-
-    // Insert nilai isian (pengikut)
-    await pool.execute(
-      `INSERT INTO nilai_isian (letter_id, field_key, field_value) VALUES (?, ?, ?)`,
-      [suratMasukId, "pengikut1_nama", warga.nama],
-    );
+    if (!suratIdResult.insertId) throw new Error("Gagal membuat surat dinas fixture.");
 
     return {
       namaJenis,

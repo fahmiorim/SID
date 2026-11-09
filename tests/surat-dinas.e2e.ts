@@ -1,6 +1,7 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { masukDenganKredensial } from "./support/login";
 import { buatFixtureSuratDinas, type SuratDinasE2EFixture } from "./support/surat-dinas-fixture";
 
 const test = webTest.extend<{ fixture: SuratDinasE2EFixture }>({
@@ -18,15 +19,13 @@ const test = webTest.extend<{ fixture: SuratDinasE2EFixture }>({
 test(
   "surat dinas: admin membuat, operator memverifikasi, dan publik mengakses arsip",
   { timeout: 180_000 },
-  async ({ app, screen, browser, _fixture }) => {
-    const operator = credentials.user("warga-e2e-operator");
+  async ({ app, screen, browser }) => {
+    const admin = credentials.user("admin");
 
-    // Login operator.
+    // Halaman buku surat dinas memerlukan izin baca modul persuratan.
     await app.clearState();
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(operator.username);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, admin.username, admin.password);
     await expect(browser).toHaveURL("/beranda");
 
     // Buka surat dinas admin.

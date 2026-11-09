@@ -13,16 +13,13 @@ test(
 );
 
 // Katalog: OS-WGA-002 — Login warga: captcha + rate limit.
-test(
-  "login warga menampilkan captcha aritmetika",
-  { session: "admin" },
-  async ({ app, screen }) => {
-    await app.open("/masuk");
-    await expect(screen.getByRole("heading", { name: /masuk/i })).toBeVisible();
-    await expect(screen.getByLabel("Username atau NIK")).toBeVisible();
-    await expect(screen.getByLabel("Kata sandi / PIN")).toBeVisible();
-  },
-);
+test("login warga menampilkan captcha aritmetika", async ({ app, screen }) => {
+  await app.open("/masuk");
+  await expect(screen.getByRole("button", { name: "Masuk" })).toBeVisible();
+  await expect(screen.getByLabel("Username atau NIK")).toBeVisible();
+  await expect(screen.getByLabel("Kata sandi / PIN")).toBeVisible();
+  await expect(screen.getByLabel(/verifikasi:/i)).toBeVisible();
+});
 
 // Katalog: OS-WGA-003 — Beranda warga + ringkasan.
 test(
@@ -30,7 +27,8 @@ test(
   { session: "warga-e2e" },
   async ({ app, screen }) => {
     await app.open("/layanan-mandiri/beranda");
-    await expect(screen.getByRole("heading", { name: /beranda|selamat datang/i })).toBeVisible();
+    await expect(screen.getByText("Selamat datang,")).toBeVisible();
+    await expect(screen.getByText("Permohonan terbaru")).toBeVisible();
   },
 );
 

@@ -13,9 +13,9 @@ test(
     await app.open("/pengaturan/plugin");
     await expect(screen.getByRole("heading", { name: /plugin/i })).toBeVisible();
     // Daftar provider terdaftar
-    await expect(screen.getByText(/WhatsApp|Resend/i)).toBeVisible({ timeout: 5000 });
+    await expect(screen.getByText(/WhatsApp Gateway/i).first()).toBeVisible({ timeout: 5000 });
     // Status aktif/nonaktif
-    await expect(screen.getByText(/aktif|nonaktif/i)).toBeVisible({ timeout: 3000 });
+    await expect(screen.getByText(/aktif|nonaktif/i).first()).toBeVisible({ timeout: 3000 });
   },
 );
 

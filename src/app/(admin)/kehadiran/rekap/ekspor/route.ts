@@ -22,10 +22,6 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   const rekap = await getRekapKehadiranData(user.villageId, tahun, bulanan);
 
-  if (!rekap.length) {
-    return new NextResponse("Tidak ada data rekap untuk periode ini.", { status: 404 });
-  }
-
   // Header CSV
   const header = "Perangkat,Jabatan,Hadir,Izin,Sakit,Alpa\n";
   const rows = rekap.map(
@@ -33,14 +29,13 @@ export async function GET(request: Request): Promise<NextResponse> {
   );
 
   const csvContent = header + rows.join("\n");
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
-  return new NextResponse(blob, {
+  return new NextResponse(csvContent, {
     headers: {
       "Content-Disposition": `attachment; filename="rekap_kehadiran_${tahun}${
         bulanan ? `_bulan_${bulanan}` : ""
       }.csv`,
-      "Content-Type": "text/csv",
+      "Content-Type": "text/csv; charset=utf-8",
     },
   });
 }

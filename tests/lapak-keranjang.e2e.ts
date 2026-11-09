@@ -36,7 +36,7 @@ test(
     await app.open(`/desa/lapak?q=${encodeURIComponent(namaLapak)}`);
     await screen.getByRole("link", { name: "Lihat Produk" }).tap();
     await expect(screen.getByText(namaProduk, { exact: true })).toBeVisible();
-    await expect(screen.getByText("Rp 15.000")).toBeVisible();
+    await expect(screen.getByText("Rp 15.000").first()).toBeVisible();
 
     await screen.getByRole("button", "Tambah ke Keranjang").tap();
     await expect(screen.getByText("Produk berhasil ditambahkan ke keranjang.")).toBeVisible({
@@ -52,6 +52,6 @@ test(
     await screen.getByRole("link", { name: "Cetak Faktur" }).tap();
     await expect(screen.getByRole("heading", { name: "Faktur Belanja" })).toBeVisible();
     await expect(screen.getByText(namaProduk, { exact: true })).toBeVisible();
-    await expect(screen.getByText("Rp 15.000")).toBeVisible();
+    await expect(screen.getByText("Rp 15.000").first()).toBeVisible();
   },
 );

@@ -61,8 +61,9 @@ adalah khusus ketiadaan atau perluasan uji browser (`tests/*.e2e.ts`).
    impor/unggah/laporan yang diminta katalog ada; baris PARITAS tidak lagi
    menyebut gap selain E2E.
 
-Snapshot 4 November mencatat 77 ID dengan gap. Per 7 November 2026, register
-mencatat **51 ID ✅, 60 ID 🟡, dan 0 🔴** dari 111 ID katalog. Status parsial
+Snapshot 4 November mencatat 77 ID dengan gap. Per 9 November 2026, register
+mencatat **53 ID ✅, 58 ID 🟡, dan 0 🔴** dari 111 ID katalog (snapshot
+7 November: 51 berfungsi penuh dan 60 sebagian). Status parsial
 mencakup gap perilaku, E2E, dan bukti provider; rincian otoritatif per ID ada di
 `PARITAS-OPENSID.md`.
 
@@ -242,12 +243,38 @@ menyusul. Setiap batch harus memperbarui `PARITAS-OPENSID.md` pada PR yang sama.
 - **OS-MOD-005** 🟡: kolom langganan `status_langganan`/`tanggal_mulai`/`tanggal_selesai`/`no_kerjasama`/`keterangan_langganan` (migrasi `0082`) + kolom dokumen `dokumen_kerjasama`/`dokumen_nama`/`dokumen_mime` (migrasi `0083`). Form admin + halaman `/pelanggan/kerja-sama`, badge status dan dropdown ubah status, unggah PDF/JPG/PNG ≤ 5 MB dengan validasi domain, dan unduhan berizin `/pelanggan/[id]/dokumen`. Test domain `pelanggan.test.ts` + test use case `pelanggan-use-cases.test.ts`. Gap: E2E.
 - **OS-OPS-011** 🟡: API data publik `/api/publik/informasi`, `/api/publik/dokumen`, `/api/publik/inventaris`, `/api/publik/surat` (tenant dari `Host`), kontrak OpenAPI 3.1 di `/api/publik/openapi`, rate limit 60 permintaan/menit per IP per endpoint memakai sliding-window MySQL lintas instans, dan audit `api.publik.akses`. Test `features/rate-limit/application/rate-limit.test.ts`, `openapi.test.ts`, `public-api.test.ts`. Gap: E2E.
 
+## Gelombang E2E — Suite Browser Hijau (9 November 2026)
+
+Suite E2E lengkap kini berjalan hijau: **48 berkas / 223 test lulus** dalam
+sekitar 1 menit 55 detik pada **build produksi** (`npm run build` +
+`npm start`), bukan `next dev`.
+
+- **Akar kegagalan sebelumnya** bukan assertion yang lemah, melainkan server
+  `next dev` basi di port 3000 yang terus dipakai runner. HMR/Fast Refresh
+  membuat login warga (scrypt) melewati batas waktu dan memunculkan 500
+  transien. Suite sekarang diarahkan ke `APP_URL` server produksi.
+- `e2e.config.ts` menetapkan `assertionTimeout: 15_000` khusus untuk deadline
+  `expect`; login paralel dapat melewati 5 detik bawaan meski kredensial valid.
+- **Fixture akun 4 peran** dibuat idempoten oleh `npm run e2e:seed`
+  (`scripts/seed-e2e.mts`): admin, warga, operator, sekdes, dan kades.
+  `tests/auth.setup.e2e.ts` menyiapkan sesi admin serta sesi warga/operator/
+  sekdes/kades; `tests/support/login.ts` menghitung jawaban captcha aritmetika
+  sehingga login E2E tidak lagi mengisi formulir secara buta.
+  `tests/support/rbac-fixture.ts` menyalin modul/izin peran ke desa fixture.
+- **CI** menjalankan `npm run e2e:seed` setelah migrasi + seed sebelum build.
+- Test yang diperbaiki agar stabil: login lintas suite, `idm` (aksi diarahkan
+  ke baris hasil create, bukan `first()`), serta unggah/unduh berkas syarat dan
+  PDF lintas pemilik yang sebelumnya gagal karena server dev.
+- **Dampak register:** `OS-SUR-007` (7 skenario verifikasi berjenjang) dan
+  `OS-WGA-005` (unggah/unduh/404/ubah/hapus dokumen warga) naik ke ✅.
+  `OS-WGA-004` tetap 🟡 dengan gap yang jujur: **E2E pembatalan permohonan oleh
+  warga**. Suite hijau tidak menutup seluruh gap per ID; gap lain tetap ada di
+  `PARITAS-OPENSID.md`.
+
 ## Rencana Penutupan Gap Non-E2E per ID (6 November 2026)
 
 Tujuan saat rencana disusun 6 November: tiap ID hanya menyisakan **gap E2E**,
-dengan uji browser ditunda sampai gelombang non-E2E selesai. Audit 7 November
-menemukan 60 ID 🟡; beberapa masih memiliki gap non-E2E atau E2E yang belum
-membuktikan perilaku, sehingga rencana ini bukan klaim penyelesaian.
+dengan uji browser ditunda sampai gelombang non-E2E selesai. Snapshot audit 7 November mencatat 60 ID 🟡; beberapa masih memiliki gap non-E2E atau E2E yang belum membuktikan perilaku, sehingga rencana ini bukan klaim penyelesaian.
 
 **Definisi "non-E2E tertutup" untuk satu ID:** rute/UI yang dipakai, aksi atau
 use case dengan otorisasi + scoping `villageId`, keluaran yang diminta katalog
@@ -358,7 +385,7 @@ Gelombang C–E selesai non-E2E pada 7 Nov 2026, kecuali item tertulis di akhir 
 Gap non-E2E yang masih menunggu bukti provider nyata adalah `OS-WGA-009` dan
 `OS-SUR-013` (kredensial belum tersedia). Gap non-E2E `OS-OPS-005` sudah ditutup;
 yang tersisa untuk ID itu adalah E2E pengiriman/filter/inbox. Register saat ini
-memuat 60 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
+memuat 58 ID 🟡; tutup gap berdasarkan bukti per ID, bukan jumlah agregat.
 
 ## Kondisi Awal (snapshot historis sebelum Fase 0)
 
@@ -1299,20 +1326,22 @@ dokumen, mode adapter TTE, dan asumsi akun warga. Tindak lanjut hari yang sama:
 `@/db` dihapus. Urutan prioritas: web publik → admin berfungsi → scope katalog
 → multi-desa.
 
-Rekonsiliasi 7 November 2026: register paritas berisi **51 ✅ / 60 🟡 / 0 🔴 /
-0 ⚪** dari 111 ID. Rincian status per ID dan hitungan per domain ada di
+Status dokumen per 9 November 2026: register paritas berisi **53 ✅ / 58 🟡 /
+0 🔴 / 0 ⚪** dari 111 ID. Rekonsiliasi 7 November (51 berfungsi penuh, 60
+sebagian) dan angka lama 37 ✅ / 74 🟡 adalah snapshot historis yang tidak
+berlaku. Rincian status per ID dan hitungan per domain ada di
 `PARITAS-OPENSID.md`; angka lama 37 ✅ / 74 🟡 sudah tidak berlaku.
 
 ---
 
-## Status Fase (direkonsiliasi 7 November 2026)
+## Status Fase (direkonsiliasi 9 November 2026)
 
 | Fase | Status | Catatan |
 |------|--------|---------|
 | 0 — Stabilisasi | ⚪ **Bukti historis** | `npm run check` dan build pernah lulus pada snapshot 31 Okt 2026. Bukan bukti quality gate working tree saat ini. |
 | 1 — Web Publik + Tema + CMS | 🟡 **Sebagian** | Fondasi dan sebagian besar CMS tersedia; gap per fitur mengacu ke register paritas. |
 | 2 — Admin existing berfungsi | 🟡 **Sebagian** | Modul inti tersedia; sisa gap perilaku/E2E dan operasional dicatat per ID pada register paritas. |
-| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 51 berfungsi penuh, 60 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
+| 3 — Paritas katalog scope OpenSID | 🔴 **Belum selesai** | Register: 53 berfungsi penuh, 58 sebagian, 0 belum ada, 0 di luar scope. Kualitas bukti E2E bervariasi; lihat gap per ID. |
 | 4 — Sambungkan web publik ke modul | 🟡 **Sebagian** | Route publik tersambung ke data nyata; status dan gap keluaran/E2E per ID ada di register. |
 | 5 — Multi-desa | 🟡 **Fondasi tersedia** | Provisioning, pengelolaan status/kuota, dan resolusi host tersedia. Domain kustom + TLS dan uji isolasi lintas desa berdomain belum selesai. |
 | 6 — Hardening & Dokumentasi | 🔴 **Belum selesai** | Audit keamanan/performa/aksesibilitas menyeluruh dan validasi runbook masih terbuka; CI terkonfigurasi, tetapi konfigurasi bukan bukti run terbaru lulus. |

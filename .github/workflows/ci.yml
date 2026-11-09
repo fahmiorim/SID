@@ -142,6 +142,7 @@ jobs:
         run: |
           npm run db:migrate
           npm run db:seed
+          npm run e2e:seed
 
       - name: Build produksi
         run: npm run build

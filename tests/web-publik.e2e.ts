@@ -237,20 +237,17 @@ test("kontak publik dapat diakses", { tags: ["smoke"] }, async ({ app, browser }
 // ============================================================================
 test("tema dapat diakses di halaman pengaturan", { session: "admin" }, async ({ app, screen }) => {
   await app.open("/konten/tema");
-  await expect(screen.getByRole("heading", { name: /tema|konten/i })).toBeVisible({
+  await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible({
     timeout: 5000,
   });
 });
 
-// ============================================================================
-// OS-WEB-017 — Pemindaian manifest tema build-time: slug semver, slot, validasi
-// ============================================================================
 test(
   "manifes tema halaman pengaturan dapat diakses",
   { session: "admin" },
   async ({ app, screen }) => {
     await app.open("/konten/tema");
-    await expect(screen.getByRole("heading", { name: /tema|pengaturan/i })).toBeVisible({
+    await expect(screen.getByRole("heading", { name: "Tema Situs" })).toBeVisible({
       timeout: 5000,
     });
   },

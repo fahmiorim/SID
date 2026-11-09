@@ -102,7 +102,7 @@ export function FormAjukanSurat({ jenis }: { jenis: JenisSuratWarga }) {
                   </select>
                 ) : field.tipe === "checkbox" ? (
                   <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" name={key} value="true" className="size-4" />
+                    <input id={key} type="checkbox" name={key} value="true" className="size-4" />
                     {field.placeholder || "Centang bila sesuai"}
                   </label>
                 ) : (

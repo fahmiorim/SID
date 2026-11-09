@@ -1,11 +1,10 @@
 import { randomInt, randomUUID } from "node:crypto";
-import { rm } from "node:fs/promises";
-import path from "node:path";
 import { hashPassword } from "better-auth/crypto";
 import { createPool, type ResultSetHeader, type RowDataPacket } from "mysql2/promise";
 
 interface AdminRoleRow extends RowDataPacket {
   role_id: number | null;
+  village_id: number | null;
 }
 
 interface LetterRow extends RowDataPacket {
@@ -97,18 +96,20 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
 
     try {
       if (desaId !== null) {
-        await rm(path.join(process.cwd(), "storage", "media", String(desaId)), {
-          recursive: true,
-          force: true,
-        });
         await pool.execute("DELETE FROM users WHERE id IN (?, ?, ?)", userIds);
-        if (jenisId !== null) {
-          await pool.execute("DELETE FROM letters WHERE type_id = ?", [jenisId]);
+        for (const id of [jenisId, jenisVariasiId]) {
+          if (id === null) continue;
+          await pool.execute("DELETE FROM letters WHERE type_id = ?", [id]);
+          await pool.execute("DELETE FROM permohonan_surat WHERE letter_type_id = ?", [id]);
+          await pool.execute("DELETE FROM letter_types WHERE id = ?", [id]);
         }
-        if (jenisVariasiId !== null) {
-          await pool.execute("DELETE FROM letters WHERE type_id = ?", [jenisVariasiId]);
+        if (syaratId !== null) {
+          await pool.execute("DELETE FROM letter_requirements WHERE id = ?", [syaratId]);
         }
-        await pool.execute("DELETE FROM villages WHERE id = ?", [desaId]);
+        await pool.execute("DELETE FROM residents WHERE national_id IN (?, ?)", [
+          warga.nik,
+          wargaLain.nik,
+        ]);
       }
     } finally {
       await pool.end();
@@ -153,17 +154,23 @@ export async function buatFixturePermohonanWarga(): Promise<PermohonanWargaFixtu
 
   try {
     const [adminRows] = await pool.execute<AdminRoleRow[]>(
-      "SELECT role_id FROM users WHERE username = ? LIMIT 1",
+      "SELECT role_id, village_id FROM users WHERE username = ? LIMIT 1",
       [adminUsername],
     );
-    const operatorRoleId = adminRows[0]?.role_id;
-    if (!operatorRoleId) throw new Error("Role akun admin E2E tidak ditemukan.");
-
-    const [desaResult] = await pool.execute<ResultSetHeader>(
-      "INSERT INTO villages (name, code) VALUES (?, ?)",
-      [`Desa Uji E2E ${run}`, `E${run}`],
+    const adminRow = adminRows[0];
+    if (!adminRow?.role_id || !adminRow.village_id) {
+      throw new Error("Akun admin E2E tidak memiliki desa/role.");
+    }
+    const [operatorRoles] = await pool.execute<RowDataPacket[]>(
+      "SELECT id FROM roles WHERE slug = 'operator' AND village_id = ? LIMIT 1",
+      [adminRow.village_id],
     );
-    desaId = desaResult.insertId;
+    const operatorRoleId = (operatorRoles[0]?.id as number | undefined) ?? adminRow.role_id;
+
+    // Pakai desa utama: modul/RBAC dan akun sekdes/kades yang dipakai test
+    // semuanya milik desa ini, sedangkan data fixture dibedakan lewat NIK dan
+    // nama jenis surat yang acak.
+    desaId = adminRow.village_id;
 
     const [wargaResult, wargaLainResult] = await Promise.all([
       pool.execute<ResultSetHeader>(

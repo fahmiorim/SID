@@ -35,7 +35,8 @@ test("point GIS: CRUD dengan simbol tersedia", { session: "admin" }, async ({ ap
 // Katalog: OS-WIL-005 — Polygon.
 test("polygon GIS: kategori dan layer tersedia", { session: "admin" }, async ({ app, screen }) => {
   await app.open("/pemetaan/polygon");
-  await expect(screen.getByRole("heading", { name: /polygon/i })).toBeVisible();
+  await expect(screen.getByRole("heading", { name: /kategori peta/i })).toBeVisible();
+  await expect(screen.getByRole("button", { name: "Tambah Polygon" })).toBeVisible();
 });
 
 // Katalog: OS-WIL-006 — Pertanahan: CRUD persil, Cdesa, mutasi.
@@ -45,7 +46,9 @@ test(
   async ({ app, screen }) => {
     await app.open("/pemetaan/pertanahan");
     await expect(screen.getByRole("heading", { name: /pertanahan/i })).toBeVisible();
-    await expect(screen.getByRole("table")).toBeVisible();
+    await expect(screen.getByRole("button", { name: "Tambah Persil" })).toBeVisible();
+    await expect(screen.getByRole("button", { name: "Tambah Cdesa" })).toBeVisible();
+    await expect(screen.getByRole("button", { name: "Tambah Mutasi" })).toBeVisible();
   },
 );
 

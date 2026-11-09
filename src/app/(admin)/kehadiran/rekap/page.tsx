@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function RekapKehadiranPage({
   searchParams,
 }: {
-  searchParams: Promise<{ get: (key: string) => string | null }>;
+  searchParams: Promise<{ bulan?: string; tahun?: string }>;
 }) {
   const user = await verifySession();
   if (!hasPermission(user.permissions, KEHADIRAN_RESOURCE, "read")) {
@@ -25,8 +25,8 @@ export default async function RekapKehadiranPage({
   }
 
   const params = await searchParams;
-  const bulan = params.get("bulan") ? Number(params.get("bulan")) : undefined;
-  const tahun = params.get("tahun") ? Number(params.get("tahun")) : new Date().getFullYear();
+  const bulan = params.bulan ? Number(params.bulan) : undefined;
+  const tahun = params.tahun ? Number(params.tahun) : new Date().getFullYear();
 
   if (!user.villageId) notFound();
   const villageId = user.villageId;
@@ -43,32 +43,29 @@ export default async function RekapKehadiranPage({
         title="Rekap Kehadiran Perangkat"
         description="Rekap bulanan kehadiran perangkat desa (hadir/izin/sakit/alpa)."
       />
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <form method="get" className="flex flex-col gap-2 sm:flex-row">
         <Input
+          name="bulan"
+          type="number"
+          min={1}
+          max={12}
+          defaultValue={bulan ? String(bulan) : ""}
           placeholder="Bulan (1-12)"
-          value={bulan ? String(bulan) : ""}
-          onChange={(e) =>
-            window.history.pushState(
-              {},
-              "",
-              `/kehadiran/rekap?bulan=${e.target.value}&tahun=${tahun}`,
-            )
-          }
+          aria-label="Bulan"
           className="flex-1"
         />
         <Input
+          name="tahun"
+          type="number"
+          defaultValue={tahun}
           placeholder="Tahun"
-          value={tahun}
-          onChange={(e) =>
-            window.history.pushState(
-              {},
-              "",
-              `/kehadiran/rekap?bulan=${bulan}&tahun=${e.target.value}`,
-            )
-          }
+          aria-label="Tahun"
           className="flex-1"
         />
-      </div>
+        <Button type="submit" variant="outline">
+          Tampilkan
+        </Button>
+      </form>
 
       <Card>
         <CardHeader>

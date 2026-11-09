@@ -18,7 +18,8 @@ test(
     await expect(browser).toHaveURL("/desa/pengaduan");
     await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
     // Form pengaduan
-    await expect(browser.locator('[name="judul"], [name="isi"]')).toBeVisible({ timeout: 3000 });
+    await expect(browser.locator('[name="judul"]')).toBeVisible({ timeout: 3000 });
+    await expect(browser.locator('[name="isi"]')).toBeVisible({ timeout: 3000 });
   },
 );
 
@@ -29,8 +30,9 @@ test(
     await app.open("/desa/pengaduan/lacak");
     await expect(browser).toHaveURL("/desa/pengaduan/lacak");
     await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
-    // Input token pelacakan
-    await expect(browser.locator('[name="token"]')).toBeVisible({ timeout: 3000 });
+    // Input nomor tiket + identitas pelacakan
+    await expect(browser.locator('[name="nomorTiket"]')).toBeVisible({ timeout: 3000 });
+    await expect(browser.locator('[name="identitas"]')).toBeVisible({ timeout: 3000 });
   },
 );
 

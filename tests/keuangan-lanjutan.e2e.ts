@@ -22,11 +22,11 @@ test(
 test(
   "arsip dokumen: unggah PDF menampilkan metadata dan tombol impor",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     await app.open("/keuangan/laporan-dokumen");
     await screen.getByRole("button", { name: /impor dokumen/i }).tap();
     await expect(screen.getByRole("heading", { name: /impor dokumen laporan/i })).toBeVisible();
-    await screen.page.setInputFiles('input[type="file"]', "tests/fixtures/berkas-uji-e2e.pdf");
+    await browser.locator('input[type="file"]').setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
     // Metadata baris muncul dan berkas lolos validasi PDF
     await expect(screen.getByText("OK", { exact: true })).toBeVisible({ timeout: 5000 });
     await expect(screen.getByRole("button", { name: /impor 1 berkas/i })).toBeVisible();
@@ -48,12 +48,15 @@ test(
   },
 );
 
-test("APBDes filter triwulan dan data laporan", { tags: ["smoke"] }, async ({ app, browser }) => {
-  await app.open("/desa/apbdes");
-  // Filter triwulan
-  await expect(browser.locator('[name="triwulan"]')).toBeVisible({ timeout: 3000 });
-  // Filter tahun
-  await expect(browser.locator('[name="tahun"]')).toBeVisible({ timeout: 3000 });
-  // Tombol ekspor
-  await expect(browser.locator("text=/ekspor|download/i")).toBeVisible({ timeout: 3000 });
-});
+test(
+  "APBDes filter triwulan dan data laporan",
+  { session: "admin", tags: ["smoke"] },
+  async ({ app, browser }) => {
+    // Laporan triwulan admin: kolom TW I–IV dan ekspor CSV.
+    await app.open("/keuangan/triwulan");
+    await expect(browser.locator("h1")).toBeVisible({ timeout: 5000 });
+    const teks = await browser.locator("body").textContent();
+    expect(teks).toMatch(/TW I/);
+    expect(teks).toMatch(/Ekspor CSV/);
+  },
+);

@@ -498,20 +498,26 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   parser, dan perhitungan.
 - Cakupan integrasi: repository/use case, migrasi DB kosong, seed idempoten,
   otorisasi, isolasi tenant, media, dan siklus akun warga.
-- Cakupan E2E: alur publik, admin, warga, pengajuan surat, persetujuan,
-  cetak/PDF, unggah/unduh, impor/ekspor, serta sebagian error/permission.
-  Penegakan status HTTP masih tipis (lihat catatan di bawah).
+- Cakupan E2E: alur publik, admin, warga, pengajuan surat, verifikasi
+  berjenjang, cetak/PDF, unggah/unduh, isolasi kepemilikan berkas,
+  impor/ekspor, serta error/permission utama. Suite penuh **48 berkas /
+  223 test lulus** pada 9 November 2026 terhadap build produksi
+  (`npm run build` + `npm start`), bukan `next dev`.
 - Test integrasi DB boleh skip hanya saat lingkungan lokal memang tidak memiliki
   MySQL; CI wajib menyediakan MariaDB dan tidak boleh menganggap skip sebagai
   bukti selesai.
 - Test E2E tidak boleh berupa scaffold kosong. Dependensi, config, target,
   fixture, dan command harus ada di repository serta dapat dijalankan CI.
-- Pola runner `tests/**/*.e2e.ts` di `e2e.config.ts` mencakup **40 berkas**.
-  Angka 25 berkas/103 test sebelumnya sudah usang; jumlah test case saat ini
-  belum dihitung ulang. CI mengonfigurasi `npx e2e run` pada job `smoke`, tetapi
-  keberadaan langkah CI bukan bukti run terbaru lulus. Sampel audit menunjukkan
-  sebagian test hanya memeriksa halaman/elemen; ukur kelengkapan berdasarkan
-  assertion perilaku per ID, bukan jumlah file.
+- Pola runner `tests/**/*.e2e.ts` di `e2e.config.ts` mencakup **48 berkas**.
+  Fixture akun (admin, warga, operator, sekdes, kades) dibuat idempoten oleh
+  `npm run e2e:seed`; login memakai captcha-aware `tests/support/login.ts`.
+  `assertionTimeout` diset 15 detik karena login warga (scrypt) dapat melewati
+  batas 5 detik saat suite paralel. Jalankan E2E terhadap server produksi:
+  `next dev` yang basi di port yang sama pernah menyebabkan kegagalan login dan
+  500 transien. CI mengonfigurasi `npx e2e run` pada job `smoke` dan menjalankan
+  `npm run e2e:seed` sebelum build; suite hijau tetap bukan bukti bahwa seluruh
+  gap perilaku per ID sudah tertutup — ukur kelengkapan dari assertion perilaku
+  per ID di `PARITAS-OPENSID.md`, bukan jumlah file.
 
 CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
 `npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh

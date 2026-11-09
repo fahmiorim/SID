@@ -24,16 +24,16 @@ test(
 test(
   "DTKS impor melaporkan nomor RTM yang tidak ditemukan",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, screen }) => {
+  async ({ app, screen, browser }) => {
     await app.open("/penduduk/dtks");
     await screen.getByRole("button", { name: /^impor$/i }).tap();
     await expect(screen.getByRole("heading", { name: /impor dtks/i })).toBeVisible();
-    await screen.page.setInputFiles('input[type="file"]', "tests/fixtures/dtks-sample.csv");
+    await browser.locator('input[type="file"]').setInputFiles("tests/fixtures/dtks-sample.csv");
     await screen
       .getByRole("dialog")
       .getByRole("button", { name: /^impor$/i })
       .tap();
-    await expect(screen.getByText(/tidak ditemukan/i)).toBeVisible({ timeout: 10000 });
+    await expect(screen.getByText(/tidak ditemukan/i).first()).toBeVisible({ timeout: 10000 });
   },
 );
 

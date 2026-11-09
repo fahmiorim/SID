@@ -28,11 +28,17 @@ test(
   async ({ app, screen }) => {
     await app.open("/kehadiran/rekap");
     await expect(screen.getByRole("heading", { name: /rekap kehadiran/i })).toBeVisible();
-    await expect(screen.getByRole("table")).toBeVisible();
+    await expect(screen.getByText("Total per Status")).toBeVisible();
+    await expect(screen.getByText("Hadir", { exact: true })).toBeVisible();
   },
 );
 
-test("rekap kehadiran unduh CSV tersedia", { session: "admin" }, async ({ app, screen }) => {
-  await app.open("/kehadiran/rekap/ekspor");
-  await expect(screen.getByRole("heading", { name: /ekspor|unduh/i })).toBeVisible();
+test("rekap kehadiran unduh CSV tersedia", { session: "admin" }, async ({ app, browser }) => {
+  await app.open("/kehadiran/rekap");
+  const hasil = await browser.evaluate(async () => {
+    const res = await fetch("/kehadiran/rekap/ekspor");
+    return { contentType: res.headers.get("content-type"), body: await res.text() };
+  });
+  expect(hasil.contentType).toContain("text/csv");
+  expect(hasil.body).toContain("Perangkat");
 });

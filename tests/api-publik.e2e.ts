@@ -11,18 +11,20 @@ import { expect } from "e2e";
 // `features/rate-limit/application/rate-limit.test.ts`, `openapi.test.ts`, `public-api.test.ts`,
 // serta route dokumen/inf…
 // ============================================================================
-test("API publik `/api/publik/informasi` merespons JSON dengan paginasi", async ({ browser }) => {
+test("API publik `/api/publik/informasi` merespons JSON dengan paginasi", async ({
+  app,
+  browser,
+}) => {
+  await app.open("/");
   const res = await browser.evaluate(async () => {
     const r = await fetch("/api/publik/informasi?page=1&pageSize=20");
     return { status: r.status, headers: r.headers.get("content-type"), body: await r.json() };
   });
   expect(res.status).toBe(200);
   expect(res.headers).toContain("application/json");
-  expect(res.body).toBeInstanceOf(Array);
-  if (res.body.length > 0) {
-    expect(res.body[0]).toHaveProperty("page");
-    expect(res.body[0]).toHaveProperty("pageSize");
-  }
+  expect(res.body.success).toBe(true);
+  expect(res.body.data).toBeTruthy();
+  expect(typeof res.body.data).toBe("object");
 });
 
 // ============================================================================
@@ -35,7 +37,8 @@ test("API publik `/api/publik/informasi` merespons JSON dengan paginasi", async 
 // format galat) yang disusun dari kode. **Ditambah endpoint tulis surat** `POST /api/eksternal/surat` (JSON: NIK, jenis surat,
 // isian, no HP, keterangan): penduduk dicari dari NIK pada desa API key, isian divalidasi terhadap form jenis s…
 // ============================================================================
-test("API eksternal OpenAPI kontrak tersedia", async ({ browser }) => {
+test("API eksternal OpenAPI kontrak tersedia", async ({ app, browser }) => {
+  await app.open("/");
   const res = await browser.evaluate(async () => {
     const r = await fetch("/api/eksternal/openapi");
     return { status: r.status, headers: r.headers.get("content-type") };

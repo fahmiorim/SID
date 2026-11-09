@@ -1,6 +1,7 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
   type PermohonanWargaFixture,
@@ -25,9 +26,12 @@ test(
     const masukSebagaiWarga = async (username: string, bersihkan = true) => {
       if (bersihkan) await app.clearState();
       await app.open("/masuk");
-      await screen.getByLabel("Username atau NIK").fill(username);
-      await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await masukDenganKredensial(
+        screen,
+        browser,
+        username,
+        credentials.user("warga-e2e").password,
+      );
       await expect(browser).toHaveURL("/layanan-mandiri/beranda");
     };
     const bukaBerkas = async (nama: string) => {
@@ -70,9 +74,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(`/permohonan-surat?status=1`);
@@ -80,27 +82,56 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
     const aksiSurat = () => screen.getByRole("button", { name: `Aksi surat ${alur.namaJenis}` });
 
-    for (const tahap of ["Operator", "Sekretaris Desa", "Kepala Desa"]) {
+    const verifikator = [
+      {
+        tahap: "Operator",
+        username: alur.operatorUsername,
+        password: credentials.user("warga-e2e-operator").password,
+      },
+      {
+        tahap: "Sekretaris Desa",
+        username: credentials.user("sekdes-e2e").username,
+        password: credentials.user("sekdes-e2e").password,
+      },
+      {
+        tahap: "Kepala Desa",
+        username: credentials.user("kades-e2e").username,
+        password: credentials.user("kades-e2e").password,
+      },
+    ];
+    for (const step of verifikator) {
+      await app.clearState();
+      await app.open("/masuk");
+      await masukDenganKredensial(screen, browser, step.username, step.password);
+      await expect(browser).toHaveURL("/beranda");
+      await app.open(urlSurat);
       await aksiSurat().tap();
-      await screen.getByRole("menuitem", { name: `Verifikasi ${tahap}` }).tap();
+      await screen.getByRole("menuitem", { name: `Verifikasi ${step.tahap}` }).tap();
       await expect(screen.getByRole("alertdialog")).toBeVisible();
       await screen.getByRole("button", { name: "Verifikasi" }).tap();
-      await expect(aksiSurat()).toBeVisible();
-      await app.open(urlSurat);
+      await expect(screen.getByText(/Surat diverifikasi|Surat terverifikasi/i)).toBeVisible({
+        timeout: 10_000,
+      });
     }
 
+    await app.open(urlSurat);
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Unduh PDF" })).toBeVisible();
     await app.clearState();
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open("/layanan-mandiri/surat");
@@ -125,9 +156,12 @@ test(
     const masukSebagaiWarga = async (username: string) => {
       await app.clearState();
       await app.open("/masuk");
-      await screen.getByLabel("Username atau NIK").fill(username);
-      await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await masukDenganKredensial(
+        screen,
+        browser,
+        username,
+        credentials.user("warga-e2e").password,
+      );
       await expect(browser).toHaveURL("/layanan-mandiri/beranda");
     };
 
@@ -144,9 +178,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(`/permohonan-surat?status=1`);
@@ -154,6 +186,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -163,11 +197,11 @@ test(
     await expect(screen.getByRole("alertdialog")).toBeVisible();
     await screen.getByLabel("Alasan penolakan").fill("Berkas kurang lengkap");
     await screen.getByRole("button", { name: "Tolak" }).tap();
-    await expect(screen.getByText("Surat ditolak")).toBeVisible();
+    await expect(screen.getByText(/Surat ditolak/i)).toBeVisible({ timeout: 10_000 });
 
     await masukSebagaiWarga(alur.warga.nik);
     await app.open("/layanan-mandiri/surat");
-    await expect(screen.getByText("Permohonan Dibatalkan")).toBeVisible();
+    await expect(screen.getByText(/Dibatalkan/).first()).toBeVisible();
   },
 );
 
@@ -177,9 +211,12 @@ test(
   async ({ app, screen, browser, alur }) => {
     await app.clearState();
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisVariasiId}`);
@@ -189,18 +226,18 @@ test(
     await expect(screen.getByText("Jenis surat ini tidak memerlukan berkas syarat.")).toBeVisible();
 
     // Kontrol dirender sesuai tipe isian, dan isian wajib ditandai required.
-    expect(await screen.getByLabel("Nama Kegiatan").getAttribute("type")).toBe("text");
-    expect(await screen.getByLabel("Jumlah Peserta").getAttribute("type")).toBe("number");
-    expect(await screen.getByLabel("Tanggal Kegiatan").getAttribute("type")).toBe("date");
-    expect(await screen.getByLabel("Nama Kegiatan").getAttribute("required")).not.toBeNull();
-    expect(await screen.getByLabel("Butuh Transport").getAttribute("type")).toBe("checkbox");
+    expect(await screen.getByLabel(/Nama Kegiatan/).getAttribute("type")).toBe("text");
+    expect(await screen.getByLabel(/Jumlah Peserta/).getAttribute("type")).toBe("number");
+    expect(await screen.getByLabel(/Tanggal Kegiatan/).getAttribute("type")).toBe("date");
+    expect(await screen.getByLabel(/Nama Kegiatan/).getAttribute("required")).not.toBeNull();
+    expect(await screen.getByLabel(/Butuh Transport/).getAttribute("type")).toBe("checkbox");
 
-    await screen.getByLabel("Nama Kegiatan").fill("Musyawarah Desa");
-    await screen.getByLabel("Alamat Kegiatan").fill("Balai Desa");
-    await screen.getByLabel("Jumlah Peserta").fill("25");
-    await screen.getByLabel("Tanggal Kegiatan").fill("2026-11-20");
-    await screen.getByLabel("Kategori Kegiatan").selectOption("Sosial");
-    await screen.getByLabel("Perlu transport").check();
+    await screen.getByLabel(/Nama Kegiatan/).fill("Musyawarah Desa");
+    await screen.getByLabel(/Alamat Kegiatan/).fill("Balai Desa");
+    await screen.getByLabel(/Jumlah Peserta/).fill("25");
+    await screen.getByLabel(/Tanggal Kegiatan/).fill("2026-11-20");
+    await screen.getByLabel(/Kategori Kegiatan/).selectOption("Sosial");
+    await screen.getByLabel(/Butuh Transport/).check();
     await screen.getByRole("button", { name: "Kirim permohonan" }).tap();
 
     await expect(screen.getByText("Permohonan berhasil dikirim")).toBeVisible();
@@ -217,7 +254,7 @@ test(
     });
 
     await app.open("/layanan-mandiri/surat");
-    await expect(screen.getByText(alur.namaJenisVariasi)).toBeVisible();
+    await expect(screen.getByText(alur.namaJenisVariasi).first()).toBeVisible();
   },
 );
 
@@ -228,9 +265,7 @@ test(
     const masuk = async (nik: string, bersihkan = true) => {
       if (bersihkan) await app.clearState();
       await app.open("/masuk");
-      await screen.getByLabel("Username atau NIK").fill(nik);
-      await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await masukDenganKredensial(screen, browser, nik, credentials.user("warga-e2e").password);
       await expect(browser).toHaveURL("/layanan-mandiri/beranda");
     };
     const unduh = async (url: string) =>

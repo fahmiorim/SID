@@ -1,6 +1,7 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
   type PermohonanWargaFixture,
@@ -33,9 +34,12 @@ test(
 
     // 1. Login sebagai warga dan buat permohonan surat
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -50,9 +54,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -60,6 +62,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -77,9 +81,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const sekdes = credentials.user("sekdes-e2e");
-    await screen.getByLabel("Username atau NIK").fill("sekdes-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(sekdes.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "sekdes-e2e", sekdes.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);
@@ -96,9 +98,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const kades = credentials.user("kades-e2e");
-    await screen.getByLabel("Username atau NIK").fill("kades-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(kades.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "kades-e2e", kades.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);
@@ -130,9 +130,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -147,9 +150,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -157,6 +158,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -166,9 +169,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const sekdes = credentials.user("sekdes-e2e");
-    await screen.getByLabel("Username atau NIK").fill("sekdes-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(sekdes.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "sekdes-e2e", sekdes.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);
@@ -197,9 +198,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -214,9 +218,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -224,6 +226,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -254,9 +258,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -271,9 +278,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -281,6 +286,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -288,15 +295,19 @@ test(
     // Login warga (pemohon): tidak bisa verifikasi surat sendiri
     await app.clearState();
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     // Warga tidak punya akses ke halaman admin persuratan
     await app.open(urlSurat);
-    // Warga akan di-redirect atau tidak melihat menu verifikasi
-    await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+    // Warga di-redirect atau tidak melihat aksi verifikasi sama sekali.
+    const aksiWarga = screen.getByRole("button", { name: `Aksi surat ${alur.namaJenis}` });
+    expect(await aksiWarga.count()).toBe(0);
   },
 );
 
@@ -308,9 +319,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -325,9 +339,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -335,6 +347,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -363,9 +377,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -380,9 +397,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -390,6 +405,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -407,9 +424,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const sekdes = credentials.user("sekdes-e2e");
-    await screen.getByLabel("Username atau NIK").fill("sekdes-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(sekdes.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "sekdes-e2e", sekdes.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);
@@ -436,9 +451,12 @@ test(
 
     // Setup: warga buat permohonan
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -453,9 +471,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open("/permohonan-surat?status=1");
@@ -463,6 +479,8 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
@@ -480,9 +498,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const sekdes = credentials.user("sekdes-e2e");
-    await screen.getByLabel("Username atau NIK").fill("sekdes-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(sekdes.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "sekdes-e2e", sekdes.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);
@@ -498,9 +514,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const kades = credentials.user("kades-e2e");
-    await screen.getByLabel("Username atau NIK").fill("kades-e2e");
-    await screen.getByLabel("Kata sandi / PIN").fill(kades.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, "kades-e2e", kades.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(urlSurat);

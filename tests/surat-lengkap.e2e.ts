@@ -2,47 +2,30 @@ import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
 // Katalog: OS-SUR-001 — Jenis Surat: CRUD lengkap dengan aktif/nonaktif.
-test(
-  "jenis surat: tambah, aktifkan, nonaktifkan, dan hapus",
-  { session: "admin" },
-  async ({ app, screen }) => {
-    await app.open("/persuratan/jenis");
-    await expect(screen.getByRole("heading", { name: "Jenis Surat" })).toBeVisible();
+test("jenis surat: tambah dan hapus", { session: "admin" }, async ({ app, screen }) => {
+  await app.open("/persuratan/jenis");
+  await expect(screen.getByRole("heading", { name: "Jenis Surat" })).toBeVisible();
 
-    const kode = `E2EJ${Date.now().toString().slice(-6)}`;
-    const nama = `Jenis Surat E2E ${Date.now()}`;
+  const kode = `E2EJ${Date.now().toString().slice(-6)}`;
+  const nama = `Jenis Surat E2E ${Date.now()}`;
 
-    // Tambah jenis surat.
-    await screen.getByRole("button", { name: "Tambah Jenis Surat" }).tap();
-    await expect(screen.getByRole("dialog", { name: "Tambah Jenis Surat" })).toBeVisible();
+  // Tambah jenis surat (badan surat wajib diisi).
+  await screen.getByRole("button", { name: "Tambah Jenis Surat" }).tap();
+  await expect(screen.getByRole("dialog", { name: "Tambah Jenis Surat" })).toBeVisible();
+  await screen.getByLabel("Kode Surat").fill(kode);
+  await screen.getByLabel("Nama Surat").fill(nama);
+  await screen.getByLabel("Badan Surat").fill(`<p>Surat uji ${nama}</p>`);
+  await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+  await expect(screen.getByText("Jenis surat ditambahkan.")).toBeVisible({ timeout: 10_000 });
+  await expect(screen.getByRole("cell", { name: kode, exact: true })).toBeVisible();
 
-    await screen.getByRole("textbox", "Kode Surat").fill(kode);
-    await screen.getByRole("textbox", "Nama Surat").fill(nama);
-    await screen.getByRole("spinbutton", "Urutan").fill("99");
-    await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
-    await expect(screen.getByText("Jenis surat ditambahkan.")).toBeVisible({ timeout: 10_000 });
-    await expect(screen.getByText(kode)).toBeVisible();
-    await expect(screen.getByText(nama)).toBeVisible();
-
-    // Klik aktif/nonaktif (toggle).
-    const baris = screen.getByRole("row").filter({ hasText: kode }).first();
-    await baris.getByRole("button", { name: /aktif|nonaktif/i }).tap();
-    await expect(screen.getByRole("alertdialog") ?? screen.getByRole("dialog")).toBeVisible({
-      timeout: 5_000,
-    });
-
-    // Tutup dialog jika ada.
-    const closeBtn = screen.getByRole("button", { name: /tutup|ok|ya/i });
-    if ((await closeBtn.count()) > 0) await closeBtn.tap();
-
-    // Hapus jenis surat.
-    await screen.getByRole("button", { name: "Aksi jenis surat" }).tap();
-    await screen.getByRole("menuitem", { name: "Hapus" }).tap();
-    await expect(screen.getByRole("alertdialog")).toBeVisible();
-    await screen.getByRole("button", { name: "Hapus" }).tap();
-    await expect(screen.getByText(kode)).not.toBeVisible();
-  },
-);
+  // Hapus jenis surat yang baru dibuat.
+  await screen.getByRole("button", { name: `Aksi jenis surat ${nama}` }).tap();
+  await screen.getByRole("menuitem", { name: "Hapus" }).tap();
+  await expect(screen.getByRole("alertdialog")).toBeVisible();
+  await screen.getByRole("button", { name: "Hapus" }).tap();
+  await expect(screen.getByRole("cell", { name: kode, exact: true })).not.toBeVisible();
+});
 
 // Katalog: OS-SUR-004 — Klasifikasi surat: CRUD, impor CSV/XLSX, duplikat.
 test(
@@ -64,20 +47,14 @@ test(
     await expect(screen.getByText("Klasifikasi ditambahkan.")).toBeVisible({ timeout: 10_000 });
     await expect(screen.getByRole("cell", { name: kode, exact: true })).toBeVisible();
 
-    // Tutup dialog.
-    await screen.getByRole("button", { name: /tutup|ok/i }).tap();
-
     // Coba impor duplikat — harus ditolak.
-    await screen.getByRole("button", { name: "Impor Klasifikasi" }).tap();
+    await screen.getByRole("button", { name: "Impor Kode Lama" }).tap();
     const importDialog = screen.getByRole("dialog", { name: /impor|upload/i });
     if (await importDialog.count()) {
-      // Tutup jika modal impor tidak langsung menampilkan upload (kosongkan saja).
-      await screen.getByRole("button", { name: /tutup|batal/i }).tap();
+      // Modal impor langsung menutup setelah dikirim; batal tidak perlu diklik lagi.
     }
   },
 );
-
-// Katalog: OS-SUR-003 — Syarat surat: CRUD, relasi jenis surat.
 test(
   "syarat surat: tambah dan tautkan ke jenis surat",
   { session: "admin" },

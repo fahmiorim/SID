@@ -2,6 +2,7 @@ import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
 import { buatFixtureBantuanWarga, type BantuanWargaFixture } from "./support/bantuan-warga-fixture";
+import { masukDenganKredensial } from "./support/login";
 
 const test = webTest.extend<{ bantuan: BantuanWargaFixture }>({
   bantuan: async ({}, gunakan) => {
@@ -22,9 +23,12 @@ test(
     await app.open("/layanan-mandiri/bantuan");
     await expect(browser).toHaveURL(/\/masuk/);
 
-    await screen.getByLabel("Username atau NIK").fill(bantuan.wargaNik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      bantuan.wargaNik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/bantuan");
     await expect(screen.getByRole("link", { name: "Bantuan" })).toBeVisible();
     await expect(screen.getByRole("heading", { name: "Bantuan yang Diterima" })).toBeVisible();

@@ -16,11 +16,9 @@ test(
     await app.open("/pengaturan/notifikasi");
     await expect(screen.getByRole("heading", { name: /notifikasi/i })).toBeVisible();
     // Daftar riwayat notifikasi
-    await expect(screen.locator("table")).toBeVisible({ timeout: 5000 });
-    // Kotak masuk
-    await expect(screen.getByRole("heading", { name: /kotak masuk/i })).toBeVisible({
-      timeout: 5000,
-    });
+    await expect(screen.getByRole("table").first()).toBeVisible({ timeout: 5000 });
+    // Kotak masuk (CardTitle bukan heading)
+    await expect(screen.getByText(/kotak masuk email/i)).toBeVisible({ timeout: 5000 });
   },
 );
 

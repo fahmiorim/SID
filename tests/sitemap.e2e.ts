@@ -31,13 +31,14 @@ test("robots.txt: halaman publik diizinkan, admin ditolak", async ({ app, browse
   await app.open("/robots.txt");
   await expect(browser).toHaveURL("/robots.txt");
   const body = await browser.locator("body").textContent();
-  expect(body).toContain("User-agent: *");
-  expect(body).toContain("Allow: /");
+  // Teks robots dirender satu baris oleh browser (baris baru jadi spasi).
+  expect(body).toMatch(/user-agent:\s*\*/i);
+  expect(body).toMatch(/allow:\s*\//i);
   // Admin routes disallowed
-  expect(body).toContain("Disallow: /beranda");
-  expect(body).toContain("Disallow: /masuk");
-  expect(body).toContain("Disallow: /pengaturan");
-  expect(body).toContain("Disallow: /api/");
+  expect(body).toMatch(/disallow:\s*\/beranda/i);
+  expect(body).toMatch(/disallow:\s*\/masuk/i);
+  expect(body).toMatch(/disallow:\s*\/pengaturan/i);
+  expect(body).toMatch(/disallow:\s*\/api\//i);
   // Sitemap reference
-  expect(body).toContain("Sitemap:");
+  expect(body).toMatch(/sitemap:\s*https?:\/\//i);
 });

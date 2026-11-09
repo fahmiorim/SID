@@ -1,6 +1,7 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
   type PermohonanWargaFixture,
@@ -24,9 +25,12 @@ test(
   async ({ app, screen, browser, alur }) => {
     await app.clearState();
     await app.open("/masuk");
-    await screen.getByLabel("Username atau NIK").fill(alur.warga.nik);
-    await screen.getByLabel("Kata sandi / PIN").fill(credentials.user("warga-e2e").password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(
+      screen,
+      browser,
+      alur.warga.nik,
+      credentials.user("warga-e2e").password,
+    );
     await expect(browser).toHaveURL("/layanan-mandiri/beranda");
 
     await app.open(`/layanan-mandiri/surat?jenis=${alur.jenisId}`);
@@ -40,9 +44,7 @@ test(
     await app.clearState();
     await app.open("/masuk");
     const operator = credentials.user("warga-e2e-operator");
-    await screen.getByLabel("Username atau NIK").fill(alur.operatorUsername);
-    await screen.getByLabel("Kata sandi / PIN").fill(operator.password);
-    await screen.getByRole("button", { name: "Masuk" }).tap();
+    await masukDenganKredensial(screen, browser, alur.operatorUsername, operator.password);
     await expect(browser).toHaveURL("/beranda");
 
     await app.open(`/permohonan-surat?status=1`);
@@ -50,27 +52,53 @@ test(
     await permohonan.getByRole("button", { name: "Periksa" }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
     await screen.getByRole("button", { name: "Buat konsep & ajukan verifikasi" }).tap();
+    // Tunggu Server Action selesai sebelum pindah halaman.
+    await expect(screen.getByRole("dialog")).not.toBeVisible({ timeout: 15_000 });
 
     const urlSurat = `/persuratan/surat?q=${encodeURIComponent(alur.namaJenis)}`;
     await app.open(urlSurat);
     const aksiSurat = () => screen.getByRole("button", { name: `Aksi surat ${alur.namaJenis}` });
 
-    for (const tahap of ["Operator", "Sekretaris Desa", "Kepala Desa"]) {
+    const verifikator = [
+      {
+        tahap: "Operator",
+        username: alur.operatorUsername,
+        password: credentials.user("warga-e2e-operator").password,
+      },
+      {
+        tahap: "Sekretaris Desa",
+        username: credentials.user("sekdes-e2e").username,
+        password: credentials.user("sekdes-e2e").password,
+      },
+      {
+        tahap: "Kepala Desa",
+        username: credentials.user("kades-e2e").username,
+        password: credentials.user("kades-e2e").password,
+      },
+    ];
+    for (const step of verifikator) {
+      await app.clearState();
+      await app.open("/masuk");
+      await masukDenganKredensial(screen, browser, step.username, step.password);
+      await expect(browser).toHaveURL("/beranda");
+      await app.open(urlSurat);
       await aksiSurat().tap();
-      await screen.getByRole("menuitem", { name: `Verifikasi ${tahap}` }).tap();
+      await screen.getByRole("menuitem", { name: `Verifikasi ${step.tahap}` }).tap();
       await expect(screen.getByRole("alertdialog")).toBeVisible();
       await screen.getByRole("button", { name: "Verifikasi" }).tap();
-      await expect(aksiSurat()).toBeVisible();
-      await app.open(urlSurat);
+      await expect(screen.getByText(/Surat diverifikasi|Surat terverifikasi/i)).toBeVisible({
+        timeout: 10_000,
+      });
     }
 
+    await app.open(urlSurat);
     await aksiSurat().tap();
     await expect(screen.getByRole("menuitem", { name: "Unduh PDF" })).toBeVisible();
 
     // Buka arsip sebelum hapus untuk memastikan nomor tercatat
     await app.open("/persuratan/surat/arsip");
     await expect(screen.getByRole("heading", { name: "Arsip Nomor Surat" })).toBeVisible();
-    await expect(screen.getByText(alur.namaJenis)).toBeVisible();
+    await expect(screen.getByRole("cell", { name: alur.namaJenis }).first()).toBeVisible();
 
     // Hapus surat sumber (konsep/terbit bisa dihapus tergantung state; coba via aksi hapus jika ada)
     await app.open(urlSurat);
@@ -85,6 +113,6 @@ test(
 
     await app.open("/persuratan/surat/arsip");
     await expect(screen.getByRole("heading", { name: "Arsip Nomor Surat" })).toBeVisible();
-    await expect(screen.getByText(alur.namaJenis)).toBeVisible();
+    await expect(screen.getByRole("cell", { name: alur.namaJenis }).first()).toBeVisible();
   },
 );

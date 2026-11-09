@@ -1,6 +1,17 @@
 import { web } from "@e2e-dev/web";
 import type { E2EConfig } from "e2e";
 
+// Muat `.env` agar fixture (DATABASE_URL) dan APP_URL tersedia saat
+// `npx e2e run` dijalankan langsung, sama seperti `npm run dev`. Di CI seluruh
+// variabel sudah disediakan environment, jadi berkas ini opsional.
+if (!process.env.DATABASE_URL) {
+  try {
+    process.loadEnvFile(".env");
+  } catch {
+    // Tidak ada `.env`; biarkan e2e memakai environment yang ada.
+  }
+}
+
 const ADMIN_USERNAME = process.env.E2E_ADMIN_USERNAME ?? "admin";
 const ADMIN_PASSWORD = process.env.E2E_ADMIN_PASSWORD ?? "Admin#12345";
 const E2E_WARGA_PASSWORD = process.env.E2E_WARGA_PASSWORD ?? "TestWarga#12345";
@@ -15,6 +26,11 @@ const appCommand = process.env.APP_URL
 
 export default {
   tests: "tests/**/*.e2e.ts",
+  // Login warga memakai scrypt (better-auth) di server. Saat seluruh suite
+  // berjalan paralel, satu proses masuk dapat melewati 5 detik bawaan e2e
+  // sehingga assertion URL gagal padahal kredensial valid. Beri ruang lebih
+  // longgar khusus untuk deadline `expect`.
+  assertionTimeout: 15_000,
   credentials: {
     admin: { username: ADMIN_USERNAME, password: ADMIN_PASSWORD },
     "warga-e2e": { username: "warga-e2e", password: E2E_WARGA_PASSWORD },

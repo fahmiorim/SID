@@ -37,11 +37,9 @@ test(
     // 3. Pendaftaran kerja sama dengan unggah dokumen PDF.
     await app.open("/pelanggan/kerja-sama");
     await screen.getByRole("textbox", "Nama Pelanggan").fill(namaKerjasama);
-    await browser.locator('input[name="dokumenKerjasama"]').setInputFiles({
-      name: "perjanjian-kerja-sama.pdf",
-      mimeType: "application/pdf",
-      buffer: Buffer.from("%PDF-1.4\n% E2E\n"),
-    });
+    await browser
+      .locator('input[name="dokumenKerjasama"]')
+      .setInputFiles("tests/fixtures/berkas-uji-e2e.pdf");
     await screen.getByRole("button", { name: "Daftar", exact: true }).tap();
     await expect(screen.getByText("Pendaftaran kerja sama berhasil disimpan")).toBeVisible({
       timeout: 10_000,

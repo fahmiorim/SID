@@ -32,10 +32,11 @@ interface StatusLanggananDropdownProps {
 
 export function StatusLanggananDropdown({ item }: StatusLanggananDropdownProps) {
   const [open, setOpen] = useState(false);
-  const [_state, formAction, isPending] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     updateStatusLanggananAction,
     createIdleActionState<{ id: number } | null>(),
   );
+  const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   return (
     <>
@@ -111,6 +112,20 @@ export function StatusLanggananDropdown({ item }: StatusLanggananDropdownProps) 
                 rows={2}
               />
             </div>
+
+            {state.status === "success" ? (
+              <p className="text-sm text-muted-foreground">{state.message}</p>
+            ) : null}
+            {state.status === "error" ? (
+              <div className="space-y-1 text-sm text-destructive">
+                <p>{state.message}</p>
+                {fieldErrors
+                  ? Object.entries(fieldErrors).map(([field, messages]) => (
+                      <p key={field}>{messages[0]}</p>
+                    ))
+                  : null}
+              </div>
+            ) : null}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

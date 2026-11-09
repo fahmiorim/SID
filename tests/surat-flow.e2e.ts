@@ -23,7 +23,7 @@ test(
 
     await screen.getByRole("combobox", "Penduduk").tap();
     await screen
-      .getByRole("option", { name: /Uji Perubahan Status/ })
+      .getByRole("option", { name: /Warga Uji/i })
       .first()
       .tap();
 
@@ -81,6 +81,7 @@ test("letter type (jenis surat) CRUD", { session: "admin" }, async ({ app, scree
 
   await screen.getByRole("textbox", "Kode Surat").fill(kode);
   await screen.getByRole("textbox", "Nama Surat").fill("Surat E2E Test");
+  await screen.getByRole("textbox", "Badan Surat").fill("<p>Surat uji E2E</p>");
   await screen.getByRole("spinbutton", "Urutan").fill("99");
 
   // Use screen to find and click the Tambah button within the dialog
@@ -90,8 +91,8 @@ test("letter type (jenis surat) CRUD", { session: "admin" }, async ({ app, scree
     .tap();
   await expect(screen.getByText("Jenis surat ditambahkan.")).toBeVisible({ timeout: 10_000 });
 
-  await expect(screen.getByText(kode)).toBeVisible();
-  await expect(screen.getByText("Surat E2E Test")).toBeVisible();
+  const barisJenis = screen.getByRole("row").filter({ hasText: kode });
+  await expect(barisJenis.getByRole("cell", { name: "Surat E2E Test", exact: true })).toBeVisible();
 });
 
 test("letter classification (klasifikasi) CRUD", { session: "admin" }, async ({ app, screen }) => {
@@ -113,7 +114,8 @@ test("letter classification (klasifikasi) CRUD", { session: "admin" }, async ({ 
   });
   await expect(screen.getByText("Klasifikasi ditambahkan.")).toBeVisible({ timeout: 10_000 });
   await expect(screen.getByRole("cell", { name: kode, exact: true })).toBeVisible();
-  await expect(screen.getByRole("cell", { name: "Klasifikasi E2E", exact: true })).toBeVisible();
+  const baris = screen.getByRole("row").filter({ hasText: kode });
+  await expect(baris.getByRole("cell", { name: "Klasifikasi E2E", exact: true })).toBeVisible();
 });
 
 test("letter requirement (syarat) CRUD", { session: "admin" }, async ({ app, screen }) => {

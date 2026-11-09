@@ -11,7 +11,8 @@ test(
     // Dialog shortcut tersedia.
     await screen.getByRole("button", { name: /atur shortcut/i }).tap();
     await expect(screen.getByRole("dialog")).toBeVisible();
-    await screen.getByRole("button", { name: /tutup|batal/i }).tap();
+    await screen.getByRole("button", { name: "Close" }).tap();
+    await expect(screen.getByRole("dialog")).not.toBeVisible();
   },
 );
 
@@ -78,9 +79,10 @@ test(
 
 // Katalog: OS-OPS-011 — API data publik.
 test("API publik `/api/publik/informasi` merespons JSON tenant dari host", async ({
-  _app,
+  app,
   browser,
 }) => {
+  await app.open("/");
   const res = await browser.evaluate(async () => {
     const r = await fetch("/api/publik/informasi");
     return { status: r.status, contentType: r.headers.get("content-type") };
@@ -90,7 +92,8 @@ test("API publik `/api/publik/informasi` merespons JSON tenant dari host", async
 });
 
 // Katalog: OS-OPS-012 — API eksternal TTE dan surat ber-API key.
-test("API eksternal OpenAPI kontrak tersedia", async ({ _app, browser }) => {
+test("API eksternal OpenAPI kontrak tersedia", async ({ app, browser }) => {
+  await app.open("/");
   const res = await browser.evaluate(async () => {
     const r = await fetch("/api/eksternal/openapi");
     return { status: r.status, contentType: r.headers.get("content-type") };

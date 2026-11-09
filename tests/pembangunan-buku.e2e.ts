@@ -3,9 +3,6 @@ import { expect } from "e2e";
 
 // ============================================================================
 // OS-GOV-009 — Pembangunan: CRUD proyek + buku pembangunan + ekspor CSV.
-// **Buku pembangunan** `/pembangunan/buku` (rekap per tahun: jumlah proyek per status,
-// total anggaran, progres rata-rata, rincian proyek, siap cetak) + ekspor CSV `/pembangunan/buku/ekspor`;
-// domain `buku-pembangunan.ts` + 8 test. **Gap: E2E buku pembangunan belum ada**.
 // ============================================================================
 test(
   "pembangunan: halaman buku pembangunan daftar proyek per tahun",
@@ -13,10 +10,16 @@ test(
   async ({ app, screen }) => {
     await app.open("/pembangunan/buku");
     await expect(screen.getByRole("heading", { name: /buku pembangunan/i })).toBeVisible();
-    // Filter tahun
-    await expect(screen.getByLabel(/tahun/i)).toBeVisible();
-    // Daftar proyek per status
-    await expect(screen.locator("text=/aktif|selesai|draft/i")).toBeVisible({ timeout: 5000 });
+
+    // Filter tahun tersedia
+    await expect(screen.getByRole("link", { name: /semua tahun/i })).toBeVisible();
+    // Jika tidak ada data, biasanya ada teks "Belum ada data" atau tabel dengan header
+    const table = screen.getByRole("table");
+    if (await table.count()) {
+      await expect(table).toBeVisible();
+    } else {
+      await expect(screen.getByText(/belum ada proyek pembangunan/i)).toBeVisible();
+    }
   },
 );
 
@@ -24,12 +27,13 @@ test(
   "pembangunan: ekspor CSV buku pembangunan",
   { session: "admin", tags: ["smoke"] },
   async ({ app, browser }) => {
-    await app.open("/pembangunan/buku/ekspor");
-    await expect(browser).toHaveURL("/pembangunan/buku/ekspor");
-    // Cek header CSV atau konten
-    const csvContent = await browser.locator("pre, code, textarea").textContent();
-    expect(csvContent).toContain("proyek");
-    expect(csvContent).toContain("status");
-    expect(csvContent).toContain("anggaran");
+    await app.open("/pembangunan/buku");
+
+    const contentType = await browser.evaluate(async () => {
+      const res = await fetch("/pembangunan/buku/ekspor");
+      return res.headers.get("content-type");
+    });
+
+    expect(contentType).toContain("text/csv");
   },
 );

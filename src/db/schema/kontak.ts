@@ -25,7 +25,7 @@ export const kontak = mysqlTable(
     email: varchar("email", { length: 100 }),
     telegram: varchar("telegram", { length: 50 }),
     hubungWarga: varchar("hubung_warga", { length: 50 }).default("Telegram"),
-    keterangan: text("eterangan"),
+    keterangan: text("keterangan"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at")
       .notNull()

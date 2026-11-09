@@ -14,20 +14,22 @@ test(
     await app.open("/kelompok?tipe=lembaga");
     await expect(screen.getByRole("heading", { name: /lembaga/i })).toBeVisible();
     // Tabel daftar lembaga
-    await expect(screen.locator("table")).toBeVisible({ timeout: 5000 });
+    await expect(screen.getByRole("table")).toBeVisible({ timeout: 5000 });
   },
 );
 
 test(
   "lembaga: laporan anggota terperinci dan ekspor CSV",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, screen, browser }) => {
+  async ({ app, screen }) => {
     await app.open("/kelompok/laporan?tipe=lembaga");
     await expect(screen.getByRole("heading", { name: /laporan/i })).toBeVisible();
     // Tabel jabatan, NIK, nomor keanggotaan
-    await expect(screen.locator("text=/jabatan|NIK|keanggotaan/i")).toBeVisible({ timeout: 5000 });
+    await expect(screen.getByText(/jabatan|NIK|keanggotaan/i).first()).toBeVisible({
+      timeout: 5000,
+    });
     // Tombol ekspor CSV
-    await expect(browser.locator("text=/ekspor CSV/i")).toBeVisible({ timeout: 3000 });
+    await expect(screen.getByText(/ekspor CSV/i).first()).toBeVisible({ timeout: 3000 });
   },
 );
 
@@ -43,17 +45,19 @@ test(
   async ({ app, screen }) => {
     await app.open("/kelompok?tipe=kelompok");
     await expect(screen.getByRole("heading", { name: /kelompok/i })).toBeVisible();
-    await expect(screen.locator("table")).toBeVisible({ timeout: 5000 });
+    await expect(screen.getByRole("table")).toBeVisible({ timeout: 5000 });
   },
 );
 
 test(
   "kelompok masyarakat: laporan anggota terperinci dan ekspor CSV",
   { session: "admin", tags: ["smoke"] },
-  async ({ app, screen, browser }) => {
+  async ({ app, screen }) => {
     await app.open("/kelompok/laporan?tipe=kelompok");
     await expect(screen.getByRole("heading", { name: /laporan/i })).toBeVisible();
-    await expect(screen.locator("text=/jabatan|NIK|keanggotaan/i")).toBeVisible({ timeout: 5000 });
-    await expect(browser.locator("text=/ekspor CSV/i")).toBeVisible({ timeout: 3000 });
+    await expect(screen.getByText(/jabatan|NIK|keanggotaan/i).first()).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(screen.getByText(/ekspor CSV/i).first()).toBeVisible({ timeout: 3000 });
   },
 );

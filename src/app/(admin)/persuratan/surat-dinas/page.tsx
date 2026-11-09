@@ -1,9 +1,10 @@
-import { Printer, ScrollText } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { PrintButton } from "@/components/shared/print-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,10 +48,7 @@ export default async function SuratDinasPage({
         description="Buku surat dinas antar instansi."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <Button type="button" variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" />
-              Cetak
-            </Button>
+            <PrintButton />
             {canManage ? <SuratDinasCreateButton classifications={classifications} /> : null}
           </div>
         }

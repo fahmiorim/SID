@@ -1,9 +1,10 @@
-import { Printer, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { PrintButton } from "@/components/shared/print-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,10 +48,7 @@ export default async function SuratKeluarPage({
         description="Buku agenda surat yang dikirim desa."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">
-            <Button type="button" variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" />
-              Cetak
-            </Button>
+            <PrintButton />
             {canManage ? <SuratKeluarCreateButton classifications={classifications} /> : null}
           </div>
         }

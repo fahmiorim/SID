@@ -3,6 +3,30 @@
 Catatan kronologis pekerjaan. Status fitur **tidak** diambil dari log ini;
 sumber status tetap [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
 
+## 2026-11-09 — Overhaul E2E: suite browser hijau pada build produksi
+
+- Suite E2E lengkap lulus: **48 berkas / 223 test** dalam sekitar 1m55s
+  (`npx e2e run --reporter list`, run `01a1bec4-d48e-7d81-911e-c61719ad428a`).
+- Akar kegagalan sebelumnya: runner menabrak server `next dev` basi di port
+  3000. HMR/Fast Refresh memperlambat login warga (scrypt) hingga melewati
+  batas waktu dan memunculkan 500 transien. Server dev dimatikan; suite
+  dijalankan terhadap `npm run build` + `npm start` lewat `APP_URL`.
+- `e2e.config.ts`: `assertionTimeout: 15_000` agar deadline `expect` tidak
+  gagal semata karena login paralel.
+- Fixture E2E baru: `npm run e2e:seed` (`scripts/seed-e2e.mts`) membuat akun
+  admin/warga/operator/sekdes/kades secara idempoten; `tests/auth.setup.e2e.ts`
+  menyiapkan sesinya, `tests/support/login.ts` menghitung jawaban captcha
+  aritmetika, dan `tests/support/rbac-fixture.ts` menyalin modul/izin peran ke
+  desa fixture. CI menjalankan `npm run e2e:seed` sebelum build.
+- Test yang diperbaiki: login lintas suite, `tests/idm.e2e.ts` (Ubah/Hapus
+  diarahkan ke baris hasil create, bukan `first()`), serta alur berkas syarat
+  dan PDF lintas pemilik.
+- Register: `OS-SUR-007` dan `OS-WGA-005` naik ke ✅. Ringkasan menjadi
+  **53 ✅ / 58 🟡 / 0 🔴 / 0 ⚪** dari 111 ID. `OS-WGA-004` tetap 🟡 dengan
+  gap E2E pembatalan permohonan oleh warga.
+- Quality gate yang dijalankan sebelum commit: `npm run lint`, `npm run
+  format:check`, `npm run test`, `npm run check`/typecheck, dan `npm run build`.
+
 ## 2026-11-07 — Hardening: throttle survei, paginasi API, label DPT
 
 - Limiter survei publik (10/15 menit), API publik (60/menit), API eksternal
