@@ -94,12 +94,15 @@ export default async function AnjunganPermohonanPage({
   }
 
   const params = await searchParams;
-  const jenisId = Number(typeof params.jenis === "string" ? params.jenis : "");
-  const dipilih = Number.isInteger(jenisId)
-    ? await getJenisSuratKioskData(villageId, perangkat, jenisId)
-    : null;
+  const jenisRaw = typeof params.jenis === "string" ? params.jenis.trim() : "";
+  const jenisId = jenisRaw === "" ? null : Number(jenisRaw);
 
-  if (Number.isInteger(jenisId) && !dipilih) notFound();
+  if (jenisId !== null && (!Number.isInteger(jenisId) || jenisId < 1)) notFound();
+
+  const dipilih =
+    jenisId === null ? null : await getJenisSuratKioskData(villageId, perangkat, jenisId);
+
+  if (jenisId !== null && !dipilih) notFound();
 
   const semuaJenis = dipilih ? [] : await daftarJenisSuratKioskData(villageId, perangkat);
   const riwayat = dipilih ? [] : await daftarPermohonanKioskData(villageId, perangkat, sesi);

@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -36,15 +37,20 @@ import {
 } from "../anjungan-actions";
 
 function HapusAnjunganButton({ item }: { item: AnjunganDTO }) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(
     deleteAnjunganAction,
     createIdleActionState<{ id: number } | null>(),
   );
 
   useEffect(() => {
-    if (state.status === "success") toast.success(state.message);
+    if (state.status === "success") {
+      toast.success(state.message);
+      // Baris baru hilang setelah toast sempat dirender, bukan sebelum efek ini.
+      router.refresh();
+    }
     if (state.status === "error") toast.error(state.message);
-  }, [state]);
+  }, [state, router]);
 
   return (
     <form action={formAction}>

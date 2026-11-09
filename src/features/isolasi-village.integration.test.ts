@@ -5,7 +5,20 @@ import mysql from "mysql2/promise";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { db } from "@/db";
-import { arsip, bukuTamu, kehadiranPerangkat, lapak, sisaLebih, villages } from "@/db/schema";
+import {
+  anjungan,
+  arsip,
+  bukuTamu,
+  kehadiranPerangkat,
+  lapak,
+  sisaLebih,
+  villages,
+} from "@/db/schema";
+import {
+  deleteAnjungan,
+  listAnjungan,
+  updateAnjungan,
+} from "@/features/anjungan/infrastructure/anjungan-repository";
 import {
   deleteArsip,
   listArsip,
@@ -41,6 +54,7 @@ let fixture: {
   lapakA: number;
   arsipA: number;
   bukuTamuA: number;
+  anjunganA: number;
 } | null = null;
 
 beforeAll(async () => {
@@ -107,6 +121,14 @@ beforeAll(async () => {
       tanggal: new Date(2026, 0, 5),
       status: "hadir",
     });
+    await db.insert(anjungan).values({
+      villageId,
+      nama: `Anjungan ${penanda} ${RUN}`,
+      uuid: randomUUID(),
+      aktif: 1,
+      status: "aktif",
+      permohonanSuratTanpaAkun: 1,
+    });
   }
 
   const lapakA = await db
@@ -124,11 +146,21 @@ beforeAll(async () => {
     .from(bukuTamu)
     .where(sql`${bukuTamu.villageId} = ${desaA}`)
     .then((rows) => rows[0]?.id);
-  if (lapakA === undefined || arsipA === undefined || bukuTamuA === undefined) {
+  const anjunganA = await db
+    .select({ id: anjungan.id })
+    .from(anjungan)
+    .where(sql`${anjungan.villageId} = ${desaA}`)
+    .then((rows) => rows[0]?.id);
+  if (
+    lapakA === undefined ||
+    arsipA === undefined ||
+    bukuTamuA === undefined ||
+    anjunganA === undefined
+  ) {
     throw new Error("Seed uji gagal: baris modul tidak terbentuk");
   }
 
-  fixture = { desaA, desaB, lapakA, arsipA, bukuTamuA };
+  fixture = { desaA, desaB, lapakA, arsipA, bukuTamuA, anjunganA };
 });
 
 afterAll(async () => {
@@ -203,5 +235,20 @@ describe("isolasi villageId antar desa", () => {
 
     expect(items).toHaveLength(1);
     expect(items[0]?.villageId).toBe(fixture.desaA);
+  });
+
+  it("tidak mengubah atau menghapus anjungan desa lain", async (ctx) => {
+    if (!dbReady || !fixture) return ctx.skip();
+
+    expect((await listAnjungan(fixture.desaA, true)).map((item) => item.nama)).toEqual([
+      expect.stringContaining(`Anjungan A ${RUN}`),
+    ]);
+
+    await updateAnjungan(fixture.anjunganA, fixture.desaB, { nama: "Diambil alih desa B" });
+    await deleteAnjungan(fixture.anjunganA, fixture.desaB);
+
+    const masihAda = await listAnjungan(fixture.desaA);
+    expect(masihAda).toHaveLength(1);
+    expect(masihAda[0]?.nama).toContain(`Anjungan A ${RUN}`);
   });
 });

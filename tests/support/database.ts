@@ -30,6 +30,13 @@ export async function idPendudukDariNik(nik: string): Promise<number | null> {
   });
 }
 
+/** Hapus anjungan uji berdasarkan nama (cleanup bila langkah UI gagal). */
+export async function hapusAnjunganDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM anjungan WHERE nama = ?", [nama]);
+  });
+}
+
 /** Hapus penduduk uji (tanpa NIK, mis. bayi) berdasarkan nama. */
 export async function hapusPendudukDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {

@@ -96,7 +96,8 @@ export async function deleteAnjunganAction(
     const id = Number(formData.get("id"));
     if (!id) return errorState("ID tidak valid.");
     await hapusAnjungan(user.villageId, id);
-    revalidatePath("/anjungan");
+    // Baris dihapus oleh tombol setelah toast tampil (lihat HapusAnjunganButton).
+    // Revalidasi di sini akan melepas komponen sebelum efek toast sempat berjalan.
     return successState("Anjungan berhasil dihapus.");
   } catch (error) {
     return errorState(isAppError(error) ? error.message : "Gagal menghapus anjungan.");
