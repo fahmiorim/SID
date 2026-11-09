@@ -107,6 +107,16 @@ export async function getIdentitasDesa(villageId: number): Promise<IdentitasDesa
   return row ?? null;
 }
 
+/** Nama desa berdasarkan tenant, `null` bila desa tidak ditemukan. */
+export async function getNamaDesa(villageId: number): Promise<string | null> {
+  const [row] = await db
+    .select({ name: villages.name })
+    .from(villages)
+    .where(eq(villages.id, villageId))
+    .limit(1);
+  return row?.name ?? null;
+}
+
 /** Id desa aktif pertama. Hanya untuk fallback mode satu-desa/administrasi. */
 export async function getFirstVillageId(): Promise<number | null> {
   const [row] = await db

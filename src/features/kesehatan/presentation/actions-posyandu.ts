@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { KIA_RESOURCE, posyanduSchema } from "@/features/kesehatan/domain/kesehatan";
 import {
-  createPosyandu,
-  deletePosyandu,
-  updatePosyandu,
-} from "@/features/kesehatan/infrastructure/kesehatan-repository";
+  hapusPosyandu,
+  tambahPosyandu,
+  ubahPosyandu,
+} from "@/features/kesehatan/application/kia-use-cases";
+import { KIA_RESOURCE, posyanduSchema } from "@/features/kesehatan/domain/kesehatan";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -35,14 +35,14 @@ export async function savePosyanduAction(formData: FormData) {
 
   try {
     if (parsed.data.id) {
-      await updatePosyandu(parsed.data.id, villageId, {
+      await ubahPosyandu(parsed.data.id, villageId, {
         nama: parsed.data.nama,
         alamat: parsed.data.alamat || undefined,
         namaKetua: parsed.data.namaKetua || undefined,
         namaBidan: parsed.data.namaBidan || undefined,
       });
     } else {
-      await createPosyandu({
+      await tambahPosyandu({
         villageId,
         nama: parsed.data.nama,
         alamat: parsed.data.alamat || undefined,
@@ -64,7 +64,7 @@ export async function deletePosyanduAction(id: number) {
   }
   const villageId = await resolveVillageId(user);
   try {
-    await deletePosyandu(id, villageId);
+    await hapusPosyandu(id, villageId);
     revalidatePath("/kesehatan/posyandu");
     return { ok: true };
   } catch (e) {

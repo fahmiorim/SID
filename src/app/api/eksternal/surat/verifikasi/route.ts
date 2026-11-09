@@ -4,8 +4,7 @@ import { authenticateApiKey } from "@/features/api-eksternal/domain/auth";
 import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
 import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
-import { hashVerificationToken } from "@/features/surat/domain/surat";
-import { findSuratByTokenHash } from "@/features/surat/infrastructure/surat-repository";
+import { cariSuratEksternal } from "@/features/surat/application/verifikasi-publik";
 
 export async function POST(req: NextRequest) {
   const apiKeyHeader = req.headers.get("X-API-Key");
@@ -23,8 +22,7 @@ export async function POST(req: NextRequest) {
   if (!/^[0-9a-f]{64}$/i.test(token))
     return NextResponse.json({ message: "Invalid token format" }, { status: 400 });
 
-  const tokenHash = await hashVerificationToken(token.toLowerCase());
-  const surat = await findSuratByTokenHash(auth.apiKey.villageId, tokenHash);
+  const surat = await cariSuratEksternal(auth.apiKey.villageId, token);
 
   await recordAuditEvent({
     villageId: auth.apiKey.villageId,

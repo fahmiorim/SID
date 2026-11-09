@@ -8,11 +8,11 @@ import {
   getIdentitasFromRequest,
   resolveVillageId,
 } from "@/features/desa/application/resolve-village";
-import { PENDAPAT_RESOURCE, pendapatSchema } from "@/features/pendapat/domain/pendapat";
 import {
-  createPendapat,
-  deletePendapat,
-} from "@/features/pendapat/infrastructure/pendapat-repository";
+  createPendapatUseCase,
+  deletePendapatUseCase,
+} from "@/features/pendapat/application/use-cases";
+import { PENDAPAT_RESOURCE, pendapatSchema } from "@/features/pendapat/domain/pendapat";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import {
   errorState,
@@ -62,7 +62,7 @@ export async function submitPendapatPublikAction(
   const sessionKey = generateSessionKey(parsed.data.residentId ?? null, ipAddress);
 
   try {
-    await createPendapat({
+    await createPendapatUseCase({
       villageId,
       residentId: parsed.data.residentId ?? null,
       sessionKey,
@@ -87,7 +87,7 @@ export async function deletePendapatAction(id: number) {
   }
   const villageId = await resolveVillageId(user);
   try {
-    await deletePendapat(id, villageId);
+    await deletePendapatUseCase(id, villageId);
     revalidatePath("/pendapat");
     return { ok: true };
   } catch (e) {

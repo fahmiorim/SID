@@ -1,4 +1,5 @@
-import { bacaMedia, jalurAbsolutMedia } from "@/features/publik/infrastructure/media-storage";
+import { bacaLampiranPengaduan } from "@/features/pengaduan/application/use-cases";
+import { jalurAbsolutMedia } from "@/features/publik/infrastructure/media-storage";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { requireUser } from "@/lib/dal";
@@ -72,7 +73,7 @@ export async function GET(
   try {
     // Pastikan jalur tidak keluar dari akar penyimpanan.
     jalurAbsolutMedia(relatif);
-    const isi = await bacaMedia(relatif);
+    const isi = await bacaLampiranPengaduan(relatif);
 
     return new Response(Buffer.from(isi), {
       headers: {

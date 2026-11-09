@@ -6,6 +6,7 @@ import {
   deleteWilayah as deleteWilayahRow,
   findWilayahById,
   insertWilayah,
+  listWilayahOptions,
   listWilayah as listWilayahRows,
   updateWilayah as updateWilayahRow,
   wilayahExists,
@@ -20,6 +21,12 @@ import { conflict, notFound } from "@/lib/errors";
  * Setiap use case **menegakkan izin sendiri** lewat `requirePermission`, jadi
  * pemanggil mana pun (Server Action, Route Handler, skrip) otomatis terlindungi.
  */
+
+/** Opsi wilayah untuk filter halaman statistik; izin baca wilayah diperiksa di sini. */
+export async function daftarWilayahOptions(villageId: number) {
+  await requirePermission(WILAYAH_RESOURCE, "read");
+  return listWilayahOptions(villageId);
+}
 
 export interface ListWilayahParams {
   search: string;

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { getPendudukDetailById } from "@/features/penduduk/infrastructure/penduduk-repository";
+import { getPendudukDetail } from "@/features/penduduk/application/use-cases";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { verifySession } from "@/lib/dal";
@@ -17,7 +17,7 @@ export default async function PendudukDetailPage({ params }: { params: Promise<{
   }
   const villageId = await resolveVillageId(user);
   const { id } = await params;
-  const detail = await getPendudukDetailById(villageId, Number(id));
+  const detail = await getPendudukDetail(villageId, Number(id));
 
   if (!detail) {
     return (

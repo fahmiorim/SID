@@ -5,13 +5,22 @@ import { batasiPermintaan } from "@/features/rate-limit/application/rate-limit";
 import { validationError } from "@/lib/errors";
 
 import { buatKodeOtp, hashKodeOtp, MASA_BERLAKU_OTP_MS, periksaKodeOtp } from "../domain/login-otp";
-import { getLoginOtpContext, getOtpLoginTarget } from "../infrastructure/auth-repository";
+import {
+  getLoginOtpContext,
+  getOtpLoginAktif,
+  getOtpLoginTarget,
+} from "../infrastructure/auth-repository";
 import {
   findKodeLoginAktif,
   simpanKodeLogin,
   tambahPercobaanLogin,
   tandaiKodeLoginTerpakai,
 } from "../infrastructure/login-otp-repository";
+
+/** Status OTP login akun sesi; `userId` harus berasal dari sesi, bukan input klien. */
+export async function getStatusOtpLoginAktif(userId: string): Promise<boolean> {
+  return getOtpLoginAktif(userId);
+}
 
 const PESAN_GENERIK =
   "Jika akun ini memerlukan kode OTP, kode telah dikirim ke nomor WhatsApp atau email terdaftar.";

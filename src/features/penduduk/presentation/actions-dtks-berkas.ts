@@ -8,6 +8,7 @@ import {
   hapusProgramDtksUseCase,
   imporDtksUseCase,
   lepasLampiranUseCase,
+  simpanBerkasLampiranDtks,
   simpanProgramDtksUseCase,
   tautkanLampiranUseCase,
   unggahLampiranDtksUseCase,
@@ -18,7 +19,6 @@ import {
   type BarisImporDtks,
   type KunciImporDtks,
 } from "@/features/penduduk/domain/dtks-berkas";
-import { simpanUnggahanMedia } from "@/features/publik/infrastructure/media-storage";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 import { bacaImporDariFormData } from "@/lib/impor-berkas";
@@ -114,7 +114,7 @@ export async function unggahLampiranDtksAction(formData: FormData): Promise<{
   const villageId = await resolveVillageId(user);
 
   try {
-    const simpan = await simpanUnggahanMedia(villageId, "umum", {
+    const simpan = await simpanBerkasLampiranDtks(villageId, "umum", {
       nama: berkas.name,
       mime: berkas.type || null,
       ukuran: berkas.size,

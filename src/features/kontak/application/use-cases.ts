@@ -1,7 +1,12 @@
 import "server-only";
 
 import { getIdentitas } from "@/features/desa/application/get-identitas";
-import { type KontakGrupInput, type KontakInput } from "@/features/kontak/domain/kontak";
+import {
+  GRUP_KONTAK_RESOURCE,
+  KONTAK_RESOURCE,
+  type KontakGrupInput,
+  type KontakInput,
+} from "@/features/kontak/domain/kontak";
 import {
   buildGrupKontakCsv,
   buildKontakCsv,
@@ -23,6 +28,43 @@ import {
   updateKontak,
   updateKontakGrup,
 } from "@/features/kontak/infrastructure/kontak-repository";
+import { requirePermission } from "@/lib/dal";
+
+/** Data halaman grup kontak beserta opsi kontak; izin baca grup kontak diperiksa di sini. */
+export async function muatGrupKontakData(villageId: number) {
+  await requirePermission(GRUP_KONTAK_RESOURCE, "read");
+  return Promise.all([listKontakGrup(villageId), listKontak(villageId)]);
+}
+
+/** Daftar kontak untuk halaman admin; izin baca kontak diperiksa di sini. */
+export async function daftarKontakData(villageId: number) {
+  await requirePermission(KONTAK_RESOURCE, "read");
+  return listKontak(villageId);
+}
+
+/** Tulis data kontak dan grup; izin dan tenant diperiksa pemanggil (action). */
+export const ubahKontak = (
+  id: number,
+  villageId: number,
+  input: Parameters<typeof updateKontak>[2],
+) => updateKontak(id, villageId, input);
+export const tambahKontak = (input: Parameters<typeof createKontak>[0]) => createKontak(input);
+export const hapusKontak = (id: number, villageId: number) => deleteKontak(id, villageId);
+export const tambahGrupKontak = (input: Parameters<typeof createKontakGrup>[0]) =>
+  createKontakGrup(input);
+export const ubahGrupKontak = (
+  id: number,
+  villageId: number,
+  input: Parameters<typeof updateKontakGrup>[2],
+) => updateKontakGrup(id, villageId, input);
+export const hapusGrupKontak = (id: number, villageId: number) => deleteKontakGrup(id, villageId);
+export const tambahAnggotaGrup = (input: Parameters<typeof addAnggotaGrup>[0]) =>
+  addAnggotaGrup(input);
+export const daftarKontakPenuh = (villageId: number) => listKontak(villageId);
+export const daftarGrupKontak = (villageId: number) => listKontakGrup(villageId);
+export const hapusAnggotaGrup = (id: number, villageId: number) => removeAnggotaGrup(id, villageId);
+export const daftarAnggotaGrup = (villageId: number, grupId: number) =>
+  listAnggotaGrupDetail(villageId, grupId);
 
 export async function listKontakUseCase(villageId: number) {
   return listKontak(villageId);

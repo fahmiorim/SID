@@ -4,6 +4,19 @@ import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
+  tambahAnggotaGrup as addAnggotaGrup,
+  tambahKontak as createKontak,
+  tambahGrupKontak as createKontakGrup,
+  hapusKontak as deleteKontak,
+  hapusGrupKontak as deleteKontakGrup,
+  daftarAnggotaGrup as listAnggotaGrupDetail,
+  daftarKontakPenuh as listKontak,
+  daftarGrupKontak as listKontakGrup,
+  hapusAnggotaGrup as removeAnggotaGrup,
+  ubahKontak as updateKontak,
+  ubahGrupKontak as updateKontakGrup,
+} from "@/features/kontak/application/use-cases";
+import {
   GRUP_KONTAK_RESOURCE,
   KONTAK_RESOURCE,
   kontakGrupSchema,
@@ -14,19 +27,6 @@ import {
   type BarisImporKontak,
   type KunciImporKontak,
 } from "@/features/kontak/domain/kontak-berkas";
-import {
-  addAnggotaGrup,
-  createKontak,
-  createKontakGrup,
-  deleteKontak,
-  deleteKontakGrup,
-  listAnggotaGrupDetail,
-  listKontak,
-  listKontakGrup,
-  removeAnggotaGrup,
-  updateKontak,
-  updateKontakGrup,
-} from "@/features/kontak/infrastructure/kontak-repository";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { errorState, successState, type ActionState } from "@/lib/action-state";
 import { verifySession } from "@/lib/dal";

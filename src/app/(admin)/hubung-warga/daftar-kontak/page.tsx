@@ -4,8 +4,8 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { daftarKontakData } from "@/features/kontak/application/use-cases";
 import { KONTAK_RESOURCE } from "@/features/kontak/domain/kontak";
-import { listKontak } from "@/features/kontak/infrastructure/kontak-repository";
 import { KontakImporDialog } from "@/features/kontak/presentation/components/kontak-impor-dialog";
 import { KontakTable } from "@/features/kontak/presentation/components/kontak-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
@@ -20,7 +20,7 @@ export default async function DaftarKontakPage() {
   }
   const canManage = hasPermission(user.permissions, KONTAK_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const rows = await listKontak(villageId);
+  const rows = await daftarKontakData(villageId);
 
   return (
     <div className="space-y-6 p-6">

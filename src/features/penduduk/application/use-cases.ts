@@ -14,6 +14,7 @@ import {
 import {
   deletePenduduk as deletePendudukRow,
   findPendudukById,
+  getPendudukDetailById,
   headOfFamilyExists,
   insertPenduduk,
   listPenduduk as listPendudukRows,
@@ -31,6 +32,11 @@ import { conflict, notFound } from "@/lib/errors";
  * Setiap use case menegakkan izinnya sendiri lewat `requirePermission`, jadi
  * pemanggil mana pun (Server Action, Route Handler, skrip) otomatis terlindungi.
  */
+
+/** Detail biodata penduduk; izin baca diperiksa halaman pemanggil (sesi sudah diverifikasi). */
+export async function getPendudukDetail(villageId: number, id: number) {
+  return getPendudukDetailById(villageId, id);
+}
 
 export interface ListPendudukParams {
   /** Filter lanjutan daftar penduduk (lihat `parseFilterPenduduk`). */

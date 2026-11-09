@@ -16,7 +16,7 @@ import {
   setPublikPengaduan,
   updateTanggapanPengaduan,
 } from "@/features/pengaduan/infrastructure/pengaduan-repository";
-import { hapusMedia } from "@/features/publik/infrastructure/media-storage";
+import { bacaMedia, hapusMedia } from "@/features/publik/infrastructure/media-storage";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { requirePermission } from "@/lib/dal";
 import { notFound } from "@/lib/errors";
@@ -34,6 +34,12 @@ export interface FilterPengaduanData {
   status?: StatusPengaduan;
   kategori?: string;
   cari?: string;
+}
+
+/** Isi lampiran pengaduan untuk petugas ber-izin; jalur sudah diverifikasi route. */
+export async function bacaLampiranPengaduan(relatif: string): Promise<Buffer> {
+  await requirePermission(RESOURCES.pengaduan, "read");
+  return bacaMedia(relatif);
 }
 
 /** Daftar pengaduan desa sesuai filter (terbaru lebih dulu). */

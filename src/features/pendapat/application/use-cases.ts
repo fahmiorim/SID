@@ -1,7 +1,6 @@
 import "server-only";
 
 import { getIdentitas } from "@/features/desa/application/get-identitas";
-import type { PendapatInput } from "@/features/pendapat/domain/pendapat";
 import {
   buildPendapatCsv,
   pendapatFilename,
@@ -22,7 +21,7 @@ export async function listPendapatUseCase(villageId: number, page = 1, perPage =
   return listPendapat(villageId, page, perPage);
 }
 
-export async function createPendapatUseCase(input: PendapatInput) {
+export async function createPendapatUseCase(input: Parameters<typeof createPendapat>[0]) {
   return createPendapat(input);
 }
 

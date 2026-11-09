@@ -1,10 +1,9 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { muatKiaData } from "@/features/kesehatan/application/kia-use-cases";
 import { KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
-import { listKia, listPosyandu } from "@/features/kesehatan/infrastructure/kesehatan-repository";
 import { KiaTable } from "@/features/kesehatan/presentation/components/kia-table";
-import { listPendudukOptions } from "@/features/penduduk/infrastructure/penduduk-repository";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -17,11 +16,7 @@ export default async function KesehatanKiaPage() {
   }
   const canManage = hasPermission(user.permissions, KIA_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const [rows, pendudukRows, posyanduRows] = await Promise.all([
-    listKia(villageId),
-    listPendudukOptions(villageId),
-    listPosyandu(villageId),
-  ]);
+  const [rows, pendudukRows, posyanduRows] = await muatKiaData(villageId);
   const pendudukOptions = pendudukRows.map((row) => ({
     id: row.id,
     label: row.nationalId ? `${row.name} (${row.nationalId})` : row.name,

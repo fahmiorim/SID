@@ -16,7 +16,7 @@ import {
   type StatistikBantuanKind,
 } from "@/features/statistik/domain/statistik";
 import { StatistikTable } from "@/features/statistik/presentation/components/statistik/statistik-table";
-import { listWilayahOptions } from "@/features/wilayah/infrastructure/wilayah-repository";
+import { daftarWilayahOptions } from "@/features/wilayah/application/use-cases";
 import { verifySession } from "@/lib/dal";
 
 export const dynamic = "force-dynamic";
@@ -75,7 +75,7 @@ export default async function StatistikBantuanPage({
       periodeAkhir: periodeAkhir || undefined,
       perPage: 50,
     }),
-    listWilayahOptions(villageId),
+    daftarWilayahOptions(villageId),
   ]);
 
   const dusunOptions = [...new Set(wilayah.map((w) => w.dusun).filter(Boolean))].sort();

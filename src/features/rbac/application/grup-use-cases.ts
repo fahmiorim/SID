@@ -6,6 +6,7 @@ import { fromCrudPermissions, toCrudPermissions } from "@/features/rbac/domain/p
 import {
   createRole,
   deleteRole,
+  findRoleById,
   getRoleById,
   listLevelsByRole,
   listModules,
@@ -29,6 +30,12 @@ export async function listRolesWithMeta() {
   const user = await requirePermission(GRUP_AKSES_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
   return listRoles(villageId);
+}
+
+/** Nama dan slug peran pengguna sesi; sesi sudah diverifikasi layout/halaman pemanggil. */
+export async function getPeranSesi(roleId: number): Promise<{ name: string; slug: string } | null> {
+  const role = await findRoleById(roleId);
+  return role ? { name: role.name, slug: role.slug } : null;
 }
 
 export async function getRoleDetail(id: number) {

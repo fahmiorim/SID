@@ -15,7 +15,7 @@ import {
   type StatistikPendudukKind,
 } from "@/features/statistik/domain/statistik";
 import { StatistikTable } from "@/features/statistik/presentation/components/statistik/statistik-table";
-import { listWilayahOptions } from "@/features/wilayah/infrastructure/wilayah-repository";
+import { daftarWilayahOptions } from "@/features/wilayah/application/use-cases";
 import { verifySession } from "@/lib/dal";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +65,7 @@ export default async function StatistikPendudukPage({
       page: 1,
       perPage: PAGE_SIZE,
     }),
-    listWilayahOptions(villageId),
+    daftarWilayahOptions(villageId),
   ]);
 
   const dusunOptions = [...new Set(wilayah.map((w) => w.dusun).filter(Boolean))].sort();

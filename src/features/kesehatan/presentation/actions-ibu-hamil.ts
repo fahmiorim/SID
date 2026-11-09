@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { ibuHamilSchema, KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
 import {
-  createIbuHamil,
-  deleteIbuHamil,
-  updateIbuHamil,
-} from "@/features/kesehatan/infrastructure/kesehatan-repository";
+  hapusIbuHamil,
+  tambahIbuHamil,
+  ubahIbuHamil,
+} from "@/features/kesehatan/application/kia-use-cases";
+import { ibuHamilSchema, KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -67,9 +67,9 @@ export async function saveIbuHamilAction(formData: FormData) {
     };
 
     if (parsed.data.id) {
-      await updateIbuHamil(parsed.data.id, villageId, payload);
+      await ubahIbuHamil(parsed.data.id, villageId, payload);
     } else {
-      await createIbuHamil(payload);
+      await tambahIbuHamil(payload);
     }
     revalidatePath("/kesehatan/pemantauan-ibu-hamil");
     return { ok: true };
@@ -88,7 +88,7 @@ export async function deleteIbuHamilAction(id: number) {
   }
   const villageId = await resolveVillageId(user);
   try {
-    await deleteIbuHamil(id, villageId);
+    await hapusIbuHamil(id, villageId);
     revalidatePath("/kesehatan/pemantauan-ibu-hamil");
     return { ok: true };
   } catch (e) {

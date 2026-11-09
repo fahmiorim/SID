@@ -1,8 +1,8 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { muatGrupKontakData } from "@/features/kontak/application/use-cases";
 import { GRUP_KONTAK_RESOURCE } from "@/features/kontak/domain/kontak";
-import { listKontak, listKontakGrup } from "@/features/kontak/infrastructure/kontak-repository";
 import { GrupKontakTable } from "@/features/kontak/presentation/components/grup-kontak-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
@@ -16,7 +16,7 @@ export default async function GrupKontakPage() {
   }
   const canManage = hasPermission(user.permissions, GRUP_KONTAK_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const [rows, kontakRows] = await Promise.all([listKontakGrup(villageId), listKontak(villageId)]);
+  const [rows, kontakRows] = await muatGrupKontakData(villageId);
   const kontakOptions = kontakRows.map((row) => ({ id: row.id, nama: row.nama }));
 
   return (

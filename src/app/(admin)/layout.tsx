@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/app-shell";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { getMenuSidebarForUser } from "@/features/navigation/application/urutan-menu-use-cases";
-import { findRoleById } from "@/features/rbac/infrastructure/rbac-repository";
+import { getPeranSesi } from "@/features/rbac/application/grup-use-cases";
 import { verifySession } from "@/lib/dal";
 
 /**
@@ -15,10 +15,10 @@ import { verifySession } from "@/lib/dal";
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const user = await verifySession();
 
-  const [menu, desa, role] = await Promise.all([
+  const [menu, desa, peran] = await Promise.all([
     getMenuSidebarForUser(user),
     getIdentitas(),
-    user.roleId !== null ? findRoleById(user.roleId) : Promise.resolve(null),
+    user.roleId !== null ? getPeranSesi(user.roleId) : Promise.resolve(null),
   ]);
 
   return (
@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         name: user.name,
         username: user.username,
         email: user.email,
-        roleName: role?.name ?? null,
+        roleName: peran?.name ?? null,
       }}
       desa={{ nama: desa?.namaDesa ?? "Desa", logo: desa?.logo ?? null }}
     >

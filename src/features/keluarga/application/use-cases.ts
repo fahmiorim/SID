@@ -2,6 +2,7 @@ import "server-only";
 
 import { recordAuditEvent } from "@/features/audit/application/audit-use-cases";
 import { AUDIT_EVENTS } from "@/features/audit/domain/audit";
+import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import {
   HEAD_OF_FAMILY_RELATION_ID,
@@ -13,6 +14,7 @@ import {
   type KeluargaMemberDetail,
   type KeluargaReferenceData,
 } from "@/features/keluarga/domain/keluarga";
+import { buildKeluargaPdf } from "@/features/keluarga/infrastructure/keluarga-pdf";
 import {
   deleteKeluarga as deleteKeluargaRow,
   findKeluargaById,
@@ -93,6 +95,19 @@ export interface KeluargaPrintData {
     rw: string | null;
     rt: string | null;
   };
+}
+
+/** Bangun PDF Kartu Keluarga; izin dan wilayah diperiksa di use case. */
+export async function buildKeluargaPdfData(familyId: number): Promise<Uint8Array> {
+  const { keluarga, anggota, wilayah } = await getKeluargaPrintData(familyId);
+  const desa = await getIdentitas();
+  return buildKeluargaPdf({
+    desa,
+    nomorKk: keluarga.number,
+    alamat: keluarga.address,
+    wilayah,
+    anggota,
+  });
 }
 
 export async function getKeluargaPrintData(familyId: number): Promise<KeluargaPrintData> {

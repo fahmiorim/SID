@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
-import { db } from "@/db";
-import { villages } from "@/db/schema/village";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { getNamaDesaUseCase } from "@/features/desa/application/use-cases";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { getStatistikBantuanUseCase } from "@/features/statistik/application/statistik-use-cases";
@@ -239,13 +237,7 @@ export async function GET(request: Request, _context: { params: Promise<Record<s
   });
 
   // Get village name for header
-  const villageRow = await db
-    .select({ name: villages.name })
-    .from(villages)
-    .where(eq(villages.id, villageId))
-    .limit(1);
-
-  const villageName = villageRow.length > 0 ? (villageRow[0]?.name ?? "Desa") : "Desa";
+  const villageName = (await getNamaDesaUseCase(villageId)) ?? "Desa";
 
   try {
     const pdfBytes = await createStatistikBantuanPdf(kind, result, villageName);

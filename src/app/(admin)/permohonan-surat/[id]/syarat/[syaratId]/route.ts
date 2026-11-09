@@ -1,5 +1,4 @@
-import { getBerkasSyaratAdminData } from "@/features/layanan-mandiri/application/admin-use-cases";
-import { bacaMedia } from "@/features/publik/infrastructure/media-storage";
+import { bacaBerkasSyaratAdmin } from "@/features/layanan-mandiri/application/admin-use-cases";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { getCurrentUser } from "@/lib/dal";
@@ -28,11 +27,10 @@ export async function GET(
   }
 
   try {
-    const berkas = await getBerkasSyaratAdminData(permohonanId, syarat);
-    const isi = await bacaMedia(berkas.berkas);
+    const berkas = await bacaBerkasSyaratAdmin(permohonanId, syarat);
     const nama = berkas.namaAsli.replace(/[^\w.\- ]+/g, "_") || "berkas";
 
-    return new Response(new Uint8Array(isi), {
+    return new Response(new Uint8Array(berkas.isi), {
       headers: {
         "Content-Type": berkas.mime || "application/octet-stream",
         "Content-Disposition": `inline; filename="${nama}"`,

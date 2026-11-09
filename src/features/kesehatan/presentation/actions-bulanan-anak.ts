@@ -3,12 +3,12 @@
 import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { bulananAnakSchema, KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
 import {
-  createBulananAnak,
-  deleteBulananAnak,
-  updateBulananAnak,
-} from "@/features/kesehatan/infrastructure/kesehatan-repository";
+  hapusBulananAnak,
+  tambahBulananAnak,
+  ubahBulananAnak,
+} from "@/features/kesehatan/application/kia-use-cases";
+import { bulananAnakSchema, KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -73,9 +73,9 @@ export async function saveBulananAnakAction(formData: FormData) {
     };
 
     if (parsed.data.id) {
-      await updateBulananAnak(parsed.data.id, villageId, payload);
+      await ubahBulananAnak(parsed.data.id, villageId, payload);
     } else {
-      await createBulananAnak(payload);
+      await tambahBulananAnak(payload);
     }
     revalidatePath("/kesehatan/pemantauan-anak");
     return { ok: true };
@@ -94,7 +94,7 @@ export async function deleteBulananAnakAction(id: number) {
   }
   const villageId = await resolveVillageId(user);
   try {
-    await deleteBulananAnak(id, villageId);
+    await hapusBulananAnak(id, villageId);
     revalidatePath("/kesehatan/pemantauan-anak");
     return { ok: true };
   } catch (e) {

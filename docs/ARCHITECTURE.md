@@ -3,10 +3,10 @@
 Dokumen ini menjelaskan **cara kode ini disusun** dan **mengapa**. Tujuannya agar
 kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
 
-> Peta seluruh dokumentasi ada di [`README.md`](./README.md). Status fitur dan
-> prioritas **tidak** diambil dari dokumen ini — gunakan
-> [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md) dan
-> [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
+> Peta seluruh dokumentasi ada di [`README.md`](./README.md). Cakupan,
+> status bukti, dan urutan kerja ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md),
+> [`STATUS-MODUL.md`](./STATUS-MODUL.md), dan
+> [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
 ---
 
@@ -21,7 +21,7 @@ kontributor berikutnya (manusia atau AI) menambahkan modul baru tanpa menebak.
 3. **Satu sumber kebenaran.** Environment divalidasi sekali (`src/lib/env.ts`),
    slug modul dipusatkan (`src/features/rbac/domain/resources.ts`), nama
    aplikasi di `src/lib/app-config.ts`, dan scope fitur di
-   `docs/KATALOG-FITUR-OPENSID.md`.
+   `docs/CAKUPAN-OPENSID.md`.
 4. **Skema dirancang sendiri.** Tidak ada ketergantungan pada skema atau data
    sistem lain; nama tabel/kolom ditentukan demi kejelasan, bukan demi
    kompatibilitas (lihat §3).
@@ -99,18 +99,20 @@ Fitur yang sudah dibangun saat ini:
 | `pendapat`       | Jajak pendapat warga: pilihan, rekap, dan halaman publik.              |
 | `statistik`      | Agregasi penduduk/bantuan/rentang umur, Data Pilah, dan ekspor CSV.    |
 
-> Cakupan & batasan tiap modul ada di
-> [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md). Status paritas dan
-> prioritas ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) dan
-> [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md); dokumen di `docs/riset/`
-> hanya **referensi historis**.
+> Cakupan & pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md).
+> Status bukti kode/test dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md),
+> sedangkan audit dan urutan kerja ada di
+> [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md). Dokumen lama di arsip
+> dan bahan `docs/riset/` adalah **referensi historis**, bukan status aktif.
 
 ### Aturan penting
 
 - **`infrastructure` hanya dipanggil `application`.** Halaman & aksi memanggil
   *use case*, bukan *repository*.
-  **Utang teknis terukur (per Nov 2026):** 31 impor infrastruktur + 2 impor
-  `@/db` pada 33 berkas `src/app/**` dan `src/features/*/presentation/**`.
+  **Utang teknis terukur (per Nov 2026):** 2 impor infrastruktur/`@/db` tersisa di
+  `src/app/**` (keduanya disengaja: validasi jalur media lampiran pengaduan, dan
+  `api/penduduk/nik` yang memakai `verifySession` sehingga belum dipindah tanpa mengubah aturan
+  izin). `src/features/*/presentation/**` sudah 0.
   Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan
   `src/app/sitemap.ts` sudah **0** dan dijaga
   `src/features/publik/application/lapisan-publik.test.ts`. Sisa terbanyak:
@@ -345,9 +347,10 @@ dan `getPendudukReferenceData(villageId)` (fitur `penduduk`).
 
 ## 10. Multi-Tenant, Web Publik & Tema (target)
 
-Bagian ini adalah **arah arsitektur** untuk Fase 1 dan Fase 4; belum semua
-diimplementasikan. Statusnya ada di
-[`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md).
+Bagian ini adalah **arah arsitektur** untuk fase tenant dan web publik; belum
+semua diimplementasikan. Statusnya dicatat di
+[`STATUS-MODUL.md`](./STATUS-MODUL.md), dengan tindak lanjut di
+[`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
 ### Route group
 
@@ -488,9 +491,9 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
 - Perubahan skema disertai berkas migrasi yang ikut di-commit. Penjaga
   `src/db/migrasi-paritas.test.ts` memastikan setiap tabel pada skema dibuat
   oleh berkas migrasi dan setiap berkas migrasi terdaftar di `_journal.json`.
-- Perubahan status paritas disertai pembaruan `PARITAS-OPENSID.md`. Penjaga
-  `src/db/paritas-register.test.ts` memastikan register memuat setiap ID
-  katalog tepat satu baris dan ringkasannya cocok dengan hitungan baris.
+- Perubahan status bukti fitur disertai pembaruan `STATUS-MODUL.md` dan/atau
+  `RENCANA-PENGEMBANGAN.md`. `src/db/paritas-register.test.ts` menjaga dokumen
+  status aktif dan indeks utama tetap selaras dengan struktur baru.
 
 ### Pengujian
 
@@ -518,8 +521,8 @@ Sebelum sebuah perubahan dianggap selesai, pastikan juga:
   `next dev` yang basi di port yang sama pernah menyebabkan kegagalan login dan
   500 transien. CI mengonfigurasi `npx e2e run` pada job `smoke` dan menjalankan
   `npm run e2e:seed` sebelum build; suite hijau tetap bukan bukti bahwa seluruh
-  gap perilaku per ID sudah tertutup — ukur kelengkapan dari assertion perilaku
-  per ID di `PARITAS-OPENSID.md`, bukan jumlah file.
+  gap perilaku per ID sudah tertutup — ukur kelengkapan dari bukti assertion
+  perilaku yang dicatat di `STATUS-MODUL.md`, bukan jumlah file.
 
 CI (`.github/workflows/ci.yml`) wajib menjalankan migrasi + seed DB kosong,
 `npm run check`, `npm run build`, smoke publik, dan E2E yang diperlukan oleh

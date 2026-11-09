@@ -33,7 +33,7 @@ import {
 } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
 import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-media";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
-import { hapusMedia } from "@/features/publik/infrastructure/media-storage";
+import { bacaMedia, hapusMedia } from "@/features/publik/infrastructure/media-storage";
 import {
   buildIsianValues,
   isianErrorsToFieldErrors,
@@ -181,6 +181,16 @@ export async function getBerkasSyaratWargaData(
   return item;
 }
 
+/** Isi berkas syarat milik warga untuk route unduhan privat. */
+export async function bacaBerkasSyaratWarga(
+  permohonanId: number,
+  syaratId: number,
+): Promise<{ isi: Buffer; mime: string; namaAsli: string }> {
+  const berkas = await getBerkasSyaratWargaData(permohonanId, syaratId);
+  const isi = await bacaMedia(berkas.berkas);
+  return { isi, mime: berkas.mime, namaAsli: berkas.namaAsli };
+}
+
 /** Batalkan permohonan milik warga selama belum diambil. */
 export async function batalkanPermohonanWargaData(
   permohonanId: number,
@@ -295,4 +305,13 @@ export async function getBerkasDokumenWargaData(id: number) {
 
   if (!dokumen) throw notFound("Dokumen tidak ditemukan.");
   return dokumen;
+}
+
+/** Isi dokumen warga untuk route unduhan privat; pemilik saja. */
+export async function bacaBerkasDokumenWarga(
+  id: number,
+): Promise<{ isi: Buffer; mime: string; namaAsli: string }> {
+  const dokumen = await getBerkasDokumenWargaData(id);
+  const isi = await bacaMedia(dokumen.berkas);
+  return { isi, mime: dokumen.mime, namaAsli: dokumen.namaAsli };
 }

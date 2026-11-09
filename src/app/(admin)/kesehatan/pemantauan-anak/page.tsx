@@ -1,12 +1,8 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { muatPemantauanAnakData } from "@/features/kesehatan/application/kia-use-cases";
 import { KIA_RESOURCE } from "@/features/kesehatan/domain/kesehatan";
-import {
-  listBulananAnak,
-  listKia,
-  listPosyandu,
-} from "@/features/kesehatan/infrastructure/kesehatan-repository";
 import { BulananAnakTable } from "@/features/kesehatan/presentation/components/bulanan-anak-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
@@ -20,11 +16,7 @@ export default async function PemantauanAnakPage() {
   }
   const canManage = hasPermission(user.permissions, KIA_RESOURCE, "update");
   const villageId = await resolveVillageId(user);
-  const [rows, posyanduRows, kiaRows] = await Promise.all([
-    listBulananAnak(villageId),
-    listPosyandu(villageId),
-    listKia(villageId),
-  ]);
+  const [rows, posyanduRows, kiaRows] = await muatPemantauanAnakData(villageId);
   const posyanduOptions = posyanduRows.map((row) => ({ id: row.id, label: row.nama }));
   const kiaOptions = kiaRows.map((row) => ({
     id: row.id,

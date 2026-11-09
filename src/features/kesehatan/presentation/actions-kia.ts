@@ -3,12 +3,8 @@
 import { revalidatePath } from "next/cache";
 
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { hapusKia, tambahKia, ubahKia } from "@/features/kesehatan/application/kia-use-cases";
 import { KIA_RESOURCE, kiaSchema } from "@/features/kesehatan/domain/kesehatan";
-import {
-  createKia,
-  deleteKia,
-  updateKia,
-} from "@/features/kesehatan/infrastructure/kesehatan-repository";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { verifySession } from "@/lib/dal";
 
@@ -37,14 +33,14 @@ export async function saveKiaAction(formData: FormData) {
 
   try {
     if (parsed.data.id) {
-      await updateKia(parsed.data.id, villageId, {
+      await ubahKia(parsed.data.id, villageId, {
         noKia: parsed.data.noKia,
         ibuId: parsed.data.ibuId,
         anakId: parsed.data.anakId ?? null,
         hariPerkiraanLahir: parsed.data.hariPerkiraanLahir || null,
       });
     } else {
-      await createKia({
+      await tambahKia({
         villageId,
         noKia: parsed.data.noKia,
         ibuId: parsed.data.ibuId,
@@ -66,7 +62,7 @@ export async function deleteKiaAction(id: number) {
   }
   const villageId = await resolveVillageId(user);
   try {
-    await deleteKia(id, villageId);
+    await hapusKia(id, villageId);
     revalidatePath("/kesehatan/kia");
     return { ok: true };
   } catch (e) {

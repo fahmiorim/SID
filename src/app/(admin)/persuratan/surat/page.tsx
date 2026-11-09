@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { hasPermission } from "@/features/rbac/application/authorization";
-import { findRoleById } from "@/features/rbac/infrastructure/rbac-repository";
+import { getPeranSesi } from "@/features/rbac/application/grup-use-cases";
 import { listSuratWithMeta } from "@/features/surat/application/surat-use-cases";
 import {
   formatTanggalIndonesia,
@@ -54,7 +54,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
     status,
   });
   const canManage = hasPermission(user.permissions, SURAT_RESOURCE, "update");
-  const role = user.roleId === null ? null : await findRoleById(user.roleId);
+  const peran = user.roleId === null ? null : await getPeranSesi(user.roleId);
 
   const recapMap = new Map(recap.map((item) => [item.status, item.total]));
   const totalSurat = recap.reduce((sum, item) => sum + item.total, 0);
@@ -199,7 +199,7 @@ export default async function SuratPage({ searchParams }: PageProps<"/persuratan
                           penduduk={penduduk}
                           syarat={syarat}
                           canManage={canManage}
-                          roleSlug={role?.slug ?? null}
+                          roleSlug={peran?.slug ?? null}
                           isSuperadmin={user.permissions.isSuperadmin}
                         />
                       </TableCell>

@@ -1,23 +1,14 @@
-import { resolveVillageId } from "@/features/desa/application/resolve-village";
+import { listPenduduk } from "@/features/penduduk/application/use-cases";
 import { toCsv } from "@/features/penduduk/domain/laporan-penduduk";
 import {
   calculateAge,
   GENDER_LABELS,
   LIFE_STATUS_LABELS,
   parseFilterPenduduk,
-  PENDUDUK_RESOURCE,
 } from "@/features/penduduk/domain/penduduk";
-import { listPenduduk } from "@/features/penduduk/infrastructure/penduduk-repository";
-import { hasPermission } from "@/features/rbac/application/authorization";
-import { getCurrentUser } from "@/lib/dal";
+import { isAppError } from "@/lib/errors";
 
 export async function GET(request: Request, _context: RouteContext<"/penduduk/ekspor">) {
-  const user = await getCurrentUser();
-  if (!user) return new Response("Sesi Anda telah berakhir.", { status: 401 });
-  if (!hasPermission(user.permissions, PENDUDUK_RESOURCE, "read")) {
-    return new Response("Anda tidak memiliki hak akses.", { status: 403 });
-  }
-
   const url = new URL(request.url);
   const filter = parseFilterPenduduk({
     q: url.searchParams.get("q") ?? undefined,
@@ -34,8 +25,18 @@ export async function GET(request: Request, _context: RouteContext<"/penduduk/ek
     umurMax: url.searchParams.get("umurMax") ?? undefined,
   });
 
-  const villageId = await resolveVillageId(user);
-  const result = await listPenduduk({ villageId, filter, page: 1, pageSize: 100000 });
+  let result;
+  try {
+    result = await listPenduduk({ filter, page: 1, pageSize: 100000 });
+  } catch (error) {
+    if (isAppError(error) && error.code === "FORBIDDEN") {
+      return new Response("Anda tidak memiliki hak akses.", { status: 403 });
+    }
+    if (isAppError(error) && error.code === "UNAUTHENTICATED") {
+      return new Response("Sesi Anda telah berakhir.", { status: 401 });
+    }
+    throw error;
+  }
 
   const rows = result.rows.map((row, index) => [
     String(index + 1),

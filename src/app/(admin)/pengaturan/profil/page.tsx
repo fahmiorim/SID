@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { setOtpLoginAktifAction } from "@/features/auth/actions";
-import { siapkanOtpLogin } from "@/features/auth/application/login-otp-use-cases";
-import { getOtpLoginAktif } from "@/features/auth/infrastructure/auth-repository";
+import {
+  getStatusOtpLoginAktif,
+  siapkanOtpLogin,
+} from "@/features/auth/application/login-otp-use-cases";
 import { getProfilSaya } from "@/features/pengguna/application/pengguna-use-cases";
 import { requireUser } from "@/lib/dal";
 
@@ -28,7 +30,7 @@ function Baris({ label, value }: { label: string; value: ReactNode }) {
 export default async function ProfilPage({ searchParams }: PageProps<"/pengaturan/profil">) {
   const profil = await getProfilSaya();
   const user = await requireUser();
-  const otpAktif = await getOtpLoginAktif(user.id);
+  const otpAktif = await getStatusOtpLoginAktif(user.id);
   const siapOtp = await siapkanOtpLogin(user.id);
   const params = await searchParams;
   const pesanOtp =

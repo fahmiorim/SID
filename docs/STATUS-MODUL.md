@@ -37,9 +37,9 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | Test E2E yang berinteraksi UI | 61 (24%) | Sisanya hanya memuat halaman, heading, body, atau HTTP |
 | Test E2E non-interaktif | 190 (76%) | Belum membuktikan aksi pengguna |
 | Aksi UI di E2E | 425 | Terpusat di sedikit berkas |
-| Impor infrastruktur langsung | 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas | Sisa dari `src/app/**` dan `src/features/*/presentation/**`; route `(public)/desa`, `api/publik`, dan `sitemap.ts` sudah 0 dan dijaga `lapisan-publik.test.ts` |
+| Impor infrastruktur langsung | 2 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Sisa: `api/pengaduan/lampiran` (validasi jalur media, dibiarkan) dan `api/penduduk/nik` (memakai `verifySession`, ditunda agar aturan izin tidak berubah) |
 
-Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Setelah pembersihan route publik, pengukuran ulang menemukan 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
+Angka ini adalah temuan struktur pada 9 November 2026, bukan persentase paritas dan bukan coverage. Pengukuran ulang setelah pemindahan ke use case menemukan 2 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -202,7 +202,7 @@ Catatan tabel:
 
 ### 1. Batas lapisan masih bocor
 
-Terdapat **31 impor infrastruktur + 2 impor `@/db`** dari `src/app/**` atau `src/features/*/presentation/**` pada 33 berkas. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan `src/app/sitemap.ts` sudah **0** dan dijaga `src/features/publik/application/lapisan-publik.test.ts`; sisa berada di admin/warga/API internal dan presentation. Ini melewati use case, sehingga otorisasi dan tenant tidak selalu ditegakkan di satu tempat.
+Tersisa **2 impor** dari `src/app/**` (`api/pengaduan/lampiran` dan `api/penduduk/nik`); `src/features/*/presentation/**` sudah **0**. Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan `src/app/sitemap.ts` juga 0 dan dijaga `src/features/publik/application/lapisan-publik.test.ts`. Route admin/warga/API lain sudah melewati use case yang memeriksa izin dan tenant.
 
 Sebaran terbesar:
 
@@ -227,7 +227,7 @@ Route publik desa, API publik, dan `sitemap.ts` sudah bersih; sisa pelanggaran b
 - Halaman admin yang diperiksa mengambil `villageId` dari sesi, bukan dari input klien.
 - Halaman publik yang diperiksa menyelesaikan desa dari host.
 - Use case pada modul yang diaudit memanggil `requirePermission`; halaman warga memakai `requireWarga`.
-- Namun 31 impor infrastruktur + 2 impor `@/db` pada 33 berkas sisa berarti tidak semua route melewati use case. Route tersebut **Belum diaudit** satu per satu untuk izin dan isolasi tenant, sehingga tidak boleh dianggap aman hanya karena halaman admin lain sudah benar.
+- Route admin/warga yang sudah dipindahkan ke use case belum diaudit ulang satu per satu untuk izin dan isolasi tenant; pemindahan ini tidak boleh dianggap bukti keamanan tanpa test otorisasi.
 
 ### 3. Provider eksternal
 
@@ -259,7 +259,7 @@ Hanya 61 dari 251 test E2E yang menjalankan aksi UI. Sebaliknya, beberapa alur b
 1. **Eksekusi suite E2E**: tidak dijalankan dalam audit ini karena memerlukan build produksi, server, dan seed. Hasil E2E historis tidak diverifikasi ulang.
 2. **Pemeriksaan visual seluruh 202 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
 3. **Provider eksternal nyata**: tidak diuji tanpa kredensial.
-4. **Isolasi tenant pada 33 berkas sisa impor langsung**: belum diperiksa route per route; route publik desa/API publik/sitemap sudah 0.
+4. **Isolasi tenant pada route yang dipindahkan**: belum diperiksa route per route dengan test; route publik desa/API publik/sitemap sudah 0.
 5. **Persentase paritas**: tidak dihitung; jumlah ID atau test bukan ukuran paritas.
 
 ## Kesimpulan

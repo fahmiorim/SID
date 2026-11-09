@@ -21,6 +21,7 @@ import {
   prosesPermohonan,
   tautkanSuratPermohonan,
 } from "@/features/layanan-mandiri/infrastructure/layanan-mandiri-repository";
+import { bacaMedia } from "@/features/publik/infrastructure/media-storage";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import {
@@ -83,6 +84,16 @@ export async function eksporPermohonanData(filter: FilterPermohonan = {}) {
     csv: buildPermohonanCsv({ namaDesa: desa?.namaDesa ?? null, rows, filter: labelFilter }),
     filename: namaBerkasPermohonan(desa?.namaDesa ?? null),
   };
+}
+
+/** Isi berkas syarat milik permohonan, untuk route unduhan operator. */
+export async function bacaBerkasSyaratAdmin(
+  permohonanId: number,
+  syaratId: number,
+): Promise<{ isi: Buffer; mime: string; namaAsli: string }> {
+  const berkas = await getBerkasSyaratAdminData(permohonanId, syaratId);
+  const isi = await bacaMedia(berkas.berkas);
+  return { isi, mime: berkas.mime, namaAsli: berkas.namaAsli };
 }
 
 /** Berkas syarat milik permohonan, untuk route unduhan operator. */

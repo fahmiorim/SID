@@ -5,6 +5,16 @@ import { hashVerificationToken, type SuratDetail } from "@/features/surat/domain
 import { findSuratByTokenHash } from "@/features/surat/infrastructure/surat-repository";
 
 /**
+ * Cari surat untuk API eksternal berdasarkan token; `villageId` berasal dari API key.
+ * Token yang tidak berbentuk hex 64 char langsung dianggap tidak ditemukan.
+ */
+export async function cariSuratEksternal(villageId: number, token: string) {
+  if (!/^[0-9a-f]{64}$/i.test(token)) return null;
+  const tokenHash = await hashVerificationToken(token.toLowerCase());
+  return findSuratByTokenHash(villageId, tokenHash);
+}
+
+/**
  * Use case publik: verifikasi surat via token (Fase 2E — perbaikan IDOR).
  *
  * `villageId` berasal dari host (aturan multi-tenant), token dari URL dicocokkan

@@ -4,6 +4,7 @@ import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { IDENTITAS_DESA_RESOURCE, type DesaFormInput } from "@/features/desa/domain/desa";
 import {
   getIdentitasDesa,
+  getNamaDesa,
   updateIdentitasDesa,
   type IdentitasDesa,
 } from "@/features/desa/infrastructure/desa-repository";
@@ -11,6 +12,11 @@ import { simpanBerkasMedia } from "@/features/publik/application/simpan-berkas-m
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import { requirePermission } from "@/lib/dal";
 import { notFound } from "@/lib/errors";
+
+/** Nama desa untuk tenant sesi; `null` bila desa tidak ditemukan. */
+export async function getNamaDesaUseCase(villageId: number): Promise<string | null> {
+  return getNamaDesa(villageId);
+}
 
 export async function getIdentitas(): Promise<IdentitasDesa | null> {
   const user = await requirePermission(IDENTITAS_DESA_RESOURCE, "read");

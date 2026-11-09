@@ -1,7 +1,8 @@
-import { getIdentitas } from "@/features/desa/application/get-identitas";
-import { getKeluargaPrintData } from "@/features/keluarga/application/use-cases";
+import {
+  buildKeluargaPdfData,
+  getKeluargaPrintData,
+} from "@/features/keluarga/application/use-cases";
 import { KELUARGA_RESOURCE } from "@/features/keluarga/domain/keluarga";
-import { buildKeluargaPdf } from "@/features/keluarga/infrastructure/keluarga-pdf";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
@@ -29,18 +30,10 @@ export async function GET(_request: Request, { params }: RouteContext<"/keluarga
   }
 
   try {
-    const [{ keluarga, anggota, wilayah }, desa] = await Promise.all([
+    const [pdf, { keluarga }] = await Promise.all([
+      buildKeluargaPdfData(familyId),
       getKeluargaPrintData(familyId),
-      getIdentitas(),
     ]);
-
-    const pdf = await buildKeluargaPdf({
-      desa,
-      nomorKk: keluarga.number,
-      alamat: keluarga.address,
-      wilayah,
-      anggota,
-    });
 
     const filename = `kartu-keluarga-${keluarga.number.replace(/[^a-zA-Z0-9._-]+/g, "-")}.pdf`;
 

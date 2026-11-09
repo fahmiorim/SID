@@ -42,6 +42,7 @@ import {
   updateDtks,
   upsertPengaturanProgram,
 } from "@/features/penduduk/infrastructure/dtks-repository";
+import { simpanUnggahanMedia as simpanBerkasLampiranDtks } from "@/features/publik/infrastructure/media-storage";
 
 export async function getDtksListUseCase(
   villageId: number,
@@ -122,6 +123,8 @@ export async function updateDtksUseCase(
  * total) supaya satu baris salah tidak menggagalkan seluruh impor. RTM yang
  * sudah punya DTKS pada versi kuisioner ini dilewati agar impor idempoten.
  */
+export { simpanBerkasLampiranDtks };
+
 export async function imporDtksUseCase(
   villageId: number,
   rows: readonly BarisImporDtks[],
