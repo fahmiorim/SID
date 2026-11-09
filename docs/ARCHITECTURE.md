@@ -109,14 +109,16 @@ Fitur yang sudah dibangun saat ini:
 
 - **`infrastructure` hanya dipanggil `application`.** Halaman & aksi memanggil
   *use case*, bukan *repository*.
-  **Utang teknis terukur (per Nov 2026):** 38 baris impor runtime di 37 berkas
-  `src/app/**` dan `src/features/*/presentation/**` masih langsung ke
-  `infrastructure`, ditambah 4 impor `import type`. Terbanyak: aksi & halaman
-  `kesehatan` (KIA, ibu hamil, pemantauan anak, posyandu), `media-storage`
-  publik, `surat-pdf`/`keluarga-pdf`, `rbac-repository` di layout admin, dan
-  `penduduk-repository` di halaman/ekspor. Angka ini harus **turun, bukan
-  bertambah**; ubah ke use case setiap kali berkas tersebut disentuh. Jangan
-  menyalin pola impor baru dari berkas yang masih melanggar.
+  **Utang teknis terukur (per Nov 2026):** 31 impor infrastruktur + 2 impor
+  `@/db` pada 33 berkas `src/app/**` dan `src/features/*/presentation/**`.
+  Route `src/app/(public)/desa/**`, `src/app/api/publik/**`, dan
+  `src/app/sitemap.ts` sudah **0** dan dijaga
+  `src/features/publik/application/lapisan-publik.test.ts`. Sisa terbanyak:
+  aksi & halaman `kesehatan` (KIA, ibu hamil, pemantauan anak, posyandu),
+  `statistik`, `penduduk`, `hubung-warga`, route warga, dan presentation
+  `kontak`/`pendapat`/`survey`. Angka ini harus **turun, bukan bertambah**;
+  ubah ke use case setiap kali berkas tersebut disentuh. Jangan menyalin pola
+  impor baru dari berkas yang masih melanggar.
 - **`domain` tidak mengimpor lapisan atas atau I/O.** Dilarang (dan saat ini 0
   pelanggaran): `application`, `infrastructure`, `presentation`, `@/db`,
   `server-only`, serta API Node. Konstanta lintas lapisan diletakkan di modul
