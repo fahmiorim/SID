@@ -9,6 +9,7 @@ import {
   daftarAnjunganPublik,
 } from "@/features/anjungan/application/anjungan-use-cases";
 import { AnjunganDeviceId } from "@/features/anjungan/presentation/components/anjungan-device-id";
+import { tataLetakKiosk } from "@/features/anjungan/presentation/tata-letak-kiosk";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 
 export const dynamic = "force-dynamic";
@@ -45,9 +46,10 @@ export default async function AnjunganPublicPage() {
 
   // Show only active items, ordered by urutan then id
   const items = await daftarAnjunganPublik(villageId);
+  const tata = tataLetakKiosk(perangkat?.orientasiLayar);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div className={`mx-auto ${tata.kelasLebar} px-4 py-8`}>
       <AnjunganDeviceId />
       <header className="mb-8 text-center">
         <h1 className="text-2xl font-bold">Anjungan Mandiri</h1>
@@ -56,8 +58,7 @@ export default async function AnjunganPublicPage() {
         </p>
         {perangkat ? (
           <p className="mt-1 text-xs text-muted-foreground">
-            Perangkat: {perangkat.nama} · Orientasi{" "}
-            {perangkat.orientasiLayar === 0 ? "potret" : "lanskap"}
+            Perangkat: {perangkat.nama} · Orientasi {tata.orientasi}
           </p>
         ) : null}
       </header>
@@ -70,7 +71,7 @@ export default async function AnjunganPublicPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className={tata.kelasGrid}>
           {items.map((item) => (
             <ServiceCard key={item.id} item={item} />
           ))}
