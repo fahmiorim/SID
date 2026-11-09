@@ -1,6 +1,11 @@
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import {
+  ambilStatusVerifikasiSurat,
+  buatSuratMenungguKadesUji,
+  hapusSuratDariId,
+} from "./support/database";
 import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
@@ -642,5 +647,46 @@ test(
 
     const setelahTolak = await alur.ambilSuratTerbaru();
     expect(setelahTolak?.status).toBe("draft");
+  },
+);
+
+test(
+  "verifikasi berjenjang: pembuat tidak boleh menyetujui tahap kades",
+  { timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const tujuan = `Uji verifikasi sendiri ${Date.now()}`;
+    const surat = await buatSuratMenungguKadesUji({
+      tujuan,
+      createdByUsername: "kades-e2e",
+    });
+
+    try {
+      await app.clearState();
+      await app.open("/masuk");
+      const kades = credentials.user("kades-e2e");
+      await masukDenganKredensial(screen, browser, "kades-e2e", kades.password);
+      await expect(browser).toHaveURL("/beranda");
+
+      await app.open(`/persuratan/surat?q=${encodeURIComponent(tujuan)}`);
+      const baris = screen.getByRole("row").filter({ hasText: tujuan });
+      await expect(baris).toBeVisible();
+
+      // Menu tetap tampil (RBAC dan urutan lolos); penolakan datang dari aturan
+      // own-submission di server, bukan sekadar menyembunyikan tombol.
+      await baris.getByRole("button", { name: `Aksi surat ${surat.typeName}` }).tap();
+      await screen.getByRole("menuitem", { name: "Verifikasi Kepala Desa" }).tap();
+      const dialog = screen.getByRole("alertdialog");
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole("button", { name: "Verifikasi" }).tap();
+      await expect(
+        dialog.getByText("Anda tidak boleh memverifikasi surat yang Anda buat sendiri."),
+      ).toBeVisible({ timeout: 15_000 });
+
+      const status = await ambilStatusVerifikasiSurat(surat.id);
+      expect(status?.status).toBe("verifikasi");
+      expect(status?.verifikasiKades ?? false).toBe(false);
+    } finally {
+      await hapusSuratDariId(surat.id);
+    }
   },
 );

@@ -47,7 +47,7 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 
 | Berkas E2E | Test | Test beraksi | Aksi | ID utama |
 |---|---:|---:|---:|---|
-| `verifikasi-berjenjang` | 7 | 7 | 74 | `OS-SUR-007` |
+| `verifikasi-berjenjang` | 8 | 8 | 77 | `OS-SUR-007` |
 | `permohonan-warga` | 5 | 5 | 42 | `OS-WGA-004`, `OS-WGA-005`, `OS-SUR-002` |
 | `gis-layer` | 4 | 4 | 35 | `OS-WIL-002`–`OS-WIL-005` |
 | `gis-pertanahan` | 7 | 1 | 33 | `OS-WIL-006` |
@@ -107,7 +107,7 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `warga-mandiri` | 1 | 24 | Login warga (captcha), pesan, lapak tambah/ubah/hapus + katalog publik, izin, verifikasi surat via token, dan registrasi mandiri yang disetujui admin (PIN tampil sekali) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
 | `pendapat` | 2 | 7 | Kirim publik tercatat, kiriman kedua ditolak, rekap + ekspor CSV, hapus admin | `OS-POP-014` |
 | `idm` | 3 | 16 | Indikator tiga dimensi + rekap, ekspor CSV, capaian SDGs isi/ubah/hapus, halaman publik tanpa sesi | `OS-GOV-006` |
-| `verifikasi-berjenjang` | 7 | 74 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
+| `verifikasi-berjenjang` | 8 | 77 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga, pembuat ditolak saat menyetujui tahap kades; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
 
 Bug produksi yang ditemukan dan diperbaiki:
 
@@ -123,7 +123,7 @@ Quality gate: `prettier --check tests src` bersih, `npm run lint` 0 error (2 war
 
 Sisa kelompok yang belum ditulis ulang menjadi alur interaktif: `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`, `sinergi`, `lapak-keranjang`, `pelanggan-kerjasama`.
 
-Gap domain yang dicatat tetapi belum diubah: `verifySuratData` tidak memanggil `validateVerification`, sehingga aturan own-submission di `src/features/surat/domain/verifikasi.ts` tidak ditegakkan oleh aksi verifikasi.
+Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
 ## Status per ID (111 ID)
 
@@ -169,7 +169,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-SUR-004 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-005 | Sebagian | E2E rekap/notifikasi. | `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-006 | Struktur lengkap; ada E2E interaktif | — | `arsip-nomor-surat` 1 test/1 interaktif; `surat-lengkap` 4 test/4 interaktif |
-| OS-SUR-007 | Struktur lengkap; ada E2E interaktif | Status dicek di DB + badge; nomor surat dan catatan penolakan terlihat pengguna | `verifikasi-berjenjang` 7 test/7 beraksi |
+| OS-SUR-007 | Struktur lengkap; ada E2E interaktif | Pembuat ditolak memverifikasi tahap sekdes/kades; status dicek di DB + badge, nomor surat dan catatan penolakan terlihat pengguna | `verifikasi-berjenjang` 8 test/8 beraksi |
 | OS-SUR-008 | Sebagian | E2E cetak per varian template. | `publik-verifikasi` 2 test/1 interaktif |
 | OS-SUR-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |

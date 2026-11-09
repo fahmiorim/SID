@@ -40,8 +40,8 @@ export interface SuratVerificationData {
   verifikasiOperator: boolean | null;
   verifikasiSekdes: boolean | null;
   verifikasiKades: boolean | null;
-  /** ID pembuat surat (untuk cek own-submission). */
-  createdBy?: number | null;
+  /** ID pengguna pembuat surat (untuk cek own-submission). */
+  createdBy?: string | null;
 }
 
 /**
@@ -114,7 +114,7 @@ export function getVerificationStepInfo(surat: SuratVerificationData): Verificat
  */
 export function validateVerification(
   userRoleSlug: string | null,
-  userId: number,
+  userId: string | number,
   surat: SuratVerificationData,
   step: VerificationStep,
   isSuperadmin: boolean = false,
@@ -128,8 +128,17 @@ export function validateVerification(
     };
   }
 
-  // 2. Cek own-submission: pembuat tidak boleh verifikasi surat sendiri
-  if (surat.createdBy !== null && surat.createdBy !== undefined && surat.createdBy === userId) {
+  // 2. Cek own-submission pada tahap persetujuan.
+  //
+  // Tahap operator dikecualikan: operator menyusun konsep lalu mengajukan dan
+  // memang memeriksa konsepnya sendiri (alur OpenSID). Larangan berlaku saat
+  // pembuat hendak menyetujui karyanya pada tahap sekdes/kades.
+  if (
+    step !== "operator" &&
+    surat.createdBy !== null &&
+    surat.createdBy !== undefined &&
+    surat.createdBy === String(userId)
+  ) {
     return {
       ok: false,
       errorCode: "own-submission",

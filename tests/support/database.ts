@@ -440,6 +440,80 @@ export async function buatSuratUjiDenganToken(input: {
   });
 }
 
+/**
+ * Buat surat uji yang sudah lolos operator + sekdes dan menunggu keputusan kades.
+ *
+ * `createdByUsername` menentukan pembuat konsep, dipakai untuk menguji larangan
+ * memverifikasi surat sendiri pada tahap persetujuan.
+ */
+export async function buatSuratMenungguKadesUji(input: {
+  tujuan: string;
+  createdByUsername: string;
+}): Promise<{ id: number; typeName: string }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [pembuat] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM users WHERE username = ? LIMIT 1",
+      [input.createdByUsername],
+    );
+    const pembuatId = pembuat[0] ? String(pembuat[0].id) : null;
+    if (!pembuatId) throw new Error(`Pengguna ${input.createdByUsername} tidak ditemukan.`);
+
+    const [types] = await pool.query<RowDataPacket[]>(
+      "SELECT id, name FROM letter_types WHERE village_id = ? ORDER BY id LIMIT 1",
+      [villageId],
+    );
+    const typeId = Number(types[0]?.id);
+    const typeName = String(types[0]?.name ?? "");
+    if (!typeId) throw new Error("Jenis surat desa E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO letters
+         (village_id, type_id, type_name, status, letter_date, year, purpose,
+          verifikasi_operator, verifikasi_sekdes, created_by)
+       VALUES (?, ?, ?, 'verifikasi', '2026-11-10', 2026, ?, 1, 1, ?)`,
+      [villageId, typeId, typeName, input.tujuan, pembuatId],
+    );
+    return { id: hasil.insertId, typeName };
+  });
+}
+
+/** Status verifikasi surat uji (untuk memastikan penolakan tidak mengubah data). */
+export async function ambilStatusVerifikasiSurat(id: number): Promise<{
+  status: string;
+  verifikasiOperator: boolean | null;
+  verifikasiSekdes: boolean | null;
+  verifikasiKades: boolean | null;
+} | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT status, verifikasi_operator, verifikasi_sekdes, verifikasi_kades FROM letters WHERE id = ? LIMIT 1",
+      [id],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      status: String(row.status),
+      verifikasiOperator:
+        row.verifikasi_operator === null ? null : Boolean(row.verifikasi_operator),
+      verifikasiSekdes: row.verifikasi_sekdes === null ? null : Boolean(row.verifikasi_sekdes),
+      verifikasiKades: row.verifikasi_kades === null ? null : Boolean(row.verifikasi_kades),
+    };
+  });
+}
+
+/** Hapus surat uji berdasarkan ID. */
+export async function hapusSuratDariId(id: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM letters WHERE id = ?", [id]);
+  });
+}
+
 /** Hapus surat uji berdasarkan token verifikasi. */
 export async function hapusSuratDariToken(token: string): Promise<void> {
   await denganPool(async (pool) => {

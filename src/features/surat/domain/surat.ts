@@ -529,6 +529,8 @@ export interface SuratListRow {
 }
 
 export interface SuratDetail extends SuratListRow {
+  /** ID pengguna yang membuat konsep (untuk larangan verifikasi sendiri). */
+  createdBy: string | null;
   content?: string | null;
   /** Jalur relatif berkas PDF hasil TTE (privat). */
   tteFile: string | null;

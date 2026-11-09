@@ -76,7 +76,7 @@ import {
   type VerificationStep,
 } from "@/features/surat/domain/surat";
 import { isiTerbilangDanHitung, terbilangIsi } from "@/features/surat/domain/terbilang";
-import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
+import { buildVerificationUrl, validateVerification } from "@/features/surat/domain/verifikasi";
 import {
   getJenisSurat,
   listJenisSurat,
@@ -691,22 +691,31 @@ export async function verifySuratData(
 
   const surat = await getSurat(villageId, id);
   if (!surat) throw notFound("Surat tidak ditemukan.");
-  if (surat.status !== "verifikasi") {
-    throw conflict("Surat belum diajukan untuk verifikasi.");
-  }
 
   const role = user.roleId === null ? null : await findRoleById(user.roleId);
-  if (!roleCanVerifyStep(step, role?.slug ?? null, user.permissions.isSuperadmin)) {
-    throw forbidden(`Tahap ${VERIFICATION_STEP_LABELS[step]} bukan wewenang role Anda.`);
-  }
+  const validasi = validateVerification(
+    role?.slug ?? null,
+    user.id,
+    {
+      id: surat.id,
+      status: surat.status,
+      verifikasiOperator: surat.verifikasiOperator,
+      verifikasiSekdes: surat.verifikasiSekdes,
+      verifikasiKades: surat.verifikasiKades,
+      createdBy: surat.createdBy,
+    },
+    step,
+    user.permissions.isSuperadmin,
+  );
 
-  if (!canVerifyStep(surat, step)) {
-    const next = nextVerificationStep(surat);
-    throw conflict(
-      next
-        ? `Verifikasi harus berurutan. Tahap berikutnya: ${VERIFICATION_STEP_LABELS[next]}.`
-        : "Surat ini sudah selesai diverifikasi.",
-    );
+  if (!validasi.ok) {
+    const pesan = validasi.error ?? "Verifikasi tidak dapat dilakukan.";
+    // Pelanggaran peran dan kepemilikan ditolak sebagai 403; tahap/urutan yang
+    // sudah tidak berlaku tetap 409 agar UI membedakan konflik status.
+    if (validasi.errorCode === "wrong-role" || validasi.errorCode === "own-submission") {
+      throw forbidden(pesan);
+    }
+    throw conflict(pesan);
   }
 
   if (step === "operator") {

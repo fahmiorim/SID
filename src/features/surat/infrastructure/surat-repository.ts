@@ -118,6 +118,7 @@ export async function getSurat(villageId: number, id: number): Promise<SuratDeta
   const [row] = await db
     .select({
       ...listColumns,
+      createdBy: letters.createdBy,
       content: letters.content,
       tteFile: letters.tteFile,
       verificationToken: letters.verificationToken,
@@ -300,6 +301,7 @@ export async function findSuratByTokenHash(
       logVerifikasi: letters.logVerifikasi,
       catatanVerifikasi: letters.catatanVerifikasi,
       tte: letters.tte,
+      createdBy: letters.createdBy,
     })
     .from(letters)
     .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
