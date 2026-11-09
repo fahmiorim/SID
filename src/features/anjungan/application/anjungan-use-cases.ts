@@ -1,6 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 
 import { requirePermission } from "@/lib/dal";
 import { AppError } from "@/lib/errors";
@@ -25,6 +26,17 @@ export async function daftarAnjungan(villageId: number, aktifOnly = false) {
 
 export async function daftarAnjunganPublik(villageId: number) {
   return listAnjungan(villageId, true);
+}
+
+/**
+ * Mencari perangkat kiosk berdasarkan UUID yang disimpan di browser kiosk.
+ * Hanya perangkat aktif dengan status `aktif` pada desa tersebut yang dianggap terdaftar.
+ */
+export async function cariPerangkatKiosk(villageId: number, uuid: string | null | undefined) {
+  const kunci = uuid?.trim();
+  if (!kunci || !z.string().uuid().safeParse(kunci).success) return null;
+  const rows = await listAnjungan(villageId, true);
+  return rows.find((row) => row.uuid === kunci) ?? null;
 }
 
 export async function tambahAnjungan(villageId: number, input: unknown) {

@@ -1,9 +1,13 @@
 import { Monitor, MonitorOff } from "lucide-react";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { daftarAnjunganPublik } from "@/features/anjungan/application/anjungan-use-cases";
+import {
+  cariPerangkatKiosk,
+  daftarAnjunganPublik,
+} from "@/features/anjungan/application/anjungan-use-cases";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +38,10 @@ export default async function AnjunganPublicPage() {
   const villageId = identitas?.id;
   if (!villageId) notFound();
 
+  // Perangkat kiosk dikenali dari UUID yang disimpan browser kiosk (cookie `anjungan_uuid`).
+  const cookieStore = await cookies();
+  const perangkat = await cariPerangkatKiosk(villageId, cookieStore.get("anjungan_uuid")?.value);
+
   // Show only active items, ordered by urutan then id
   const items = await daftarAnjunganPublik(villageId);
 
@@ -44,6 +52,12 @@ export default async function AnjunganPublicPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Layanan mandiri digital {identitas?.namaDesa ?? "desa"}
         </p>
+        {perangkat ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Perangkat: {perangkat.nama} · Orientasi{" "}
+            {perangkat.orientasiLayar === 0 ? "potret" : "lanskap"}
+          </p>
+        ) : null}
       </header>
 
       {items.length === 0 ? (

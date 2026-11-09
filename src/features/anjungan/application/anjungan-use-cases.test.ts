@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as dal from "@/lib/dal";
 
 import * as repo from "../infrastructure/anjungan-repository";
-import { tambahAnjungan, ubahAnjungan } from "./anjungan-use-cases";
+import { cariPerangkatKiosk, tambahAnjungan, ubahAnjungan } from "./anjungan-use-cases";
 
 vi.mock("@/lib/dal", () => ({ requirePermission: vi.fn() }));
 
@@ -42,6 +42,34 @@ describe("tambahAnjungan", () => {
     );
 
     expect(repo.createAnjungan).not.toHaveBeenCalled();
+  });
+});
+
+describe("cariPerangkatKiosk", () => {
+  const UUID_TERDAFTAR = "550e8400-e29b-41d4-a716-446655440000";
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(repo.listAnjungan).mockResolvedValue([
+      { id: 3, uuid: UUID_TERDAFTAR, nama: "Anjungan Lobi" } as never,
+    ]);
+  });
+
+  it("mengembalikan perangkat bila UUID terdaftar untuk desa", async () => {
+    const hasil = await cariPerangkatKiosk(7, UUID_TERDAFTAR);
+
+    expect(repo.listAnjungan).toHaveBeenCalledWith(7, true);
+    expect(hasil?.id).toBe(3);
+  });
+
+  it("mengembalikan null untuk UUID kosong atau tidak valid tanpa menyentuh database", async () => {
+    expect(await cariPerangkatKiosk(7, undefined)).toBeNull();
+    expect(await cariPerangkatKiosk(7, "bukan-uuid")).toBeNull();
+    expect(repo.listAnjungan).not.toHaveBeenCalled();
+  });
+
+  it("mengembalikan null bila UUID tidak terdaftar", async () => {
+    expect(await cariPerangkatKiosk(7, "6ba7b810-9dad-41d1-80b4-00c04fd430c8")).toBeNull();
   });
 });
 

@@ -176,7 +176,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-ANA-004 | Sebagian | E2E. | tidak dirujuk |
 | OS-ANA-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-ANA-006 | Sebagian | E2E. | tidak dirujuk |
-| OS-MOD-001 | Sebagian | Konfigurasi admin + daftar publik ada; UUID kosong kini dinormalisasi dan diisi otomatis, dengan test domain/use case. Daftar publik kini hanya menampilkan perangkat dengan `status = aktif` (perbaikan/nonaktif disembunyikan). Alur kiosk publik, pemakaian konfigurasi perangkat, dan E2E CRUD/tenant belum ada. | `modul-tambahan` 4 test/1 interaktif |
+| OS-MOD-001 | Sebagian | Konfigurasi admin + daftar publik ada; UUID kosong kini dinormalisasi dan diisi otomatis, dengan test domain/use case. Daftar publik kini hanya menampilkan perangkat dengan `status = aktif` (perbaikan/nonaktif disembunyikan). Halaman publik mengenali perangkat dari cookie `anjungan_uuid` (`cariPerangkatKiosk`, test unit) dan menampilkan orientasi layar. Belum ada: blokir permohonan tanpa akun (halaman permohonan belum ada), keyboard virtual, alur kiosk penuh, dan E2E CRUD/tenant. | `modul-tambahan` 4 test/1 interaktif |
 | OS-MOD-002 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-MOD-003 | Struktur terverifikasi | Rekap kehadiran `/kehadiran/rekap` + ekspor; use case memakai repository yang ada; test `kehadiran.test.ts` | tidak dirujuk |
 | OS-MOD-004 | Struktur lengkap; ada E2E interaktif | — | `lapak-keranjang` 1 test/1 interaktif |
