@@ -77,13 +77,11 @@ export async function updateBukuTamuAction(
 }
 
 export async function deleteBukuTamuAction(
-  _prev: ActionState<{ id: number } | null>,
-  formData: FormData,
+  id: number,
 ): Promise<ActionState<{ id: number } | null>> {
   try {
     const user = await getCurrentUser();
     if (!user?.villageId) return errorState("Desa tidak ditemukan.");
-    const id = Number(formData.get("id"));
     if (!id) return errorState("ID tidak valid.");
     await hapusBukuTamu(user.villageId, id);
     revalidatePath("/buku-tamu");

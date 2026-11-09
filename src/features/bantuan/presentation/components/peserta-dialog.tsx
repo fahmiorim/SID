@@ -298,37 +298,42 @@ function PesertaContent({ program }: { program: BantuanListRow }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
+          {state.peserta.length === 0
+            ? "Belum ada peserta pada program ini."
+            : `${state.peserta.length} peserta terdaftar.`}
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <PesertaImportDialog program={program} onImported={muatUlang} />
+          {state.peserta.length > 0 ? (
+            <form
+              action={async (formData) => {
+                const res = await deleteAllPesertaAction(idleActionState, formData);
+                if (res.status === "success") {
+                  toast.success(res.message);
+                  setReloadKey((key) => key + 1);
+                } else if (res.status === "error") {
+                  toast.error(res.message);
+                }
+              }}
+            >
+              <input type="hidden" name="programId" value={program.id} />
+              <Button type="submit" variant="destructive" size="sm">
+                <Trash2 className="size-4" />
+                Hapus semua peserta
+              </Button>
+            </form>
+          ) : null}
+        </div>
+      </div>
+
       {state.peserta.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">
-          Belum ada peserta pada program ini.
+          Tambahkan peserta secara manual atau impor beberapa sekaligus dari berkas CSV/XLSX.
         </p>
       ) : (
         <div className="max-h-72 overflow-auto rounded-lg border">
-          <div className="flex items-center justify-between gap-2 p-2">
-            <p className="text-xs text-muted-foreground">
-              {state.peserta.length} peserta terdaftar.
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <PesertaImportDialog program={program} onImported={muatUlang} />
-              <form
-                action={async (formData) => {
-                  const res = await deleteAllPesertaAction(idleActionState, formData);
-                  if (res.status === "success") {
-                    toast.success(res.message);
-                    setReloadKey((key) => key + 1);
-                  } else if (res.status === "error") {
-                    toast.error(res.message);
-                  }
-                }}
-              >
-                <input type="hidden" name="programId" value={program.id} />
-                <Button type="submit" variant="destructive" size="sm">
-                  <Trash2 className="size-4" />
-                  Hapus semua peserta
-                </Button>
-              </form>
-            </div>
-          </div>
           <Table>
             <TableHeader>
               <TableRow>

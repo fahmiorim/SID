@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -38,10 +38,8 @@ export function BukuTamuFormDialog({ open, onOpenChange, item }: BukuTamuFormDia
     isEdit ? updateBukuTamuAction : createBukuTamuAction,
     createIdleActionState<{ id: number } | null>(),
   );
-  const [deleteState, deleteAction, isDeletePending] = useActionState(
-    deleteBukuTamuAction,
-    createIdleActionState<{ id: number } | null>(),
-  );
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, startDelete] = useTransition();
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
 
   useEffect(() => {
@@ -51,12 +49,19 @@ export function BukuTamuFormDialog({ open, onOpenChange, item }: BukuTamuFormDia
     }
   }, [state, onOpenChange]);
 
-  useEffect(() => {
-    if (deleteState.status === "success") {
-      toast.success(deleteState.message);
-      onOpenChange(false);
-    }
-  }, [deleteState, onOpenChange]);
+  function handleDelete() {
+    if (!item) return;
+    setDeleteError(null);
+    startDelete(async () => {
+      const result = await deleteBukuTamuAction(item.id);
+      if (result.status === "success") {
+        toast.success(result.message);
+        onOpenChange(false);
+      } else if (result.status === "error") {
+        setDeleteError(result.message);
+      }
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -146,21 +151,30 @@ export function BukuTamuFormDialog({ open, onOpenChange, item }: BukuTamuFormDia
             <Textarea id="keterangan" name="keterangan" defaultValue={item?.keterangan ?? ""} />
           </div>
 
+          {deleteError ? (
+            <Alert variant="destructive">
+              <AlertCircle />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          ) : null}
+
           <DialogFooter className="flex justify-between">
             {isEdit && item ? (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <Button type="submit" variant="destructive" disabled={isDeletePending}>
-                  {isDeletePending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Menghapus...
-                    </>
-                  ) : (
-                    "Hapus"
-                  )}
-                </Button>
-              </form>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isDeleting}
+                onClick={handleDelete}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  "Hapus"
+                )}
+              </Button>
             ) : (
               <div />
             )}

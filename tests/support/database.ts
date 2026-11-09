@@ -238,6 +238,31 @@ export async function hapusBeritaDariJudul(judul: string): Promise<void> {
   });
 }
 
+/** Status simpanan berita uji; dipakai untuk memastikan publikasi sudah tersimpan. */
+export async function bacaBeritaDariJudul(
+  judul: string,
+): Promise<{ status: string; terbitPada: Date | null } | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT status, terbit_pada FROM berita WHERE judul = ? LIMIT 1",
+      [judul],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      status: String(row.status),
+      terbitPada: row.terbit_pada ? new Date(row.terbit_pada) : null,
+    };
+  });
+}
+
+/** Hapus dokumen publik uji berdasarkan nama. */
+export async function hapusDokumenDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM dokumen_publik WHERE nama = ?", [nama]);
+  });
+}
+
 /** Hapus album galeri uji berdasarkan nama. */
 export async function hapusAlbumGaleriDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
@@ -702,5 +727,58 @@ export async function hapusIdmTahun(tahun: number): Promise<void> {
 export async function hapusLaporanDokumenDariJudul(judul: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM keuangan_laporan WHERE judul = ?", [judul]);
+  });
+}
+
+/** Buat penduduk dengan tanggal lahir cukup umur agar muncul pada DPT. */
+export async function buatPendudukDptUji(nik: string, nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    await pool.execute(
+      `INSERT INTO residents (village_id, national_id, name, gender, birth_date, address)
+       VALUES (?, ?, ?, 'male', '1990-01-01', 'Jl. DPT E2E')`,
+      [villageId, nik, nama],
+    );
+  });
+}
+
+/** Hapus pemilihan DPT uji berdasarkan judul. */
+export async function hapusPemilihanDptDariJudul(judul: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM elections WHERE judul = ?", [judul]);
+  });
+}
+
+/** Hapus posyandu uji berdasarkan nama. */
+export async function hapusPosyanduDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM posyandu WHERE nama = ?", [nama]);
+  });
+}
+
+/** Hapus KIA uji beserta pemantauan ibu hamil dan anak yang terkait. */
+export async function hapusKesehatanDariNoKia(noKia: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM kia WHERE no_kia = ?", [
+      noKia,
+    ]);
+    for (const row of rows) {
+      const id = Number(row.id);
+      await pool.execute("DELETE FROM bulanan_anak WHERE kia_id = ?", [id]);
+      await pool.execute("DELETE FROM ibu_hamil WHERE kia_id = ?", [id]);
+      await pool.execute("DELETE FROM kia WHERE id = ?", [id]);
+    }
+  });
+}
+
+/** Hapus buku tamu uji berdasarkan nama. */
+export async function hapusBukuTamuDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM buku_tamu WHERE nama = ?", [nama]);
   });
 }

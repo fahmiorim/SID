@@ -18,7 +18,12 @@ export async function daftarBukuTamu(villageId: number) {
     const t = item.tanggal;
     const tanggalStr =
       typeof t === "string" ? t : t instanceof Date ? t.toISOString().split("T")[0] : "";
-    return { ...item, tanggal: tanggalStr as string };
+    return {
+      ...item,
+      tanggal: tanggalStr as string,
+      jamMasuk: item.jamMasuk?.slice(0, 5) ?? null,
+      jamKeluar: item.jamKeluar?.slice(0, 5) ?? null,
+    };
   });
 }
 
@@ -31,6 +36,8 @@ export async function tambahBukuTamu(villageId: number, input: unknown) {
     instansi: parsed.instansi ?? null,
     keperluan: parsed.keperluan ?? null,
     tanggal: new Date(parsed.tanggal),
+    jamMasuk: parsed.jamMasuk || null,
+    jamKeluar: parsed.jamKeluar || null,
     keterangan: parsed.keterangan ?? null,
   });
   return { id };
@@ -44,6 +51,8 @@ export async function ubahBukuTamu(villageId: number, id: number, input: unknown
     instansi: parsed.instansi ?? null,
     keperluan: parsed.keperluan ?? null,
     tanggal: new Date(parsed.tanggal),
+    jamMasuk: parsed.jamMasuk || null,
+    jamKeluar: parsed.jamKeluar || null,
     keterangan: parsed.keterangan ?? null,
   });
 }

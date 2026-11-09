@@ -16,8 +16,8 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 ## Status audit
 
 - 111 ID katalog, 102 baris register historis, 9 ID tanpa baris register yang kini dipetakan eksplisit.
-- 52 folder fitur, 183 file test unit/integrasi, 204 `page.tsx`, 78 `route.ts`, 57 berkas E2E.
-- Hitung ulang 10 November 2026: 57 berkas, **178 deklarasi `test()`**, **89** memuat aksi UI literal, 89 non-interaktif, 706 aksi literal. Runner menjalankan **180 test** karena perluasan fixture/parameter; aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
+- 52 folder fitur, 183 file test unit/integrasi, 204 `page.tsx`, 78 `route.ts`, 58 berkas E2E.
+- Hitung ulang 10 November 2026: 58 berkas, **179 test**; rincian kedalaman aksi per berkas dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
 - 8 ID berstatus ✅ historis punya E2E interaktif, 8 ID hanya smoke, 32 ID berstatus ✅ historis tanpa rujukan E2E.
 - 0 impor infrastruktur di `src/app/**` dan `src/features/*/presentation/**`; route publik desa, API publik, dan sitemap juga 0.
 - Tidak ada ID yang dinyatakan selesai penuh. P0 selesai 10 November 2026 dengan bukti E2E Anjungan 2/2 dan uji adapter/route; suite penuh 57 berkas/180 test dijalankan terhadap build produksi, dengan satu flake berbeda pada dua run paralel yang keduanya lulus saat dijalankan sendiri. Pengujian provider nyata dan pemeriksaan visual seluruh halaman belum dilakukan.
@@ -25,6 +25,8 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 - **Anjungan (9 November 2026):** UUID kosong tidak lagi ditolak; schema menormalisasi string kosong menjadi `null` dan use case mengisi `randomUUID()`. Halaman publik memakai `daftarAnjunganPublik`, bukan repository langsung. Test domain/use case 7 lulus. Daftar publik hanya menampilkan `status = aktif`; browser kiosk membuat UUID sendiri di `localStorage`, mencerminkannya ke cookie `anjungan_uuid`, dan halaman menampilkan nama perangkat terdaftar. Orientasi layar memilih tata letak (potret lebih sempit). Permohonan surat tanpa akun selesai: halaman `permohonan` digerbangi perangkat + `permohonanSuratTanpaAkun`, login NIK + tanggal lahir, sesi guest token HMAC (cookie HttpOnly 30 menit), keyboard virtual, dan pengajuan berbagi `simpanPermohonanSurat` dengan warga; unit test anjungan 31 lulus. Status `OS-MOD-001` tetap **Sebagian** sampai E2E CRUD/tenant dan E2E kiosk berjalan.
 
 ### E2E perilaku (pembaruan 10 November 2026)
+
+**P1 selesai 10 November 2026.** Tujuh berkas E2E dijalankan terfokus terhadap build produksi: 32 test lulus, termasuk DPT lewat UI, KIA/ibu hamil/pemantauan anak, buku tamu CRUD, peta dan statistik publik, proyek pembangunan di halaman publik, cetak album galeri, serta impor peserta bantuan. Dua bug produksi ditemukan dan diperbaiki: jam masuk/keluar buku tamu tidak pernah dikirim ke repository, dan impor peserta gagal validasi karena field kartu opsional tidak dinormalisasi. P2 mulai dari impor peserta (`OS-POP-012`) dan cetak album (`OS-WEB-004`).
 
 **Pembaruan 10 November 2026:** suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start`, bukan `next dev`) dengan 6 worker: **56 berkas, 178 test, 178 lulus dalam 146,68 detik**. Kegagalan yang berpindah-pindah pada dev server hilang setelah pindah ke server produksi. Uji yang memilih penduduk `option` pertama diganti penduduk seed `Warga Uji E2E` agar tidak bertabrakan dengan fixture paralel. Dialog pembatalan permohonan warga (`OS-WGA-004`) menutup setelah Server Action sukses; penantian simpan tema/inventaris/bantuan/RTM/pengaduan diperbaiki agar tidak memotong request.
 
@@ -36,7 +38,7 @@ Bug produksi yang ditemukan dan diperbaiki: `optionalDigits` di `src/lib/forms.t
 
 Verifikasi 9 November 2026 (historis): `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console`), `npm run check` lulus, suite E2E 190/194. Hasil ini digantikan pembaruan 10 November 2026: suite produksi 178/178 lulus dan `npm run build` lulus.
 
-Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Catatan `dtks-impor`: berkas CSV dibuat dari RTM fixture di `tests/support/database.ts`; alur menguji ringkasan impor, baris hasil, metadata/anggota di dialog Kelola, perubahan status, dan impor ulang `0 formulir dibuat; 1 dilewati`.
 
@@ -60,21 +62,21 @@ Urutan berdasarkan risiko dan jumlah ID yang bergantung pada berkas tersebut.
 
 | # | Berkas E2E | Kondisi sekarang | ID yang terdampak | Skenario minimum |
 |---|---|---|---|---|
-| 1 | `tests/penduduk.e2e.ts` | **Selesai 9 November 2026:** 8 test/26 aksi (CRUD, detail/cetak, filter, CSV, DPT, suplemen, DTKS) | `OS-POP-001`, `OS-POP-002` | Tambah → cari/filter → detail → ubah → ekspor/cetak |
-| 2 | `tests/rtm-dpt.e2e.ts` | **Sebagian selesai:** 2 test/22 aksi (RTM + anggota, laporan rekap); DPT belum | `OS-POP-004`, `OS-POP-005`, `OS-POP-007` | CRUD RTM, anggota, DPT, rekap, tolak duplikat |
+| 1 | `tests/penduduk.e2e.ts` | **Selesai 10 November 2026:** 8 test (CRUD, detail/cetak, filter, CSV, DPT aktif/filter/ekspor/rekap, suplemen, DTKS) | `OS-POP-001`, `OS-POP-002`, `OS-POP-005` | Tambah → cari/filter → detail → ubah → ekspor/cetak |
+| 2 | `tests/rtm-dpt.e2e.ts` | **RTM selesai 9 November 2026:** 2 test/22 aksi; alur DPT ditutup di `penduduk` | `OS-POP-004`, `OS-POP-005`, `OS-POP-007` | CRUD RTM, anggota, DPT, rekap, tolak duplikat |
 | 3 | `tests/keuangan.e2e.ts` | **Selesai 9 November 2026:** 5 test/18 aksi (APBDes, laporan + filter bidang, triwulan, SiLPA, rekonsiliasi) | `OS-FIN-001`–`OS-FIN-003` | Input pagu/realisasi → laporan → ekspor; nilai tersimpan dicek dari UI/DB |
 | 4 | `tests/warga-mandiri.e2e.ts` | **Selesai 10 November 2026:** 1 test/24 aksi (login captcha, pesan, lapak, izin, verifikasi surat, registrasi mandiri) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` | Login, kirim pesan, verifikasi surat, CRUD lapak, ajukan izin |
 | 5 | `tests/pemerintahan.e2e.ts` | **Selesai 9 November 2026:** `pemerintahan` 3 test/19 aksi dan `kelompok-laporan` 3 test/22 aksi | `OS-GOV-002`–`OS-GOV-005` | CRUD perangkat/lembaga/kelompok, laporan anggota, ekspor |
-| 6 | `tests/anjungan.e2e.ts` + `tests/modul-tambahan.e2e.ts` | **Anjungan selesai 10 November 2026:** 2 test CRUD/tenant/kiosk; `modul-tambahan` tetap 4 test/1 interaktif untuk buku tamu dan rekap | `OS-MOD-001`, `OS-MOD-002`, `OS-MOD-003` | CRUD/tenant/kiosk anjungan; buku tamu; rekap kehadiran |
-| 7 | `tests/web-publik.e2e.ts` | **Sebagian selesai:** `web-publik` 15 test/4 aksi, `web-berita-galeri` 3/16, `umpan-balik` 2/8, `survei-publik` 2/1 | `OS-WEB-001`–`OS-WEB-019` | Beranda, berita, galeri, dokumen, statistik, kontak, umpan balik |
-| 8 | `tests/kesehatan.e2e.ts` | Belum: 2 test/0 aksi | `OS-POP-008` | Input KIA/ibu hamil/pemantauan anak dan ekspor |
+| 6 | `tests/anjungan.e2e.ts` + `tests/modul-tambahan.e2e.ts` | **Selesai 10 November 2026:** anjungan 2 test CRUD/tenant/kiosk; `modul-tambahan` 2 test/1 interaktif untuk buku tamu dan rekap | `OS-MOD-001`, `OS-MOD-002`, `OS-MOD-003` | CRUD/tenant/kiosk anjungan; buku tamu; rekap kehadiran |
+| 7 | `tests/web-publik.e2e.ts` | **Selesai untuk P1 10 November 2026:** `web-publik` 15 test mencakup peta + cetak, statistik, inventaris, bantuan, suplemen, IDM, analisis; `web-berita-galeri` 3 test termasuk cetak album; `umpan-balik` 2/8; `survei-publik` 2/1 | `OS-WEB-001`–`OS-WEB-019` | Beranda, berita, galeri, dokumen, statistik, kontak, umpan balik |
+| 8 | `tests/kesehatan.e2e.ts` | **Selesai 10 November 2026:** 2 test/1 interaktif (posyandu, KIA, ibu hamil, anak, ekspor CSV) | `OS-POP-008` | Input KIA/ibu hamil/pemantauan anak dan ekspor |
 
 ### P2 — gap fungsional per ID
 
 Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MODUL.md`. Kelompok yang paling sering muncul:
 
-- **Keluaran belum diuji E2E:** impor peserta (`OS-POP-012`), cetak album galeri (`OS-WEB-004`). Ekspor PDF statistik, laporan bantuan, buku pembangunan, dan ekspor kelompok sudah beraksi.
-- **Alur publik belum lengkap:** statistik (`OS-WEB-006`), peta (`OS-WEB-007`), pembangunan (`OS-WEB-008`), inventaris (`OS-WEB-011`), suplemen (`OS-WEB-012`), analisis publik (`OS-WEB-013`), dan cakupan tema (`OS-WEB-017`). Berita, galeri, dokumen, pengaduan/lacak, umpan balik, dan tema (`OS-WEB-016`) sudah beraksi.
+- **Keluaran P2 yang sudah diuji 10 November 2026:** impor peserta (`OS-POP-012`) diuji lewat CSV pada program kosong + impor ulang idempoten; cetak album galeri (`OS-WEB-004`) dibuktikan memanggil `window.print`. Ekspor PDF statistik, laporan bantuan, buku pembangunan, dan ekspor kelompok sudah beraksi.
+- **Alur publik belum lengkap:** statistik (`OS-WEB-006`), peta (`OS-WEB-007`), pembangunan (`OS-WEB-008`), inventaris (`OS-WEB-011`), suplemen (`OS-WEB-012`), analisis publik (`OS-WEB-013`), dan cakupan tema (`OS-WEB-017`). Peta, statistik, inventaris, pembangunan, berita, galeri, dokumen, pengaduan/lacak, umpan balik, dan tema (`OS-WEB-016`) kini punya bukti interaksi; kedalaman tiap ID tetap dicatat di `STATUS-MODUL.md`.
 - **GIS:** cetak peta dan CRUD layer (`OS-WIL-002`–`OS-WIL-008`); E2E interaktif sudah mencakup layer, pertanahan (persil/CDESA/mutasi), peta cetak, dan simbol.
 - **Analisis/survei:** kategori/indikator/survei dan alur jawaban warga → rekap admin sudah beraksi (`OS-ANA-001`–`OS-ANA-006`); sisa laporan skor dan formulir eksternal.
 - **Operasional:** preferensi menu, pengaturan, OTP, inbox email, cakupan audit, restore, dan API publik (`OS-OPS-002`–`OS-OPS-007`, `OS-OPS-011`); plugin (`OS-OPS-008`) sudah beraksi.
@@ -99,9 +101,9 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 ## Verifikasi dokumen ini
 
 - `prettier --check .`: lulus (10 November 2026).
-- `npm run lint`: 0 error, 2 warning `no-console` di `tests/umpan-balik.e2e.ts`.
+- `npm run lint`: 0 error (2 warning `no-console` historis di `tests/umpan-balik.e2e.ts`).
 - `npm run test`: 183 berkas / 1.474 test lulus.
 - `npm run check` (typegen + tsc + ESLint + format + unit): lulus.
-- Suite E2E penuh: 57 berkas / 180 test terhadap build produksi (`npm run build` + `npm start`). Dua run paralel 6 worker menghasilkan 179/180 dengan flake berbeda (`dtks-impor`, `web-berita-galeri`); keduanya lulus sendiri. Test P0 Anjungan 2/2 lulus.
+- Suite E2E penuh: 58 berkas / 179 test terhadap build produksi (`npm run build` + `npm start`). Run terakhir 178 lulus; satu flake `surat-flow` (baris PDF hilang karena data antar-test) lulus 7/7 saat berkasnya dijalankan sendiri. Tujuh berkas P1/P2 terfokus lulus 32/32.
 - `npm run build`: lulus.
 

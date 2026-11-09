@@ -80,13 +80,23 @@ test(
 );
 
 /**
- * Katalog: OS-WEB-006 — Peta publik
+ * Katalog: OS-WEB-006 — Peta publik dan cetak peta.
  */
-test("peta publik: peta Leaflet tampil", { timeout: 60_000 }, async ({ app, browser }) => {
-  await app.open("/desa/peta");
-  await expect(browser.locator("h1")).toContainText("Peta Desa");
-  await expect(browser.locator(".leaflet-container")).toBeVisible();
-});
+test(
+  "peta publik: peta Leaflet dan cetak peta",
+  { timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    await app.open("/desa/peta");
+    await expect(browser.locator("h1")).toContainText("Peta Desa");
+    await expect(browser.locator(".leaflet-container")).toBeVisible();
+    await expect(browser.locator("body")).toContainText(/layer polygon|area|garis|titik/);
+
+    await screen.getByRole("link", { name: "Cetak Peta" }).tap();
+    await expect(browser).toHaveURL(/\/desa\/peta\/cetak$/);
+    await expect(browser.locator("h1")).toContainText("Peta Desa");
+    await expect(screen.getByRole("link", { name: "Kembali ke peta" })).toBeVisible();
+  },
+);
 
 /**
  * Katalog: OS-WEB-007 — Pembangunan publik
@@ -128,13 +138,15 @@ test(
 );
 
 /**
- * Katalog: OS-WEB-011/012/013 — Inventaris, bantuan, suplemen, IDM/SDGs, survei
+ * Katalog: OS-WEB-006/011/012/013 — Statistik, inventaris, bantuan, suplemen,
+ * IDM/SDGs, dan analisis publik.
  */
 test(
-  "halaman publik lain: inventaris, bantuan, suplemen, IDM, dan survei",
+  "halaman publik lain: statistik, inventaris, bantuan, suplemen, IDM, dan survei",
   { timeout: 120_000 },
-  async ({ app, browser }) => {
+  async ({ app, screen, browser }) => {
     for (const [path, judul] of [
+      ["/desa/statistik", "Statistik Desa"],
       ["/desa/inventaris", "Inventaris"],
       ["/desa/bantuan", "Program Bantuan Sosial"],
       ["/desa/suplemen", "Suplemen Data Desa"],
@@ -144,6 +156,16 @@ test(
       await app.open(path);
       await expect(browser.locator("h1")).toContainText(judul);
     }
+
+    await app.open("/desa/statistik");
+    await expect(screen.getByText("Total Penduduk")).toBeVisible();
+    await expect(screen.getByText("Realisasi APBDes Per Triwulan")).toBeVisible();
+
+    await app.open("/desa/inventaris");
+    await screen.getByLabel("Cari barang").fill("barang-tidak-ada-e2e");
+    await screen.getByRole("button", { name: "Terapkan" }).tap();
+    await expect(browser).toHaveURL(/q=barang-tidak-ada-e2e/);
+    await expect(screen.getByText("0 barang cocok dengan filter.")).toBeVisible();
   },
 );
 

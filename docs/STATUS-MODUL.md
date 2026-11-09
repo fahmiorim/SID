@@ -32,8 +32,8 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | File test unit/integrasi di fitur | 183 | Bukan jumlah skenario |
 | Halaman `page.tsx` | 204 | Belum dikelompokkan admin/publik/warga |
 | Route handler `route.ts` | 78 | Termasuk API publik/eksternal |
-| Berkas E2E | 57 | `tests/**/*.e2e.ts` |
-| Test E2E | 178 deklarasi | Runner menjalankan **180 test** karena perluasan fixture/parameter |
+| Berkas E2E | 58 | `tests/**/*.e2e.ts` |
+| Test E2E | 179 | Runner menjalankan **179 test**; rincian aksi per berkas ada di tabel kedalaman E2E |
 | Test E2E yang berinteraksi UI | 89 (50%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
 | Test E2E non-interaktif | 89 (50%) | Belum membuktikan aksi pengguna secara langsung |
 | Aksi UI literal di E2E | 706 | Bukan coverage dan bukan bukti paritas |
@@ -68,14 +68,24 @@ Contoh berkas yang masih perlu diperluas (10 November 2026):
 
 | Berkas E2E | Test | Test beraksi | Temuan |
 |---|---:|---:|---|
-| `modul-tambahan` | 4 | 1 | CRUD anjungan sebagian; buku tamu dan rekap kehadiran belum |
-| `kesehatan` | 2 | 0 | Tidak menguji input data kesehatan |
+| `modul-tambahan` | 2 | 1 | Buku tamu CRUD lewat UI (termasuk jam masuk/keluar); rekap kehadiran dicek sebagai smoke |
+| `kesehatan` | 2 | 1 | Posyandu → KIA → ibu hamil → pemantauan anak lewat dialog, lalu ekspor CSV; satu test publik |
 
 ## Pembaruan 10 November 2026 — P0 dan suite E2E build produksi
 
 **P0 selesai 10 November 2026.** Anjungan (`OS-MOD-001`) sekarang memiliki E2E CRUD admin, ubah aktif/nonaktif, isolasi tenant, hapus, serta alur kiosk lengkap (verifikasi NIK/tanggal lahir salah, login benar, pilih surat, kirim, nomor antrian, baris DB, perangkat tanpa izin 404). Dua bug ditemukan lewat E2E: `?jenis` kosong dianggap `0` sehingga halaman 404 setelah login, dan toast hapus hilang karena revalidasi melepas komponen; keduanya diperbaiki. Uji integrasi repository menambah bukti update/delete lintas desa. Adapter notifikasi dan BSrE diuji dengan server HTTP lokal (sukses, HTTP gagal, respons JSON, mode nonaktif), dan route lampiran pengaduan, lookup NIK, TTE eksternal, serta surat eksternal mendapat test otorisasi/tenant. Kredensial provider nyata tetap belum tersedia.
 
-Suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start`, bukan `next dev`): **57 berkas, 180 test**. Dua run paralel 6 worker masing-masing menghasilkan **179/180** dengan flake berbeda (`dtks-impor`, lalu `web-berita-galeri`); keduanya lulus saat dijalankan sendiri. Test P0 Anjungan lulus **2/2**. Kegagalan yang semula berpindah-pindah pada dev server hilang setelah pindah ke server produksi. Uji yang memilih `option` penduduk pertama diganti penduduk seed `Warga Uji E2E` agar tidak bertabrakan dengan fixture paralel yang dibersihkan. Dialog pembatalan permohonan warga (`OS-WGA-004`) kini menutup setelah Server Action sukses, dan penantian simpan pada tema, inventaris, bantuan, RTM, serta pengaduan tidak lagi memotong request.
+Suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start`, bukan `next dev`): **58 berkas, 179 test**. Run terakhir menghasilkan **178 lulus**; satu flake `surat-flow` (baris PDF hilang karena data antar-test) lulus **7/7** saat berkasnya dijalankan sendiri. Test P0 Anjungan lulus **2/2**. Kegagalan yang semula berpindah-pindah pada dev server hilang setelah pindah ke server produksi. Uji yang memilih `option` penduduk pertama diganti penduduk seed `Warga Uji E2E` agar tidak bertabrakan dengan fixture paralel yang dibersihkan. Dialog pembatalan permohonan warga (`OS-WGA-004`) kini menutup setelah Server Action sukses, dan penantian simpan pada tema, inventaris, bantuan, RTM, serta pengaduan tidak lagi memotong request.
+
+## Pembaruan 10 November 2026 — P1 dan P2
+
+**P1 selesai 10 November 2026.** Tujuh berkas E2E terfokus dijalankan terhadap build produksi: **32/32 test lulus**. Bukti perilaku: DPT membuat pemilihan aktif, menolak pemilihan aktif kedua, memfilter pemilih, mengekspor CSV, dan membuka rekap (`OS-POP-005`); kesehatan membuat posyandu, KIA, ibu hamil, pemantauan anak, lalu mengekspor CSV (`OS-POP-008`); buku tamu menambah/mengubah/menghapus dengan jam masuk tersimpan (`OS-MOD-002`); peta, statistik, inventaris, dan pembangunan dibaca di halaman publik; berita tampil dan dicari; galeri menampilkan album.
+
+**P2 mulai 10 November 2026.** Impor peserta bantuan (`OS-POP-012`) diuji dari program kosong: tombol Impor tersedia, CSV menautkan NIK, baris peserta muncul, dan impor ulang menghasilkan `0 peserta ditambahkan; 1 sudah terdaftar`. Cetak album galeri (`OS-WEB-004`) dibuktikan memanggil `window.print`. Test tidak menambah assertion palsu; data dibersihkan di `finally`.
+
+Bug produksi yang diperbaiki: (1) form pemilihan DPT memakai `value` tanpa `onChange` sehingga tidak bisa diisi, kini `defaultValue` + `key`; (2) jam masuk/keluar buku tamu dibaca dari form tetapi tidak pernah diteruskan ke repository, dan tampilan kini dinormalisasi `HH:MM`; (3) dialog buku tamu memiliki form bersarang dan tombol hapus mengirim objek, kini satu form + aksi menerima `id`; (4) impor peserta melewatkan field kartu opsional sehingga `pesertaFormSchema.parse` melempar ZodError, kini field kosong dinormalisasi sebelum dilengkapi dari data master; (5) tombol Impor peserta kini tetap tersedia saat program belum punya peserta.
+
+Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/kesehatan.e2e.ts` (2/1), `tests/modul-tambahan.e2e.ts` (2/1), `tests/penduduk.e2e.ts` (DPT), `tests/web-publik.e2e.ts` (peta/statistik/inventaris), `tests/web-berita-galeri.e2e.ts` (status berita + cetak album), dan `tests/pembangunan-buku.e2e.ts` (proyek tampil publik).
 
 Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, dan `npm run build` lulus.
 
@@ -127,9 +137,9 @@ Bug produksi yang ditemukan dan diperbaiki:
 - Pendapat publik menampilkan pesan "Terjadi kesalahan pada server" saat sesi sudah pernah memilih: `ER_DUP_ENTRY` dibungkus Drizzle di `error.cause`, bukan `error.code`. Deteksi kini menelusuri rantai `cause` sehingga pesan duplikat yang ramah tampil.
 - Halaman SDGs admin mengabaikan `?tahun=` dan selalu memakai tahun terbaru, sehingga tautan dari halaman IDM tidak konsisten. `ringkasanIdmPublik` kini menerima tahun pilihan admin.
 
-Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.474 test; 57 berkas/180 test E2E).
+Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0/P1/P2, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.474 test unit; 58 berkas/179 test E2E).
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `modul-tambahan`, `kesehatan`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `publik-apbdes`, `peta-publik`, `sitemap`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
@@ -143,13 +153,13 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 8 test/8 beraksi |
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
-| OS-POP-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap | `penduduk` 8 test/8 beraksi |
 | OS-POP-006 | Struktur terverifikasi | Impor CSV menautkan RTM, menyalin anggota, dan idempoten | `dtks-impor` 1 test/1 beraksi |
 | OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-POP-008 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `kesehatan` 2 test/smoke |
+| OS-POP-008 | Struktur lengkap; ada E2E interaktif | Posyandu, KIA, ibu hamil, anak, ekspor CSV | `kesehatan` 2 test/1 beraksi |
 | OS-POP-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-POP-011 | Struktur lengkap; ada E2E interaktif | — | `bantuan-laporan` 3 test/3 beraksi |
-| OS-POP-012 | Sebagian | E2E impor peserta. | tidak dirujuk |
+| OS-POP-012 | Struktur lengkap; ada E2E interaktif | Impor CSV pada program kosong + impor ulang idempoten | `bantuan-impor-peserta` 1 test/1 beraksi |
 | OS-POP-013 | Struktur lengkap; E2E hanya smoke | Ekspor PDF diuji tanpa aksi UI | `ekspor-statistik` 6 test/smoke |
 | OS-POP-014 | Struktur lengkap; ada E2E interaktif | — | `pendapat` 2 test/7 beraksi |
 | OS-POP-015 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
@@ -201,14 +211,14 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WEB-001 | Sebagian | Cakupan E2E publik belum menyeluruh; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. | `web-publik` 15 test/2 beraksi |
 | OS-WEB-002 | Struktur lengkap; ada E2E interaktif | — | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-003 | Sebagian | E2E profil/pemerintahan/SOTK publik belum ada | tidak dirujuk |
-| OS-WEB-004 | Sebagian | Album + detail sudah; cetak album belum | `web-berita-galeri` 3 test/2 beraksi |
-| OS-WEB-005 | Struktur lengkap; ada E2E interaktif | — | `web-dokumen` 1 test/1 beraksi |
-| OS-WEB-006 | Sebagian | E2E belum ada. | tidak dirujuk |
-| OS-WEB-007 | Sebagian | E2E hanya memuat halaman; coverage layer belum diperluas. | tidak dirujuk |
-| OS-WEB-008 | Sebagian | E2E. | tidak dirujuk |
+| OS-WEB-004 | Struktur lengkap; ada E2E interaktif | Album, detail, dan cetak album | `web-berita-galeri` 3 test/2 beraksi |
+| OS-WEB-005 | Struktur lengkap; ada E2E interaktif | Dokumen dibuat, difilter, dicari, dan sematan sandbox | `web-dokumen` 1 test/1 beraksi |
+| OS-WEB-006 | Sebagian | E2E publik membaca statistik; cakupan tenant/ekspor belum | `web-publik` 15 test |
+| OS-WEB-007 | Sebagian | Peta Leaflet dan cetak dibuka lewat UI; cakupan layer lebih luas belum | `web-publik` 15 test |
+| OS-WEB-008 | Sebagian | Proyek baru tampil di halaman publik; filter tahun dicek | `pembangunan-buku` 1 test/1 beraksi |
 | OS-WEB-009 | Struktur lengkap; ada E2E interaktif | — | `pengaduan` 1 test/1 beraksi; `umpan-balik` 2 test/2 beraksi |
-| OS-WEB-010 | Sebagian | E2E. | tidak dirujuk |
-| OS-WEB-011 | Sebagian | E2E filter/ekspor. | tidak dirujuk |
+| OS-WEB-010 | Sebagian | Daftar kelompok dan tombol cetak tampil; alur cetak penuh belum | `web-publik` 15 test |
+| OS-WEB-011 | Sebagian | Filter inventaris tanpa hasil diuji; ekspor belum | `web-publik` 15 test |
 | OS-WEB-012 | Sebagian | E2E. | tidak dirujuk |
 | OS-WEB-013 | Sebagian | E2E publik/isolasi tenant. | tidak dirujuk |
 | OS-WEB-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |

@@ -24,6 +24,13 @@ test(
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
       await expect(screen.getByText("Proyek pembangunan ditambahkan.")).toBeVisible();
 
+      // Proyek baru langsung tampil pada halaman publik dan bisa difilter tahun.
+      await app.open("/desa/pembangunan?tahun=2099");
+      await expect(browser.locator("h1")).toContainText("Pembangunan Desa");
+      await expect(screen.getByText(judul)).toBeVisible();
+      await expect(screen.getByLabel("Tahun anggaran")).toHaveValue("2099");
+
+      await app.open("/pembangunan");
       await screen.getByLabel("Cari proyek pembangunan").fill(judul);
       await screen.getByRole("button", { name: "Terapkan" }).tap();
       const baris = screen.getByRole("row").filter({ hasText: judul });

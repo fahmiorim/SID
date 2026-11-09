@@ -1,7 +1,11 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-import { hapusAlbumGaleriDariNama, hapusBeritaDariJudul } from "./support/database";
+import {
+  bacaBeritaDariJudul,
+  hapusAlbumGaleriDariNama,
+  hapusBeritaDariJudul,
+} from "./support/database";
 
 /**
  * Katalog: OS-WEB-001 — Beranda tema menampilkan portal desa.
@@ -27,12 +31,19 @@ test(
       await screen.getByLabel("Judul").fill(judul);
       await screen.getByLabel("Ringkasan").fill("Ringkasan E2E");
       await screen.getByLabel("Isi (HTML)").fill("<p>Isi berita E2E</p>");
-      await screen.getByLabel("Status").tap();
+      const status = screen.getByRole("combobox", { name: "Status" });
+      await status.tap();
       await screen.getByRole("option", { name: "Terbit" }).tap();
+      await expect(status).toContainText("Terbit");
       await screen.getByRole("button", { name: "Simpan berita" }).tap();
       await expect(screen.getByText("Berita ditambahkan.")).toBeVisible();
 
-      await app.open("/desa/berita");
+      const tersimpan = await bacaBeritaDariJudul(judul);
+      expect(tersimpan, "berita harus tersimpan").not.toBeNull();
+      expect(tersimpan?.status).toBe("published");
+      expect(tersimpan?.terbitPada).toBeTruthy();
+
+      await app.open(`/desa/berita?q=${encodeURIComponent(judul)}`);
       await expect(screen.getByText(judul)).toBeVisible();
 
       await screen.getByText(judul).tap();
@@ -76,6 +87,22 @@ test(
       await screen.getByText(albumNama).tap();
       await expect(browser).toHaveURL(/\/desa\/galeri\/.+/);
       await expect(screen.getByRole("button", { name: /Cetak Album/i })).toBeVisible();
+
+      // Buktikan tombol benar-benar memanggil dialog cetak browser.
+      const cetakDipanggil = await browser.evaluate(() => {
+        let dipanggil = false;
+        const asli = window.print;
+        window.print = () => {
+          dipanggil = true;
+        };
+        const tombol = Array.from(document.querySelectorAll("button")).find((item) =>
+          item.textContent?.includes("Cetak Album"),
+        );
+        tombol?.click();
+        window.print = asli;
+        return dipanggil;
+      });
+      expect(cetakDipanggil).toBe(true);
     } finally {
       await hapusAlbumGaleriDariNama(albumNama);
     }

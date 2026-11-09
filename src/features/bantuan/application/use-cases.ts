@@ -421,7 +421,11 @@ export async function imporPesertaBantuan(
       programId: String(programId),
       sasaranId: String(item.id),
       nomorKartu: item.nomorKartu,
+      kartuNik: "",
       kartuNama: item.namaKartu,
+      kartuTempatLahir: "",
+      kartuTanggalLahir: "",
+      kartuAlamat: "",
     });
 
     const lengkap = await lengkapiKartu(villageId, program.sasaran, item.id, input);

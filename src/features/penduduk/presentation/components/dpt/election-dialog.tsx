@@ -98,7 +98,11 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
               untuk perhitungan umur DPT.
             </DialogDescription>
           </DialogHeader>
-          <form action={formAction} className="flex flex-col gap-4">
+          <form
+            key={editingElection?.id ?? "baru"}
+            action={formAction}
+            className="flex flex-col gap-4"
+          >
             <input type="hidden" name="id" value={editingElection?.id ?? ""} />
 
             <div className="flex flex-col gap-2">
@@ -108,13 +112,13 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
                 name="judul"
                 placeholder="Contoh: Pilkades 2024, Pemilu 2024"
                 required
-                value={editingElection?.judul ?? ""}
+                defaultValue={editingElection?.judul ?? ""}
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="status">Status *</Label>
-              <Select name="status" value={editingElection?.status ?? "draf"} required>
+              <Select name="status" defaultValue={editingElection?.status ?? "draf"} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih status" />
                 </SelectTrigger>
@@ -136,7 +140,7 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
                 name="tanggal"
                 type="date"
                 required
-                value={editingElection?.tanggal ?? ""}
+                defaultValue={editingElection?.tanggal ?? ""}
               />
             </div>
 
@@ -147,7 +151,7 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
                 name="keterangan"
                 rows={3}
                 placeholder="Catatan tambahan..."
-                value={editingElection?.keterangan ?? ""}
+                defaultValue={editingElection?.keterangan ?? ""}
               />
             </div>
 

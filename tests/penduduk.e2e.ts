@@ -2,7 +2,9 @@ import { test } from "@e2e-dev/web";
 import { expect, type Screen } from "e2e";
 
 import {
+  buatPendudukDptUji,
   hapusMutasiDariSurat,
+  hapusPemilihanDptDariJudul,
   hapusPendudukDariNama,
   hapusPendudukDariNik,
   hapusSuplemenDariNama,
@@ -176,22 +178,83 @@ test(
 );
 
 /**
- * Katalog: OS-POP-005 — DPT: rekap pemilih dan kelola pemilihan
+ * Katalog: OS-POP-005 — DPT: kelola pemilihan, filter, ekspor, dan rekap.
  */
 test(
-  "dpt: rekap pemilih dan dialog pemilihan",
-  { session: "admin", timeout: 60_000 },
+  "dpt: pemilihan aktif, filter pemilih, ekspor, dan rekap",
+  { session: "admin", timeout: 120_000 },
   async ({ app, screen, browser }) => {
-    await app.open("/penduduk/dpt");
-    await expect(browser.locator("h1")).toContainText("DPT");
+    const cap = Date.now();
+    const judul = `Pemilihan E2E ${cap}`;
+    const judulKedua = `Pemilihan Ganda E2E ${cap}`;
+    const nik = nikUnik();
+    const nama = namaUnik("Pemilih DPT");
 
-    await screen.getByRole("button", { name: "Kelola Pemilihan" }).tap();
-    await expect(screen.getByText("Buat Pemilihan Baru")).toBeVisible();
-    await screen.getByRole("button", { name: "Batal" }).tap();
+    try {
+      await buatPendudukDptUji(nik, nama);
 
-    await screen.getByRole("link", { name: "Rekap" }).tap();
-    await expect(browser).toHaveURL(/\/penduduk\/dpt\/rekap$/);
-    await expect(browser.locator("h1")).toContainText("Rekapitulasi DPT");
+      await app.open("/penduduk/dpt");
+      await expect(browser.locator("h1")).toContainText("DPT");
+      await expect(screen.getByText(/Tidak ada pemilihan aktif/)).toBeVisible();
+
+      // --- Buat pemilihan aktif ------------------------------------------
+      await screen.getByRole("button", { name: "Kelola Pemilihan" }).tap();
+      let dialog = screen.getByRole("dialog");
+      await dialog.getByLabel("Judul Pemilihan *").fill(judul);
+      await dialog.getByRole("combobox").tap();
+      await screen.getByRole("option", { name: "Aktif (DPT)" }).tap();
+      await dialog.getByLabel("Tanggal Pemilihan *").fill("2026-11-10");
+      await dialog.getByLabel("Keterangan").fill("Data uji E2E");
+      await dialog.getByRole("button", { name: "Simpan", exact: true }).tap();
+
+      // Dialog memuat ulang halaman setelah sukses.
+      await expect(browser.locator("body")).toContainText(judul, { timeout: 15_000 });
+      await expect(screen.getByText(/Daftar pemilih berdasarkan pemilihan aktif/)).toBeVisible();
+
+      // --- Hanya satu pemilihan aktif ------------------------------------
+      await screen.getByRole("button", { name: "Kelola Pemilihan" }).tap();
+      dialog = screen.getByRole("dialog");
+      await dialog.getByLabel("Judul Pemilihan *").fill(judulKedua);
+      await dialog.getByRole("combobox").tap();
+      await screen.getByRole("option", { name: "Aktif (DPT)" }).tap();
+      await dialog.getByLabel("Tanggal Pemilihan *").fill("2026-11-10");
+      await dialog.getByRole("button", { name: "Simpan", exact: true }).tap();
+      await expect(dialog.getByText(/Sudah ada pemilihan aktif/)).toBeVisible();
+      await dialog.getByRole("button", { name: "Batal" }).tap();
+
+      // --- Filter mencari pemilih ----------------------------------------
+      await screen.getByLabel("Cari nama/NIK").fill(nama);
+      await screen.getByRole("button", { name: "Terapkan Filter" }).tap();
+      await expect(browser).toHaveURL(/search=/);
+      const baris = screen.getByRole("row").filter({ hasText: nama });
+      await expect(baris).toBeVisible();
+      await expect(baris.getByText(nik)).toBeVisible();
+
+      // --- Ekspor memakai filter dan pemilihan aktif ----------------------
+      const csv = await browser.evaluate(async () => {
+        const tautan = Array.from(document.querySelectorAll<HTMLAnchorElement>("a")).find((a) =>
+          a.textContent?.includes("Ekspor CSV"),
+        );
+        if (!tautan) return { status: 0, body: "" };
+        const res = await fetch(tautan.href);
+        return { status: res.status, body: await res.text() };
+      });
+      expect(csv.status).toBe(200);
+      expect(csv.body).toContain(judul);
+      expect(csv.body).toContain(nama);
+      expect(csv.body).toContain(nik);
+
+      // --- Rekap per wilayah ---------------------------------------------
+      await screen.getByRole("link", { name: "Rekap" }).tap();
+      await expect(browser).toHaveURL(/\/penduduk\/dpt\/rekap$/);
+      await expect(browser.locator("h1")).toContainText("Rekapitulasi DPT");
+      await expect(screen.getByRole("table")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: "Jumlah", exact: true })).toBeVisible();
+    } finally {
+      await hapusPemilihanDptDariJudul(judulKedua);
+      await hapusPemilihanDptDariJudul(judul);
+      await hapusPendudukDariNik(nik);
+    }
   },
 );
 
