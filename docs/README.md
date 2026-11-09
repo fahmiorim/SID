@@ -1,96 +1,13 @@
-# Dokumentasi — Peta & Aturan
+# Dokumentasi
 
-Dokumen ini mencegah agent atau kontributor memakai dokumen lama yang sudah
-tidak sesuai kode atau melewatkan fitur dalam scope katalog yang belum dipetakan.
+Mulai dari tiga dokumen kerja ini:
 
-## Sumber Kebenaran
+1. [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md) — target rebuild, pengecualian, dan snapshot acuan.
+2. [`STATUS-MODUL.md`](./STATUS-MODUL.md) — hasil audit struktur 111 ID, kedalaman bukti E2E, dan gap yang tersisa.
+3. [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md) — urutan audit, perbaikan, dan pengujian.
 
-Baca dengan urutan ini:
+Dokumen teknis tetap menjadi referensi implementasi: [`ARCHITECTURE.md`](./ARCHITECTURE.md) dan [`RUNBOOK-PEMULIHAN.md`](./RUNBOOK-PEMULIHAN.md). Bahan riset ada di [`riset/`](./riset/).
 
-| Urutan | Dokumen | Untuk apa | Otoritatif? |
-|---|---|---|---|
-| 1 | [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md) | Prioritas, fase, estimasi, status milestone | ✅ **Ya** untuk rencana & status |
-| 2 | [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) | Status implementasi terhadap katalog fitur OpenSID | ✅ **Ya** untuk status paritas |
-| 3 | [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md) | Baseline cakupan fitur OpenSID yang wajib dipetakan | ✅ **Ya** untuk scope kebutuhan |
-| 4 | [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Konvensi kode, lapisan, skema, RBAC, dan quality gate | ✅ **Ya** untuk cara menulis kode |
-| 5 | [`LOG-PERKEMBANGAN.md`](./LOG-PERKEMBANGAN.md) | Catatan pekerjaan yang sudah selesai | Catatan historis aktif |
-| 6 | [`riset/`](./riset/) | Analisis mendalam sistem acuan (OpenSID) | Referensi, **bukan** status |
-| 7 | [`arsip/`](./arsip/) | Dokumen yang sudah digantikan | ❌ **Jangan** dipakai untuk status |
+Dokumen katalog, paritas, roadmap, dan log sebelumnya disimpan utuh di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/) sebagai riwayat. Gunakan arsip hanya untuk melihat keputusan/klaim pada waktu itu, **bukan** untuk menentukan scope/status terkini. Pengecualian scope saat ini: OpenDK, SMS, serta Covid-19 dan Vaksin Covid.
 
-`KATALOG-FITUR-OPENSID.md` mendefinisikan cakupan fitur OpenSID yang dipilih
-untuk produk ini; status implementasi hanya boleh ditulis di
-`PARITAS-OPENSID.md`. Katalog dapat menetapkan scope yang lebih sempit dari
-seluruh fitur OpenSID.
-
-## Batas tanggung jawab
-
-| Dokumen | Boleh berisi | Tidak boleh berisi |
-|---|---|---|
-| `README.md` akar | quick start, teknologi, link dokumentasi | rincian status per domain |
-| `RENCANA-PERBAIKAN.md` | urutan fase, milestone, acceptance, risiko | inventaris fitur yang tidak punya ID katalog |
-| `KATALOG-FITUR-OPENSID.md` | requirement dalam scope produk dan sumber OpenSID | klaim status terkini |
-| `PARITAS-OPENSID.md` | status terkini, bukti, gap, prioritas | changelog bertanggal panjang |
-| `ARCHITECTURE.md` | aturan teknis dan quality gate | status feature delivery |
-| `LOG-PERKEMBANGAN.md` | kronologi bukti pekerjaan yang sudah dilakukan | roadmap baru atau prioritas baru |
-| `riset/` | data reverse engineering dan temuan risiko | status proyek saat ini |
-| `arsip/` | jejak dokumen yang sudah digantikan | dokumen aktif baru |
-
-
-## Definisi Istilah Status
-
-Agar tidak ada salah tafsir, gunakan definisi berikut saat menilai/melaporkan status fitur:
-
-| Istilah | Arti | Bukti yang dibutuhkan |
-|---|---|---|
-| `belum dibuat` | Tidak ada `page.tsx` / rute sama sekali di `src/app/`. | Verifikasi langsung di `src/app/`. |
-| `ada (minimal/orphan)` | Ada file `page.tsx`/rute, tapi **tidak terdaftar** di modul/menu/RBAC (atau tidak terhubung navigasi). Biasanya hanya card/teks. | Path file + konfirmasi tidak ada entri di `modules.ts`/navigasi. |
-| `halaman statis (placeholder)` | Ada rute, tampilan statis/minimal, belum memakai use-case/application layer atau belum ada CRUD fungsional sesuai perilaku OpenSID. | Path file + cek pemanggilan use-case/action. |
-| `berfungsi` | Ada UI, aksi/use-case, validasi, scoping tenant/RBAC sesuai peran, dan bisa dipakai end-to-end. | Path route + action/use-case + izin + bukti uji bila relevan. |
-| `sebagian` | Ada inti fungsional, tapi ada gap penting (fitur keluaran, PDF/ekspor, UI konfigurasi, dsb). | Sebut gap secara spesifik + path yang ada/tidak ada. |
-| `selesai` | Sesuai kebutuhan katalog/DoD, punya bukti UI+aksi+otorisasi+test yang relevan, tanpa placeholder/mockup/menu mati. | ID katalog (jika relevan) + route/UI + action/use-case + test/cek nyata. | 
-
-## Aturan Wajib
-
-
-1. **Status fitur hanya boleh diambil dari `RENCANA-PERBAIKAN.md` dan
-   `PARITAS-OPENSID.md`.** Cakupan fitur wajib diambil dari katalog. Jangan
-   percaya klaim "selesai" di dokumen arsip, komentar kode lama, atau README
-   yang belum diperbarui.
-2. **Satu klaim = satu bukti.** Sebutkan path file + test. Jika belum ada UI,
-   fitur belum "selesai" walau domain/action-nya ada.
-3. **Ubah kode → ubah dokumen.** PR yang mengubah perilaku/status fitur wajib
-   memperbarui `RENCANA-PERBAIKAN.md` (milestone) dan/atau
-   `PARITAS-OPENSID.md` (status modul).
-4. **Jangan menyalin kode/aset OpenSID.** OpenSID berlisensi GPL v3. Tiru
-   perilaku, alur, dan model data; implementasi tetap orisinal.
-5. **Multi-tenant:** `villageId` untuk halaman publik berasal dari **host**,
-   untuk admin dari **sesi**. Jangan pernah menerimanya dari input klien.
-6. **Dokumen baru** harus masuk daftar di file ini. Jangan membuat dokumen
-   status baru yang bersaing dengan dua dokumen otoritatif di atas.
-
-## Struktur
-
-```
-docs/
-├─ README.md                  # file ini (peta & aturan)
-├─ RENCANA-PERBAIKAN.md       # roadmap + status (otoritatif)
-├─ PARITAS-OPENSID.md         # status paritas (otoritatif)
-├─ KATALOG-FITUR-OPENSID.md   # baseline scope fitur lengkap
-├─ ARCHITECTURE.md            # konvensi teknis & quality gate
-├─ LOG-PERKEMBANGAN.md        # catatan pekerjaan selesai
-├─ riset/                     # analisis sistem acuan (referensi)
-└─ arsip/                     # dokumen usang (historis, jangan dipakai)
-```
-
-## Untuk Agent
-
-Sebelum mengerjakan fitur:
-
-1. Baca `RENCANA-PERBAIKAN.md` → tentukan fase & milestone yang sedang aktif.
-2. Baca `KATALOG-FITUR-OPENSID.md` → temukan ID kebutuhan dan keluaran yang
-   wajib dicakup.
-3. Baca `PARITAS-OPENSID.md` → pastikan fitur yang sama belum ada / sudah ada.
-4. Baca `ARCHITECTURE.md` → ikuti lapisan & konvensi.
-5. Cek `git log`/`git status` → jangan menimpa pekerjaan yang belum di-commit.
-6. Setelah selesai: jalankan `npm run check` + `npm run build`, lalu perbarui
-   status di dua dokumen otoritatif.
+Aturan kerja: klaim “selesai” wajib menyebut bukti route/UI, aksi/use case, izin dan scoping tenant, serta test perilaku yang dijalankan. Daftar folder dan smoke test bukan bukti paritas.

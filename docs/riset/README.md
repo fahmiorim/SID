@@ -6,9 +6,9 @@ ini **bukan status proyek** dan bukan roadmap aktif.
 
 ## Aturan penggunaan
 
-- Scope fitur aktif ada di [`../KATALOG-FITUR-OPENSID.md`](../KATALOG-FITUR-OPENSID.md).
-- Status implementasi ada di [`../PARITAS-OPENSID.md`](../PARITAS-OPENSID.md).
-- Prioritas dan urutan kerja ada di [`../RENCANA-PERBAIKAN.md`](../RENCANA-PERBAIKAN.md).
+- Scope fitur aktif ada di [`../CAKUPAN-OPENSID.md`](../CAKUPAN-OPENSID.md).
+- Status bukti implementasi ada di [`../STATUS-MODUL.md`](../STATUS-MODUL.md).
+- Prioritas, audit, dan urutan kerja ada di [`../RENCANA-PENGEMBANGAN.md`](../RENCANA-PENGEMBANGAN.md).
 - Konvensi implementasi ada di [`../ARCHITECTURE.md`](../ARCHITECTURE.md).
 - Klaim lama, estimasi lama, dan rekomendasi stack lama di folder ini tidak boleh
   mengalahkan dokumen aktif.
@@ -70,10 +70,10 @@ use case, validasi MIME/magic bytes, tenant scoping, audit, dan adapter integras
 ## Cara mengubah hasil riset menjadi pekerjaan
 
 1. Temukan perilaku di dokumen riset.
-2. Cari atau buat ID `OS-*` yang sesuai di katalog.
-3. Tambahkan acceptance criteria dan dependensi di roadmap.
+2. Petakan ke scope dan ID `OS-*` yang sesuai; inventaris aktif ada di dokumen cakupan dan audit.
+3. Tambahkan acceptance criteria, dependensi, dan tindak lanjut ke rencana pengembangan.
 4. Implementasikan dengan arsitektur proyek saat ini, bukan struktur OpenSID.
-5. Catat bukti UI, test, dan status hanya di matriks paritas.
+5. Catat bukti UI, test, dan status di dokumen status modul.
 
 Tanggal riset historis tidak menentukan status. Bila source OpenSID berubah,
 inventaris ulang katalog sebelum memperbarui status.

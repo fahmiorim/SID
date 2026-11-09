@@ -3,9 +3,10 @@
 Aplikasi **fullstack Next.js + TypeScript** untuk administrasi pemerintahan desa:
 bersih, bertipe kuat, dan mudah dirawat. Repositori ini adalah rebuild orisinal
 dengan target **cakupan fitur OpenSID lengkap**, bukan salinan kode OpenSID.
-Sumber kebutuhan lengkap ada di
-[`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md); status
-implementasi ada di [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md).
+Scope, audit bukti kode/test, dan rencana perbaikan ada di
+[`docs/CAKUPAN-OPENSID.md`](docs/CAKUPAN-OPENSID.md),
+[`docs/STATUS-MODUL.md`](docs/STATUS-MODUL.md), dan
+[`docs/RENCANA-PENGEMBANGAN.md`](docs/RENCANA-PENGEMBANGAN.md).
 
 Saat ini proyek masih bertahap: fondasi dan banyak fitur inti sudah tersedia,
 tetapi sejumlah modul OpenSID, quality gate, dan verifikasi E2E masih belum
@@ -119,9 +120,10 @@ src/
 └─ lib/                      # env, logger, errors, action-state, forms, dal, auth
 ```
 
-Dokumentasi lengkap ada di [`docs/`](docs/) — mulai dari
-[`docs/README.md`](docs/README.md). Dokumen usang dipindahkan ke
-[`docs/arsip/`](docs/arsip/) dan **tidak boleh** dipakai sebagai acuan status.
+Dokumentasi ada di [`docs/`](docs/) — mulai dari
+[`docs/README.md`](docs/README.md). Dokumen status terdahulu disimpan utuh di
+[`docs/arsip/status-sebelum-audit/`](docs/arsip/status-sebelum-audit/) sebagai
+riwayat, bukan acuan status terkini.
 
 ## Autentikasi & Hak Akses
 
@@ -180,35 +182,16 @@ npm run test:watch  # mode pantau
 
 ## Dokumentasi
 
-Mulai dari **[`docs/README.md`](docs/README.md)** — peta dokumentasi dan aturan
-sumber kebenaran.
+Mulai dari **[`docs/README.md`](docs/README.md)**. Tiga dokumen aktif:
 
-- [`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md) — baseline
-  cakupan **seluruh** fitur OpenSID yang wajib dipetakan.
-- [`docs/PARITAS-OPENSID.md`](docs/PARITAS-OPENSID.md) — **otoritatif** untuk
-  status paritas implementasi terhadap katalog OpenSID.
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — **otoritatif** untuk
-  arsitektur, lapisan, skema, RBAC, dan konvensi kode.
-- [`docs/LOG-PERKEMBANGAN.md`](docs/LOG-PERKEMBANGAN.md) — kronologi pekerjaan
-  yang sudah selesai.
-- [`docs/riset/`](docs/riset/README.md) — analisis sistem acuan (OpenSID) sebagai
-  **referensi historis**, bukan status.
-- [`docs/arsip/`](docs/arsip/README.md) — dokumen usang; **jangan** dipakai untuk
-  status atau prioritas.
+- [`docs/CAKUPAN-OPENSID.md`](docs/CAKUPAN-OPENSID.md) — cakupan dan pengecualian.
+- [`docs/STATUS-MODUL.md`](docs/STATUS-MODUL.md) — bukti kode/test yang ditemukan serta hal yang belum diaudit.
+- [`docs/RENCANA-PENGEMBANGAN.md`](docs/RENCANA-PENGEMBANGAN.md) — urutan audit, perbaikan, dan pengujian.
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — arsitektur, lapisan, skema, RBAC, dan konvensi kode.
+- [`docs/riset/`](docs/riset/README.md) — referensi riset sistem acuan.
+- [`docs/arsip/status-sebelum-audit/`](docs/arsip/status-sebelum-audit/) — katalog, paritas, roadmap, dan log lama; arsip historis saja.
 
-## Status & Peta Jalan
-
-Status lengkap dan urutan fase ada di
-[`docs/RENCANA-PERBAIKAN.md`](docs/RENCANA-PERBAIKAN.md). Ringkasnya:
-
-1. **Fondasi** ✅ — auth staf, RBAC, kerangka admin, lapisan data, dan wilayah.
-2. **Fitur inti** 🟡 — kependudukan, keluarga, RTM, kelompok, bantuan,
-   persuratan, keuangan dasar, inventaris, Bumindes inti, layanan mandiri,
-   pengaduan, survei dasar, dan CMS publik sudah memiliki irisan implementasi.
-3. **Paritas OpenSID lengkap** 🔴 — seluruh ID di
-   [`docs/KATALOG-FITUR-OPENSID.md`](docs/KATALOG-FITUR-OPENSID.md) belum selesai.
-4. **Multi-desa dan hardening** 🟡/🔴 — seam tenant publik sudah dibuat, tetapi
-   provisioning, super-admin, audit, backup, dan uji keamanan menyeluruh belum.
-
-Status fitur di atas bukan klaim bahwa seluruh kemampuan OpenSID pada domain
-tersebut sudah tersedia. Status per ID ada di `PARITAS-OPENSID.md`.
+**Status proyek:** struktur menunjukkan implementasi dan test pada banyak domain,
+tetapi audit perilaku per fitur dan pemetaan menyeluruh terhadap snapshot
+OpenSID belum dilakukan. Karena itu README tidak menyatakan modul selesai atau
+memberi persentase paritas. Detail temuan/batas audit ada di `STATUS-MODUL.md`.
