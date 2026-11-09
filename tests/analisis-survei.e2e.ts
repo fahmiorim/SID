@@ -138,6 +138,12 @@ test(
       const url = await browser.url();
       const surveyId = url.split("/analisis-survei/")[1]?.split("/")[0];
 
+      // Daftar admin menghitung soal dan responden dari tabel anak, bukan 0.
+      await app.open("/analisis-survei");
+      const barisAwal = screen.getByRole("row").filter({ hasText: judul });
+      await expect(barisAwal.getByRole("cell", { name: "1", exact: true })).toHaveCount(1);
+      await expect(barisAwal.getByRole("cell", { name: "0", exact: true })).toHaveCount(1);
+
       // Warga mengisi survei dari halaman publik.
       await app.open(`/desa/analisis-survei/${surveyId}/isi`);
       await expect(screen.getByRole("heading", { name: judul })).toBeVisible();
@@ -150,6 +156,35 @@ test(
       await app.open(`/analisis-survei/${surveyId}`);
       await expect(screen.getByText("Warga Survey E2E")).toBeVisible();
       await expect(screen.getByText("Rekap Jawaban")).toBeVisible();
+
+      // Setelah ada responden, daftar admin menampilkan 1 soal dan 1 responden.
+      await app.open("/analisis-survei");
+      const barisSetelah = screen.getByRole("row").filter({ hasText: judul });
+      await expect(barisSetelah.getByRole("cell", { name: "1", exact: true })).toHaveCount(2);
+      await expect(barisSetelah.getByRole("cell", { name: "0", exact: true })).toHaveCount(0);
+
+      // Laporan skor formal merangkum responden yang baru mengisi.
+      await app.open(`/analisis-survei/${surveyId}/laporan`);
+      await expect(browser.locator("h1")).toContainText(`Laporan Skor: ${judul}`);
+      await expect(screen.getByText("Responden", { exact: true })).toBeVisible();
+      await expect(screen.getByText("Rata-rata Skor", { exact: true })).toBeVisible();
+      await expect(screen.getByText("Distribusi Klasifikasi", { exact: true })).toBeVisible();
+      await expect(screen.getByText("Skor per Responden", { exact: true })).toBeVisible();
+      await expect(
+        screen.getByRole("cell", { name: "Warga Survey E2E", exact: true }),
+      ).toBeVisible();
+
+      // Ekspor CSV laporan membawa responden yang sama.
+      const csv = await browser.evaluate(async (id: string) => {
+        const respons = await fetch(`/analisis-survei/${id}/laporan/ekspor`);
+        return {
+          status: respons.status,
+          tipe: respons.headers.get("content-type") ?? "",
+          body: await respons.text(),
+        };
+      }, surveyId as string);
+      expect(csv.status).toBe(200);
+      expect(csv.body).toContain("Warga Survey E2E");
     } finally {
       await hapusSurveyDariJudul(judul);
     }

@@ -1,6 +1,8 @@
+import { randomBytes } from "node:crypto";
 import { test as webTest } from "@e2e-dev/web";
 import { credentials, expect } from "e2e";
 
+import { buatSuratUjiDenganToken, hapusSuratDariToken } from "./support/database";
 import { masukDenganKredensial } from "./support/login";
 import {
   buatFixturePermohonanWarga,
@@ -103,6 +105,52 @@ test(
     await app.open(`/desa/verifikasi-surat/${surat!.verificationToken}`);
     await expect(screen.getByText(new RegExp(alur.namaJenis)).first()).toBeVisible();
     await expect(screen.getByText(surat!.number!).first()).toBeVisible();
+  },
+);
+
+/**
+ * Katalog: OS-WEB-019 — Verifikasi surat publik lewat form token (jalur kode
+ * QR) tanpa sesi, serta penolakan token tidak dikenal/berformat salah.
+ */
+test(
+  "verifikasi surat publik: form token, token valid, dan token tidak dikenal",
+  { timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const token = randomBytes(32).toString("hex");
+    const nomor = `E2E/VER/${Date.now()}`;
+    await buatSuratUjiDenganToken({
+      token,
+      nomor,
+      jenis: "Surat Keterangan Uji E2E",
+      tanggal: "2026-11-10",
+    });
+
+    try {
+      // Form token adalah jalur yang dipakai pemindai kode QR.
+      await app.open("/desa/verifikasi-surat");
+      await expect(screen.getByRole("heading", { name: "Verifikasi Surat" })).toBeVisible();
+      await expect(screen.getByLabel("Token verifikasi")).toBeVisible();
+
+      // Token berformat salah ditolak tanpa membocorkan surat mana pun.
+      await screen.getByLabel("Token verifikasi").fill("token-tidak-valid");
+      await screen.getByRole("button", { name: "Verifikasi" }).tap();
+      await expect(browser).toHaveURL(/\/desa\/verifikasi-surat\/token-tidak-valid$/);
+      await expect(screen.getByRole("heading", { name: "Surat Tidak Ditemukan" })).toBeVisible();
+
+      // Token 64 hex yang valid milik desa ini menampilkan data surat terbit.
+      await app.open(`/desa/verifikasi-surat?token=${token}`);
+      await expect(browser).toHaveURL(new RegExp(`/desa/verifikasi-surat/${token}$`));
+      await expect(screen.getByRole("heading", { name: "Verifikasi Surat" })).toBeVisible();
+      await expect(screen.getByText(nomor)).toBeVisible();
+      await expect(screen.getByText("Siap Diambil", { exact: true })).toBeVisible();
+    } finally {
+      await hapusSuratDariToken(token);
+    }
+
+    // Surat yang sudah dihapus tidak lagi dapat diverifikasi lewat tokennya.
+    await app.open(`/desa/verifikasi-surat/${token}`);
+    await expect(screen.getByRole("heading", { name: "Surat Tidak Ditemukan" })).toBeVisible();
+    await expect(screen.getByText(nomor)).toHaveCount(0);
   },
 );
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
 
 import { db } from "@/db";
 import { galeriAlbum, galeriFoto } from "@/db/schema";
@@ -33,7 +33,7 @@ export interface FotoSimpan {
 
 /** Daftar album untuk admin, lengkap dengan jumlah foto (termasuk nonaktif). */
 export async function listAlbumAdmin(villageId: number): Promise<AlbumAdminRow[]> {
-  return db
+  const rows = await db
     .select({
       id: galeriAlbum.id,
       nama: galeriAlbum.nama,
@@ -42,14 +42,29 @@ export async function listAlbumAdmin(villageId: number): Promise<AlbumAdminRow[]
       sampul: galeriAlbum.sampul,
       aktif: galeriAlbum.aktif,
       urut: galeriAlbum.urut,
-      jumlahFoto: sql<number>`(
-        select count(*) from ${galeriFoto}
-        where ${galeriFoto.albumId} = ${galeriAlbum.id}
-      )`,
     })
     .from(galeriAlbum)
     .where(eq(galeriAlbum.villageId, villageId))
     .orderBy(asc(galeriAlbum.urut), desc(galeriAlbum.id));
+
+  // Query agregat, bukan subquery berkorelasi: Drizzle merender kolom subquery
+  // tanpa kualifikasi tabel sehingga `id` menunjuk `galeri_foto.id`.
+  const fotoRows =
+    rows.length === 0
+      ? []
+      : await db
+          .select({ albumId: galeriFoto.albumId, jumlah: count() })
+          .from(galeriFoto)
+          .where(
+            inArray(
+              galeriFoto.albumId,
+              rows.map((row) => row.id),
+            ),
+          )
+          .groupBy(galeriFoto.albumId);
+  const fotoByAlbum = new Map(fotoRows.map((row) => [row.albumId, Number(row.jumlah ?? 0)]));
+
+  return rows.map((row) => ({ ...row, jumlahFoto: fotoByAlbum.get(row.id) ?? 0 }));
 }
 
 /** Satu album milik desa, atau `null`. */
@@ -63,16 +78,19 @@ export async function getAlbumAdmin(villageId: number, id: number): Promise<Albu
       sampul: galeriAlbum.sampul,
       aktif: galeriAlbum.aktif,
       urut: galeriAlbum.urut,
-      jumlahFoto: sql<number>`(
-        select count(*) from ${galeriFoto}
-        where ${galeriFoto.albumId} = ${galeriAlbum.id}
-      )`,
     })
     .from(galeriAlbum)
     .where(and(eq(galeriAlbum.villageId, villageId), eq(galeriAlbum.id, id)))
     .limit(1);
 
-  return row ?? null;
+  if (!row) return null;
+
+  const [jumlah] = await db
+    .select({ value: count() })
+    .from(galeriFoto)
+    .where(eq(galeriFoto.albumId, row.id));
+
+  return { ...row, jumlahFoto: Number(jumlah?.value ?? 0) };
 }
 
 /** Apakah slug album sudah dipakai desa ini (kecuali baris yang diubah)? */

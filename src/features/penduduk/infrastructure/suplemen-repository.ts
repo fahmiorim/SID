@@ -220,15 +220,23 @@ export async function listSuplemenRekap(villageId: number) {
       id: suplemen.id,
       nama: suplemen.nama,
       sasaran: suplemen.sasaran,
-      jumlahTerdata: sql<number>`(
-        select count(*) from ${suplemenTerdata} where ${suplemenTerdata.suplemenId} = ${suplemen.id}
-      )`,
     })
     .from(suplemen)
     .where(eq(suplemen.villageId, villageId))
     .orderBy(asc(suplemen.nama));
 
-  return rows.map((row) => ({ ...row, jumlahTerdata: Number(row.jumlahTerdata ?? 0) }));
+  // Query agregat, bukan subquery berkorelasi: Drizzle merender kolom subquery
+  // tanpa kualifikasi tabel sehingga `id` menunjuk `suplemen_terdata.id`.
+  const terdataRows = await db
+    .select({ suplemenId: suplemenTerdata.suplemenId, jumlah: count() })
+    .from(suplemenTerdata)
+    .where(eq(suplemenTerdata.villageId, villageId))
+    .groupBy(suplemenTerdata.suplemenId);
+  const terdataBySuplemen = new Map(
+    terdataRows.map((row) => [row.suplemenId, Number(row.jumlah ?? 0)]),
+  );
+
+  return rows.map((row) => ({ ...row, jumlahTerdata: terdataBySuplemen.get(row.id) ?? 0 }));
 }
 
 export async function addSuplemenTerdata(

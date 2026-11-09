@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, isNotNull, like, lte, ne, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, like, lte, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -187,16 +187,28 @@ export async function listAlbumGaleri(villageId: number, cari?: string): Promise
       keterangan: galeriAlbum.keterangan,
       sampul: galeriAlbum.sampul,
       urut: galeriAlbum.urut,
-      jumlahFoto: sql<number>`(
-        select count(*) from ${galeriFoto}
-        where ${galeriFoto.albumId} = ${galeriAlbum.id} and ${galeriFoto.aktif} = true
-      )`,
     })
     .from(galeriAlbum)
     .where(and(...kondisi))
     .orderBy(asc(galeriAlbum.urut), desc(galeriAlbum.id));
 
-  return rows.map(({ urut: _urut, ...album }) => album);
+  // Query agregat, bukan subquery berkorelasi: Drizzle merender kolom subquery
+  // tanpa kualifikasi tabel sehingga `id` menunjuk `galeri_foto.id`.
+  const albumIds = rows.map((row) => row.id);
+  const fotoRows =
+    albumIds.length === 0
+      ? []
+      : await db
+          .select({ albumId: galeriFoto.albumId, jumlah: count() })
+          .from(galeriFoto)
+          .where(and(eq(galeriFoto.aktif, true), inArray(galeriFoto.albumId, albumIds)))
+          .groupBy(galeriFoto.albumId);
+  const fotoByAlbum = new Map(fotoRows.map((row) => [row.albumId, Number(row.jumlah ?? 0)]));
+
+  return rows.map(({ urut: _urut, ...album }) => ({
+    ...album,
+    jumlahFoto: fotoByAlbum.get(album.id) ?? 0,
+  }));
 }
 
 export async function getAlbumBySlug(

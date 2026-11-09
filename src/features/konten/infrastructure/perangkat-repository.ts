@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne } from "drizzle-orm";
 
 import { db } from "@/db";
 import { jabatanPerangkat, perangkatDesa } from "@/db/schema";
@@ -39,20 +39,37 @@ export interface PerangkatSimpan {
 
 /** Daftar jabatan beserta jumlah perangkat yang menjabat. */
 export async function listJabatanAdmin(villageId: number): Promise<JabatanAdminRow[]> {
-  return db
+  const rows = await db
     .select({
       id: jabatanPerangkat.id,
       nama: jabatanPerangkat.nama,
       slug: jabatanPerangkat.slug,
       urut: jabatanPerangkat.urut,
-      jumlahPerangkat: sql<number>`(
-        select count(*) from ${perangkatDesa}
-        where ${perangkatDesa.jabatanId} = ${jabatanPerangkat.id}
-      )`,
     })
     .from(jabatanPerangkat)
     .where(eq(jabatanPerangkat.villageId, villageId))
     .orderBy(asc(jabatanPerangkat.urut), asc(jabatanPerangkat.nama));
+
+  // Query agregat, bukan subquery berkorelasi: Drizzle merender kolom subquery
+  // tanpa kualifikasi tabel sehingga `id` menunjuk `perangkat_desa.id`.
+  const perangkatRows =
+    rows.length === 0
+      ? []
+      : await db
+          .select({ jabatanId: perangkatDesa.jabatanId, jumlah: count() })
+          .from(perangkatDesa)
+          .where(
+            inArray(
+              perangkatDesa.jabatanId,
+              rows.map((row) => row.id),
+            ),
+          )
+          .groupBy(perangkatDesa.jabatanId);
+  const perangkatByJabatan = new Map(
+    perangkatRows.map((row) => [row.jabatanId, Number(row.jumlah ?? 0)]),
+  );
+
+  return rows.map((row) => ({ ...row, jumlahPerangkat: perangkatByJabatan.get(row.id) ?? 0 }));
 }
 
 /** Pilihan jabatan untuk form perangkat. */

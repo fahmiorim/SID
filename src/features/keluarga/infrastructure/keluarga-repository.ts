@@ -11,7 +11,6 @@ import {
   like,
   ne,
   or,
-  sql,
   type SQL,
 } from "drizzle-orm";
 
@@ -99,11 +98,6 @@ function buildWhere(villageId: number, search: string): SQL {
   return and(...filters) ?? villageFilter;
 }
 
-/** Jumlah anggota KK, dihitung di basis data agar tidak ada query per baris. */
-const memberCountExpr = sql<number>`(
-  select count(*) from ${residents} where ${residents.familyId} = ${families.id}
-)`;
-
 export async function listKeluarga(params: ListKeluargaParams): Promise<KeluargaListResult> {
   const { villageId, search, page, pageSize } = params;
   const where = buildWhere(villageId, search);
@@ -113,7 +107,6 @@ export async function listKeluarga(params: ListKeluargaParams): Promise<Keluarga
       .select({
         family: families,
         headName: head.name,
-        memberCount: memberCountExpr,
         dusun: regions.dusun,
         rw: regions.rw,
         rt: regions.rt,
@@ -133,11 +126,27 @@ export async function listKeluarga(params: ListKeluargaParams): Promise<Keluarga
 
   const total = totalRows[0]?.value ?? 0;
 
+  // Hitungan anggota diambil lewat query agregat, bukan subquery berkorelasi:
+  // Drizzle merender kolom subquery tanpa kualifikasi tabel sehingga `id`
+  // menunjuk `residents.id`, bukan `families.id`.
+  const familyIds = rows.map((row) => row.family.id);
+  const anggotaRows =
+    familyIds.length === 0
+      ? []
+      : await db
+          .select({ familyId: residents.familyId, jumlah: count() })
+          .from(residents)
+          .where(inArray(residents.familyId, familyIds))
+          .groupBy(residents.familyId);
+  const anggotaByFamily = new Map(
+    anggotaRows.map((row) => [row.familyId, Number(row.jumlah ?? 0)]),
+  );
+
   return {
     rows: rows.map((row) => ({
       ...toDto(row.family),
       headName: row.headName ?? null,
-      memberCount: Number(row.memberCount),
+      memberCount: anggotaByFamily.get(row.family.id) ?? 0,
       regionLabel: formatRegionLabel(row.family.regionId, row.dusun, row.rw, row.rt),
     })),
     total,

@@ -1,6 +1,18 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import {
+  buatInventarisDesaLainUji,
+  buatInventarisPublikUji,
+  buatSuplemenPublikUji,
+  buatSurveiAnalisisPublikUji,
+  buatSurveiDesaLainUji,
+  hapusInventarisUji,
+  hapusSuplemenPublikUji,
+  hapusSurveiDesaLainUji,
+  hapusSurveyDariJudul,
+} from "./support/database";
+
 /**
  * Katalog: OS-WEB-001 — Beranda publik
  */
@@ -210,6 +222,170 @@ test(
     await screen.getByRole("button", { name: "Terapkan" }).tap();
     await expect(browser).toHaveURL(/q=barang-tidak-ada-e2e/);
     await expect(screen.getByText("0 barang cocok dengan filter.")).toBeVisible();
+  },
+);
+
+/**
+ * Katalog: OS-WEB-012 — Suplemen publik: ringkasan agregat, detail kolom, dan
+ * slug asing ditolak. Nilai isian warga tidak boleh ikut tampil.
+ */
+test(
+  "suplemen publik: ringkasan dan detail hanya menampilkan agregat",
+  { timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    const nama = `Suplemen Publik E2E ${Date.now()}`;
+    const fixture = await buatSuplemenPublikUji({
+      nama,
+      keterangan: "Pendataan uji halaman publik",
+      isian: { "Nomor Kartu": "A-1" },
+    });
+
+    try {
+      await app.open("/desa/suplemen");
+      await expect(screen.getByRole("heading", { name: nama, exact: true })).toBeVisible();
+      await expect(screen.getByText(/Sasaran: Keluarga \(KK\) · 1 data/).first()).toBeVisible();
+
+      await app.open(`/desa/suplemen/${fixture.slug}`);
+      await expect(browser.locator("h1")).toContainText(nama);
+      await expect(
+        screen.getByText("Sasaran: Keluarga (KK) · 1 data terhimpun", { exact: true }),
+      ).toBeVisible();
+      await expect(screen.getByRole("heading", { name: "Kolom data" })).toBeVisible();
+      await expect(screen.getByText("Nomor Kartu", { exact: true })).toBeVisible();
+      // Nama kolom dipublikasikan, nilainya tidak.
+      await expect(screen.getByText(/A-1/)).toHaveCount(0);
+    } finally {
+      await hapusSuplemenPublikUji(fixture.id);
+    }
+
+    // Suplemen yang sudah tidak ada tidak dapat dibuka lewat slug lamanya.
+    await app.open(`/desa/suplemen/${fixture.slug}`);
+    await expect(screen.getByText("Halaman tidak ditemukan", { exact: true })).toBeVisible();
+  },
+);
+
+/**
+ * Katalog: OS-WEB-011 — Inventaris publik: filter lewat formulir dan ekspor
+ * CSV yang mengikuti filter. Barang desa lain tidak boleh ikut tampil.
+ */
+test(
+  "inventaris publik: filter, hitungan hasil, dan ekspor CSV",
+  { timeout: 90_000 },
+  async ({ app, screen, browser }) => {
+    const nama = `Genset E2E ${Date.now()}`;
+    const kategori = `Peralatan E2E ${Date.now()}`;
+    const namaDesaLain = `Barang Desa Lain ${Date.now()}`;
+    const milik = await buatInventarisPublikUji({ nama, kategori, tahun: 2024 });
+    const desaLain = await buatInventarisDesaLainUji({ nama: namaDesaLain, kategori });
+
+    try {
+      await app.open("/desa/inventaris");
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+      // Barang desa lain tidak pernah muncul di daftar publik.
+      await expect(screen.getByText(namaDesaLain)).toHaveCount(0);
+
+      await screen.getByLabel("Cari barang").fill(nama);
+      await screen.getByRole("button", { name: "Terapkan" }).tap();
+      await expect(browser).toHaveURL(/q=Genset/);
+      await expect(screen.getByText("1 barang cocok dengan filter.")).toBeVisible();
+      await expect(screen.getByRole("cell", { name: nama, exact: true })).toBeVisible();
+
+      // Unduhan CSV memakai filter yang sama dengan halaman.
+      const csv = await browser.evaluate(async (kata: string) => {
+        const respons = await fetch(`/desa/inventaris/ekspor?q=${encodeURIComponent(kata)}`);
+        return {
+          status: respons.status,
+          tipe: respons.headers.get("content-type") ?? "",
+          disposisi: respons.headers.get("content-disposition") ?? "",
+          body: await respons.text(),
+        };
+      }, nama);
+      expect(csv.status).toBe(200);
+      expect(csv.tipe).toContain("text/csv");
+      expect(csv.disposisi).toContain("inventaris-");
+      expect(csv.body).toContain("Nama Barang");
+      expect(csv.body).toContain(nama);
+      expect(csv.body).not.toContain(namaDesaLain);
+    } finally {
+      await hapusInventarisUji(milik);
+      await hapusInventarisUji(desaLain);
+    }
+  },
+);
+
+/**
+ * Katalog: OS-WEB-013 — Analisis publik: rekap agregat per pertanyaan, filter
+ * periode, dan isolasi tenant. Nama/NIK responden serta isi jawaban teks tidak
+ * boleh ikut tampil.
+ */
+test(
+  "analisis publik: rekap agregat dan filter periode tanpa data pribadi",
+  { timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const judul = `Survei Analisis Publik E2E ${Date.now()}`;
+    const judulDesaLain = `Survei Desa Lain E2E ${Date.now()}`;
+    const namaResponden = `Responden Rahasia E2E ${Date.now()}`;
+    const nikResponden = "3201010101019999";
+    const tahun = new Date().getFullYear();
+
+    await buatSurveiAnalisisPublikUji({
+      judul,
+      soal: [
+        {
+          pertanyaan: "Bagaimana kepuasan pelayanan desa?",
+          tipe: "choice",
+          pilihan: ["Puas", "Tidak puas"],
+        },
+        { pertanyaan: "Berapa anggota keluarga Anda?", tipe: "number" },
+        { pertanyaan: "Apa saran Anda untuk desa?", tipe: "text" },
+      ],
+      responden: [
+        { nama: namaResponden, nik: nikResponden, jawaban: ["Puas", "4", "Isi rahasia E2E"] },
+        {
+          nama: `${namaResponden} 2`,
+          nik: "3201010101019998",
+          jawaban: ["Puas", "6", "Isi rahasia lain"],
+        },
+      ],
+    });
+    const desaLain = await buatSurveiDesaLainUji(judulDesaLain);
+
+    try {
+      await app.open("/desa/analisis-survei");
+      await expect(browser.locator("h1")).toContainText("Analisis & Survei");
+      await expect(screen.getByRole("heading", { name: judul, exact: true })).toBeVisible();
+      await expect(screen.getByText("3 pertanyaan", { exact: true })).toBeVisible();
+      await expect(screen.getByText("2 responden", { exact: true })).toBeVisible();
+      await expect(screen.getByRole("heading", { name: "Hasil pendataan" })).toBeVisible();
+      await expect(screen.getByText(/2 responden · seluruh periode/)).toBeVisible();
+
+      // Distribusi pilihan, rata-rata angka, dan jumlah jawaban teks.
+      await expect(screen.getByText("2 (100%)", { exact: true })).toBeVisible();
+      await expect(screen.getByText(/Rata-rata 5 dari 2 jawaban/)).toBeVisible();
+      await expect(screen.getByText(/2 jawaban \(isi tidak dipublikasikan\)/)).toBeVisible();
+
+      // Identitas responden dan isi jawaban teks tidak pernah tampil.
+      await expect(screen.getByText(new RegExp(namaResponden))).toHaveCount(0);
+      await expect(screen.getByText(new RegExp(nikResponden))).toHaveCount(0);
+      await expect(screen.getByText(/Isi rahasia/)).toHaveCount(0);
+
+      // Survei desa lain tidak ikut tampil di daftar publik.
+      await expect(screen.getByText(new RegExp(judulDesaLain))).toHaveCount(0);
+
+      // Filter periode tahun berjalan menyaring rekap.
+      await screen.getByLabel("Periode hasil").selectOption({ label: String(tahun) });
+      await screen.getByRole("button", { name: "Tampilkan" }).tap();
+      await expect(browser).toHaveURL(new RegExp(`tahun=${tahun}`));
+      await expect(screen.getByText(new RegExp(`2 responden · tahun ${tahun}`))).toBeVisible();
+      await expect(screen.getByRole("link", { name: "Hapus filter" })).toBeVisible();
+
+      // Halaman pengisian survei desa lain tetap 404.
+      await app.open(`/desa/analisis-survei/${desaLain.id}/isi`);
+      await expect(screen.getByText("Halaman tidak ditemukan", { exact: true })).toBeVisible();
+    } finally {
+      await hapusSurveyDariJudul(judul);
+      await hapusSurveiDesaLainUji(desaLain.id, desaLain.villageId);
+    }
   },
 );
 

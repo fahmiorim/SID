@@ -42,14 +42,6 @@ export async function listSurveiPublik(villageId: number): Promise<SurveiPublikR
       sasaran: survey.sasaran,
       mulai: survey.mulai,
       selesai: survey.selesai,
-      jumlahSoal: sql<number>`(
-        select count(*) from ${surveySoal}
-        where ${surveySoal.surveyId} = ${survey.id}
-      )`,
-      jumlahResponden: sql<number>`(
-        select count(*) from ${surveyResponden}
-        where ${surveyResponden.surveyId} = ${survey.id}
-      )`,
     })
     .from(survey)
     .where(and(eq(survey.villageId, villageId), eq(survey.aktif, 1)))
@@ -93,6 +85,23 @@ export async function listSurveiPublik(villageId: number): Promise<SurveiPublikR
     soalBySurvey.set(row.surveyId, list);
   }
 
+  // Hitungan diambil lewat query agregat, bukan subquery berkorelasi: Drizzle
+  // merender nama kolom tanpa kualifikasi, sehingga `id` di dalam subquery
+  // menunjuk kolom tabel dalam (mis. `survey_soal.id`), bukan `survey.id`.
+  const respondenRows = await db
+    .select({ surveyId: surveyResponden.surveyId, jumlah: count() })
+    .from(surveyResponden)
+    .where(
+      inArray(
+        surveyResponden.surveyId,
+        tersedia.map((item) => item.id),
+      ),
+    )
+    .groupBy(surveyResponden.surveyId);
+  const respondenBySurvey = new Map(
+    respondenRows.map((row) => [row.surveyId, Number(row.jumlah ?? 0)]),
+  );
+
   return tersedia.map((row) => ({
     id: row.id,
     judul: row.judul,
@@ -100,8 +109,8 @@ export async function listSurveiPublik(villageId: number): Promise<SurveiPublikR
     sasaran: row.sasaran,
     mulai: row.mulai,
     selesai: row.selesai,
-    jumlahSoal: Number(row.jumlahSoal ?? 0),
-    jumlahResponden: Number(row.jumlahResponden ?? 0),
+    jumlahSoal: soalBySurvey.get(row.id)?.length ?? 0,
+    jumlahResponden: respondenBySurvey.get(row.id) ?? 0,
     soal: soalBySurvey.get(row.id) ?? [],
   }));
 }

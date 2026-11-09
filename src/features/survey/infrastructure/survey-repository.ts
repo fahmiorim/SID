@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, desc, eq, max, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, max } from "drizzle-orm";
 
 import { db } from "@/db";
 import { survey, surveyJawaban, surveyResponden, surveySoal } from "@/db/schema";
@@ -22,15 +22,38 @@ import {
  * didahului pemeriksaan kepemilikan survei di use case.
  */
 
-const jumlahSoalQuery = sql<number>`(
-  select count(*) from ${surveySoal}
-  where ${surveySoal.surveyId} = ${survey.id}
-)`;
+/**
+ * Hitungan soal & responden per survei.
+ *
+ * Memakai query agregat terpisah, bukan subquery berkorelasi: Drizzle
+ * merender kolom di dalam subquery tanpa kualifikasi tabel, sehingga `id` pada
+ * `where survey_id = id` menunjuk `survey_soal.id`/`survey_responden.id` dan
+ * hitungan selalu 0.
+ */
+async function hitungAnakSurvei(
+  surveyIds: readonly number[],
+): Promise<{ soal: Map<number, number>; responden: Map<number, number> }> {
+  if (surveyIds.length === 0) return { soal: new Map(), responden: new Map() };
 
-const jumlahRespondenQuery = sql<number>`(
-  select count(*) from ${surveyResponden}
-  where ${surveyResponden.surveyId} = ${survey.id}
-)`;
+  const ids = [...surveyIds];
+  const [soalRows, respondenRows] = await Promise.all([
+    db
+      .select({ surveyId: surveySoal.surveyId, jumlah: count() })
+      .from(surveySoal)
+      .where(inArray(surveySoal.surveyId, ids))
+      .groupBy(surveySoal.surveyId),
+    db
+      .select({ surveyId: surveyResponden.surveyId, jumlah: count() })
+      .from(surveyResponden)
+      .where(inArray(surveyResponden.surveyId, ids))
+      .groupBy(surveyResponden.surveyId),
+  ]);
+
+  return {
+    soal: new Map(soalRows.map((row) => [row.surveyId, Number(row.jumlah ?? 0)])),
+    responden: new Map(respondenRows.map((row) => [row.surveyId, Number(row.jumlah ?? 0)])),
+  };
+}
 
 /** Daftar survei desa (termasuk yang nonaktif) beserta jumlah soal/responden. */
 export async function listSurvey(villageId: number): Promise<SurveyRow[]> {
@@ -44,12 +67,12 @@ export async function listSurvey(villageId: number): Promise<SurveyRow[]> {
       selesai: survey.selesai,
       aktif: survey.aktif,
       createdAt: survey.createdAt,
-      jumlahSoal: jumlahSoalQuery,
-      jumlahResponden: jumlahRespondenQuery,
     })
     .from(survey)
     .where(eq(survey.villageId, villageId))
     .orderBy(desc(survey.createdAt), desc(survey.id));
+
+  const hitung = await hitungAnakSurvei(rows.map((row) => row.id));
 
   return rows.map((row) => ({
     id: row.id,
@@ -59,8 +82,8 @@ export async function listSurvey(villageId: number): Promise<SurveyRow[]> {
     mulai: row.mulai,
     selesai: row.selesai,
     aktif: row.aktif === 1,
-    jumlahSoal: Number(row.jumlahSoal ?? 0),
-    jumlahResponden: Number(row.jumlahResponden ?? 0),
+    jumlahSoal: hitung.soal.get(row.id) ?? 0,
+    jumlahResponden: hitung.responden.get(row.id) ?? 0,
     createdAt: row.createdAt,
   }));
 }
@@ -77,14 +100,14 @@ export async function getSurvey(villageId: number, id: number): Promise<SurveyRo
       selesai: survey.selesai,
       aktif: survey.aktif,
       createdAt: survey.createdAt,
-      jumlahSoal: jumlahSoalQuery,
-      jumlahResponden: jumlahRespondenQuery,
     })
     .from(survey)
     .where(and(eq(survey.villageId, villageId), eq(survey.id, id)))
     .limit(1);
 
   if (!row) return null;
+
+  const hitung = await hitungAnakSurvei([row.id]);
 
   return {
     id: row.id,
@@ -94,8 +117,8 @@ export async function getSurvey(villageId: number, id: number): Promise<SurveyRo
     mulai: row.mulai,
     selesai: row.selesai,
     aktif: row.aktif === 1,
-    jumlahSoal: Number(row.jumlahSoal ?? 0),
-    jumlahResponden: Number(row.jumlahResponden ?? 0),
+    jumlahSoal: hitung.soal.get(row.id) ?? 0,
+    jumlahResponden: hitung.responden.get(row.id) ?? 0,
     createdAt: row.createdAt,
   };
 }
@@ -264,21 +287,38 @@ export async function listResponden(surveyId: number): Promise<RespondenRow[]> {
       nama: surveyResponden.nama,
       nik: surveyResponden.nik,
       createdAt: surveyResponden.createdAt,
-      jumlahJawaban: sql<number>`(
-        select count(*) from ${surveyJawaban}
-        where ${surveyJawaban.respondenId} = ${surveyResponden.id}
-      )`,
     })
     .from(surveyResponden)
     .where(eq(surveyResponden.surveyId, surveyId))
     .orderBy(asc(surveyResponden.id));
+
+  const jawabanRows =
+    rows.length === 0
+      ? []
+      : await db
+          .select({ respondenId: surveyJawaban.respondenId, jumlah: count() })
+          .from(surveyJawaban)
+          .innerJoin(surveySoal, eq(surveyJawaban.soalId, surveySoal.id))
+          .where(
+            and(
+              eq(surveySoal.surveyId, surveyId),
+              inArray(
+                surveyJawaban.respondenId,
+                rows.map((row) => row.id),
+              ),
+            ),
+          )
+          .groupBy(surveyJawaban.respondenId);
+  const jawabanByResponden = new Map(
+    jawabanRows.map((row) => [row.respondenId, Number(row.jumlah ?? 0)]),
+  );
 
   return rows.map((row) => ({
     id: row.id,
     nama: row.nama,
     nik: row.nik,
     createdAt: row.createdAt,
-    jumlahJawaban: Number(row.jumlahJawaban ?? 0),
+    jumlahJawaban: jawabanByResponden.get(row.id) ?? 0,
   }));
 }
 

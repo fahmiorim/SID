@@ -314,9 +314,6 @@ export async function listDtksEkspor(
       namaResponden: dtks.namaResponden,
       tanggalPencacahan: dtks.tanggalPencacahan,
       namaKk: families.number,
-      jumlahAnggota: sql<number>`(
-        select count(*) from ${dtksAnggota} where ${dtksAnggota.dtksId} = ${dtks.id}
-      )`,
     })
     .from(dtks)
     .leftJoin(rumahTangga, eq(dtks.rtmId, rumahTangga.id))
@@ -326,12 +323,29 @@ export async function listDtksEkspor(
     .where(where)
     .orderBy(asc(rumahTangga.number));
 
+  // Query agregat, bukan subquery berkorelasi: Drizzle merender kolom subquery
+  // tanpa kualifikasi tabel sehingga `id` menunjuk `dtks_anggota.id`.
+  const anggotaRows =
+    rows.length === 0
+      ? []
+      : await db
+          .select({ dtksId: dtksAnggota.dtksId, jumlah: count() })
+          .from(dtksAnggota)
+          .where(
+            inArray(
+              dtksAnggota.dtksId,
+              rows.map((row) => row.id),
+            ),
+          )
+          .groupBy(dtksAnggota.dtksId);
+  const anggotaByDtks = new Map(anggotaRows.map((row) => [row.dtksId, Number(row.jumlah ?? 0)]));
+
   return rows.map((row) => ({
     id: row.id,
     noRtm: row.noRtm ?? "-",
     kepalaRtm: row.kepalaRtm ?? null,
     status: row.status,
-    jumlahAnggota: Number(row.jumlahAnggota ?? 0),
+    jumlahAnggota: anggotaByDtks.get(row.id) ?? 0,
     dusun: row.dusun ?? null,
     namaPetugas: row.namaPetugas ?? null,
     namaResponden: row.namaResponden ?? null,

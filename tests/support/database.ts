@@ -146,6 +146,46 @@ export async function hapusSuplemenDariNama(nama: string): Promise<void> {
   });
 }
 
+/**
+ * Buat suplemen desa sendiri beserta satu data terhimpun.
+ *
+ * Dipakai halaman publik `OS-WEB-012`: ringkasan hanya boleh menampilkan
+ * agregat (jumlah data dan nama kolom), bukan nilai isian warga.
+ */
+export async function buatSuplemenPublikUji(input: {
+  nama: string;
+  sasaran?: number;
+  keterangan?: string;
+  isian?: Record<string, string>;
+}): Promise<{ id: number; slug: string }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const slug = `e2e-suplemen-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const [suplemen] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO suplemen (village_id, nama, slug, sasaran, keterangan) VALUES (?, ?, ?, ?, ?)",
+      [villageId, input.nama, slug, input.sasaran ?? 2, input.keterangan ?? null],
+    );
+    await pool.execute(
+      "INSERT INTO suplemen_terdata (village_id, id_suplemen, data_form_isian) VALUES (?, ?, ?)",
+      [villageId, suplemen.insertId, JSON.stringify(input.isian ?? {})],
+    );
+    return { id: suplemen.insertId, slug };
+  });
+}
+
+/** Hapus suplemen publik uji beserta data terhimpunnya. */
+export async function hapusSuplemenPublikUji(id: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM suplemen_terdata WHERE id_suplemen = ?", [id]);
+    await pool.execute("DELETE FROM suplemen WHERE id = ?", [id]);
+  });
+}
+
 /** Hapus riwayat mutasi berdasarkan nomor surat (untuk data uji kelahiran). */
 export async function hapusMutasiDariSurat(referenceNo: string): Promise<void> {
   await denganPool(async (pool) => {
@@ -221,6 +261,101 @@ export async function buatSurveyPublikDariJudul(judul: string): Promise<number> 
       [villageId, judul],
     );
     return hasil.insertId;
+  });
+}
+
+/**
+ * Buat survei aktif lengkap (soal, responden, jawaban) di desa admin.
+ *
+ * Dipakai halaman publik `OS-WEB-013`: rekap yang dipublikasikan hanya boleh
+ * berupa agregat, jadi nama/NIK responden dan isi jawaban teks disimpan di
+ * sini untuk dibuktikan tidak pernah tampil di halaman publik.
+ */
+export async function buatSurveiAnalisisPublikUji(input: {
+  judul: string;
+  soal: { pertanyaan: string; tipe: "choice" | "number" | "text"; pilihan?: string[] }[];
+  responden?: { nama: string; nik: string; jawaban: string[] }[];
+}): Promise<{ id: number; soalIds: number[] }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [survei] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO survey (village_id, judul, deskripsi, sasaran, mulai, selesai, aktif)
+       VALUES (?, ?, 'Survei uji rekap publik E2E', 'Warga usia produktif', '2020-01-01', '2099-12-31', 1)`,
+      [villageId, input.judul],
+    );
+
+    const soalIds: number[] = [];
+    for (const [urutan, soal] of input.soal.entries()) {
+      const [baris] = await pool.execute<ResultSetHeader>(
+        "INSERT INTO survey_soal (survey_id, pertanyaan, tipe, pilihan, urutan) VALUES (?, ?, ?, ?, ?)",
+        [
+          survei.insertId,
+          soal.pertanyaan,
+          soal.tipe,
+          soal.pilihan ? JSON.stringify(soal.pilihan) : null,
+          urutan,
+        ],
+      );
+      soalIds.push(baris.insertId);
+    }
+
+    for (const responden of input.responden ?? []) {
+      const [baris] = await pool.execute<ResultSetHeader>(
+        "INSERT INTO survey_responden (survey_id, nama, nik) VALUES (?, ?, ?)",
+        [survei.insertId, responden.nama, responden.nik],
+      );
+      for (const [index, jawaban] of responden.jawaban.entries()) {
+        const soalId = soalIds[index];
+        if (!soalId) continue;
+        await pool.execute(
+          "INSERT INTO survey_jawaban (responden_id, soal_id, jawaban) VALUES (?, ?, ?)",
+          [baris.insertId, soalId, jawaban],
+        );
+      }
+    }
+
+    return { id: survei.insertId, soalIds };
+  });
+}
+
+/**
+ * Buat survei aktif pada desa fixture tersendiri.
+ *
+ * Dipakai untuk membuktikan isolasi tenant halaman publik `OS-WEB-013`:
+ * survei desa lain tidak boleh muncul di daftar maupun terbuka lewat `/isi`.
+ */
+export async function buatSurveiDesaLainUji(
+  judul: string,
+): Promise<{ id: number; villageId: number }> {
+  return denganPool(async (pool) => {
+    const kode = `SL${Date.now().toString().slice(-8)}`;
+    const [desa] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO villages (name, code, slug) VALUES (?, ?, ?)",
+      [`Desa Survei Lain ${kode}`, kode, `desa-survei-${kode.toLowerCase()}`],
+    );
+    const [survei] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO survey (village_id, judul, sasaran, mulai, selesai, aktif)
+       VALUES (?, ?, 'Warga desa lain', '2020-01-01', '2099-12-31', 1)`,
+      [desa.insertId, judul],
+    );
+    await pool.execute(
+      "INSERT INTO survey_soal (survey_id, pertanyaan, tipe, pilihan, urutan) VALUES (?, ?, 'choice', ?, 0)",
+      [survei.insertId, "Pertanyaan rahasia desa lain", JSON.stringify(["Ya", "Tidak"])],
+    );
+    return { id: survei.insertId, villageId: desa.insertId };
+  });
+}
+
+/** Hapus survei desa lain beserta desa fixture-nya. */
+export async function hapusSurveiDesaLainUji(id: number, villageId: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM survey WHERE id = ?", [id]);
+    await pool.execute("DELETE FROM villages WHERE id = ?", [villageId]);
   });
 }
 
@@ -342,6 +477,92 @@ export async function ambilStatusPengaduanDariJudul(judul: string): Promise<stri
 export async function hapusPengaduanDariJudul(judul: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM pengaduan WHERE judul = ?", [judul]);
+  });
+}
+
+/**
+ * Buat barang inventaris uji beserta kategorinya pada desa admin.
+ *
+ * Dipakai halaman publik `OS-WEB-011`: filter dan ekspor CSV hanya boleh
+ * menampilkan barang milik desa ini.
+ */
+export async function buatInventarisPublikUji(input: {
+  nama: string;
+  kategori: string;
+  lokasi?: string;
+  tahun?: number;
+  jumlah?: string;
+  nilai?: string;
+}): Promise<{ id: number; kategoriId: number }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [kategori] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO inventaris_kategori (village_id, kode, nama, golongan) VALUES (?, ?, ?, 'peralatan_mesin')",
+      [villageId, `E2E${Date.now().toString().slice(-8)}`, input.kategori],
+    );
+    const [barang] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO inventaris
+         (village_id, kategori_id, nama_barang, jumlah, satuan, kondisi, lokasi,
+          tahun_pembelian, nilai_akhir)
+       VALUES (?, ?, ?, ?, 'unit', 'baik', ?, ?, ?)`,
+      [
+        villageId,
+        kategori.insertId,
+        input.nama,
+        input.jumlah ?? "2",
+        input.lokasi ?? "Gudang E2E",
+        input.tahun ?? 2026,
+        input.nilai ?? "1500000",
+      ],
+    );
+    return { id: barang.insertId, kategoriId: kategori.insertId };
+  });
+}
+
+/**
+ * Buat barang inventaris pada desa fixture tersendiri.
+ *
+ * Dipakai untuk membuktikan isolasi tenant halaman publik `OS-WEB-011`.
+ */
+export async function buatInventarisDesaLainUji(input: {
+  nama: string;
+  kategori: string;
+}): Promise<{ id: number; kategoriId: number; villageId: number }> {
+  return denganPool(async (pool) => {
+    const kode = `IL${Date.now().toString().slice(-8)}`;
+    const [desa] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO villages (name, code, slug) VALUES (?, ?, ?)",
+      [`Desa Inventaris Lain ${kode}`, kode, `desa-inventaris-${kode.toLowerCase()}`],
+    );
+    const [kategori] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO inventaris_kategori (village_id, kode, nama, golongan) VALUES (?, ?, ?, 'peralatan_mesin')",
+      [desa.insertId, `E2E${Date.now().toString().slice(-8)}`, input.kategori],
+    );
+    const [barang] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO inventaris (village_id, kategori_id, nama_barang, jumlah, satuan, kondisi) VALUES (?, ?, ?, '1', 'unit', 'baik')",
+      [desa.insertId, kategori.insertId, input.nama],
+    );
+    return { id: barang.insertId, kategoriId: kategori.insertId, villageId: desa.insertId };
+  });
+}
+
+/** Hapus barang inventaris uji, kategorinya, dan desa fixture bila ada. */
+export async function hapusInventarisUji(input: {
+  id: number;
+  kategoriId: number;
+  villageId?: number;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM inventaris WHERE id = ?", [input.id]);
+    await pool.execute("DELETE FROM inventaris_kategori WHERE id = ?", [input.kategoriId]);
+    if (input.villageId) {
+      await pool.execute("DELETE FROM villages WHERE id = ?", [input.villageId]);
+    }
   });
 }
 

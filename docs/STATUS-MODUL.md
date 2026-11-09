@@ -63,6 +63,7 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `lapak-keranjang` | 1 | 1 | 13 | `OS-MOD-004` |
 | `arsip-nomor-surat` | 1 | 1 | 12 | `OS-SUR-006` |
 | `pelanggan-kerjasama` | 3 | 1 | 12 | `OS-MOD-005` |
+| `publik-verifikasi` | 3 | 2 | 11 | `OS-SUR-008`, `OS-WEB-019` |
 
 Contoh berkas yang masih perlu diperluas (10 November 2026):
 
@@ -90,6 +91,16 @@ Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/keseh
 Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, dan `npm run build` lulus.
 
 **P2 — `OS-MOD-005` ditutup 10 November 2026.** Gap "E2E belum membuktikan unduh dokumen berhasil dan ditolak untuk akses tanpa izin/lintas desa" diselesaikan dengan tiga test di `tests/pelanggan-kerjasama.e2e.ts`: (1) tautan "Lihat dokumen" mengembalikan `200` dengan `Content-Type` PDF, `Content-Disposition: inline`, magic `%PDF-`, dan ukuran > 0; (2) `/pelanggan/abc/dokumen` → `400`, ID pelanggan milik desa lain → `404`, ID yang tidak ada → `404`; (3) sesi warga tanpa izin `pelanggan` → `403` tanpa menyajikan berkas, dan permintaan tanpa cookie sesi dialihkan ke `/masuk?next=`. Fixture desa lain dibuat dan dibersihkan lewat `tests/support/database.ts`, sehingga tidak ada baris yatim setelah test. Verifikasi: E2E berkas ini 5/5 lulus (3 test + 2 setup sesi) terhadap build produksi, `npm run build` lulus, `npm run lint` 0 error, `tsc --noEmit` lulus, dan Prettier bersih.
+
+**P2 — `OS-WEB-012` dan `OS-ANA-002`/`OS-ANA-003`/`OS-ANA-004` ditutup 10 November 2026.** Suplemen publik kini punya bukti E2E tersendiri di `web-publik` (18 test): fixture suplemen bersasaran keluarga dengan satu data terhimpun tampil di `/desa/suplemen` sebagai "Sasaran: Keluarga (KK) · 1 data"; halaman detail menampilkan "1 data terhimpun", daftar "Kolom data" berisi nama kolom, sedangkan nilai isian tidak muncul; setelah fixture dihapus, slug lamanya 404. Untuk analisis, `analisis-survei` (7 test) kini dirujuk eksplisit: indikator dengan kode/nama/bobot lalu dihapus (`OS-ANA-002`), survei dengan sasaran + periode dan status `Aktif` (`OS-ANA-003`), serta laporan skor formal yang menampilkan responden, rata-rata skor, distribusi klasifikasi, dan skor per responden beserta CSV-nya (`OS-ANA-004`). Baris `OS-ANA-005` hanya dikoreksi: endpoint token sudah diuji menolak tanpa token, tetapi jalur sukses bertoken tetap belum diuji E2E. Verifikasi: E2E build produksi `web-publik` 18/18 + `analisis-survei` 7/7 (26/26 termasuk setup sesi), `npm run build` lulus, `tsc --noEmit` lulus, Prettier bersih.
+
+**P2 — `OS-WEB-013` ditutup 10 November 2026.** Test baru di `web-publik` (19 test) membuat survei aktif dengan tiga pertanyaan (pilihan, angka, teks) dan dua responden, lalu membuktikan halaman `/desa/analisis-survei` menampilkan "3 pertanyaan", "2 responden", distribusi "2 (100%)", rata-rata "5 dari 2 jawaban", dan "2 jawaban (isi tidak dipublikasikan)" tanpa memuat nama/NIK responden maupun isi jawaban teks. Filter "Periode hasil" menyaring rekap ke tahun berjalan dan menyediakan tautan "Hapus filter"; survei desa lain tidak muncul di daftar dan halaman `/isi`-nya 404. Test ini juga menemukan bug nyata: subquery berkorelasi `listSurveiPublik()` dirender Drizzle dengan nama kolom tanpa kualifikasi sehingga `id` di subquery menunjuk `survey_soal.id`, dan hitungan soal/responden selalu tampil 0; hitungan kini diambil lewat query agregat terpisah. Verifikasi: `web-publik` 19/19 + setup sesi (20/20) pada build produksi, `npm run build` lulus, `tsc --noEmit` lulus, `npm run lint` 0 error, Prettier bersih.
+
+**P2 — `OS-WEB-019` ditutup 10 November 2026.** `publik-verifikasi` (3 test) kini juga menguji jalur form token yang dipakai pemindai kode QR: `/desa/verifikasi-surat` menampilkan isian "Token verifikasi", token berformat salah dialihkan ke `/desa/verifikasi-surat/token-tidak-valid` dan berakhir di "Surat Tidak Ditemukan", sedangkan token 64 hex milik desa ini menampilkan nomor surat dan status "Siap Diambil" tanpa sesi. Setelah surat fixture dihapus, tokennya kembali "Surat Tidak Ditemukan". Verifikasi: `publik-verifikasi` 3/3 pada build produksi, `tsc --noEmit` lulus, `npm run lint` 0 error, Prettier bersih.
+
+**P2 — `OS-WEB-011` ditutup 10 November 2026.** Test baru di `web-publik` (20 test) membuat satu barang inventaris bersasaran kategori unik di desa sendiri dan satu barang pada desa fixture lain. Halaman `/desa/inventaris` menampilkan barang sendiri, tidak menampilkan barang desa lain, lalu filter "Cari barang" + "Terapkan" menghasilkan "1 barang cocok dengan filter."; unduhan `/desa/inventaris/ekspor?q=...` mengembalikan `200` `text/csv` dengan `Content-Disposition` berkas `inventaris-*.csv`, memuat judul kolom "Nama Barang" dan barang yang difilter, tanpa barang desa lain. Verifikasi: `web-publik` 20/20 + setup sesi pada build produksi, `tsc --noEmit` lulus, `npm run lint` 0 error, Prettier bersih.
+
+**Perbaikan hitungan tabel anak 10 November 2026.** Test `OS-WEB-013` menemukan pola subquery berkorelasi yang dirender Drizzle tanpa kualifikasi tabel (`where \`survey_id\` = \`id\``), sehingga `id` menunjuk tabel dalam dan hitungan selalu 0. Pola yang sama diperbaiki di daftar survei admin (soal/responden per survei, jawaban per responden), anggota per KK, terdata per suplemen, anggota per DTKS, perangkat per jabatan, foto per album admin, dan foto aktif per album publik — semuanya kini memakai query agregat `GROUP BY` yang dibatasi id induk. Daftar survei admin dibuktikan E2E: setelah satu pertanyaan dibuat baris menampilkan 1 soal dan 0 responden, dan setelah warga mengisi menjadi 1 soal dan 1 responden.
 
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
 
@@ -153,7 +164,7 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `analisis-survei` | 7 | 34 | Kategori/indikator/survei CRUD, jawaban warga → rekap admin, ekspor, token API | `OS-ANA-001`–`OS-ANA-006` |
 | `survei-publik` | 2 | 1 | Survei aktif tampil + dapat dibuka; survei nonaktif disembunyikan | `OS-ANA-006` |
 | `gis-pertanahan` | 7 | 30 | Area/garis/point/polygon, persil/CDESA/mutasi, peta cetak, simbol | `OS-WIL-006` |
-| `web-publik` | 17 | 6 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak; tautan lewati + `aria-current` filter kategori | `OS-WEB-001`–`OS-WEB-019` |
+| `web-publik` | 20 | 8 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak, suplemen, analisis publik; tautan lewati + `aria-current` filter kategori | `OS-WEB-001`–`OS-WEB-019` |
 | `web-berita-galeri` | 3 | 16 | Berita buat/tampil/detail/cari, galeri album + detail | `OS-WEB-002`, `OS-WEB-004` |
 | `umpan-balik` | 2 | 8 | Warga kirim umpan balik; admin menandai baru → dibaca → ditindaklanjuti | `OS-WEB-009`, `OS-WEB-015` |
 | `pengaduan` | 1 | 17 | Kirim pengaduan tanpa akun, lacak dengan nomor tiket + identitas, operator menanggapi, status dan tanggapan terlihat pelapor | `OS-WEB-009` |
@@ -249,25 +260,25 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-FIN-011 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-FIN-013 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-WEB-001 | Sebagian | Cakupan E2E publik belum menyeluruh; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. Audit 10 November 2026 menambahkan tautan "Lewati ke konten utama" + `main#konten-utama` pada tema `esensi` dan `natra`. | `web-publik` 17 test/6 beraksi |
+| OS-WEB-001 | Sebagian | Cakupan E2E publik belum menyeluruh; header/beranda/footer dirombak menjadi portal desa, menu publik 7 grup + dropdown, duplikasi Kontak dihapus. Audit 10 November 2026 menambahkan tautan "Lewati ke konten utama" + `main#konten-utama` pada tema `esensi` dan `natra`. | `web-publik` 20 test/8 beraksi |
 | OS-WEB-002 | Struktur lengkap; ada E2E interaktif | Filter kategori aktif ditandai `aria-current`; sampul kartu `alt=""` agar nama tautan tidak diumumkan ganda | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-003 | Sebagian | E2E profil/pemerintahan/SOTK publik belum ada | tidak dirujuk |
 | OS-WEB-004 | Struktur lengkap; ada E2E interaktif | Album, detail, dan cetak album; sampul dekoratif, foto tanpa judul tidak lagi meminjam nama album sebagai `alt` | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-005 | Struktur lengkap; ada E2E interaktif | Dokumen dibuat, difilter, dicari, dan sematan sandbox | `web-dokumen` 1 test/1 beraksi |
-| OS-WEB-006 | Sebagian | E2E publik membaca statistik; cakupan tenant/ekspor belum | `web-publik` 17 test |
-| OS-WEB-007 | Sebagian | Peta Leaflet dan cetak dibuka lewat UI; cakupan layer lebih luas belum. Peta interaktif kini ber-`role="region"` dengan label desa, dan label ringkasan memakai "layer poligon". | `web-publik` 17 test |
+| OS-WEB-006 | Sebagian | E2E publik membaca statistik; cakupan tenant/ekspor belum | `web-publik` 20 test |
+| OS-WEB-007 | Sebagian | Peta Leaflet dan cetak dibuka lewat UI; cakupan layer lebih luas belum. Peta interaktif kini ber-`role="region"` dengan label desa, dan label ringkasan memakai "layer poligon". | `web-publik` 20 test |
 | OS-WEB-008 | Sebagian | Proyek baru tampil di halaman publik; filter tahun dicek | `pembangunan-buku` 1 test/1 beraksi |
 | OS-WEB-009 | Struktur lengkap; ada E2E interaktif | — | `pengaduan` 1 test/1 beraksi; `umpan-balik` 2 test/2 beraksi |
-| OS-WEB-010 | Sebagian | Daftar kelompok dan tombol cetak tampil; alur cetak penuh belum | `web-publik` 17 test |
-| OS-WEB-011 | Sebagian | Filter inventaris tanpa hasil diuji; ekspor belum | `web-publik` 17 test |
-| OS-WEB-012 | Sebagian | E2E. | tidak dirujuk |
-| OS-WEB-013 | Sebagian | E2E publik/isolasi tenant. | tidak dirujuk |
+| OS-WEB-010 | Sebagian | Daftar kelompok dan tombol cetak tampil; alur cetak penuh belum | `web-publik` 20 test |
+| OS-WEB-011 | Struktur lengkap; ada E2E interaktif | Filter kata kunci lewat formulir menampilkan pesan hasil; ekspor CSV mengikuti filter yang sama (`text/csv` + `Content-Disposition`); barang desa lain tidak tampil di daftar maupun CSV. | `web-publik` 20 test/8 beraksi |
+| OS-WEB-012 | Struktur terverifikasi; ada E2E interaktif | Daftar dan detail suplemen tampil dengan sasaran serta jumlah data; hanya nama kolom isian yang dipublikasikan, nilai isian tidak; slug yang sudah dihapus 404. | `web-publik` 20 test/8 beraksi |
+| OS-WEB-013 | Struktur lengkap; ada E2E interaktif | Rekap publik per pertanyaan (distribusi pilihan, rata-rata angka, jumlah jawaban teks tanpa isi), jumlah soal/responden, dan filter periode tahun; nama/NIK responden serta isi jawaban teks tidak tampil; survei desa lain tidak muncul dan `/isi` desa lain 404. | `web-publik` 20 test/8 beraksi |
 | OS-WEB-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-WEB-015 | Struktur lengkap; ada E2E interaktif | — | `umpan-balik` 2 test/2 beraksi |
 | OS-WEB-016 | Struktur lengkap; ada E2E interaktif | — | `tema` 1 test/1 beraksi |
 | OS-WEB-017 | Sebagian | E2E tema terbatas pada teks berjalan dan tautan Facebook | `tema` 1 test/1 beraksi |
 | OS-WEB-018 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `sitemap` 2 test/smoke |
-| OS-WEB-019 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-WEB-019 | Struktur lengkap; ada E2E interaktif | Form token (jalur kode QR) mengalihkan ke halaman token publik; token valid 64 hex menampilkan jenis, nomor, dan status surat; token berformat salah maupun token yang sudah dihapus menampilkan "Surat Tidak Ditemukan" tanpa membocorkan data. | `publik-verifikasi` 3 test/2 beraksi |
 | OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-002 | Struktur terverifikasi | Login `/masuk`, sesi warga, PIN, OTP faktor kedua, rate limit; test `warga.test.ts`, `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-003 | Struktur terverifikasi | Beranda/profil/ringkasan layanan warga di `/layanan-mandiri`; test `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
@@ -280,10 +291,10 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WGA-010 | Struktur terverifikasi | Lapak warga `/layanan-mandiri/lapak` + katalog publik; test `lapak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-011 | Struktur terverifikasi | Kehadiran `/kehadiran`, izin warga `/layanan-mandiri/izin`, keputusan `/kehadiran/izin`; test `kehadiran.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-ANA-001 | Struktur lengkap; ada E2E interaktif | Kategori analisis CRUD | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-002 | Sebagian | E2E. | tidak dirujuk |
-| OS-ANA-003 | Sebagian | E2E. | tidak dirujuk |
-| OS-ANA-004 | Sebagian | E2E. | tidak dirujuk |
-| OS-ANA-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-ANA-002 | Struktur lengkap; ada E2E interaktif | Indikator dibuat dengan kode, nama, dan bobot 50 lalu dihapus | `analisis-survei` 7 test/4 beraksi |
+| OS-ANA-003 | Struktur lengkap; ada E2E interaktif | Survei dibuat dengan sasaran dan periode, status `Aktif` tampil di daftar | `analisis-survei` 7 test/4 beraksi |
+| OS-ANA-004 | Struktur lengkap; ada E2E interaktif | Laporan skor menampilkan responden, rata-rata skor, distribusi klasifikasi, dan skor per responden; CSV memuat responden; ID tidak valid ditolak `400` | `analisis-survei` 7 test/4 beraksi |
+| OS-ANA-005 | Struktur lengkap; E2E hanya penolakan | Endpoint formulir eksternal diuji menolak permintaan tanpa token (`401`); jalur sukses bertoken belum diuji E2E | `analisis-survei` 7 test/4 beraksi |
 | OS-ANA-006 | Struktur lengkap; ada E2E interaktif | — | `analisis-survei` 7 test/4 beraksi; `survei-publik` 2 test/1 beraksi |
 | OS-MOD-001 | Struktur lengkap; ada E2E interaktif | CRUD, aktif/nonaktif, hapus, isolasi tenant, login NIK/tanggal lahir, pengajuan surat, nomor antrian, dan gerbang perangkat tanpa izin sudah diuji. Konfigurasi printer/IP belum dipakai di alur cetak. | `anjungan` 2 test/2 beraksi; integrasi tenant; unit anjungan 31 |
 | OS-MOD-002 | Struktur lengkap; E2E hanya smoke | Buku tamu belum diuji berinteraksi | `modul-tambahan` 4 test/1 beraksi |
