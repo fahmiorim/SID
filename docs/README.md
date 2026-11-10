@@ -2,11 +2,12 @@
 
 Mulai dari dokumen kerja ini:
 
-1. [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md) — target rebuild, pengecualian, dan snapshot acuan.
+1. [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md) — fase kerja, prioritas, dan status milestone.
 2. [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md) — 111 ID `OS-*` yang menjadi scope produk beserta keluaran wajibnya.
 3. [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md) — status per ID terhadap katalog, disalin dari audit terkini.
 4. [`STATUS-MODUL.md`](./STATUS-MODUL.md) — hasil audit struktur 111 ID, kedalaman bukti E2E, dan gap yang tersisa.
-5. [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md) — urutan audit, perbaikan, dan pengujian.
+5. [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md) — backlog teknis: urutan audit, perbaikan, dan pengujian.
+6. [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md) — target rebuild, pengecualian, dan snapshot acuan.
 
 Dokumen teknis tetap menjadi referensi implementasi: [`ARCHITECTURE.md`](./ARCHITECTURE.md) dan [`RUNBOOK-PEMULIHAN.md`](./RUNBOOK-PEMULIHAN.md). Bahan riset ada di [`riset/`](./riset/).
 

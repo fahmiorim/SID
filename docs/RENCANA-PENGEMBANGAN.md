@@ -1,6 +1,6 @@
 # Rencana Pengembangan
 
-Tujuan: menuntaskan rebuild orisinal semua fitur OpenSID dalam scope pada [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md). Bukti struktur dan status per ID dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Dokumen di `arsip/status-sebelum-audit/` hanya catatan sejarah, bukan backlog yang sudah diverifikasi.
+Tujuan: menuntaskan rebuild orisinal semua fitur OpenSID dalam scope pada [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md). Fase kerja dan status milestone ada di [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md); dokumen ini memuat backlog teknis per prioritas. Status per ID ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md), bukti strukturnya di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Dokumen di `arsip/status-sebelum-audit/` hanya catatan sejarah, bukan backlog yang sudah diverifikasi.
 
 audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum selesai adalah **perbaikan gap dan pengujian perilaku**. Setiap perbaikan harus dibuktikan dengan uji unit, uji integrasi, dan uji E2E yang relevan.
 

@@ -43,6 +43,7 @@ describe("dokumentasi scope dan status", () => {
   it("peta dokumentasi aktif menautkan katalog dan paritas, bukan salinan arsip", () => {
     const peta = baca("README.md");
 
+    expect(peta).toContain("RENCANA-PERBAIKAN.md");
     expect(peta).toContain("CAKUPAN-OPENSID.md");
     expect(peta).toContain("STATUS-MODUL.md");
     expect(peta).toContain("RENCANA-PENGEMBANGAN.md");
