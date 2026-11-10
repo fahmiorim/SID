@@ -96,6 +96,51 @@ export async function hapusWilayahDariDusun(dusun: string): Promise<void> {
   });
 }
 
+/**
+ * Buat satu pesan kotak masuk email uji pada desa admin.
+ *
+ * Webhook email hanya menerima payload bila `EMAIL_WEBHOOK_TOKEN` diatur, jadi
+ * E2E `OS-OPS-005` menyiapkan barisnya langsung untuk membuktikan alur baca,
+ * tandai dibaca, dan filter kanal dari UI.
+ */
+export async function buatPesanMailboxUji(input: {
+  subjek: string;
+  alamat: string;
+  isi: string;
+}): Promise<number> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO mailbox_pesan (village_id, arah, alamat, subjek, isi, dibaca) VALUES (?, 'masuk', ?, ?, ?, 0)",
+      [villageId, input.alamat, input.subjek, input.isi],
+    );
+    return hasil.insertId;
+  });
+}
+
+/** Status baca satu pesan kotak masuk uji. */
+export async function bacaStatusPesanMailbox(id: number): Promise<boolean | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT dibaca FROM mailbox_pesan WHERE id = ? LIMIT 1",
+      [id],
+    );
+    return rows[0] ? Boolean(rows[0].dibaca) : null;
+  });
+}
+
+/** Hapus pesan kotak masuk uji berdasarkan subjek. */
+export async function hapusPesanMailboxDariSubjek(subjek: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM mailbox_pesan WHERE subjek = ?", [subjek]);
+  });
+}
+
 /** Hapus perangkat desa uji berdasarkan nama (pembersihan alur bagan SOTK). */
 export async function hapusPerangkatDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
@@ -1038,8 +1083,8 @@ export async function buatSuratUjiDenganToken(input: {
   nomor: string;
   jenis: string;
   tanggal: string;
-}): Promise<void> {
-  await denganPool(async (pool) => {
+}): Promise<{ id: number; typeId: number }> {
+  return denganPool(async (pool) => {
     const [users] = await pool.query<RowDataPacket[]>(
       "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
     );
@@ -1054,7 +1099,7 @@ export async function buatSuratUjiDenganToken(input: {
     if (!typeId) throw new Error("Jenis surat desa E2E tidak ditemukan.");
 
     const hash = createHash("sha256").update(input.token).digest("hex");
-    await pool.execute(
+    const [hasil] = await pool.execute<ResultSetHeader>(
       `INSERT INTO letters
          (village_id, type_id, type_name, number, status, letter_date, year, purpose,
           verification_token, verification_token_hash, issued_at)
@@ -1070,6 +1115,7 @@ export async function buatSuratUjiDenganToken(input: {
         hash,
       ],
     );
+    return { id: hasil.insertId, typeId };
   });
 }
 

@@ -6,31 +6,22 @@ import { toString as qrToString } from "qrcode";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { urlMedia } from "@/features/publik/domain/format";
 import { getSuratPrintData } from "@/features/surat/application/surat-use-cases";
 import { formatTanggalIndonesia, LETTER_STATUS_LABELS } from "@/features/surat/domain/surat";
+import { parseVarianCetak } from "@/features/surat/domain/varian-cetak";
 import { buildVerificationUrl } from "@/features/surat/domain/verifikasi";
 import { PrintButton } from "@/features/surat/presentation/components/print-button";
+import { VarianCetakSelect } from "@/features/surat/presentation/components/varian-cetak-select";
 import { isAppError } from "@/lib/errors";
 import { getRequestOrigin } from "@/lib/request-origin";
 
-const TEMPLATE_VARIANTS = [
-  { value: "default", label: "Default (Potrait)" },
-  { value: "landscape", label: "Landscape" },
-  { value: "compact", label: "Compact (margin kecil)" },
-] as const;
-
 export default async function CetakSuratPage({
   params,
+  searchParams,
 }: PageProps<"/persuratan/surat/[id]/cetak">) {
   const { id } = await params;
+  const query = await searchParams;
   const suratId = Number(id);
   if (!Number.isInteger(suratId) || suratId <= 0) {
     return <p className="text-sm text-destructive">Surat tidak valid.</p>;
@@ -78,11 +69,15 @@ export default async function CetakSuratPage({
     }
   }
 
+  // Varian dari URL mengalahkan pengaturan jenis surat agar pratinjau cetak
+  // dapat diganti tanpa mengubah data master.
+  const varian = parseVarianCetak(query.varian) ?? jenis.templateVariant ?? "default";
   const orientasi =
-    (layout.orientasi as string) ??
-    (jenis.templateVariant === "landscape" ? "landscape" : "portrait");
+    (layout.orientasi as string) ?? (varian === "landscape" ? "landscape" : "portrait");
   const isLandscape = orientasi === "landscape";
   const pageClass = isLandscape ? "max-w-[297mm]" : "max-w-[210mm]";
+  // Varian compact memakai margin kertas lebih kecil.
+  const paddingClass = varian === "compact" ? "p-6" : "p-10";
 
   return (
     <div className="space-y-4">
@@ -105,24 +100,7 @@ export default async function CetakSuratPage({
             <Label htmlFor="template-variant" className="text-sm font-medium">
               Varian:
             </Label>
-            <Select
-              value={jenis.templateVariant ?? "default"}
-              onValueChange={(_value) => {
-                // Update via URL reload atau server action
-                window.location.reload();
-              }}
-            >
-              <SelectTrigger id="template-variant" className="w-48">
-                <SelectValue placeholder="Pilih varian" />
-              </SelectTrigger>
-              <SelectContent>
-                {TEMPLATE_VARIANTS.map((v) => (
-                  <SelectItem key={v.value} value={v.value}>
-                    {v.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <VarianCetakSelect nilai={varian} />
           </div>
           {surat.status === "issued" ? (
             <Button variant="outline" size="sm" asChild>
@@ -137,7 +115,7 @@ export default async function CetakSuratPage({
       </div>
 
       <article
-        className={`mx-auto ${pageClass} rounded-lg border bg-white p-10 text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:text-black print:shadow-none`}
+        className={`mx-auto ${pageClass} rounded-lg border bg-white ${paddingClass} text-black shadow-sm print:max-w-none print:rounded-none print:border-0 print:p-0 print:text-black print:shadow-none`}
       >
         <header className="relative border-b-4 border-double border-black pb-3 text-center">
           {logoUrl ? (

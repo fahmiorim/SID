@@ -106,6 +106,12 @@ Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), 
 
 **P2 — `OS-GOV-003` ditutup 10 November 2026.** `pemerintahan` (4 test) kini membuktikan bagan SOTK admin, bukan hanya halaman yang termuat: satu perangkat baru dibuat lewat UI (`/konten/perangkat`, jabatan seed "Kaur Keuangan"), lalu `/konten/perangkat/sotk` menampilkan bagian "Kepala Desa", "Sekretariat", dan "Perangkat Pelaksana" beserta nama dan jabatan perangkat tersebut; tombol "Cetak" benar-benar memanggil `window.print()` (dipalsukan agar pemanggilannya terbukti). Perangkat uji dihapus lewat UI (konfirmasi "Hapus perangkat ini?"), dengan pembersihan cadangan `hapusPerangkatDariNama` di `tests/support/database.ts`. Verifikasi: E2E build produksi `pemerintahan` 5/5 (4 test + setup sesi), `npm run build` lulus, ESLint 0 masalah, Prettier bersih.
 
+**P2 — `OS-OPS-002`–`OS-OPS-007` ditutup 10 November 2026.** `ops-sistem` (9 test) tidak lagi smoke. Shortcut beranda dibuka lewat dialog, disimpan, dan kartu tetap sama setelah muat ulang (`OS-OPS-002`); jumlah berita beranda diubah lewat `/pengaturan/aplikasi`, tersimpan, lalu dipulihkan ke nilai seed (`OS-OPS-003`); OTP diaktifkan dan dinonaktifkan dari halaman profil (`OS-OPS-004`); pesan kotak masuk tampil dengan pengirim/isi, "Tandai dibaca" mengurangi jumlah pesan baru, dan filter `?kanal=email` aktif (`OS-OPS-005`); perubahan pengaturan tercatat sebagai "Ubah pengaturan aplikasi" dan dapat dicari (`OS-OPS-006`); backup SQL diunduh berisi `CREATE TABLE` dan restore menolak berkas non-SQL `400` (`OS-OPS-007`). Pengujian backup menemukan syarat lingkungan: `mysqldump` dan `mysql` harus ada di PATH proses server, jika tidak backup mengembalikan `500`. Verifikasi: E2E build produksi `ops-sistem` 10/10 (9 test + setup sesi), `npm run build` lulus, ESLint 0 masalah, Prettier bersih.
+
+**P2 — `OS-SUR-005` dan `OS-SUR-008` ditutup 10 November 2026 (dengan catatan provider).** `permohonan-rekap` membuat permohonan warga lalu membuktikan laporan operator: tabel "Rekap per Jenis Surat" berisi lima kolom untuk jenis uji, filter status `1` menampilkan permohonan dan status `3` menyembunyikannya, serta `/permohonan-surat/ekspor?status=1` menyajikan `text/csv` `rekap-permohonan-surat-*.csv` berisi NIK pemohon dan nama jenis. `surat-cetak-varian` membuktikan cetak per varian: potrait `max-w-[210mm]` dengan `p-10`, landscape `max-w-[297mm]`, dan compact `p-6`, tanpa kehilangan nomor surat maupun kode QR. Test ini menemukan bug produksi: halaman cetak mengoperasikan `onValueChange` (fungsi) dari Server Component ke `Select`, sehingga React menolak render dan halaman mengembalikan `500`; pilihan varian dipindah ke Client Component `VarianCetakSelect` yang mengganti `?varian=`, daftar varian diletakkan di domain `varian-cetak.ts` (ekspor dari modul `"use client"` menjadi client reference dan tidak dapat dipakai server), dan varian compact kini benar-benar memakai margin lebih kecil. Notifikasi email perubahan status (butuh Resend) serta PDF per varian belum diuji E2E. Verifikasi: E2E build produksi `permohonan-rekap` 1/1 dan `surat-cetak-varian` 1/1, `npm run build` lulus, ESLint 0 masalah, Prettier bersih.
+
+**P2 — status GIS diluruskan 10 November 2026.** `gis-layer` (4 test) dijalankan ulang pada build produksi dan lulus 5/5 termasuk setup sesi. Bukti yang sudah ada dipakai untuk meluruskan baris `OS-WIL-003`, `OS-WIL-004`, `OS-WIL-005`, dan `OS-WIL-008` dari "Sebagian" menjadi "Struktur lengkap; ada E2E interaktif": garis, titik, layer polygon, dan simbol masing-masing dibuat lewat dialog, diubah, lalu dihapus, dan tabel memperbarui setiap langkah. `OS-WIL-002` tetap "Sebagian" karena CRUD area/wilayah belum diuji E2E.
+
 **Perbaikan hitungan tabel anak 10 November 2026.** Test `OS-WEB-013` menemukan pola subquery berkorelasi yang dirender Drizzle tanpa kualifikasi tabel (`where \`survey_id\` = \`id\``), sehingga `id` menunjuk tabel dalam dan hitungan selalu 0. Pola yang sama diperbaiki di daftar survei admin (soal/responden per survei, jawaban per responden), anggota per KK, terdata per suplemen, anggota per DTKS, perangkat per jabatan, foto per album admin, dan foto aktif per album publik — semuanya kini memakai query agregat `GROUP BY` yang dibatasi id induk. Daftar survei admin dibuktikan E2E: setelah satu pertanyaan dibuat baris menampilkan 1 soal dan 0 responden, dan setelah warga mengisi menjadi 1 soal dan 1 responden.
 
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
@@ -197,7 +203,7 @@ Bug produksi yang ditemukan dan diperbaiki:
 
 Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0/P1/P2, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.474 test unit; 58 berkas/179 test E2E).
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
@@ -223,12 +229,12 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-POP-015 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-WIL-001 | Struktur lengkap; ada E2E interaktif | — | `wilayah-pemerintahan` 3 test/1 beraksi |
 | OS-WIL-002 | Sebagian | E2E cetak peta. | `gis-layer` 4 test/4 beraksi |
-| OS-WIL-003 | Sebagian | E2E. | `gis-layer` 4 test/4 beraksi |
-| OS-WIL-004 | Sebagian | E2E. | `gis-layer` 4 test/4 beraksi |
-| OS-WIL-005 | Sebagian | E2E GIS lebih luas. | `gis-layer` 4 test/4 beraksi |
+| OS-WIL-003 | Struktur lengkap; ada E2E interaktif | Garis dibuat dari dialog dengan path GeoJSON LineString, keterangan diubah, lalu dihapus; tabel memperbarui tiap langkah. | `gis-layer` 4 test/4 beraksi |
+| OS-WIL-004 | Struktur lengkap; ada E2E interaktif | Titik dibuat dengan path GeoJSON Point dan tipe, tipe diubah, lalu dihapus. | `gis-layer` 4 test/4 beraksi |
+| OS-WIL-005 | Struktur lengkap; ada E2E interaktif | Layer polygon dibuat dengan warna dan tipe root, warna diubah, lalu dihapus; layer aktif dipakai peta publik. | `gis-layer` 4 test/4 beraksi |
 | OS-WIL-006 | Struktur lengkap; ada E2E interaktif | — | `gis-pertanahan` 7 test/1 beraksi |
 | OS-WIL-007 | Struktur lengkap; ada E2E interaktif | Peta publik menampilkan layer polygon, garis, dan titik buatan desa; kontrol layer dapat menyembunyikan lalu menampilkan kembali tiap kelompok; peta cetak memuat geometri SVG dan legenda ketiga kelompok. | `web-publik` 23 test |
-| OS-WIL-008 | Sebagian | E2E. | tidak dirujuk |
+| OS-WIL-008 | Struktur lengkap; ada E2E interaktif | Simbol dibuat dengan keterangan, keterangan diubah, lalu dihapus dari katalog global. | `gis-layer` 4 test/4 beraksi |
 | OS-GOV-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-GOV-002 | Struktur lengkap; ada E2E interaktif | — | `pemerintahan` 3 test/2 beraksi |
 | OS-GOV-003 | Struktur lengkap; ada E2E interaktif | Perangkat baru dari form admin muncul di bagian pelaksana bagan; bagian Kepala Desa, Sekretariat, dan Perangkat Pelaksana tampil; tombol cetak memanggil `window.print()`. | `pemerintahan` 4 test/3 beraksi |
@@ -243,10 +249,10 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-SUR-002 | Sebagian | E2E. | `surat-flow` 6 test/5 interaktif; `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-003 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-004 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
-| OS-SUR-005 | Sebagian | E2E rekap/notifikasi. | `permohonan-warga` 5 test/5 interaktif |
+| OS-SUR-005 | Struktur lengkap; ada E2E interaktif | Rekap per jenis surat memuat lima kolom untuk permohonan baru, filter `?status=1` menampilkannya dan `?status=3` menyembunyikannya, serta ekspor CSV membawa filter, NIK pemohon, dan nama jenis. Notifikasi email perubahan status belum diuji karena memerlukan Resend. | `permohonan-rekap` 1 test/1 beraksi; `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-006 | Struktur lengkap; ada E2E interaktif | — | `arsip-nomor-surat` 1 test/1 interaktif; `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-007 | Struktur lengkap; ada E2E interaktif | Pembuat ditolak memverifikasi tahap sekdes/kades; status dicek di DB + badge, nomor surat dan catatan penolakan terlihat pengguna | `verifikasi-berjenjang` 8 test/8 beraksi |
-| OS-SUR-008 | Sebagian | E2E cetak per varian template. | `publik-verifikasi` 2 test/1 interaktif |
+| OS-SUR-008 | Struktur lengkap; ada E2E interaktif | Pemilih "Varian" di halaman cetak mengubah tata letak: potrait `max-w-[210mm]` + `p-10`, landscape `max-w-[297mm]`, compact `p-6`; nomor surat dan kode QR verifikasi ikut tampil. PDF per varian belum diuji. | `surat-cetak-varian` 1 test/1 beraksi; `publik-verifikasi` 3 test/2 interaktif |
 | OS-SUR-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-011 | Struktur lengkap; E2E hanya smoke | E2E belum berinteraksi | `surat-dinas` 1 test/smoke |
@@ -308,12 +314,12 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-MOD-004 | Struktur lengkap; ada E2E interaktif | — | `lapak-keranjang` 1 test/1 interaktif |
 | OS-MOD-005 | Struktur terverifikasi; ada E2E interaktif | Unduhan menyajikan PDF `inline`; ID tidak valid 400, pelanggan desa lain 404, akun warga 403, dan permintaan tanpa sesi dialihkan ke `/masuk`. | `pelanggan-kerjasama` 3 test/1 interaktif |
 | OS-OPS-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-OPS-002 | Sebagian | E2E. | tidak dirujuk |
-| OS-OPS-003 | Sebagian | E2E. | tidak dirujuk |
-| OS-OPS-004 | Sebagian | Gap: E2E aktivasi, login, dan jalur kegagalan OTP belum memadai. | tidak dirujuk |
-| OS-OPS-005 | Sebagian | E2E penerimaan webhook, alur inbox/balasan dan filter kanal. | tidak dirujuk |
-| OS-OPS-006 | Sebagian | E2E. | tidak dirujuk |
-| OS-OPS-007 | Sebagian | Gap: E2E restore. | `backup-database` 1 test/smoke |
+| OS-OPS-002 | Struktur lengkap; ada E2E interaktif | Dialog "Atur shortcut" berisi pilihan menu dan aturan enam pilihan; penyimpanan berhasil dan kartu shortcut tetap sama setelah beranda dimuat ulang. Pengurutan drag-and-drop belum diautomasi. | `ops-sistem` 9 test/6 beraksi |
+| OS-OPS-003 | Struktur lengkap; ada E2E interaktif | Jumlah berita beranda diubah lewat `/pengaturan/aplikasi`, tersimpan, dan terbaca kembali setelah muat ulang; nilai seed dipulihkan di akhir test. | `ops-sistem` 9 test/6 beraksi |
+| OS-OPS-004 | Struktur lengkap; ada E2E interaktif | Aktivasi OTP dari halaman profil mengubah status menjadi Aktif, dan penonaktifan mengembalikannya; login dengan kode OTP belum diautomasi karena kode dikirim ke provider. | `ops-sistem` 9 test/6 beraksi |
+| OS-OPS-005 | Struktur lengkap; ada E2E interaktif | Pesan kotak masuk (payload webhook) tampil dengan pengirim dan isi, "Tandai dibaca" mengurangi jumlah pesan baru, dan filter kanal `?kanal=email` aktif. Balasan email belum diuji karena memerlukan Resend. | `ops-sistem` 9 test/6 beraksi |
+| OS-OPS-006 | Struktur lengkap; ada E2E interaktif | Perubahan pengaturan menghasilkan baris "Ubah pengaturan aplikasi" yang dapat dicari lewat `?q=pengaturan`. | `ops-sistem` 9 test/6 beraksi |
+| OS-OPS-007 | Struktur lengkap; ada E2E interaktif | `/api/database/backup?format=sql` menyajikan berkas SQL berisi `CREATE TABLE` dengan `Content-Disposition` `.sql`; restore menolak berkas non-SQL `400` tanpa menyentuh database. Restore berkas valid tetap memerlukan `mysql` di PATH. | `ops-sistem` 9 test/6 beraksi |
 | OS-OPS-008 | Struktur lengkap; ada E2E interaktif | Aktivasi ditolak saat env wajib kosong | `plugin` 1 test/1 beraksi |
 | OS-OPS-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-OPS-011 | Struktur lengkap; ada E2E interaktif | Informasi dan dokumen memakai paginasi `page`/`pageSize` (bawaan 20, maksimum 100) serta menolak nilai salah dengan `400`; dokumen mengembalikan `data` array + metadata; inventaris mendukung `search` dan hanya memuat barang desa pemilik host; surat membatasi agenda lewat `limit` dan menyertakan jenis surat; OpenAPI 3.1 memakai origin host dan memuat seluruh jalur; permintaan ke-61 per menit per IP per endpoint ditolak `429`. | `api-publik` 5 test/5 beraksi |
