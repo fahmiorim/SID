@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2, Settings, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -49,13 +50,7 @@ const KATEGORI_LABELS: Record<KategoriLampiran, string> = {
   perangkat: "Perangkat Desa",
 };
 
-function SettingsRow({
-  setting,
-  onReset,
-}: {
-  setting: MediaSettingsEfektif;
-  onReset: (kategori: KategoriLampiran) => void;
-}) {
+function SettingsRow({ setting, onReset }: { setting: MediaSettingsEfektif; onReset: () => void }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [state, formAction, isPending] = useActionState(saveMediaSettings, idleActionState);
 
@@ -71,7 +66,7 @@ function SettingsRow({
     const result = await resetMediaSettingsActionWrapped(setting.kategori);
     if (result.status === "success") {
       toast.success(result.message);
-      onReset(setting.kategori);
+      onReset();
     } else if (result.status === "error") {
       toast.error(result.message);
     }
@@ -194,8 +189,12 @@ function SettingsRow({
 }
 
 export function LampiranSettingsTable({ settings }: LampiranSettingsTableProps) {
-  const handleReset = (_kategori: KategoriLampiran) => {
-    window.location.reload();
+  const router = useRouter();
+
+  // Muat ulang data server tanpa membuang hidrasi halaman seperti
+  // `window.location.reload()`, supaya tombol lain tetap responsif.
+  const handleReset = () => {
+    router.refresh();
   };
 
   return (

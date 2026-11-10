@@ -130,6 +130,8 @@ Dua penjalanan suite penuh berturut-turut pada build produksi kini hijau: **61 b
 
 Verifikasi: `npm run check` dan `npm run build` lulus; E2E build produksi dua kali berturut-turut **194/194 lulus**.
 
+**Susulan 10 November 2026.** Pemuatan ulang penuh terakhir di `src` — tombol Reset tabel pengaturan lampiran (`lampiran-settings-table.tsx`) — kini memakai `router.refresh()`, sehingga hidrasi halaman tidak dibuang. Bukti E2E baru `tests/pengaturan-lampiran.e2e.ts`: override kategori Galeri disimpan dan terbaca ulang, Reset mengembalikan nilai default, dan penanda `window` tetap ada sesudah Reset sebagai bukti tidak ada muat ulang penuh. Cakupan unduh PDF persuratan (`OS-SUR-002`) juga diperluas: `surat-flow` membuat surat konsep dan surat terbit lewat fixture DB, membuktikan menu `Unduh PDF` hanya muncul untuk surat terbit beserta berkas `application/pdf` berawalan `%PDF-` dengan `Content-Disposition: inline`, sedangkan surat konsep hanya menawarkan Pratinjau. Audit uji paralel yang mengubah state global desa: `tema.e2e.ts` (opsi tema, dipulihkan di `finally`) adalah satu-satunya yang mengubah nilai saat test berjalan, sehingga assertion judul hero beranda di `web-publik` dan `web-berita-galeri` sudah dihapus; perubahan `jumlah berita di beranda` (`ops-sistem`) dan profil desa (`web-publik`) dipulihkan di `finally` dan tidak ada test lain yang membaca nilai itu selama berjalan.
+
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
 
 Audit halaman publik yang baru diuji (beranda, berita, galeri, dokumen, peta, pembangunan, pengaduan, statistik, inventaris, bantuan, suplemen, IDM/SDGs, survei, kontak) menemukan delapan masalah dan memperbaikinya tanpa mengubah desain:

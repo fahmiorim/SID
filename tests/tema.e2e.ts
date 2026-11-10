@@ -9,6 +9,10 @@ import { expect } from "e2e";
  *
  * Kedua ID diuji dalam satu alur karena formulir tema mengirim seluruh opsi
  * sekaligus; dua test paralel pada desa yang sama akan saling menimpa.
+ *
+ * Selama test berjalan, opsi tema desa ini berubah global. Test lain yang
+ * membaca beranda (mis. `web-publik`, `web-berita-galeri`) tidak boleh
+ * mengandalkan nilai seed judul hero; nilai dipulihkan pada blok `finally`.
  */
 test(
   "OS-WEB-016/017 — opsi tema tersimpan dan diterapkan di situs publik",

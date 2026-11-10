@@ -1193,6 +1193,122 @@ export async function hapusSuratDariId(id: number): Promise<void> {
   });
 }
 
+/** Baca override pengaturan lampiran uji; `null` berarti masih default domain. */
+export async function bacaPengaturanLampiranUji(kategori: string): Promise<{
+  mimeAllowlist: string[] | null;
+  maxFiles: number | null;
+  maxSizeBytes: number | null;
+} | null> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT mime_allowlist, max_files, max_size_bytes FROM media_settings
+        WHERE village_id = ? AND kategori = ? LIMIT 1`,
+      [villageId, kategori],
+    );
+    const row = rows[0];
+    if (!row) return null;
+
+    const mime = row.mime_allowlist;
+    const mimeAllowlist = Array.isArray(mime)
+      ? (mime as string[])
+      : typeof mime === "string"
+        ? (JSON.parse(mime) as string[])
+        : null;
+
+    return {
+      mimeAllowlist,
+      maxFiles: row.max_files === null ? null : Number(row.max_files),
+      maxSizeBytes: row.max_size_bytes === null ? null : Number(row.max_size_bytes),
+    };
+  });
+}
+
+/** Pulihkan override pengaturan lampiran ke keadaan sebelum uji. */
+export async function pulihkanPengaturanLampiranUji(
+  kategori: string,
+  awal: {
+    mimeAllowlist: string[] | null;
+    maxFiles: number | null;
+    maxSizeBytes: number | null;
+  } | null,
+): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    await pool.execute("DELETE FROM media_settings WHERE village_id = ? AND kategori = ?", [
+      villageId,
+      kategori,
+    ]);
+    if (!awal) return;
+
+    await pool.execute(
+      `INSERT INTO media_settings
+         (village_id, kategori, mime_allowlist, max_files, max_size_bytes)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        villageId,
+        kategori,
+        awal.mimeAllowlist ? JSON.stringify(awal.mimeAllowlist) : null,
+        awal.maxFiles,
+        awal.maxSizeBytes,
+      ],
+    );
+  });
+}
+
+/**
+ * Buat surat uji dengan status tertentu untuk menguji aksi baris per status.
+ *
+ * `issued` mengisi `issued_at`; `draft`/`verifikasi` tidak, supaya menu aksi
+ * yang tampil sama seperti surat asli berstatus itu.
+ */
+export async function buatSuratUjiDenganStatus(input: {
+  nomor: string;
+  status: "draft" | "verifikasi" | "issued";
+  jenis: string;
+}): Promise<{ id: number; nomor: string }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [types] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM letter_types WHERE village_id = ? ORDER BY id LIMIT 1",
+      [villageId],
+    );
+    const typeId = Number(types[0]?.id);
+    if (!typeId) throw new Error("Jenis surat desa E2E tidak ditemukan.");
+
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO letters
+         (village_id, type_id, type_name, number, status, letter_date, year, purpose, issued_at)
+       VALUES (?, ?, ?, ?, ?, '2026-11-10', 2026, 'Uji E2E unduh PDF per status', ?)`,
+      [
+        villageId,
+        typeId,
+        input.jenis,
+        input.nomor,
+        input.status,
+        input.status === "issued" ? new Date() : null,
+      ],
+    );
+
+    return { id: hasil.insertId, nomor: input.nomor };
+  });
+}
+
 /** Hapus surat uji berdasarkan token verifikasi. */
 export async function hapusSuratDariToken(token: string): Promise<void> {
   await denganPool(async (pool) => {

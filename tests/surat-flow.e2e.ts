@@ -1,6 +1,8 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import { buatSuratUjiDenganStatus, hapusSuratDariId } from "./support/database";
+
 test(
   "admin creates a new letter through full form",
   { session: "admin" },
@@ -54,25 +56,69 @@ test(
   },
 );
 
-test("letter PDF download works", { session: "admin" }, async ({ app, screen }) => {
-  await app.open("/persuratan/surat");
-  await expect(screen.getByRole("heading", "Layanan Surat")).toBeVisible();
+/**
+ * Katalog: OS-SUR-002 — unduh PDF per status surat.
+ *
+ * Surat terbit menawarkan "Unduh PDF" di menu aksi baris dan berkasnya benar-benar
+ * PDF; surat konsep tidak menawarkan PDF sama sekali, hanya Pratinjau.
+ */
+test(
+  "letter PDF download works",
+  { session: "admin", timeout: 90_000 },
+  async ({ app, screen, browser }) => {
+    const cap = Date.now().toString().slice(-8);
+    const konsep = await buatSuratUjiDenganStatus({
+      nomor: `E2E-KONSEP-${cap}`,
+      status: "draft",
+      jenis: "Surat Keterangan Uji",
+    });
+    const terbit = await buatSuratUjiDenganStatus({
+      nomor: `E2E-TERBIT-${cap}`,
+      status: "issued",
+      jenis: "Surat Keterangan Uji",
+    });
 
-  // Unduh PDF ada di menu aksi baris (bukan tombol tersendiri) dan hanya
-  // dirender untuk surat berstatus Terbit.
-  const publishedRow = screen
-    .getByRole("row")
-    .filter({ hasText: /Terbit/ })
-    .first();
-  if ((await publishedRow.count()) === 0) {
-    return;
-  }
+    try {
+      await app.open(`/persuratan/surat?q=${encodeURIComponent(terbit.nomor)}`);
+      await expect(screen.getByRole("heading", "Layanan Surat")).toBeVisible();
+      const barisTerbit = screen.getByRole("row").filter({ hasText: terbit.nomor });
+      await expect(barisTerbit).toBeVisible();
+      await barisTerbit.getByRole("button", { name: /^Aksi surat / }).tap();
 
-  await publishedRow.getByRole("button", { name: /^Aksi surat / }).tap();
-  const pdfLink = screen.getByRole("menuitem", { name: "Unduh PDF" });
-  await expect(pdfLink).toBeVisible();
-  await expect(pdfLink).toHaveAttribute("href", /^\/persuratan\/surat\/\d+\/pdf$/);
-});
+      const tautan = screen.getByRole("menuitem", { name: "Unduh PDF" });
+      await expect(tautan).toHaveAttribute("href", `/persuratan/surat/${terbit.id}/pdf`);
+
+      const berkas = await browser.evaluate(async (url) => {
+        const res = await fetch(url as string);
+        const isi = await res.arrayBuffer();
+        return {
+          status: res.status,
+          tipe: res.headers.get("content-type") ?? "",
+          disposisi: res.headers.get("content-disposition") ?? "",
+          awalan: new TextDecoder().decode(new Uint8Array(isi.slice(0, 5))),
+          ukuran: isi.byteLength,
+        };
+      }, `/persuratan/surat/${terbit.id}/pdf`);
+
+      expect(berkas.status).toBe(200);
+      expect(berkas.tipe).toContain("application/pdf");
+      expect(berkas.disposisi).toContain("inline");
+      expect(berkas.awalan).toBe("%PDF-");
+      expect(berkas.ukuran).toBeGreaterThan(0);
+
+      // Surat konsep belum terbit: menu hanya menawarkan Pratinjau, bukan PDF.
+      await app.open(`/persuratan/surat?q=${encodeURIComponent(konsep.nomor)}`);
+      const barisKonsep = screen.getByRole("row").filter({ hasText: konsep.nomor });
+      await expect(barisKonsep).toBeVisible();
+      await barisKonsep.getByRole("button", { name: /^Aksi surat / }).tap();
+      await expect(screen.getByRole("menuitem", { name: "Pratinjau" })).toBeVisible();
+      await expect(screen.getByRole("menuitem", { name: "Unduh PDF" })).not.toBeVisible();
+    } finally {
+      await hapusSuratDariId(konsep.id);
+      await hapusSuratDariId(terbit.id);
+    }
+  },
+);
 
 test("letter type (jenis surat) CRUD", { session: "admin" }, async ({ app, screen }) => {
   const kode = `E2E${Date.now().toString().slice(-6)}`;
