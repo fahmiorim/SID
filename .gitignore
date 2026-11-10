@@ -52,3 +52,7 @@ next-env.d.ts
 # local test/agent caches
 /.vitest/
 **/node_modules/
+
+# python cache dari skill pihak ketiga
+__pycache__/
+*.pyc

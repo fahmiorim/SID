@@ -1,5 +1,7 @@
 node_modules
 .next
+# Skill pihak ketiga yang dipasang apa adanya (data + skrip); jangan diformat ulang.
+.agents/skills
 out
 build
 coverage
