@@ -88,6 +88,11 @@ export function slugKategoriBerita(nama: string): string {
  * Berita `published` tanpa jadwal dianggap terbit sekarang agar langsung
  * tampil dan punya urutan kronologis. Berita `draft` tidak pernah dianggap
  * terbit, tetapi jadwal yang sudah diisi tetap disimpan.
+ *
+ * Milidetik dibuang karena kolom `berita.terbit_pada` bertipe `timestamp` tanpa
+ * presisi pecahan: MySQL membulatkan `.500` ke atas, sehingga berita yang baru
+ * disimpan bisa tercatat satu detik di masa depan dan sempat hilang dari daftar
+ * publik (`terbit_pada <= sekarang`) sampai detik itu tiba.
  */
 export function tanggalTerbitEfektif(
   status: StatusBerita,
@@ -95,7 +100,8 @@ export function tanggalTerbitEfektif(
   sekarang: Date = new Date(),
 ): Date | null {
   if (terbitPada) return new Date(`${terbitPada}T00:00:00`);
-  return status === "published" ? sekarang : null;
+  if (status !== "published") return null;
+  return new Date(Math.floor(sekarang.getTime() / 1000) * 1000);
 }
 
 /** Status yang bisa dipilih operator. */

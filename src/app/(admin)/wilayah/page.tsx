@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { PrintButton } from "@/components/shared/print-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -64,7 +65,15 @@ export default async function WilayahPage({ searchParams }: PageProps<"/wilayah"
       <PageHeader
         title="Wilayah Administratif"
         description="Dusun, RW, dan RT yang terdaftar pada desa ini."
-        actions={canManage ? <WilayahCreateButton /> : null}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <PrintButton />
+            <Button asChild variant="outline" size="sm">
+              <Link href="/wilayah/rekap">Rekap Wilayah</Link>
+            </Button>
+            {canManage ? <WilayahCreateButton /> : null}
+          </div>
+        }
       />
 
       <Card>
@@ -188,12 +197,3 @@ export default async function WilayahPage({ searchParams }: PageProps<"/wilayah"
     </div>
   );
 }
-
-<div className="flex flex-wrap items-center gap-2">
-  <Button type="button" variant="outline" size="sm" onClick={() => window.print()}>
-    Cetak
-  </Button>
-  <Button asChild variant="outline" size="sm">
-    <Link href="/wilayah/rekap">Rekap Wilayah</Link>
-  </Button>
-</div>;

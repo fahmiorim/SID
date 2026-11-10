@@ -1,9 +1,10 @@
-import { FileText, Printer } from "lucide-react";
+import { FileText } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
+import { PrintButton } from "@/components/shared/print-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,10 +67,7 @@ export default async function BantuanDetailPage({ params }: { params: Promise<{ 
         description={`Program bantuan desa | ${sasaranLabel(program.sasaran)} | ${asalDanaLabel(program.asalDana)}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="outline" onClick={() => window.print()}>
-              <Printer className="size-4" />
-              Cetak
-            </Button>
+            <PrintButton />
             <Button asChild variant="outline">
               <Link href={`/bantuan/${program.id}/cetak`}>
                 <FileText className="size-4" />

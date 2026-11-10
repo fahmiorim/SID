@@ -108,7 +108,15 @@ describe("tanggalTerbitEfektif", () => {
   });
 
   it("menerbitkan sekarang bila status terbit tanpa jadwal", () => {
-    expect(tanggalTerbitEfektif("published", null, sekarang)).toBe(sekarang);
+    expect(tanggalTerbitEfektif("published", null, sekarang)?.getTime()).toBe(sekarang.getTime());
+  });
+
+  it("membuang milidetik agar jadwal tidak dibulatkan ke detik berikutnya", () => {
+    const berMilidetik = new Date("2026-10-23T09:00:00.750");
+    const hasil = tanggalTerbitEfektif("published", null, berMilidetik);
+
+    expect(hasil?.getMilliseconds()).toBe(0);
+    expect(hasil?.getTime()).toBe(new Date("2026-10-23T09:00:00").getTime());
   });
 
   it("draf tanpa jadwal tidak dianggap terbit", () => {
