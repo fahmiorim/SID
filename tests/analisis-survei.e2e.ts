@@ -2,6 +2,7 @@ import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
 import {
+  buatSurveiDenganSoalUji,
   hapusIndikatorAnalisisDariKode,
   hapusKategoriAnalisisDariNama,
   hapusSurveyDariJudul,
@@ -226,6 +227,62 @@ test("endpoint publik survei menolak tanpa token", async ({ app, browser }) => {
   expect(hasil.status).toBe(401);
   expect(hasil.body).toMatch(/token/i);
 });
+
+/**
+ * Katalog: OS-ANA-005 — Jalur sukses formulir eksternal bertoken.
+ *
+ * Token dibaca dari kartu "Embed di Situs Lain" di halaman admin, seperti
+ * yang ditempel operator ke situs pihak ketiga, lalu dipakai mengirim respons
+ * lewat `POST /api/publik/survei/[id]/respons`. Jawaban diverifikasi dari
+ * daftar responden di halaman admin, bukan hanya dari status HTTP.
+ */
+test(
+  "formulir eksternal: token dari halaman admin menerima respons lewat API",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const judul = `Survei Form Eksternal E2E ${unik()}`;
+    const survei = await buatSurveiDenganSoalUji({
+      judul,
+      pertanyaan: "Bagaimana pelayanan desa?",
+      pilihan: ["Puas", "Tidak puas"],
+    });
+
+    try {
+      await app.open(`/analisis-survei/${survei.id}`);
+      await expect(screen.getByText("Embed di Situs Lain")).toBeVisible();
+
+      const token = (await browser.locator("code.break-all").textContent())?.trim() ?? "";
+      expect(token.length).toBeGreaterThan(10);
+
+      const hasil = await browser.evaluate(
+        async (data: { id: number; token: string; soalId: number }) => {
+          const kirim = await fetch(`/api/publik/survei/${data.id}/respons`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: data.token,
+              nama: "Warga Form Eksternal E2E",
+              jawaban: { [String(data.soalId)]: "Puas" },
+            }),
+          });
+          return { status: kirim.status, body: await kirim.json() };
+        },
+        { id: survei.id, token, soalId: survei.soalId },
+      );
+
+      expect(hasil.status).toBe(201);
+      expect(hasil.body.success).toBe(true);
+
+      // Respons yang dikirim lewat API benar-benar tersimpan di survei ini.
+      await app.open(`/analisis-survei/${survei.id}`);
+      await expect(screen.getByText("Warga Form Eksternal E2E")).toBeVisible({
+        timeout: 10_000,
+      });
+    } finally {
+      await hapusSurveyDariJudul(judul);
+    }
+  },
+);
 
 /**
  * Katalog: OS-ANA-006 — Halaman publik daftar survei dapat diakses.

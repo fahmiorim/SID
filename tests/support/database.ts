@@ -1567,3 +1567,138 @@ export async function hapusPelangganDesaLainUji(id: number, villageId: number): 
     await pool.execute("DELETE FROM villages WHERE id = ?", [villageId]);
   });
 }
+
+/**
+ * Baca disposisi terakhir sebuah surat masuk uji.
+ *
+ * Dipakai E2E `OS-SUR-009`: toast sukses membuktikan aksi UI berjalan, dan
+ * pembacaan ini membuktikan instruksinya benar-benar tersimpan.
+ */
+export async function bacaDisposisiTerakhirSuratMasuk(nomor: string): Promise<{
+  instruction: string;
+  toRole: string | null;
+  dueDate: string | null;
+} | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT d.instruction, d.to_role, d.due_date
+         FROM incoming_letter_dispositions d
+         JOIN incoming_letters s ON s.id = d.incoming_letter_id
+        WHERE s.letter_number = ?
+        ORDER BY d.id DESC LIMIT 1`,
+      [nomor],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      instruction: String(row.instruction),
+      toRole: row.to_role === null ? null : String(row.to_role),
+      dueDate: row.due_date === null ? null : String(row.due_date),
+    };
+  });
+}
+
+/** Baca ekspedisi terakhir sebuah surat keluar uji (OS-SUR-010). */
+export async function bacaEkspedisiTerakhirSuratKeluar(nomor: string): Promise<{
+  sentDate: string;
+  recipient: string | null;
+  deliveryMethod: string | null;
+} | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT e.sent_date, e.recipient, e.delivery_method
+         FROM outgoing_letter_shipments e
+         JOIN outgoing_letters s ON s.id = e.outgoing_letter_id
+        WHERE s.letter_number = ?
+        ORDER BY e.id DESC LIMIT 1`,
+      [nomor],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      sentDate: String(row.sent_date),
+      recipient: row.recipient === null ? null : String(row.recipient),
+      deliveryMethod: row.delivery_method === null ? null : String(row.delivery_method),
+    };
+  });
+}
+
+/** Hapus surat masuk uji beserta disposisi dan log agendanya. */
+export async function hapusSuratMasukDariNomor(nomor: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM incoming_letters WHERE letter_number = ?",
+      [nomor],
+    );
+    for (const row of rows) {
+      const id = Number(row.id);
+      await pool.execute("DELETE FROM incoming_letter_dispositions WHERE incoming_letter_id = ?", [
+        id,
+      ]);
+      await pool.execute(
+        "DELETE FROM unified_shipments WHERE source_module = 'surat_masuk' AND source_id = ?",
+        [id],
+      );
+      await pool.execute("DELETE FROM letter_agenda_logs WHERE type = 'masuk' AND letter_id = ?", [
+        id,
+      ]);
+      await pool.execute("DELETE FROM incoming_letters WHERE id = ?", [id]);
+    }
+  });
+}
+
+/** Hapus surat keluar uji beserta ekspedisi dan log agendanya. */
+export async function hapusSuratKeluarDariNomor(nomor: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM outgoing_letters WHERE letter_number = ?",
+      [nomor],
+    );
+    for (const row of rows) {
+      const id = Number(row.id);
+      await pool.execute("DELETE FROM outgoing_letter_shipments WHERE outgoing_letter_id = ?", [
+        id,
+      ]);
+      await pool.execute(
+        "DELETE FROM unified_shipments WHERE source_module = 'surat_keluar' AND source_id = ?",
+        [id],
+      );
+      await pool.execute("DELETE FROM letter_agenda_logs WHERE type = 'keluar' AND letter_id = ?", [
+        id,
+      ]);
+      await pool.execute("DELETE FROM outgoing_letters WHERE id = ?", [id]);
+    }
+  });
+}
+
+/**
+ * Buat survei aktif dengan satu pertanyaan pilihan ganda.
+ *
+ * Dipakai E2E `OS-ANA-005`: token formulir harus dibuat server (dibaca dari UI
+ * admin), sedangkan soal dan pilihannya disiapkan di sini agar jawaban yang
+ * dikirim lewat API bisa divalidasi seperti pengisian warga.
+ */
+export async function buatSurveiDenganSoalUji(input: {
+  judul: string;
+  pertanyaan: string;
+  pilihan: string[];
+}): Promise<{ id: number; soalId: number }> {
+  return denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    const [survei] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO survey (village_id, judul, deskripsi, sasaran, mulai, selesai, aktif)
+       VALUES (?, ?, 'Survei uji formulir eksternal', 'Warga', '2020-01-01', '2099-12-31', 1)`,
+      [villageId, input.judul],
+    );
+    const [soal] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO survey_soal (survey_id, pertanyaan, tipe, pilihan, urutan) VALUES (?, ?, 'choice', ?, 0)",
+      [survei.insertId, input.pertanyaan, JSON.stringify(input.pilihan)],
+    );
+    return { id: survei.insertId, soalId: soal.insertId };
+  });
+}
