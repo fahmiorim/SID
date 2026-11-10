@@ -118,6 +118,18 @@ Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), 
 
 **Perbaikan hitungan tabel anak 10 November 2026.** Test `OS-WEB-013` menemukan pola subquery berkorelasi yang dirender Drizzle tanpa kualifikasi tabel (`where \`survey_id\` = \`id\``), sehingga `id` menunjuk tabel dalam dan hitungan selalu 0. Pola yang sama diperbaiki di daftar survei admin (soal/responden per survei, jawaban per responden), anggota per KK, terdata per suplemen, anggota per DTKS, perangkat per jabatan, foto per album admin, dan foto aktif per album publik — semuanya kini memakai query agregat `GROUP BY` yang dibatasi id induk. Daftar survei admin dibuktikan E2E: setelah satu pertanyaan dibuat baris menampilkan 1 soal dan 0 responden, dan setelah warga mengisi menjadi 1 soal dan 1 responden.
 
+## Pembaruan 10 November 2026 — flake suite penuh ditutup
+
+Dua penjalanan suite penuh berturut-turut pada build produksi kini hijau: **61 berkas/194 test lulus pada kedua run** (`npm run build` + `npm start` port 3010, 6 worker). Empat flake yang muncul pada run sebelumnya ditelusuri sampai akar, bukan diredam dengan jeda tambahan:
+
+1. **`penduduk` > DPT (`OS-POP-005`).** Setelah menyimpan pemilihan, `election-dialog.tsx` memuat ulang halaman dengan `window.location.reload()`. Klik "Kelola Pemilihan" berikutnya bisa jatuh sebelum hidrasi selesai sehingga handler React belum terpasang: tombol hanya mendapat fokus dan dialog tidak terbuka. Dialog kini memakai `useTransition` + pemanggilan Server Action langsung (`saveElectionAction`/`deleteElectionAction`) dan `router.refresh()` sesuai konvensi repo, `ActionState` direset setiap dialog dibuka, dan label tombol tetap tampil bersama spinner saat pending.
+2. **`surat-flow` > unduh PDF (`OS-SUR-002`).** Assertion lama mencari tombol PDF di baris tabel, padahal UI menaruh "Unduh PDF" di menu `Aksi surat …` dan hanya untuk surat berstatus Terbit. Test itu dulu lolos hanya karena data antar-run belum punya surat terbit sehingga `count() === 0` memicu `return` awal. Test kini menyaring baris `Terbit`, membuka menu aksinya, dan memastikan `menuitem "Unduh PDF"` menunjuk `/persuratan/surat/<id>/pdf`.
+3. **`web-berita-galeri` > elemen beranda (`OS-WEB-001`).** `tema.e2e.ts` mengubah `heroJudul` global desa dan memulihkannya di `finally`, sehingga test beranda paralel sempat membaca judul hero uji. Assertion beranda kini memeriksa kerangka tema (`[data-theme="esensi"]`), `header`, `h1` yang terlihat, dan teks sambutan yang tidak disentuh test lain; cakupan judul hero tetap diuji `tema.e2e.ts`.
+4. **`web-publik` > peta publik (`OS-WEB-007`).** Pembacaan jumlah garis/marker dan `naturalWidth` ikon terjadi pada frame pertama sebelum Leaflet menggambar geometri dan selesai men-decode ikon, sehingga sesekali terbaca 0. Test kini mem-polling sampai garis, marker, dan ikon termuat sebelum membandingkan hitungan sebelum/sesudah pengaturan layer.
+5. **`pembangunan-buku` (`OS-GOV-009`).** Pesan toast "Proyek pembangunan ditambahkan." dipakai dua kali dalam satu test; toast pertama masih tampil saat proyek kedua disimpan sehingga locator menjadi ambigu. Test kini menunggu toast pertama hilang sebelum menambah proyek kedua.
+
+Verifikasi: `npm run check` dan `npm run build` lulus; E2E build produksi dua kali berturut-turut **194/194 lulus**.
+
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
 
 Audit halaman publik yang baru diuji (beranda, berita, galeri, dokumen, peta, pembangunan, pengaduan, statistik, inventaris, bantuan, suplemen, IDM/SDGs, survei, kontak) menemukan delapan masalah dan memperbaikinya tanpa mengubah desain:

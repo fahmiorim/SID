@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertCircle, Calendar, Gavel, Loader2, Plus, Settings } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -29,7 +30,7 @@ import {
   deleteElectionAction,
   saveElectionAction,
 } from "@/features/penduduk/presentation/actions-dpt";
-import { idleActionState } from "@/lib/action-state";
+import { idleActionState, type ActionState } from "@/lib/action-state";
 import { cn } from "@/lib/utils";
 
 interface ElectionDialogProps {
@@ -46,38 +47,56 @@ const STATUS_OPTIONS = [
 export function ElectionDialog({ initialElections, activeElection }: ElectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [editingElection, setEditingEletion] = useState<ElectionDTO | null>(null);
+  const [state, setState] = useState<ActionState>(idleActionState);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-  const [state, formAction, isPending] = useActionState(saveElectionAction, idleActionState);
-
-  useEffect(() => {
-    if (state.status === "success") {
-      toast.success(state.message ?? "Pemilihan disimpan.");
-      window.location.reload();
-    }
-  }, [state, formAction]);
-
-  const [deleteState, deleteAction] = useActionState(deleteElectionAction, idleActionState);
-
-  useEffect(() => {
-    if (deleteState.status === "success") {
-      toast.success(deleteState.message ?? "Pemilihan dihapus.");
-      window.location.reload();
-    }
-  }, [deleteState, deleteAction]);
+  /**
+   * Simpan lewat pemanggilan Server Action langsung, bukan `useActionState`.
+   * Dengan begitu dialog dapat ditutup setelah hasil diketahui dan halaman cukup
+   * di-`router.refresh()`. `window.location.reload()` sebelumnya membuang hidrasi
+   * halaman sehingga klik berikutnya bisa jatuh sebelum handler React terpasang
+   * dan didiamkan browser.
+   */
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      const hasil = await saveElectionAction(idleActionState, formData);
+      if (hasil.status === "success") {
+        toast.success(hasil.message);
+        setIsOpen(false);
+        router.refresh();
+        return;
+      }
+      setState(hasil);
+    });
+  }
 
   const handleOpenCreate = () => {
     setEditingEletion(null);
+    setState(idleActionState);
     setIsOpen(true);
   };
 
   const handleOpenEdit = (election: ElectionDTO) => {
     setEditingEletion(election);
+    setState(idleActionState);
     setIsOpen(true);
   };
 
   const handleDelete = (id: number) => {
     if (!confirm("Hapus pemilihan ini? Data DPT terkait tidak terhapus.")) return;
-    deleteAction({ get: () => String(id) } as unknown as FormData);
+
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set("id", String(id));
+      const hasil = await deleteElectionAction(idleActionState, formData);
+      if (hasil.status === "success") {
+        toast.success(hasil.message);
+        router.refresh();
+      } else if (hasil.status === "error") {
+        toast.error(hasil.message);
+      }
+    });
   };
 
   return (
@@ -100,7 +119,7 @@ export function ElectionDialog({ initialElections, activeElection }: ElectionDia
           </DialogHeader>
           <form
             key={editingElection?.id ?? "baru"}
-            action={formAction}
+            action={handleSubmit}
             className="flex flex-col gap-4"
           >
             <input type="hidden" name="id" value={editingElection?.id ?? ""} />

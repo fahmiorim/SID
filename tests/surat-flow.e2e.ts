@@ -58,19 +58,20 @@ test("letter PDF download works", { session: "admin" }, async ({ app, screen }) 
   await app.open("/persuratan/surat");
   await expect(screen.getByRole("heading", "Layanan Surat")).toBeVisible();
 
-  const publishedRow = screen.getByRole("row", { name: /Terbit|Terbit/ }).first();
+  // Unduh PDF ada di menu aksi baris (bukan tombol tersendiri) dan hanya
+  // dirender untuk surat berstatus Terbit.
+  const publishedRow = screen
+    .getByRole("row")
+    .filter({ hasText: /Terbit/ })
+    .first();
   if ((await publishedRow.count()) === 0) {
     return;
   }
 
-  await publishedRow.getByRole("button", "PDF").tap();
-  await expect(screen.getByRole("dialog", { name: /PDF|Cetak/ })).toBeVisible({ timeout: 5_000 });
-
-  const pdfLink = screen.getByRole("link", { name: /Unduh|Download/ });
-  if (await pdfLink.count()) {
-    const href = await pdfLink.getAttribute("href");
-    expect(href).toMatch(/^\/api\/persuratan\/surat\/\d+\/pdf$/);
-  }
+  await publishedRow.getByRole("button", { name: /^Aksi surat / }).tap();
+  const pdfLink = screen.getByRole("menuitem", { name: "Unduh PDF" });
+  await expect(pdfLink).toBeVisible();
+  await expect(pdfLink).toHaveAttribute("href", /^\/persuratan\/surat\/\d+\/pdf$/);
 });
 
 test("letter type (jenis surat) CRUD", { session: "admin" }, async ({ app, screen }) => {

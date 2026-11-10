@@ -25,6 +25,11 @@ test(
       await screen.getByLabel("Lokasi").fill("Dusun Uji");
       await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
       await expect(screen.getByText("Proyek pembangunan ditambahkan.")).toBeVisible();
+      // Toast bertahan beberapa detik; tunggu hilang agar toast proyek kedua yang
+      // berpesan sama tidak membuat locator ambigu.
+      await expect(screen.getByText("Proyek pembangunan ditambahkan.")).not.toBeVisible({
+        timeout: 10_000,
+      });
 
       // Proyek kedua pada tahun berbeda membuktikan filter tahun publik.
       await screen.getByRole("button", { name: "Tambah Proyek" }).tap();

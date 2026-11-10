@@ -64,6 +64,9 @@ test(
     await screen.getByRole("menuitem", { name: "Hapus" }).tap();
     await expect(screen.getByRole("alertdialog", { name: "Hapus surat dinas?" })).toBeVisible();
     await screen.getByRole("alertdialog").getByRole("button", { name: "Hapus", exact: true }).tap();
+    // Toast sukses menandakan aksi hapus sudah selesai di server; tanpa menunggu
+    // ini, navigasi berikutnya bisa membaca data yang belum terhapus.
+    await expect(screen.getByText("Surat dinas dihapus.")).toBeVisible({ timeout: 10_000 });
 
     await app.open(`/persuratan/surat-dinas?q=${encodeURIComponent(perihalBaru)}`);
     await expect(screen.getByText("Tidak ada surat yang cocok.")).toBeVisible({ timeout: 10_000 });

@@ -12,7 +12,13 @@ import {
  */
 test("elemen beranda tema dirender benar", async ({ app, browser }) => {
   await app.open("/");
-  await expect(browser.locator("h1").first()).toContainText("Desa Contoh");
+
+  // Judul hero beranda dikelola formulir tema dan diubah test tema yang berjalan
+  // paralel pada desa yang sama, jadi yang diuji di sini kerangka tema dan teks
+  // sambutan yang tidak disentuh test lain.
+  await expect(browser.locator('[data-theme="esensi"]')).toBeVisible();
+  await expect(browser.locator("h1").first()).toBeVisible();
+  await expect(browser.locator("header")).toBeVisible();
   await expect(browser.locator("body")).toContainText("Selamat datang di portal resmi desa.");
 });
 

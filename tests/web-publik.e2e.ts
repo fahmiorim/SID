@@ -33,7 +33,9 @@ test(
   async ({ app, screen, browser }) => {
     await app.open("/");
     await expect(browser).toHaveURL("/");
-    await expect(browser.locator("h1")).toContainText("Desa Contoh");
+    // Judul hero beranda dikelola formulir tema dan dapat sedang diubah test
+    // tema yang berjalan paralel; identitas desa diuji lewat footer di bawah.
+    await expect(browser.locator("h1").first()).toBeVisible();
 
     const menu = screen.getByRole("navigation", { name: "Menu utama" });
     await expect(menu).toBeVisible();
@@ -282,21 +284,36 @@ test(
       expect(teksKontrol).toContain("Garis");
       expect(teksKontrol).toContain("Titik");
 
-      const sebelum = await browser.evaluate(() => ({
-        garis: document.querySelectorAll('path[stroke="#f59e0b"]').length,
-        penanda: document.querySelectorAll(".leaflet-marker-icon").length,
-      }));
+      // Geometri Leaflet digambar setelah data layer selesai dimuat dan ikon
+      // marker selesai di-decode; polling ini menunggu keduanya agar tidak
+      // membaca 0 pada frame pertama.
+      const sebelum = await browser.evaluate(async () => {
+        const baca = () => {
+          const gambar = document.querySelector<HTMLImageElement>(".leaflet-marker-icon");
+          return {
+            garis: document.querySelectorAll('path[stroke="#f59e0b"]').length,
+            penanda: document.querySelectorAll(".leaflet-marker-icon").length,
+            ikon:
+              gambar && gambar.complete ? { src: gambar.src, lebar: gambar.naturalWidth } : null,
+          };
+        };
+
+        for (let i = 0; i < 100; i += 1) {
+          const hasil = baca();
+          if (hasil.garis > 0 && hasil.penanda > 0 && (hasil.ikon?.lebar ?? 0) > 0) {
+            return hasil;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+        return baca();
+      });
       expect(sebelum.garis).toBeGreaterThan(0);
       expect(sebelum.penanda).toBeGreaterThan(0);
 
       // Ikon marker memakai aset hasil bundling dan benar-benar termuat,
       // bukan menebak path halaman (`/desa/marker-icon.png`) yang 404.
-      const ikon = await browser.evaluate(() => {
-        const gambar = document.querySelector<HTMLImageElement>(".leaflet-marker-icon");
-        return gambar ? { src: gambar.src, lebar: gambar.naturalWidth } : null;
-      });
-      expect(ikon?.src).toContain("/_next/static/media/");
-      expect(ikon?.lebar ?? 0).toBeGreaterThan(0);
+      expect(sebelum.ikon?.src).toContain("/_next/static/media/");
+      expect(sebelum.ikon?.lebar ?? 0).toBeGreaterThan(0);
 
       // Toggle lewat checkbox asli Leaflet. Kontrol dapat tertutup atau sudah
       // terbuka tergantung posisi hover, jadi klik diarahkan langsung ke input
