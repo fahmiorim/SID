@@ -12,11 +12,13 @@ import {
   dptFilename,
   dptRekapFilename,
   hitungRekapDpt,
+  keDptPublik,
   type DptFilter,
   type DptRekap,
   type ElectionDTO,
   type ElectionFormInput,
   type ListDptParams,
+  type ListDptPublikResult,
   type ListDptResult,
 } from "@/features/penduduk/domain/dpt";
 import { PENDUDUK_RESOURCE } from "@/features/penduduk/domain/penduduk";
@@ -141,16 +143,29 @@ export async function deleteElection(id: number): Promise<void> {
   await db.delete(elections).where(and(eq(elections.id, id), eq(elections.villageId, villageId)));
 }
 
-/** DPT publik: pemilihan aktif dan satu halaman daftar dari desa host. */
+/**
+ * DPT publik: pemilihan aktif dan satu halaman daftar dari desa host.
+ *
+ * Dua lapis perlindungan diterapkan di use case, bukan di JSX: NIK tidak ikut
+ * dipetakan ke DTO publik, dan pencarian hanya mencocokkan nama sehingga NIK
+ * tidak bisa dipakai untuk menebak apakah seseorang terdaftar.
+ */
 export async function getDptPublik(
   villageId: number,
   params: ListDptParams,
-): Promise<{ election: ElectionDTO | null; result: ListDptResult }> {
+): Promise<{ election: ElectionDTO | null; result: ListDptPublikResult }> {
   const [election, result] = await Promise.all([
     getActiveElection(villageId),
-    listDpt(villageId, params),
+    listDpt(villageId, params, { cariNamaSaja: true }),
   ]);
-  return { election, result };
+
+  return {
+    election,
+    result: {
+      ...result,
+      rows: result.rows.map(keDptPublik),
+    },
+  };
 }
 
 /** Daftar DPT dengan filter + pagination. */

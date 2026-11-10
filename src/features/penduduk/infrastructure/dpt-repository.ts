@@ -46,7 +46,12 @@ export async function getActiveElection(villageId: number): Promise<ElectionDTO 
 }
 
 /** Bangun klausa WHERE untuk filter DPT. */
-function whereDpt(villageId: number, params: DptFilter, tanggalPemilihan: string) {
+function whereDpt(
+  villageId: number,
+  params: DptFilter,
+  tanggalPemilihan: string,
+  opsi: { cariNamaSaja?: boolean } = {},
+) {
   const conditions = [
     eq(residents.villageId, villageId),
     eq(residents.lifeStatus, "alive"),
@@ -58,11 +63,15 @@ function whereDpt(villageId: number, params: DptFilter, tanggalPemilihan: string
   ];
 
   if (params.search) {
+    // Halaman publik hanya boleh mencocokkan nama: NIK tidak dipakai sebagai
+    // kata kunci agar nomor identitas tidak bisa ditebak lewat pencarian.
     conditions.push(
-      or(
-        like(residents.name, `%${params.search}%`),
-        like(residents.nationalId, `%${params.search}%`),
-      ),
+      opsi.cariNamaSaja
+        ? like(residents.name, `%${params.search}%`)
+        : or(
+            like(residents.name, `%${params.search}%`),
+            like(residents.nationalId, `%${params.search}%`),
+          ),
     );
   }
 
@@ -106,7 +115,11 @@ function whereDpt(villageId: number, params: DptFilter, tanggalPemilihan: string
 }
 
 /** Daftar DPT dengan pagination. */
-export async function listDpt(villageId: number, params: ListDptParams): Promise<ListDptResult> {
+export async function listDpt(
+  villageId: number,
+  params: ListDptParams,
+  opsi: { cariNamaSaja?: boolean } = {},
+): Promise<ListDptResult> {
   const election = await getActiveElection(villageId);
   if (!election) {
     return {
@@ -122,7 +135,7 @@ export async function listDpt(villageId: number, params: ListDptParams): Promise
   const perPage = Math.min(MAX_DPT_PER_PAGE, Math.max(1, params.perPage ?? DEFAULT_DPT_PER_PAGE));
   const offset = (page - 1) * perPage;
 
-  const whereClause = whereDpt(villageId, params, election.tanggal);
+  const whereClause = whereDpt(villageId, params, election.tanggal, opsi);
 
   const [rows, totalRow] = await Promise.all([
     db

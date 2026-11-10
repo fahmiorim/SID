@@ -84,6 +84,41 @@ export interface ListDptResult {
   pageCount: number;
 }
 
+/**
+ * Baris DPT untuk halaman publik (OS-POP-005).
+ *
+ * Halaman publik hanya butuh informasi untuk memastikan namanya terdaftar;
+ * NIK, tanggal lahir, dan atribut pribadi lain tidak ikut dikirim ke browser.
+ * Tipe terpisah membuat kebocoran NIK menjadi kesalahan tipe, bukan sekadar
+ * kelalaian tampilan.
+ */
+export type DptPublikRow = Pick<
+  DptRow,
+  "id" | "name" | "gender" | "umurPemilihan" | "dusun" | "rw" | "rt"
+>;
+
+/** Hasil paginasi DPT publik. */
+export interface ListDptPublikResult {
+  rows: DptPublikRow[];
+  total: number;
+  page: number;
+  perPage: number;
+  pageCount: number;
+}
+
+/** Susun baris DPT publik: buang seluruh kolom pribadi sebelum dikirim ke UI. */
+export function keDptPublik(row: DptRow): DptPublikRow {
+  return {
+    id: row.id,
+    name: row.name,
+    gender: row.gender,
+    umurPemilihan: row.umurPemilihan,
+    dusun: row.dusun,
+    rw: row.rw,
+    rt: row.rt,
+  };
+}
+
 /** CSV DPT: header + baris data. */
 export function buildDptCsv(input: {
   namaDesa: string | null;

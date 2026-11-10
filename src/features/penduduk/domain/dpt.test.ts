@@ -7,6 +7,7 @@ import {
   dptFilename,
   dptRekapFilename,
   hitungRekapDpt,
+  keDptPublik,
   type DptRow,
 } from "./dpt";
 
@@ -56,6 +57,24 @@ describe("buildDptCsv", () => {
     });
 
     expect(csv).toContain("1;-;Ani;Perempuan;-;-;Sukamaju;01;02;");
+  });
+});
+
+describe("keDptPublik", () => {
+  it("membuang NIK, tanggal lahir, dan atribut pribadi lain", () => {
+    const publik = keDptPublik(baris());
+
+    expect(publik).toEqual({
+      id: 1,
+      name: "Ani",
+      gender: "female",
+      umurPemilihan: 34,
+      dusun: "Sukamaju",
+      rw: "01",
+      rt: "02",
+    });
+    expect(Object.keys(publik)).not.toContain("nationalId");
+    expect(Object.keys(publik)).not.toContain("birthDate");
   });
 });
 

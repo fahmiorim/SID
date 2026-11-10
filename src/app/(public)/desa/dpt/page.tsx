@@ -33,7 +33,7 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold">Daftar Pemilih Tetap</h1>
         <p className="text-sm text-muted-foreground">
@@ -44,19 +44,23 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
 
       <form className="flex gap-2" action="/desa/dpt">
         <label htmlFor="dpt-search" className="sr-only">
-          Cari nama atau NIK
+          Cari nama pemilih
         </label>
         <input
           id="dpt-search"
           name="search"
           defaultValue={search}
-          placeholder="Cari nama atau NIK"
+          placeholder="Cari nama pemilih"
           className="w-full rounded-md border px-3 py-2 text-sm"
         />
         <button type="submit" className="rounded-md border px-4 py-2 text-sm font-medium">
           Cari
         </button>
       </form>
+      <p className="text-xs text-muted-foreground">
+        Untuk melindungi data pribadi, daftar publik hanya memuat nama dan wilayah. NIK hanya dapat
+        dilihat petugas melalui area pengelola.
+      </p>
 
       {!election ? (
         <p className="text-sm text-muted-foreground">DPT belum tersedia.</p>
@@ -67,7 +71,6 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
               <thead>
                 <tr className="border-b bg-muted/50">
                   <th className="p-2 text-left">No</th>
-                  <th className="p-2 text-left">NIK</th>
                   <th className="p-2 text-left">Nama</th>
                   <th className="p-2 text-left">Jenis Kelamin</th>
                   <th className="p-2 text-left">Umur</th>
@@ -79,7 +82,6 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
                 {result.rows.map((row, index) => (
                   <tr key={row.id} className="border-b">
                     <td className="p-2">{(result.page - 1) * result.perPage + index + 1}</td>
-                    <td className="p-2">{row.nationalId ?? "-"}</td>
                     <td className="p-2">{row.name}</td>
                     <td className="p-2">{row.gender === "male" ? "Laki-laki" : "Perempuan"}</td>
                     <td className="p-2">{row.umurPemilihan ?? "-"}</td>
@@ -91,7 +93,7 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
                 ))}
                 {result.rows.length === 0 && (
                   <tr>
-                    <td className="p-2 text-muted-foreground" colSpan={7}>
+                    <td className="p-2 text-muted-foreground" colSpan={6}>
                       Tidak ada data.
                     </td>
                   </tr>
