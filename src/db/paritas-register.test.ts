@@ -40,13 +40,37 @@ describe("dokumentasi scope dan status", () => {
     expect(rencana).toContain("uji E2E");
   });
 
-  it("peta dokumentasi aktif tidak mengarahkan ke dokumen status lama", () => {
+  it("peta dokumentasi aktif menautkan katalog dan paritas, bukan salinan arsip", () => {
     const peta = baca("README.md");
 
     expect(peta).toContain("CAKUPAN-OPENSID.md");
     expect(peta).toContain("STATUS-MODUL.md");
     expect(peta).toContain("RENCANA-PENGEMBANGAN.md");
-    expect(peta).not.toContain("PARITAS-OPENSID.md");
-    expect(peta).not.toContain("KATALOG-FITUR-OPENSID.md");
+    expect(peta).toContain("KATALOG-FITUR-OPENSID.md");
+    expect(peta).toContain("PARITAS-OPENSID.md");
+    expect(peta).not.toContain("arsip/status-sebelum-audit/PARITAS-OPENSID.md");
+  });
+
+  it("setiap ID katalog punya baris di paritas dan status modul", () => {
+    const katalog = baca("KATALOG-FITUR-OPENSID.md");
+    const paritas = baca("PARITAS-OPENSID.md");
+    const status = baca("STATUS-MODUL.md");
+
+    const idKatalog = [...new Set(katalog.match(/OS-[A-Z]+-\d+/g) ?? [])].sort();
+    expect(idKatalog).toHaveLength(111);
+
+    const baris = (isi: string) =>
+      new Set(
+        (isi.match(/^\|\s*(OS-[A-Z]+-\d+)\s*\|/gm) ?? []).map((b) => b.split("|")[1]?.trim() ?? ""),
+      );
+    const barisParitas = baris(paritas);
+    const barisStatus = baris(status);
+
+    expect(barisParitas.size).toBe(idKatalog.length);
+    expect(barisStatus.size).toBe(idKatalog.length);
+    for (const id of idKatalog) {
+      expect(barisParitas.has(id), `paritas: ${id}`).toBe(true);
+      expect(barisStatus.has(id), `status: ${id}`).toBe(true);
+    }
   });
 });

@@ -16,8 +16,8 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 ## Status audit
 
 - 111 ID katalog, 102 baris register historis, 9 ID tanpa baris register yang kini dipetakan eksplisit.
-- 52 folder fitur, 183 file test unit/integrasi, 204 `page.tsx`, 78 `route.ts`, 58 berkas E2E.
-- Hitung ulang 10 November 2026: 58 berkas, **179 test**; rincian kedalaman aksi per berkas dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
+- 52 folder fitur, 183 file test unit/integrasi, 204 `page.tsx`, 78 `route.ts`, 62 berkas E2E.
+- Hitung ulang 10 November 2026: 62 berkas, **195 test**; rincian kedalaman aksi per berkas dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
 - 8 ID berstatus ✅ historis punya E2E interaktif, 8 ID hanya smoke, 32 ID berstatus ✅ historis tanpa rujukan E2E.
 - 0 impor infrastruktur di `src/app/**` dan `src/features/*/presentation/**`; route publik desa, API publik, dan sitemap juga 0.
 - Tidak ada ID yang dinyatakan selesai penuh. P0 selesai 10 November 2026 dengan bukti E2E Anjungan 2/2 dan uji adapter/route; suite penuh 57 berkas/180 test dijalankan terhadap build produksi, dengan satu flake berbeda pada dua run paralel yang keduanya lulus saat dijalankan sendiri. Pengujian provider nyata dan pemeriksaan visual seluruh halaman belum dilakukan.
@@ -44,7 +44,7 @@ Bug produksi yang ditemukan dan diperbaiki: `optionalDigits` di `src/lib/forms.t
 
 Verifikasi 9 November 2026 (historis): `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console`), `npm run check` lulus, suite E2E 190/194. Hasil ini digantikan pembaruan 10 November 2026: suite produksi 178/178 lulus dan `npm run build` lulus.
 
-Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`. `surat-dinas`, `surat-konten`, `ops-sistem`, `modul-tambahan`, dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Catatan `dtks-impor`: berkas CSV dibuat dari RTM fixture di `tests/support/database.ts`; alur menguji ringkasan impor, baris hasil, metadata/anggota di dialog Kelola, perubahan status, dan impor ulang `0 formulir dibuat; 1 dilewati`.
 
@@ -111,6 +111,6 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 - `npm run lint`: 0 error (2 warning `no-console` historis di `tests/umpan-balik.e2e.ts`).
 - `npm run test`: 183 berkas / 1.474 test lulus.
 - `npm run check` (typegen + tsc + ESLint + format + unit): lulus.
-- Suite E2E penuh: 61 berkas / 194 test terhadap build produksi (`npm run build` + `npm start`). Dua penjalanan terakhir berturut-turut lulus penuh 194/194 setelah lima flake ditutup di akarnya (DPT, unduh PDF, beranda/tema, peta, toast pembangunan). Tujuh berkas P1/P2 terfokus lulus 32/32.
+- Suite E2E penuh: 62 berkas / 195 test terhadap build produksi (`npm run build` + `npm start`). Run terakhir lulus penuh 195/195 setelah lima flake ditutup di akarnya (DPT, unduh PDF, beranda/tema, peta, toast pembangunan). Tujuh berkas P1/P2 terfokus lulus 32/32.
 - `npm run build`: lulus.
 

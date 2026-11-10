@@ -32,14 +32,15 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | File test unit/integrasi di fitur | 183 | Bukan jumlah skenario |
 | Halaman `page.tsx` | 204 | Belum dikelompokkan admin/publik/warga |
 | Route handler `route.ts` | 78 | Termasuk API publik/eksternal |
-| Berkas E2E | 58 | `tests/**/*.e2e.ts` |
-| Test E2E | 179 | Runner menjalankan **179 test**; rincian aksi per berkas ada di tabel kedalaman E2E |
-| Test E2E yang berinteraksi UI | 89 (50%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
-| Test E2E non-interaktif | 89 (50%) | Belum membuktikan aksi pengguna secara langsung |
-| Aksi UI literal di E2E | 706 | Bukan coverage dan bukan bukti paritas |
+| Berkas E2E | 62 | `tests/**/*.e2e.ts` |
+| Test E2E | 195 | Runner menjalankan **195 test**; rincian aksi per berkas ada di tabel kedalaman E2E |
+| Deklarasi `test(` di berkas E2E | 193 | Runner melaporkan 195 karena beberapa berkas memperluas test/fixture |
+| Test E2E yang berinteraksi UI | 109 (56%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
+| Test E2E non-interaktif | 84 (44%) | Belum membuktikan aksi pengguna secara langsung |
+| Aksi UI literal di E2E | 908 | Bukan coverage dan bukan bukti paritas |
 | Impor infrastruktur langsung | 0 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Route lampiran pengaduan memakai `bacaLampiranPengaduan` (validasi jalur ada di use case); `api/penduduk/nik` memakai use case penduduk |
 
-Angka inventaris di atas dihitung ulang 10 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai deklarasi `test(` di awal baris; runner melaporkan 180 test karena beberapa berkas memperluas test/fixture. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
+Angka inventaris di atas dihitung ulang 10 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai deklarasi `test(` di awal baris; runner melaporkan 195 test karena beberapa berkas memperluas test/fixture. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -52,7 +53,8 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `gis-layer` | 4 | 4 | 35 | `OS-WIL-002`–`OS-WIL-005` |
 | `gis-pertanahan` | 7 | 1 | 30 | `OS-WIL-006` |
 | `survei-publik` | 2 | 1 | 1 | `OS-ANA-006` |
-| `surat-flow` | 6 | 5 | 23 | `OS-SUR-002` |
+| `surat-flow` | 6 | 5 | 24 | `OS-SUR-002` |
+| `pengaturan-lampiran` | 1 | 1 | 4 | `OS-SUR-014` |
 | `analisis-survei` | 7 | 4 | 34 | `OS-ANA-001`–`OS-ANA-006` |
 | `surat-lengkap` | 4 | 4 | 18 | `OS-SUR-001`, `OS-SUR-003`, `OS-SUR-004`, `OS-SUR-006` |
 | `web-berita-galeri` | 3 | 2 | 16 | `OS-WEB-002`, `OS-WEB-004` |
@@ -219,9 +221,9 @@ Bug produksi yang ditemukan dan diperbaiki:
 - Pendapat publik menampilkan pesan "Terjadi kesalahan pada server" saat sesi sudah pernah memilih: `ER_DUP_ENTRY` dibungkus Drizzle di `error.cause`, bukan `error.code`. Deteksi kini menelusuri rantai `cause` sehingga pesan duplikat yang ramah tampil.
 - Halaman SDGs admin mengabaikan `?tahun=` dan selalu memakai tahun terbaru, sehingga tautan dari halaman IDM tidak konsisten. `ringkasanIdmPublik` kini menerima tahun pilihan admin.
 
-Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0/P1/P2, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.474 test unit; 58 berkas/179 test E2E).
+Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0/P1/P2, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.475 test unit; 62 berkas/195 test E2E).
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Berkas E2E yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`. Yang sudah selesai ditulis ulang: `surat-dinas` (catat/cari/ubah/hapus), `surat-konten` (CRUD menu/widget/dokumen), `ops-sistem` (9 test), `modul-tambahan`, dan `kesehatan`; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
@@ -264,7 +266,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-GOV-009 | Struktur lengkap; ada E2E interaktif | — | `pembangunan-buku` 1 test/1 beraksi |
 | OS-GOV-010 | Struktur lengkap; ada E2E interaktif | — | `dokumen-publik` 2 test/2 beraksi |
 | OS-SUR-001 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
-| OS-SUR-002 | Sebagian | E2E. | `surat-flow` 6 test/5 interaktif; `permohonan-warga` 5 test/5 interaktif |
+| OS-SUR-002 | Sebagian | Unduh PDF per status sudah diuji: surat terbit menampilkan menu `Unduh PDF` dengan berkas `application/pdf` `inline` berawalan `%PDF-`, surat konsep hanya menawarkan Pratinjau. Gap tersisa: notifikasi email perubahan status dan PDF per varian template. | `surat-flow` 7 test/6 interaktif; `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-003 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-004 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-005 | Struktur lengkap; ada E2E interaktif | Rekap per jenis surat memuat lima kolom untuk permohonan baru, filter `?status=1` menampilkannya dan `?status=3` menyembunyikannya, serta ekspor CSV membawa filter, NIK pemohon, dan nama jenis. Notifikasi email perubahan status belum diuji karena memerlukan Resend. | `permohonan-rekap` 1 test/1 beraksi; `permohonan-warga` 5 test/5 interaktif |
@@ -276,7 +278,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-SUR-011 | Struktur lengkap; ada E2E interaktif | Surat dinas dicatat lewat dialog (nomor, penerima, perihal, isi), ditemukan lewat pencarian, perihal diubah, lalu dihapus dengan konfirmasi. | `surat-dinas` 1 test/1 beraksi |
 | OS-SUR-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-SUR-013 | Sebagian | Adapter BSrE diuji server HTTP lokal (PDF langsung/JSON+unduh/nonaktif); verifikasi provider nyata belum. | `tte-server.test.ts` 3 test |
-| OS-SUR-014 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-SUR-014 | Struktur lengkap; ada E2E interaktif | Simpan dan reset pengaturan lampiran per kategori diuji lewat UI; validasi MIME/ukuran, sanitasi nama, dan penyajian berkas aman masih dibuktikan test unit/integrasi (`media.test.ts`, `media-nama.test.ts`), belum lewat E2E. | `pengaturan-lampiran` 1 test/1 beraksi |
 | OS-FIN-001 | Struktur lengkap; ada E2E interaktif | Pagu/realisasi APBDes tersimpan | `keuangan` 5 test/5 beraksi |
 | OS-FIN-002 | Struktur lengkap; ada E2E interaktif | Laporan + filter bidang | `keuangan` 5 test/5 beraksi |
 | OS-FIN-003 | Struktur lengkap; ada E2E interaktif | Realisasi triwulan tersimpan | `keuangan` 5 test/5 beraksi |
@@ -373,7 +375,7 @@ Tabel sebaran impor lama dihapus karena sudah tidak berlaku setelah migrasi ke u
 
 ### 4. Cakupan E2E tidak merata
 
-Pada hitung ulang 10 November 2026, 89 dari 178 deklarasi test E2E memuat aksi UI literal; suite penuh 57 berkas/180 test dijalankan terhadap build produksi. Alur berisiko tinggi yang sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, penduduk/keluarga/RTM, keuangan, pemerintahan/kelompok, bantuan, analisis/survei, GIS, berita/galeri, umpan balik, pengaduan, tema, warga mandiri, pemilihan, dan anjungan/kiosk. Klaim "sudah diuji E2E" pada ID lain tetap perlu diperiksa terhadap kolom E2E di atas.
+Pada hitung ulang 10 November 2026, 109 dari 193 deklarasi test E2E memuat aksi UI literal; suite penuh 62 berkas/195 test dijalankan terhadap build produksi. Alur berisiko tinggi yang sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, penduduk/keluarga/RTM, keuangan, pemerintahan/kelompok, bantuan, analisis/survei, GIS, berita/galeri, umpan balik, pengaduan, tema, warga mandiri, pemilihan, dan anjungan/kiosk. Klaim "sudah diuji E2E" pada ID lain tetap perlu diperiksa terhadap kolom E2E di atas.
 
 ## Audit vertikal: Anjungan (`OS-MOD-001`)
 
