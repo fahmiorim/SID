@@ -22,7 +22,7 @@ export default async function PetaLapakPage() {
   const namaDesa = identitas?.namaDesa ?? "Desa";
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div>
       <header className="mb-6">
         <h1 className="text-2xl font-bold">Peta Produk UMKM</h1>
         <p className="text-sm text-muted-foreground">Lokasi produk dan lapak di {namaDesa}</p>

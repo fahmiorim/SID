@@ -28,7 +28,7 @@ export function EsensiSurvei({ ctx, survei, hasil, tahun, tahunTersedia }: Surve
               id="survei-tahun"
               name="tahun"
               defaultValue={tahun === null ? "" : String(tahun)}
-              className="min-h-10 border px-3 text-sm"
+              className="min-h-11 border px-3 text-sm"
             >
               <option value="">Seluruh periode</option>
               {tahunTersedia.map((item) => (
@@ -40,7 +40,7 @@ export function EsensiSurvei({ ctx, survei, hasil, tahun, tahunTersedia }: Surve
           </div>
           <button
             type="submit"
-            className="tema-button-primary inline-flex min-h-10 items-center justify-center px-4 text-sm font-medium"
+            className="tema-button-primary inline-flex min-h-11 items-center justify-center px-4 text-sm font-medium"
           >
             Tampilkan
           </button>

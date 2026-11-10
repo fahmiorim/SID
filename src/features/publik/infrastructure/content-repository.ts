@@ -6,7 +6,6 @@ import { db } from "@/db";
 import {
   berita,
   beritaKategori,
-  bumindesAgenda,
   dokumenPublik,
   galeriAlbum,
   galeriFoto,
@@ -302,40 +301,14 @@ export async function listSliderBeranda(villageId: number): Promise<FotoRingkas[
     .orderBy(asc(galeriFoto.urut), desc(galeriFoto.id));
 }
 
-/* ------------------------------------------------------------------ agenda */
-
-export interface AgendaPublikRingkas {
-  id: number;
-  tanggal: string;
-  jenis: string;
-  nomorSurat: string | null;
-  asalTujuan: string | null;
-  perihal: string;
-}
-
-/**
- * Agenda surat masuk/keluar desa yang dapat dipublikasikan.
+/*
+ * Agenda desa tidak lagi dibaca dari `bumindes_agenda`.
  *
- * Menampilkan ringkasan agenda terbaru sesuai `limit` tanpa identitas pelapor.
+ * Tabel itu adalah buku agenda surat masuk/keluar yang memuat nomor surat dan
+ * asal/tujuan instansi; mempublikasikannya membocorkan metadata persuratan.
+ * Agenda publik punya sumber sendiri (`agenda_kegiatan`) dengan status tayang
+ * eksplisit — lihat `@/features/agenda`.
  */
-export async function daftarAgendaPublik(
-  villageId: number,
-  limit = 5,
-): Promise<AgendaPublikRingkas[]> {
-  return db
-    .select({
-      id: bumindesAgenda.id,
-      tanggal: bumindesAgenda.tanggal,
-      jenis: bumindesAgenda.jenis,
-      nomorSurat: bumindesAgenda.nomorSurat,
-      asalTujuan: bumindesAgenda.asalTujuan,
-      perihal: bumindesAgenda.perihal,
-    })
-    .from(bumindesAgenda)
-    .where(eq(bumindesAgenda.villageId, villageId))
-    .orderBy(desc(bumindesAgenda.tanggal), desc(bumindesAgenda.id))
-    .limit(limit);
-}
 
 /* ---------------------------------------------------------------- widget */
 

@@ -46,7 +46,7 @@ export function EsensiInventaris({
             maxLength={100}
             defaultValue={filter.cari}
             placeholder="Cari nama atau kode barang"
-            className="min-h-10 border px-3 text-sm"
+            className="min-h-11 border px-3 text-sm"
           />
 
           <label className="sr-only" htmlFor="inventaris-kategori">
@@ -56,7 +56,7 @@ export function EsensiInventaris({
             id="inventaris-kategori"
             name="kategori"
             defaultValue={filter.kategori}
-            className="min-h-10 border px-3 text-sm"
+            className="min-h-11 border px-3 text-sm"
           >
             <option value="">Semua kategori</option>
             {opsi.kategori.map((item) => (
@@ -73,7 +73,7 @@ export function EsensiInventaris({
             id="inventaris-kondisi"
             name="kondisi"
             defaultValue={filter.kondisi}
-            className="min-h-10 border px-3 text-sm"
+            className="min-h-11 border px-3 text-sm"
           >
             <option value="">Semua kondisi</option>
             {INVENTARIS_KONDISI.map((item) => (
@@ -90,7 +90,7 @@ export function EsensiInventaris({
             id="inventaris-lokasi"
             name="lokasi"
             defaultValue={filter.lokasi}
-            className="min-h-10 border px-3 text-sm"
+            className="min-h-11 border px-3 text-sm"
           >
             <option value="">Semua lokasi</option>
             {opsi.lokasi.map((item) => (
@@ -107,7 +107,7 @@ export function EsensiInventaris({
             id="inventaris-tahun"
             name="tahun"
             defaultValue={filter.tahun === null ? "" : String(filter.tahun)}
-            className="min-h-10 border px-3 text-sm"
+            className="min-h-11 border px-3 text-sm"
           >
             <option value="">Semua tahun</option>
             {opsi.tahun.map((item) => (
@@ -120,14 +120,14 @@ export function EsensiInventaris({
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="submit"
-              className="tema-button-primary inline-flex min-h-10 items-center justify-center gap-2 px-4 text-sm font-medium"
+              className="tema-button-primary inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-medium"
             >
               <Search className="size-4" />
               Terapkan
             </button>
             <a
               href={eksporUrl}
-              className="tema-link-primary inline-flex min-h-10 items-center gap-2 border px-4 text-sm font-medium hover:underline"
+              className="tema-link-primary inline-flex min-h-11 items-center gap-2 border px-4 text-sm font-medium hover:underline"
             >
               <Download className="size-4" />
               Unduh CSV

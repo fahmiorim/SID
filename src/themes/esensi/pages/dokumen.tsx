@@ -70,7 +70,7 @@ export function EsensiDokumen({
           maxLength={100}
           defaultValue={search}
           placeholder="Cari nama, nomor, atau keterangan"
-          className="min-h-10 border px-3 text-sm"
+          className="min-h-11 border px-3 text-sm"
         />
         <label className="sr-only" htmlFor="dokumen-kategori">
           Kategori dokumen
@@ -79,7 +79,7 @@ export function EsensiDokumen({
           id="dokumen-kategori"
           name="kategori"
           defaultValue={category}
-          className="min-h-10 border px-3 text-sm"
+          className="min-h-11 border px-3 text-sm"
         >
           {DOKUMEN_KATEGORI_FILTERS.map((item) => (
             <option key={item.value} value={item.value}>
@@ -97,7 +97,7 @@ export function EsensiDokumen({
           id="dokumen-jenis"
           name="jenis"
           defaultValue={jenis}
-          className="min-h-10 border px-3 text-sm"
+          className="min-h-11 border px-3 text-sm"
         >
           <option value="">Semua jenis</option>
           {DOKUMEN_JENIS.map((value) => (
@@ -114,11 +114,11 @@ export function EsensiDokumen({
           max={2100}
           defaultValue={year}
           placeholder="Tahun"
-          className="min-h-10 border px-3 text-sm"
+          className="min-h-11 border px-3 text-sm"
         />
         <button
           type="submit"
-          className="tema-button-primary inline-flex min-h-10 items-center justify-center gap-2 px-4 text-sm font-medium"
+          className="tema-button-primary inline-flex min-h-11 items-center justify-center gap-2 px-4 text-sm font-medium"
         >
           <Search className="size-4" aria-hidden="true" />
           Cari

@@ -3,16 +3,18 @@ import { describe, expect, it } from "vitest";
 import {
   kontrasTeks,
   parseThemeOptions,
+  rasioKontras,
   THEME_DEFAULT_OPTIONS,
   themeCssVars,
   themeOptionsSchema,
+  warnaTeksAksen,
 } from "./theme";
 
 describe("themeOptionsSchema", () => {
   it("mengisi nilai bawaan saat objek kosong", () => {
     const opsi = themeOptionsSchema.parse({});
     expect(opsi.warnaPrimer).toBe("#1a7f4b");
-    expect(opsi.font).toBe("system");
+    expect(opsi.font).toBe("aksesibel");
     expect(opsi.tampilMenu).toBe(true);
     expect(opsi.beranda).toEqual([
       "hero",
@@ -117,6 +119,11 @@ describe("kontrasTeks", () => {
   it("memilih teks terang pada latar gelap", () => {
     expect(kontrasTeks("#000000")).toBe("#ffffff");
   });
+
+  it("memberi teks gelap pada warna desa rentang tengah", () => {
+    expect(kontrasTeks("#16a34a")).toBe("#0b0b0b");
+    expect(rasioKontras("#16a34a", "#0b0b0b")).toBeGreaterThanOrEqual(4.5);
+  });
 });
 
 describe("themeCssVars", () => {
@@ -129,6 +136,25 @@ describe("themeCssVars", () => {
     expect(vars["--pub-primary"]).toBe("#000000");
     expect(vars["--pub-primary-foreground"]).toBe("#ffffff");
     expect(vars["--pub-radius"]).toBe("1rem");
-    expect(vars["--pub-font"]).toContain("--font-geist-sans");
+    expect(vars["--pub-font"]).toContain("--font-atkinson");
+  });
+
+  it("menyediakan warna aksen teks yang lolos kontras 4,5:1", () => {
+    const vars = themeCssVars({ ...THEME_DEFAULT_OPTIONS, warnaPrimer: "#16a34a" });
+    expect(rasioKontras(vars["--pub-primary-text"] ?? "", "#ffffff")).toBeGreaterThanOrEqual(4.5);
+    // Warna tombol tetap warna desa apa adanya.
+    expect(vars["--pub-primary"]).toBe("#16a34a");
+  });
+});
+
+describe("warnaTeksAksen", () => {
+  it("membiarkan warna gelap yang sudah aman", () => {
+    expect(warnaTeksAksen("#0f5132")).toBe("#0f5132");
+  });
+
+  it("menggelapkan warna terang sampai memenuhi ambang teks normal", () => {
+    const hasil = warnaTeksAksen("#ffd400");
+    expect(hasil).not.toBe("#ffd400");
+    expect(rasioKontras(hasil, "#ffffff")).toBeGreaterThanOrEqual(4.5);
   });
 });

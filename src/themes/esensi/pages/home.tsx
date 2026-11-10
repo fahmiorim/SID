@@ -11,7 +11,6 @@ import {
   Newspaper,
   Phone,
   Store,
-  Users,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,12 +20,29 @@ import { formatTanggal, ringkasTeks, urlMedia } from "@/features/publik/domain/f
 import type { HomeProps } from "@/themes/types";
 import { KontenHtml } from "@/themes/ui";
 
+/** Singkatan bulan untuk lencana tanggal agenda (tanpa bergantung locale). */
+const BULAN_SINGKAT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "Mei",
+  "Jun",
+  "Jul",
+  "Agu",
+  "Sep",
+  "Okt",
+  "Nov",
+  "Des",
+];
+
 /**
- * Beranda tema `esensi` bergaya portal desa.
+ * Beranda tema `esensi`.
  *
- * Bagian utama memakai susunan dua kolom: kabar dan layanan di kolom lebar,
- * data/agenda/kontak di kolom samping. Pilihan bagian tetap mengikuti
- * `opsi.beranda` yang diatur admin.
+ * Komposisi: panel hero (sambutan + sorotan bergambar) yang menjadi satu bidang
+ * fokus, deretan akses cepat, lalu dua kolom — kabar dan layanan di kolom
+ * lebar, data/agenda/kontak di kolom samping yang menempel saat digulir.
+ * Urutan bagian tetap mengikuti `opsi.beranda` yang diatur admin.
  */
 export function EsensiHome(props: HomeProps) {
   const { ctx, slider, berita, surat } = props;
@@ -54,20 +70,20 @@ export function EsensiHome(props: HomeProps) {
     .filter((node) => node !== null);
 
   return (
-    <div className="space-y-10 sm:space-y-12">
+    <div className="space-y-10 sm:space-y-14">
       {tampil.has("hero") ? <Hero {...props} /> : null}
       {tampil.has("slider") && slider.length > 0 ? <Sorotan items={slider} /> : null}
       {tampil.has("hero") ? <QuickLinks /> : null}
 
       {utama.length > 0 && samping.length > 0 ? (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <div className="min-w-0 space-y-8">{utama}</div>
-          <aside className="space-y-6">{samping}</aside>
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="min-w-0 space-y-10">{utama}</div>
+          <aside className="min-w-0 space-y-5 lg:sticky lg:top-20 lg:self-start">{samping}</aside>
         </div>
       ) : utama.length > 0 ? (
-        <div className="space-y-8">{utama}</div>
+        <div className="space-y-10">{utama}</div>
       ) : samping.length > 0 ? (
-        <div className="grid gap-6 sm:grid-cols-2">{samping}</div>
+        <div className="grid gap-5 sm:grid-cols-2">{samping}</div>
       ) : null}
     </div>
   );
@@ -84,46 +100,58 @@ function Hero({ ctx, sambutan, statistik, berita, slider }: HomeProps) {
     .join(" · ");
 
   return (
-    <section
-      className="tema-esensi-hero relative overflow-hidden border bg-card shadow-sm"
-      style={{ borderRadius: "calc(var(--pub-radius) * 1.5)" }}
-    >
-      <div className="grid lg:grid-cols-[1.02fr_.98fr]">
-        <div className="relative z-10 p-6 sm:p-9 lg:p-10">
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold tracking-wide"
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--pub-primary) 12%, transparent)",
-              color: "var(--pub-primary)",
-            }}
-          >
-            <Landmark className="size-3.5" aria-hidden="true" />
-            Portal Resmi Pemerintah Desa
-          </span>
+    <section aria-labelledby="judul-beranda" className="tema-hero p-5 sm:p-8 lg:p-10 xl:p-12">
+      <div
+        aria-hidden="true"
+        className="tema-hero-glow -top-32 -right-20 size-[30rem]"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--pub-primary) 45%, transparent), transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="tema-hero-glow -bottom-32 -left-24 size-[26rem]"
+        style={{
+          background:
+            "radial-gradient(circle, color-mix(in srgb, var(--pub-secondary) 20%, transparent), transparent 70%)",
+        }}
+      />
 
-          <h1 className="tema-esensi-judul mt-4 text-3xl leading-tight font-bold sm:text-4xl lg:text-[2.75rem]">
+      <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.06fr)_minmax(0,0.94fr)] lg:items-stretch lg:gap-12">
+        <div className="flex min-w-0 flex-col justify-center">
+          <p className="flex items-center gap-3 text-[10px] font-semibold tracking-[0.24em] text-[var(--pub-primary-text)] uppercase">
+            <span aria-hidden="true" className="tema-garis-gradien h-px w-9 shrink-0" />
+            Portal Resmi Pemerintah Desa
+          </p>
+
+          <h1
+            id="judul-beranda"
+            className="tema-esensi-judul tema-judul-gradien mt-4 text-[2.6rem] leading-[0.95] font-extrabold tracking-[-0.035em] text-balance sm:text-[3.4rem] lg:text-[4.1rem]"
+          >
             {judul}
           </h1>
 
           {lokasi ? (
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+            <p className="mt-4 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+              <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
               {lokasi}
             </p>
           ) : null}
 
-          <p className="mt-5 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          <p className="mt-6 max-w-[56ch] text-[15px] leading-[1.75] text-muted-foreground sm:text-base">
             {ringkasTeks(sambutan, 320) ||
               "Selamat datang di portal informasi desa. Warga dapat membaca berita, melihat transparansi anggaran, memantau data kependudukan, dan mengajukan surat secara online."}
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               href={ctx.opsi.heroTombolUrl || "/layanan-mandiri"}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-[var(--pub-primary-foreground)] shadow-sm transition hover:opacity-90"
+              className="tema-gradien inline-flex min-h-12 items-center gap-2 px-6 text-sm font-semibold text-[var(--pub-primary-foreground)] transition hover:brightness-[1.08]"
               style={{
-                backgroundColor: "var(--pub-primary)",
                 borderRadius: "var(--pub-radius)",
+                boxShadow:
+                  "0 12px 26px -14px color-mix(in srgb, var(--pub-primary) 80%, transparent)",
               }}
             >
               {ctx.opsi.heroTombol || "Layanan Mandiri Warga"}
@@ -131,99 +159,132 @@ function Hero({ ctx, sambutan, statistik, berita, slider }: HomeProps) {
             </Link>
             <Link
               href="/desa/profil"
-              className="inline-flex items-center gap-2 border bg-background/80 px-5 py-2.5 text-sm font-semibold transition hover:bg-accent"
+              className="group inline-flex min-h-12 items-center gap-2 border border-[var(--pub-garis)] bg-white/70 px-5 text-sm font-semibold backdrop-blur-sm transition-colors hover:border-[color-mix(in_srgb,var(--pub-primary)_35%,transparent)] hover:bg-white hover:text-[var(--pub-primary-text)]"
               style={{ borderRadius: "var(--pub-radius)" }}
             >
               Profil Desa
+              <ArrowRight
+                className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
             </Link>
           </div>
 
-          <div className="mt-8 grid max-w-md grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 rounded-xl border bg-background/70 p-3 backdrop-blur">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-muted text-[var(--pub-primary)]">
-                <Users className="size-4" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block text-lg leading-none font-bold tabular-nums">
-                  {statistik.total.toLocaleString("id-ID")}
-                </span>
-                <span className="mt-1 block text-[11px] text-muted-foreground">Penduduk</span>
-              </span>
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-background/70 p-3 backdrop-blur">
-              <span className="flex size-9 items-center justify-center rounded-lg bg-muted text-[var(--pub-primary)]">
-                <Store className="size-4" aria-hidden="true" />
-              </span>
-              <span>
-                <span className="block text-lg leading-none font-bold tabular-nums">
-                  {statistik.keluarga.toLocaleString("id-ID")}
-                </span>
-                <span className="mt-1 block text-[11px] text-muted-foreground">Kartu Keluarga</span>
-              </span>
-            </div>
+          <dl className="mt-9 grid max-w-lg grid-cols-3 gap-4 border-t border-[var(--pub-garis)] pt-6">
+            <HeroStat label="Penduduk" nilai={statistik.total} />
+            <HeroStat label="Keluarga" nilai={statistik.keluarga} />
+            <HeroStat label="Dusun" nilai={statistik.perDusun.length} />
+          </dl>
+        </div>
+
+        <figure className="relative min-w-0 lg:h-full">
+          <div
+            className="relative aspect-[4/3] overflow-hidden bg-muted ring-1 ring-white/40 sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[28rem]"
+            style={{
+              borderRadius: "calc(var(--pub-radius) * 1.75)",
+              boxShadow:
+                "0 40px 80px -32px color-mix(in srgb, var(--pub-primary) 60%, transparent), 0 4px 12px -4px rgb(0 0 0 / 0.12)",
+            }}
+          >
+            {gambar ? (
+              // eslint-disable-next-line @next/next/no-img-element -- media unggahan desa
+              <img
+                src={gambar}
+                alt={unggulan?.judul ?? `Sorotan ${nama}`}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div
+                className={`flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center ${
+                  unggulan ? "pb-32" : ""
+                }`}
+                style={{
+                  backgroundImage: [
+                    "radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--pub-primary) 16%, transparent) 1px, transparent 0)",
+                    "radial-gradient(120% 100% at 20% 0%, color-mix(in srgb, var(--pub-primary) 16%, transparent), transparent 60%)",
+                  ].join(", "),
+                  backgroundSize: "18px 18px, auto",
+                }}
+              >
+                {desa.logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- logo unggahan desa
+                  <img src={desa.logo} alt={`Logo ${nama}`} className="size-16 object-contain" />
+                ) : (
+                  <span
+                    className="flex size-14 items-center justify-center text-xl font-bold text-[var(--pub-primary-foreground)]"
+                    style={{
+                      backgroundColor: "var(--pub-primary)",
+                      borderRadius: "var(--pub-radius)",
+                    }}
+                  >
+                    {(nama.charAt(0) || "D").toUpperCase()}
+                  </span>
+                )}
+                <p className="max-w-[22ch] text-sm leading-relaxed text-muted-foreground">
+                  {lokasi || "Portal informasi desa"}
+                </p>
+              </div>
+            )}
+
+            {unggulan && gambar ? (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-5 sm:p-6">
+                <Link
+                  href={`/desa/berita/${unggulan.slug}`}
+                  className="group/caption block text-white"
+                >
+                  <span className="tema-chip bg-white/20 text-white backdrop-blur-sm">
+                    {unggulan.kategori ?? "Berita Utama"}
+                  </span>
+                  <span className="mt-2.5 line-clamp-3 block text-[17px] leading-snug font-semibold tracking-[-0.01em] group-hover/caption:underline sm:text-lg">
+                    {unggulan.judul}
+                  </span>
+                  <time className="mt-2 flex items-center gap-1.5 text-xs text-white/80">
+                    <CalendarDays className="size-3.5" aria-hidden="true" />
+                    {formatTanggal(unggulan.terbitPada ?? unggulan.createdAt)}
+                  </time>
+                </Link>
+              </div>
+            ) : null}
+
+            {unggulan && !gambar ? (
+              <div
+                className="absolute inset-x-0 bottom-0 p-5 sm:p-6"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to top, var(--card) 55%, color-mix(in srgb, var(--card) 70%, transparent), transparent)",
+                }}
+              >
+                <Link href={`/desa/berita/${unggulan.slug}`} className="group/caption block">
+                  <span className="text-[10px] font-semibold tracking-[0.16em] text-[var(--pub-primary-text)] uppercase">
+                    {unggulan.kategori ?? "Berita Utama"}
+                  </span>
+                  <span className="mt-1.5 line-clamp-2 block text-[15px] leading-snug font-semibold group-hover/caption:underline">
+                    {unggulan.judul}
+                  </span>
+                  <time className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <CalendarDays className="size-3.5" aria-hidden="true" />
+                    {formatTanggal(unggulan.terbitPada ?? unggulan.createdAt)}
+                  </time>
+                </Link>
+              </div>
+            ) : null}
           </div>
-        </div>
-
-        <div className="relative min-h-64 overflow-hidden lg:min-h-full">
-          {gambar ? (
-            // eslint-disable-next-line @next/next/no-img-element -- media unggahan desa
-            <img
-              src={gambar}
-              alt={unggulan?.judul ?? `Sorotan ${nama}`}
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-          ) : (
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle at 20% 15%, rgba(255,255,255,.22), transparent 42%), linear-gradient(135deg, var(--pub-primary), var(--pub-secondary))",
-              }}
-            />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/5" />
-          {!gambar ? (
-            <Newspaper
-              className="absolute top-1/2 left-1/2 size-28 -translate-x-1/2 -translate-y-1/2 text-white/10"
-              aria-hidden="true"
-            />
-          ) : null}
-
-          {unggulan ? (
-            <Link
-              href={`/desa/berita/${unggulan.slug}`}
-              className="group absolute inset-x-0 bottom-0 block p-5 text-white sm:p-6"
-            >
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold backdrop-blur">
-                <Newspaper className="size-3" aria-hidden="true" />
-                {unggulan.kategori ?? "Berita Utama"}
-              </span>
-              <h2 className="mt-2 line-clamp-3 text-lg leading-snug font-bold group-hover:underline sm:text-xl">
-                {unggulan.judul}
-              </h2>
-              <time className="mt-2 flex items-center gap-1.5 text-xs text-white/75">
-                <CalendarDays className="size-3.5" aria-hidden="true" />
-                {formatTanggal(unggulan.terbitPada ?? unggulan.createdAt)}
-              </time>
-            </Link>
-          ) : (
-            <div className="relative flex h-full min-h-64 flex-col items-center justify-center gap-3 p-8 text-center text-white">
-              {desa.logo ? (
-                // eslint-disable-next-line @next/next/no-img-element -- logo unggahan desa
-                <img src={desa.logo} alt={`Logo ${nama}`} className="size-16 object-contain" />
-              ) : (
-                <span className="flex size-16 items-center justify-center rounded-2xl bg-white/15 text-2xl font-bold backdrop-blur">
-                  {(nama.charAt(0) || "D").toUpperCase()}
-                </span>
-              )}
-              <p className="text-sm font-medium text-white/85">
-                {lokasi || "Portal informasi desa"}
-              </p>
-            </div>
-          )}
-        </div>
+        </figure>
       </div>
     </section>
+  );
+}
+
+function HeroStat({ label, nilai }: { label: string; nilai: number }) {
+  return (
+    <div>
+      <dt className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+        {label}
+      </dt>
+      <dd className="mt-1.5 text-[1.55rem] leading-none font-bold tracking-tight tabular-nums sm:text-[1.75rem]">
+        {nilai.toLocaleString("id-ID")}
+      </dd>
+    </div>
   );
 }
 
@@ -263,23 +324,29 @@ function QuickLinks() {
           <Link
             key={item.href}
             href={item.href}
-            className="group flex items-center gap-3 border bg-card p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            style={{ borderRadius: "var(--pub-radius)" }}
+            className="tema-kartu tema-kartu-interaktif group flex items-start gap-3 p-4"
           >
             <span
-              className="flex size-11 shrink-0 items-center justify-center rounded-xl text-[var(--pub-primary)]"
-              style={{ backgroundColor: "color-mix(in srgb, var(--pub-primary) 12%, transparent)" }}
+              className="flex size-10 shrink-0 items-center justify-center ring-1 ring-[color-mix(in_srgb,var(--pub-primary)_18%,transparent)] transition-transform ring-inset group-hover:scale-105"
+              style={{
+                backgroundImage:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--pub-primary) 16%, transparent), color-mix(in srgb, var(--pub-secondary) 8%, transparent))",
+                color: "var(--pub-primary-text)",
+                borderRadius: "calc(var(--pub-radius) * 0.9)",
+              }}
             >
-              <Icon className="size-5" aria-hidden="true" />
+              <Icon className="size-[18px]" aria-hidden="true" />
             </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold">{item.label}</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">{item.description}</span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center justify-between gap-2">
+                <span className="truncate text-sm font-semibold">{item.label}</span>
+                <ChevronRight
+                  className="size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-[var(--pub-primary-text)]"
+                  aria-hidden="true"
+                />
+              </span>
+              <span className="mt-1 block text-xs text-muted-foreground">{item.description}</span>
             </span>
-            <ChevronRight
-              className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-              aria-hidden="true"
-            />
           </Link>
         );
       })}
@@ -304,88 +371,100 @@ function BeritaSection({ berita }: { berita: NonNullable<HomeProps["berita"]> })
         action="Semua berita"
       />
 
-      <article
-        className="group overflow-hidden border bg-card shadow-sm"
-        style={{ borderRadius: "calc(var(--pub-radius) * 1.1)" }}
-      >
-        <Link href={`/desa/berita/${utama.slug}`} className="block">
-          {" "}
-          <div className="relative aspect-[16/9] overflow-hidden bg-muted sm:aspect-[21/9]">
+      <article className="tema-kartu group overflow-hidden">
+        <Link
+          href={`/desa/berita/${utama.slug}`}
+          className="block sm:grid sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]"
+        >
+          <div className="relative aspect-[16/9] overflow-hidden bg-muted sm:aspect-auto sm:min-h-[17rem]">
             {gambar ? (
               // eslint-disable-next-line @next/next/no-img-element -- media unggahan desa
               <img
                 src={gambar}
                 alt={utama.judul}
-                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
               />
             ) : (
               <div
-                className="relative flex h-full w-full items-end overflow-hidden p-5 sm:p-6"
+                className="relative flex h-full w-full items-end overflow-hidden p-5"
                 style={{
                   backgroundImage:
-                    "radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--pub-primary) 22%, transparent), transparent 40%), linear-gradient(120deg, color-mix(in srgb, var(--pub-primary) 12%, transparent), color-mix(in srgb, var(--pub-primary) 3%, transparent))",
+                    "radial-gradient(circle at 88% 12%, color-mix(in srgb, var(--pub-primary) 34%, transparent), transparent 46%), radial-gradient(circle at 6% 100%, color-mix(in srgb, var(--pub-secondary) 26%, transparent), transparent 50%), linear-gradient(125deg, color-mix(in srgb, var(--pub-primary) 18%, transparent), color-mix(in srgb, var(--pub-primary) 5%, transparent))",
                 }}
               >
-                <p className="max-w-sm text-2xl leading-tight font-bold text-[var(--pub-primary)]/80 sm:text-3xl">
+                <p className="max-w-[14ch] text-xl leading-tight font-bold text-[var(--pub-primary-text)]/85">
                   Cerita dari desa
                 </p>
                 <Newspaper
-                  className="absolute right-4 bottom-4 size-20 text-[var(--pub-primary)] opacity-10 sm:size-24"
+                  className="absolute right-4 bottom-4 size-16 text-[var(--pub-primary-text)] opacity-15"
                   aria-hidden="true"
                 />
               </div>
             )}
-            <span className="absolute top-4 left-4 rounded-full bg-background/95 px-3 py-1 text-[11px] font-semibold text-[var(--pub-primary)] shadow-sm backdrop-blur">
+            <span className="tema-chip absolute top-4 left-4 bg-background/95 text-[var(--pub-primary-text)] shadow-sm backdrop-blur">
               {utama.kategori ?? "Berita Desa"}
             </span>
           </div>
-          <div className="p-5">
-            <h3 className="text-lg leading-snug font-bold group-hover:underline sm:text-xl">
+
+          <div className="flex flex-col justify-center p-5 sm:p-7">
+            <h3 className="text-xl leading-[1.25] font-bold tracking-[-0.015em] group-hover:underline group-hover:decoration-2 group-hover:underline-offset-4 sm:text-[1.375rem]">
               {utama.judul}
             </h3>
-            <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
               {ringkasTeks(utama.ringkasan, 180)}
             </p>
-            <time className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <CalendarDays className="size-3.5" aria-hidden="true" />
-              {formatTanggal(utama.terbitPada ?? utama.createdAt)}
-            </time>
+            <div className="mt-5 flex items-center justify-between gap-4 border-t border-[var(--pub-garis)] pt-3.5">
+              <time className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <CalendarDays className="size-3.5" aria-hidden="true" />
+                {formatTanggal(utama.terbitPada ?? utama.createdAt)}
+              </time>
+              <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-[var(--pub-primary-text)]">
+                Baca
+                <ArrowRight
+                  className="size-3.5 transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
+              </span>
+            </div>
           </div>
         </Link>
       </article>
 
       {lain.length > 0 ? (
-        <ul className="mt-3 grid gap-3 sm:grid-cols-2">
+        <ul className="tema-kartu mt-3 divide-y overflow-hidden">
           {lain.map((item) => {
             const sampul = urlMedia(item.gambar);
             return (
-              <li
-                key={item.id}
-                className="overflow-hidden border bg-card transition hover:shadow-md"
-                style={{ borderRadius: "var(--pub-radius)" }}
-              >
-                <Link href={`/desa/berita/${item.slug}`} className="group flex h-full gap-3 p-3">
-                  <span className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-muted">
+              <li key={item.id}>
+                <Link
+                  href={`/desa/berita/${item.slug}`}
+                  className="group flex items-center gap-3.5 px-4 py-3.5 transition-colors hover:bg-muted/50 sm:px-5"
+                >
+                  <span className="relative size-14 shrink-0 overflow-hidden rounded-lg bg-muted">
                     {sampul ? (
                       // eslint-disable-next-line @next/next/no-img-element -- media unggahan desa
                       <img src={sampul} alt={item.judul} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="flex h-full w-full items-center justify-center text-[var(--pub-primary)]">
+                      <span className="flex h-full w-full items-center justify-center text-[var(--pub-primary-text)]">
                         <Newspaper className="size-5 opacity-60" aria-hidden="true" />
                       </span>
                     )}
                   </span>
-                  <span className="min-w-0">
-                    <span className="block text-[11px] font-semibold text-[var(--pub-primary)]">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-semibold tracking-[0.14em] text-[var(--pub-primary-text)] uppercase">
                       {item.kategori ?? "Berita"}
                     </span>
-                    <span className="mt-1 line-clamp-2 block text-sm leading-snug font-semibold group-hover:underline">
+                    <span className="mt-1 line-clamp-2 block text-[13.5px] leading-snug font-semibold group-hover:underline">
                       {item.judul}
                     </span>
-                    <time className="mt-2 block text-[11px] text-muted-foreground">
-                      {formatTanggal(item.terbitPada ?? item.createdAt)}
-                    </time>
                   </span>
+                  <time className="hidden shrink-0 text-[11px] text-muted-foreground sm:block">
+                    {formatTanggal(item.terbitPada ?? item.createdAt)}
+                  </time>
+                  <ChevronRight
+                    className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
                 </Link>
               </li>
             );
@@ -409,12 +488,10 @@ function WidgetSection({ items }: { items: HomeProps["widget"] }) {
       />
       <div className="grid gap-4 sm:grid-cols-2">
         {tampil.map((item) => (
-          <article
-            key={item.id}
-            className="border bg-card p-5 shadow-sm"
-            style={{ borderRadius: "var(--pub-radius)" }}
-          >
-            {item.judul ? <h3 className="font-semibold">{item.judul}</h3> : null}
+          <article key={item.id} className="tema-kartu p-5 sm:p-6">
+            {item.judul ? (
+              <h3 className="text-[15px] font-semibold tracking-[-0.01em]">{item.judul}</h3>
+            ) : null}
             {item.isi ? (
               <KontenHtml
                 html={item.isi}
@@ -438,13 +515,16 @@ function SuratSection({ surat }: { surat: HomeProps["surat"] }) {
         href="/desa/surat"
         action="Jenis surat"
       />
-      <div
-        className="overflow-hidden border bg-card shadow-sm"
-        style={{ borderRadius: "var(--pub-radius)" }}
-      >
+      <div className="tema-kartu overflow-hidden">
         {surat.length === 0 ? (
           <div className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-[var(--pub-primary)]">
+            <span
+              className="flex size-10 shrink-0 items-center justify-center rounded-full"
+              style={{
+                backgroundColor: "color-mix(in srgb, var(--pub-primary) 8%, transparent)",
+                color: "var(--pub-primary-text)",
+              }}
+            >
               <FileText className="size-4" aria-hidden="true" />
             </span>
             Belum ada surat yang diterbitkan.
@@ -452,9 +532,18 @@ function SuratSection({ surat }: { surat: HomeProps["surat"] }) {
         ) : (
           <ul className="divide-y">
             {surat.map((item) => (
-              <li key={item.id} className="flex items-start justify-between gap-4 p-4">
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-4 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:px-5"
+              >
                 <div className="flex min-w-0 gap-3">
-                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-[var(--pub-primary)]">
+                  <span
+                    className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+                    style={{
+                      backgroundColor: "color-mix(in srgb, var(--pub-primary) 8%, transparent)",
+                      color: "var(--pub-primary-text)",
+                    }}
+                  >
                     <FileText className="size-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
@@ -464,7 +553,7 @@ function SuratSection({ surat }: { surat: HomeProps["surat"] }) {
                     </p>
                   </div>
                 </div>
-                <time className="shrink-0 pt-1 text-[11px] text-muted-foreground">
+                <time className="shrink-0 text-[11px] text-muted-foreground">
                   {item.tanggalLabel ?? ""}
                 </time>
               </li>
@@ -479,41 +568,74 @@ function SuratSection({ surat }: { surat: HomeProps["surat"] }) {
 function StatistikSection({ statistik }: { statistik: HomeProps["statistik"] }) {
   const persen = (nilai: number) =>
     statistik.total > 0 ? Math.round((nilai / statistik.total) * 100) : 0;
+  const laki = persen(statistik.lakiLaki);
+  const perempuan = persen(statistik.perempuan);
 
   return (
-    <SidebarCard
-      title="Data Kependudukan"
-      icon={<Users className="size-4" aria-hidden="true" />}
-      href="/desa/statistik"
-      action="Detail"
-    >
-      <div className="flex items-end justify-between">
-        <p className="text-3xl leading-none font-bold tabular-nums">
+    <SidebarCard title="Data Kependudukan" href="/desa/statistik" action="Detail">
+      <div className="flex items-baseline gap-2">
+        <p className="text-[2.05rem] leading-none font-bold tracking-tight tabular-nums">
           {statistik.total.toLocaleString("id-ID")}
         </p>
-        <span className="pb-1 text-xs text-muted-foreground">jiwa</span>
+        <span className="text-xs text-muted-foreground">jiwa</span>
       </div>
 
-      <div className="mt-4 space-y-3">
-        <StatBar label="Laki-laki" nilai={statistik.lakiLaki} persen={persen(statistik.lakiLaki)} />
-        <StatBar
-          label="Perempuan"
-          nilai={statistik.perempuan}
-          persen={persen(statistik.perempuan)}
-          warna="var(--pub-secondary)"
+      <div className="mt-4 flex h-2 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+        <span
+          style={{
+            width: `${laki}%`,
+            backgroundImage:
+              "linear-gradient(135deg, var(--pub-primary), color-mix(in srgb, var(--pub-primary) 60%, var(--pub-secondary)))",
+          }}
+        />
+        <span
+          style={{
+            width: `${perempuan}%`,
+            backgroundImage:
+              "linear-gradient(135deg, color-mix(in srgb, var(--pub-secondary) 65%, var(--pub-primary)), var(--pub-secondary))",
+          }}
         />
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2 border-t pt-4 text-sm">
+      <ul className="mt-3.5 space-y-2 text-xs">
+        <li className="flex items-center gap-2">
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: "var(--pub-primary)" }}
+            aria-hidden="true"
+          />
+          <span className="text-muted-foreground">Laki-laki</span>
+          <span className="ml-auto font-semibold tabular-nums">
+            {statistik.lakiLaki.toLocaleString("id-ID")} · {laki}%
+          </span>
+        </li>
+        <li className="flex items-center gap-2">
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: "var(--pub-secondary)" }}
+            aria-hidden="true"
+          />
+          <span className="text-muted-foreground">Perempuan</span>
+          <span className="ml-auto font-semibold tabular-nums">
+            {statistik.perempuan.toLocaleString("id-ID")} · {perempuan}%
+          </span>
+        </li>
+      </ul>
+
+      <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--pub-garis)] pt-4">
         <div>
-          <dt className="text-[11px] text-muted-foreground">Kartu Keluarga</dt>
-          <dd className="mt-0.5 font-semibold tabular-nums">
+          <dt className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+            Kartu Keluarga
+          </dt>
+          <dd className="mt-1 text-sm font-semibold tabular-nums">
             {statistik.keluarga.toLocaleString("id-ID")}
           </dd>
         </div>
         <div>
-          <dt className="text-[11px] text-muted-foreground">Wilayah dusun</dt>
-          <dd className="mt-0.5 font-semibold tabular-nums">
+          <dt className="text-[10px] tracking-[0.1em] text-muted-foreground uppercase">
+            Wilayah dusun
+          </dt>
+          <dd className="mt-1 text-sm font-semibold tabular-nums">
             {statistik.perDusun.length.toLocaleString("id-ID")}
           </dd>
         </div>
@@ -522,53 +644,44 @@ function StatistikSection({ statistik }: { statistik: HomeProps["statistik"] }) 
   );
 }
 
-function StatBar({
-  label,
-  nilai,
-  persen,
-  warna = "var(--pub-primary)",
-}: {
-  label: string;
-  nilai: number;
-  persen: number;
-  warna?: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium tabular-nums">
-          {nilai.toLocaleString("id-ID")} · {persen}%
-        </span>
-      </div>
-      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted">
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${persen}%`, backgroundColor: warna }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function AgendaSection({ agenda }: { agenda: HomeProps["agenda"] }) {
   return (
-    <SidebarCard title="Agenda Desa" icon={<CalendarDays className="size-4" aria-hidden="true" />}>
+    <SidebarCard title="Agenda Desa" href="/desa/agenda" action="Semua">
       {agenda.length === 0 ? (
         <EmptyLine>Belum ada agenda kegiatan.</EmptyLine>
       ) : (
-        <ul className="space-y-3">
-          {agenda.slice(0, 5).map((item) => (
-            <li key={item.id} className="border-l-2 border-[var(--pub-primary)] pl-3">
-              <time className="text-[11px] font-medium text-[var(--pub-primary)]">
-                {formatTanggal(item.tanggal)}
-              </time>
-              <p className="mt-0.5 line-clamp-2 text-sm font-medium">{item.perihal}</p>
-              {item.asalTujuan ? (
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{item.asalTujuan}</p>
-              ) : null}
-            </li>
-          ))}
+        <ul className="space-y-3.5">
+          {agenda.slice(0, 5).map((item) => {
+            const bagian = item.mulai.split("-").map(Number);
+            const hari = bagian[2] ?? 0;
+            const bulan = bagian[1] ?? 0;
+            return (
+              <li key={item.id} className="flex gap-3">
+                <span
+                  className="tema-gradien flex size-11 shrink-0 flex-col items-center justify-center text-[var(--pub-primary-foreground)] shadow-sm"
+                  style={{ borderRadius: "calc(var(--pub-radius) * 0.8)" }}
+                >
+                  <span className="text-[15px] leading-none font-bold tabular-nums">
+                    {hari || "•"}
+                  </span>
+                  <span className="mt-0.5 text-[9px] font-semibold tracking-[0.08em] uppercase opacity-90">
+                    {BULAN_SINGKAT[bulan - 1] ?? ""}
+                  </span>
+                </span>
+                <div className="min-w-0">
+                  <p className="line-clamp-2 text-[13px] leading-snug font-semibold">
+                    {item.judul}
+                  </p>
+                  {item.lokasi ? (
+                    <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <MapPin className="size-3 shrink-0" aria-hidden="true" />
+                      <span className="truncate">{item.lokasi}</span>
+                    </p>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
     </SidebarCard>
@@ -579,13 +692,8 @@ function KontakSection({ ctx }: { ctx: HomeProps["ctx"] }) {
   const desa = ctx.desa;
 
   return (
-    <SidebarCard
-      title="Kontak Desa"
-      icon={<MapPin className="size-4" aria-hidden="true" />}
-      href="/desa/kontak"
-      action="Detail"
-    >
-      <ul className="space-y-3 text-sm">
+    <SidebarCard title="Kontak Desa" href="/desa/kontak" action="Detail">
+      <ul className="space-y-3 text-[13px]">
         <ContactLine icon={<MapPin className="size-4" aria-hidden="true" />}>
           {desa.alamatKantor ?? "Alamat kantor desa belum diatur."}
         </ContactLine>
@@ -601,7 +709,7 @@ function KontakSection({ ctx }: { ctx: HomeProps["ctx"] }) {
       </ul>
       <Link
         href="/desa/kontak"
-        className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-[var(--pub-primary)] hover:underline"
+        className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
       >
         Lihat halaman kontak
         <ArrowRight className="size-3.5" aria-hidden="true" />
@@ -626,8 +734,7 @@ function Sorotan({ items }: { items: HomeProps["slider"] }) {
           return (
             <article
               key={item.id}
-              className="w-64 shrink-0 snap-start overflow-hidden border bg-card shadow-sm sm:w-72"
-              style={{ borderRadius: "var(--pub-radius)" }}
+              className="tema-kartu w-64 shrink-0 snap-start overflow-hidden sm:w-72"
             >
               <div className="relative aspect-[4/3] bg-muted">
                 {gambar ? (
@@ -646,13 +753,13 @@ function Sorotan({ items }: { items: HomeProps["slider"] }) {
                     }}
                   >
                     <Landmark
-                      className="size-8 text-[var(--pub-primary)] opacity-40"
+                      className="size-8 text-[var(--pub-primary-text)] opacity-40"
                       aria-hidden="true"
                     />
                   </div>
                 )}
                 {item.judul ? (
-                  <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-3 text-sm font-medium text-white">
+                  <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-sm font-medium text-white">
                     {item.judul}
                   </p>
                 ) : null}
@@ -679,23 +786,27 @@ function SectionHeading({
   action?: string;
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-[var(--pub-garis)] pb-4">
       <div>
-        <p className="text-[11px] font-semibold tracking-[0.18em] text-[var(--pub-primary)] uppercase">
+        <p className="flex items-center gap-2.5 text-[10px] font-semibold tracking-[0.2em] text-[var(--pub-primary-text)] uppercase">
+          <span aria-hidden="true" className="tema-garis-gradien h-px w-7 shrink-0" />
           {eyebrow}
         </p>
-        <h2 className="tema-esensi-judul mt-1 text-xl font-bold tracking-tight sm:text-2xl">
+        <h2 className="tema-esensi-judul mt-1.5 text-[1.3rem] font-bold tracking-[-0.02em] sm:text-[1.5rem]">
           {title}
         </h2>
-        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+        {description ? <p className="mt-1.5 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {href && action ? (
         <Link
           href={href}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-[var(--pub-primary)] hover:underline"
+          className="group inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
         >
           {action}
-          <ArrowRight className="size-4" aria-hidden="true" />
+          <ArrowRight
+            className="size-3.5 transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
         </Link>
       ) : null}
     </div>
@@ -704,45 +815,37 @@ function SectionHeading({
 
 function SidebarCard({
   title,
-  icon,
   href,
   action,
   children,
 }: {
   title: string;
-  icon: ReactNode;
   href?: string;
   action?: string;
   children: ReactNode;
 }) {
   return (
-    <section
-      className="overflow-hidden border bg-card shadow-sm"
-      style={{ borderRadius: "calc(var(--pub-radius) * 1.05)" }}
-    >
-      <div className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
-        <h2 className="flex items-center gap-2 text-sm font-bold">
-          <span className="text-[var(--pub-primary)]">{icon}</span>
-          {title}
-        </h2>
+    <section className="tema-kartu overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--pub-garis)] px-5 py-3.5">
+        <h2 className="text-[10px] font-semibold tracking-[0.18em] uppercase">{title}</h2>
         {href && action ? (
           <Link
             href={href}
-            className="text-[11px] font-semibold text-[var(--pub-primary)] hover:underline"
+            className="text-[11px] font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
           >
             {action}
           </Link>
         ) : null}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="px-5 py-4">{children}</div>
     </section>
   );
 }
 
 function ContactLine({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <li className="flex gap-3">
-      <span className="mt-0.5 shrink-0 text-[var(--pub-primary)]">{icon}</span>
+    <li className="flex gap-2.5">
+      <span className="mt-0.5 shrink-0 text-[var(--pub-primary-text)]">{icon}</span>
       <span className="min-w-0 leading-relaxed">{children}</span>
     </li>
   );
@@ -751,7 +854,7 @@ function ContactLine({ icon, children }: { icon: ReactNode; children: ReactNode 
 function EmptyLine({ children }: { children: ReactNode }) {
   return (
     <p className="flex items-center gap-2 text-sm text-muted-foreground">
-      <span className="size-1.5 rounded-full bg-[var(--pub-primary)]" />
+      <span className="size-1.5 rounded-full bg-[var(--pub-primary)]" aria-hidden="true" />
       {children}
     </p>
   );

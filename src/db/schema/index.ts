@@ -11,6 +11,7 @@ export * from "./kontak";
  */
 
 export * from "./audit";
+export * from "./agenda-kegiatan";
 export * from "./auth";
 export * from "./mailbox-pesan";
 export * from "./bantuan";

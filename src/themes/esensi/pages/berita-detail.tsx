@@ -11,7 +11,7 @@ export function EsensiBeritaDetail({ berita, terkait }: BeritaDetailProps) {
   const lampiran = urlMedia(berita.dokumen);
 
   return (
-    <article className="space-y-8">
+    <article className="mx-auto w-full max-w-4xl space-y-8">
       <Link
         href="/desa/berita"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
@@ -63,7 +63,7 @@ export function EsensiBeritaDetail({ berita, terkait }: BeritaDetailProps) {
               <li key={item.id}>
                 <Link
                   href={`/desa/berita/${item.slug}`}
-                  className="font-medium hover:text-[var(--pub-primary)] hover:underline"
+                  className="font-medium hover:text-[var(--pub-primary-text)] hover:underline"
                 >
                   {item.judul}
                 </Link>

@@ -3,9 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { daftarLapakPublik } from "@/features/lapak/application/lapak-publik";
+import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -51,13 +51,14 @@ export default async function LapakPublicPage({
 
   const { items, kategori: kategoriList, total, page: currentPage, pageCount } = listing;
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">Lapak Desa {identitas?.namaDesa ?? "Desa"}</h1>
-        <p className="text-sm text-muted-foreground">
-          Daftar UMKM dan produk warga {identitas?.namaDesa ?? "desa"}
-        </p>
-      </header>
+    <div>
+      <div className="mb-7">
+        <ThemePageHeader
+          eyebrow="Potensi Desa"
+          title={`Lapak Desa ${identitas?.namaDesa ?? "Desa"}`}
+          description={`Daftar UMKM dan produk warga ${identitas?.namaDesa ?? "desa"}.`}
+        />
+      </div>
 
       <form method="get" className="mb-4 flex flex-wrap items-center gap-2">
         {kategori ? <input type="hidden" name="kategori" value={kategori} /> : null}
@@ -70,12 +71,9 @@ export default async function LapakPublicPage({
           name="q"
           defaultValue={q}
           placeholder="Cari nama, pemilik, atau alamat"
-          className="h-9 w-full max-w-sm rounded-md border bg-background px-3 text-sm"
+          className="min-h-11 w-full max-w-sm rounded-md border bg-background px-3 text-sm"
         />
-        <button
-          type="submit"
-          className="h-9 rounded-md border px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
-        >
+        <button type="submit" className="tema-button-primary min-h-11 px-4 text-sm">
           Cari
         </button>
         {q ? (
@@ -122,30 +120,28 @@ export default async function LapakPublicPage({
       </p>
 
       {items.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Belum ada data lapak UMKM yang cocok.
-          </CardContent>
-        </Card>
+        <div className="rounded-[var(--pub-radius)] border border-dashed p-10 text-center text-sm text-muted-foreground">
+          Belum ada data lapak UMKM yang cocok.
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((item) => (
-            <Card key={item.id} className="flex flex-col">
-              <CardContent className="flex flex-1 flex-col p-4">
+            <ThemeCard key={item.id} className="flex flex-col">
+              <div className="flex flex-1 flex-col p-5">
                 <h3 className="truncate font-semibold">{item.nama}</h3>
                 {item.kategori && (
-                  <span className="mt-1 inline-block rounded bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
+                  <span className="mt-2 self-start text-[11px] font-semibold tracking-[0.12em] text-[var(--pub-primary-text)] uppercase">
                     {item.kategori}
                   </span>
                 )}
                 {item.pemilik && (
-                  <p className="mt-1 text-sm text-muted-foreground">Pemilik: {item.pemilik}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Pemilik: {item.pemilik}</p>
                 )}
                 {item.alamat && (
-                  <p className="mt-1 truncate text-sm text-muted-foreground">📍 {item.alamat}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{item.alamat}</p>
                 )}
                 {item.keterangan && (
-                  <p className="mt-2 line-clamp-3 flex-1 text-sm text-muted-foreground">
+                  <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">
                     {item.keterangan}
                   </p>
                 )}
@@ -154,7 +150,7 @@ export default async function LapakPublicPage({
                     {item.produkCount} produk tersedia
                   </div>
                 )}
-                <div className="mt-4 flex gap-2">
+                <div className="mt-4 flex gap-2 border-t pt-4">
                   <Button variant="outline" size="sm" asChild>
                     <Link href={`/desa/lapak/${item.id}/produk`}>Lihat Produk</Link>
                   </Button>
@@ -162,8 +158,8 @@ export default async function LapakPublicPage({
                     <Link href="/desa/lapak/peta">Peta</Link>
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </ThemeCard>
           ))}
         </div>
       )}

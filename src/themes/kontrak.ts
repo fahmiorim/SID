@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import type { ThemeManifest, ThemeSlot } from "@/features/publik/domain/theme";
 
 import type {
+  AgendaProps,
   ApbdesProps,
   BantuanProps,
   BeritaDetailProps,
@@ -17,7 +18,9 @@ import type {
   KontakProps,
   LayananMandiriProps,
   LayoutProps,
+  PembangunanProps,
   PerangkatProps,
+  PetaProps,
   ProfilProps,
   SinergiProps,
   StatistikProps,
@@ -43,6 +46,9 @@ export interface ThemeComponents {
   perangkat: ComponentType<PerangkatProps>;
   berita: ComponentType<BeritaListProps>;
   beritaDetail: ComponentType<BeritaDetailProps>;
+  agenda: ComponentType<AgendaProps>;
+  peta: ComponentType<PetaProps>;
+  pembangunan: ComponentType<PembangunanProps>;
   galeri: ComponentType<GaleriListProps>;
   galeriDetail: ComponentType<GaleriDetailProps>;
   dokumen: ComponentType<DokumenProps>;
@@ -70,6 +76,9 @@ export function slotTerpenuhi(manifest: ThemeManifest): boolean {
     "perangkat",
     "berita",
     "berita-detail",
+    "agenda",
+    "peta",
+    "pembangunan",
     "galeri",
     "galeri-detail",
     "dokumen",

@@ -15,7 +15,7 @@ export default async function KiaPublikPage() {
   const rows = await daftarKiaPublik(desa.id);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold">Kesehatan Ibu dan Anak (KIA)</h1>
         <p className="text-sm text-muted-foreground">

@@ -1,12 +1,15 @@
+import { agendaMendatang } from "@/features/agenda/application/agenda-use-cases";
 import { jalankanApiPublik } from "@/features/api-publik/application/public-api";
-import { daftarAgendaBeranda } from "@/features/publik/application/konten-publik";
 import { listJenisSuratPublik } from "@/features/surat/application/surat-publik-use-cases";
 
 /**
  * GET /api/publik/surat
  *
- * Agenda surat publik dan jenis surat yang dapat diverifikasi.
+ * Agenda kegiatan desa yang ditayangkan dan jenis surat yang dapat diverifikasi.
  * Query: `limit` (1–100, default 20).
+ *
+ * Agenda surat masuk/keluar tidak diekspos: nomor surat dan asal/tujuan
+ * instansi adalah metadata internal.
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,7 +18,7 @@ export async function GET(request: Request) {
 
   return jalankanApiPublik(request, "surat", async (desa) => {
     const [agenda, jenisSurat] = await Promise.all([
-      daftarAgendaBeranda(desa.id, limit),
+      agendaMendatang(desa.id, limit),
       listJenisSuratPublik(desa.id),
     ]);
 

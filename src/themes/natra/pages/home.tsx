@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { agendaLabelTanggal } from "@/features/agenda/domain/agenda";
 import { formatTanggal, ringkasTeks, urlMedia } from "@/features/publik/domain/format";
 import type { HomeProps } from "@/themes/types";
 import { KontenHtml } from "@/themes/ui";
@@ -147,15 +148,13 @@ export function NatraHome(props: HomeProps) {
             {props.agenda.map((item) => (
               <li key={item.id} className="flex items-start justify-between gap-4 p-4">
                 <div className="min-w-0 flex-1">
-                  <span className="text-xs font-semibold text-muted-foreground">
-                    {item.perihal}
-                  </span>
-                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
-                    {item.asalTujuan ?? "—"}
+                  <span className="text-sm font-semibold">{item.judul}</span>
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                    {item.lokasi ?? "Lokasi belum diatur"}
                   </p>
                 </div>
                 <time className="shrink-0 text-xs text-muted-foreground">
-                  {formatTanggal(item.tanggal)}
+                  {agendaLabelTanggal(item.mulai, item.selesai)}
                 </time>
               </li>
             ))}

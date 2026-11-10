@@ -7,6 +7,7 @@ import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use
 import { RegistrasiWargaForm } from "@/features/registrasi-warga/presentation/components/registrasi-warga-form";
 import { buatCaptcha } from "@/lib/captcha";
 import { env } from "@/lib/env";
+import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -23,15 +24,14 @@ export default async function RegistrasiWargaPublikPage() {
 
   if (!pengaturan.pendaftaranWargaAktif) {
     return (
-      <div className="mx-auto max-w-xl px-4 py-8">
-        <h1 className="text-2xl font-bold">Pendaftaran Akun Ditutup</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Pengajuan akun layanan mandiri Desa {identitas.namaDesa} sedang ditutup. Silakan
-          menghubungi kantor desa untuk informasi lebih lanjut.
-        </p>
+      <div className="max-w-xl space-y-4">
+        <ThemePageHeader
+          title="Pendaftaran Akun Ditutup"
+          description={`Pengajuan akun layanan mandiri Desa ${identitas.namaDesa} sedang ditutup. Silakan menghubungi kantor desa untuk informasi lebih lanjut.`}
+        />
         <Link
           href="/"
-          className="mt-6 inline-block text-sm text-primary underline-offset-4 hover:underline"
+          className="inline-block text-sm text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
         >
           Kembali ke beranda
         </Link>
@@ -42,20 +42,23 @@ export default async function RegistrasiWargaPublikPage() {
   const captcha = buatCaptcha(env.BETTER_AUTH_SECRET);
 
   return (
-    <div className="mx-auto max-w-xl px-4 py-8">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold">Registrasi Akun Layanan Mandiri</h1>
-        <p className="text-sm text-muted-foreground">
-          Desa {identitas.namaDesa}. Ajukan akun untuk mengakses layanan surat dan dokumen secara
-          mandiri.
-        </p>
-      </header>
+    <div className="max-w-xl space-y-6">
+      <ThemePageHeader
+        title="Registrasi Akun Layanan Mandiri"
+        description={`Desa ${identitas.namaDesa}. Ajukan akun untuk mengakses layanan surat dan dokumen secara mandiri.`}
+        eyebrow="Layanan Warga"
+      />
 
-      <RegistrasiWargaForm captchaPertanyaan={captcha.pertanyaan} captchaToken={captcha.token} />
+      <ThemeCard className="p-6">
+        <RegistrasiWargaForm captchaPertanyaan={captcha.pertanyaan} captchaToken={captcha.token} />
+      </ThemeCard>
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Sudah memiliki akun?{" "}
-        <Link href="/masuk" className="text-primary underline-offset-4 hover:underline">
+        <Link
+          href="/masuk"
+          className="text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
+        >
           Masuk di sini
         </Link>
         .

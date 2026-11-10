@@ -2,6 +2,7 @@ import type { ThemeComponents } from "@/themes/kontrak";
 
 import { EsensiLayout } from "./layout";
 import { manifest } from "./manifest";
+import { EsensiAgenda } from "./pages/agenda";
 import { EsensiApbdes } from "./pages/apbdes";
 import { EsensiBantuan } from "./pages/bantuan";
 import { EsensiBerita } from "./pages/berita";
@@ -15,7 +16,9 @@ import { EsensiInventaris } from "./pages/inventaris";
 import { EsensiKelompok } from "./pages/kelompok";
 import { EsensiKontak } from "./pages/kontak";
 import { EsensiLayananMandiri } from "./pages/layanan-mandiri";
+import { EsensiPembangunan } from "./pages/pembangunan";
 import { EsensiPerangkat } from "./pages/perangkat";
+import { EsensiPeta } from "./pages/peta";
 import { EsensiProfil } from "./pages/profil";
 import { EsensiSinergi } from "./pages/sinergi";
 import { EsensiStatistik } from "./pages/statistik";
@@ -35,6 +38,9 @@ export const esensi: ThemeComponents = {
   perangkat: EsensiPerangkat,
   berita: EsensiBerita,
   beritaDetail: EsensiBeritaDetail,
+  agenda: EsensiAgenda,
+  peta: EsensiPeta,
+  pembangunan: EsensiPembangunan,
   galeri: EsensiGaleri,
   galeriDetail: EsensiGaleriDetail,
   dokumen: EsensiDokumen,

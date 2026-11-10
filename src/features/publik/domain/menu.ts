@@ -28,6 +28,8 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     children: [
       { href: "/desa/profil", label: "Profil Desa" },
       { href: "/desa/pemerintahan", label: "Pemerintahan" },
+      { href: "/desa/kelompok", label: "Kelompok & Lembaga" },
+      { href: "/desa/peta", label: "Peta Desa" },
     ],
   },
   {
@@ -35,6 +37,7 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     label: "Informasi",
     children: [
       { href: "/desa/berita", label: "Berita" },
+      { href: "/desa/agenda", label: "Agenda" },
       { href: "/desa/galeri", label: "Galeri" },
       { href: "/desa/dokumen", label: "Informasi Publik" },
     ],
@@ -46,6 +49,8 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { href: "/desa/apbdes", label: "APBDes" },
       { href: "/desa/statistik", label: "Statistik" },
       { href: "/desa/pembangunan", label: "Pembangunan" },
+      { href: "/desa/inventaris", label: "Inventaris" },
+      { href: "/desa/status-des", label: "Status Desa" },
     ],
   },
   {
@@ -63,6 +68,7 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { href: "/desa/dpt", label: "DPT" },
       { href: "/desa/pemilihan", label: "Pemilihan" },
       { href: "/jajak-pendapat", label: "Jajak Pendapat" },
+      { href: "/desa/pengaduan", label: "Pengaduan" },
     ],
   },
   { href: "/desa/kontak", label: "Kontak" },

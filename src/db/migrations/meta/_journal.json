@@ -687,6 +687,13 @@
       "when": 1794435891000,
       "tag": "0097_add_lampiran_surat_agenda",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "5",
+      "when": 1794435892000,
+      "tag": "0098_create_agenda_kegiatan",
+      "breakpoints": true
     }
   ]
 }

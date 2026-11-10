@@ -20,11 +20,11 @@ export function EsensiGaleri({ album, cari }: GaleriListProps) {
           name="q"
           defaultValue={cari}
           placeholder="Cari nama atau keterangan album"
-          className="min-h-10 flex-1 border px-3 text-sm"
+          className="min-h-11 flex-1 border px-3 text-sm"
         />
         <button
           type="submit"
-          className="tema-button-primary inline-flex min-h-10 items-center gap-2 px-4 text-sm font-medium"
+          className="tema-button-primary inline-flex min-h-11 items-center gap-2 px-4 text-sm font-medium"
         >
           Cari
         </button>

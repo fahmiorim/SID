@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { SOSMED_LABELS } from "@/features/publik/domain/theme";
 import type { LayoutProps } from "@/themes/types";
-import { ThemeSkipLink } from "@/themes/ui";
+import { TEMA_WADAH, ThemeSkipLink } from "@/themes/ui";
 
 /**
  * Struktur (header + footer) tema `natra`: header berwarna penuh dan footer
@@ -14,11 +14,11 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
   const nama = desa.namaDesa ?? "Desa";
 
   return (
-    <div data-theme="natra" className="flex min-h-full flex-col bg-background text-foreground">
+    <div data-theme="natra" className="flex min-h-dvh flex-col bg-background text-foreground">
       <ThemeSkipLink />
 
       <header className="tema-natra-header sticky top-0 z-40">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6">
+        <div className={`${TEMA_WADAH} flex h-16 items-center gap-4`}>
           <Link href="/" className="flex items-center gap-3">
             {desa.logo ? (
               // eslint-disable-next-line @next/next/no-img-element -- logo diunggah dinamis
@@ -135,7 +135,7 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
 
       {opsi.teksBerjalan ? (
         <div className="border-b border-black/10 bg-muted/60" aria-label="Teks berjalan">
-          <div className="mx-auto flex w-full max-w-6xl items-baseline gap-2 px-4 py-1.5 text-xs sm:px-6">
+          <div className={`${TEMA_WADAH} flex items-baseline gap-2 py-1.5 text-xs`}>
             <span className="shrink-0 font-semibold tracking-wide text-muted-foreground uppercase">
               Info
             </span>
@@ -144,16 +144,12 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
         </div>
       ) : null}
 
-      <main
-        id="konten-utama"
-        tabIndex={-1}
-        className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6"
-      >
+      <main id="konten-utama" tabIndex={-1} className={`${TEMA_WADAH} flex-1 py-10`}>
         {children}
       </main>
 
       <footer className="mt-auto bg-neutral-950 text-neutral-300">
-        <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
+        <div className={`${TEMA_WADAH} grid gap-8 py-12 md:grid-cols-3`}>
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-white">{nama}</h2>
             <p className="text-sm leading-relaxed text-neutral-400">
@@ -209,7 +205,9 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
         </div>
 
         <div className="border-t border-white/10">
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-4 text-xs text-neutral-400 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <div
+            className={`${TEMA_WADAH} flex flex-col gap-1 py-4 text-xs text-neutral-400 sm:flex-row sm:items-center sm:justify-between`}
+          >
             <p>
               © {new Date().getFullYear()} {nama} · {tema.nama}
             </p>

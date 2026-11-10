@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { agendaMendatang } from "@/features/agenda/application/agenda-use-cases";
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import {
   getStatistikDesa,
@@ -7,7 +8,6 @@ import {
 } from "@/features/desa/application/statistik-desa";
 import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 import {
-  daftarAgendaBeranda,
   daftarBerita,
   daftarSliderBeranda,
   daftarWidgetPublik,
@@ -39,7 +39,7 @@ export default async function BerandaPage() {
     daftarBerita(desa.id, { limit: pengaturan.beritaBeranda }),
     profilDesaPublik(desa.id),
     daftarWidgetPublik(desa.id),
-    daftarAgendaBeranda(desa.id, 5),
+    agendaMendatang(desa.id, 5),
   ]);
 
   const Home = tema.home;

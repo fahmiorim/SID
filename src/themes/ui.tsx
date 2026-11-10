@@ -16,6 +16,16 @@ import { sanitasiHtml } from "@/lib/sanitize";
  */
 
 /**
+ * Lebar isi situs publik.
+ *
+ * Dipakai bersama oleh kedua tema agar header, isi, dan footer berhenti di
+ * titik yang sama. Lebar ini menggantikan `max-w-6xl` (72rem) yang membuat
+ * konten terasa sempit di layar lebar, sementara `px-4..lg:px-8` menjaga gutter
+ * tumbuh di layar besar tanpa membuat baris teks menyentuh tepi.
+ */
+export const TEMA_WADAH = "mx-auto w-full max-w-[84rem] px-4 sm:px-6 lg:px-8";
+
+/**
  * Render HTML konten ter-sanitasi (berita, halaman statis, widget).
  *
  * Sanitasi diulang di sini sebagai lapisan kedua walau action sudah
@@ -47,17 +57,25 @@ export function ThemePageHeader({
   eyebrow?: string;
 }) {
   return (
-    <header className="space-y-2">
+    <header className="max-w-3xl">
       {eyebrow ? (
-        <span
-          className="inline-block rounded-full px-3 py-1 text-xs font-semibold text-[var(--pub-primary-foreground)]"
-          style={{ backgroundColor: "var(--pub-primary)" }}
-        >
+        <p className="flex items-center gap-3 text-[11px] font-semibold tracking-[0.2em] text-[var(--pub-primary-text)] uppercase">
+          <span
+            aria-hidden="true"
+            className="h-px w-8 shrink-0"
+            style={{ backgroundColor: "var(--pub-primary)" }}
+          />
           {eyebrow}
-        </span>
+        </p>
       ) : null}
-      <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
-      {description ? <p className="text-muted-foreground">{description}</p> : null}
+      <h1 className="mt-3 text-[2rem] leading-[1.05] font-bold tracking-[-0.03em] text-balance sm:text-[2.75rem]">
+        {title}
+      </h1>
+      {description ? (
+        <p className="mt-3.5 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+          {description}
+        </p>
+      ) : null}
     </header>
   );
 }
@@ -73,7 +91,7 @@ export function ThemeCard({
 }) {
   return (
     <Tag
-      className={`overflow-hidden border bg-card ${className ?? ""}`}
+      className={`overflow-hidden border bg-card shadow-[0_1px_2px_rgb(15_23_42_/_0.05)] ${className ?? ""}`}
       style={{ borderRadius: "var(--pub-radius)" }}
     >
       {children}
@@ -98,8 +116,8 @@ export function ThemeButton({
   return (
     <a
       href={href}
-      style={gaya}
-      className={`inline-flex shrink-0 items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium whitespace-nowrap transition-opacity hover:opacity-90 ${
+      style={{ ...gaya, borderRadius: "var(--pub-radius)" }}
+      className={`inline-flex shrink-0 items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition-opacity hover:opacity-90 ${
         variant === "outline" ? "border" : ""
       }`}
     >
@@ -113,8 +131,10 @@ export function ThemeStatGrid({ items }: { items: { label: string; nilai: number
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => (
         <ThemeCard key={item.label} className="p-5">
-          <p className="text-sm text-muted-foreground">{item.label}</p>
-          <p className="mt-2 text-3xl font-semibold tabular-nums">
+          <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+            {item.label}
+          </p>
+          <p className="mt-3 text-[1.65rem] leading-none font-bold tracking-tight tabular-nums sm:text-[1.85rem]">
             {typeof item.nilai === "number" ? item.nilai.toLocaleString("id-ID") : item.nilai}
           </p>
         </ThemeCard>
@@ -125,7 +145,7 @@ export function ThemeStatGrid({ items }: { items: { label: string; nilai: number
 
 export function ThemeEmpty({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">
+    <p className="mx-auto max-w-xl rounded-[var(--pub-radius)] border border-dashed p-10 text-center text-sm leading-relaxed text-muted-foreground">
       {children}
     </p>
   );
@@ -151,7 +171,7 @@ export function TemaTeksBerjalan({ teks }: { teks: string }) {
       }}
     >
       <p className="sr-only">{isi}</p>
-      <div className="mx-auto w-full max-w-6xl overflow-hidden px-4 sm:px-6" aria-hidden="true">
+      <div className={`${TEMA_WADAH} overflow-hidden`} aria-hidden="true">
         <div className="tema-teks-berjalan-track flex w-max py-2 text-sm font-medium">
           <span className="shrink-0 px-8">{isi}</span>
           <span className="shrink-0 px-8">{isi}</span>

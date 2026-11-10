@@ -18,6 +18,9 @@ export const THEME_SLOTS = [
   "perangkat",
   "berita",
   "berita-detail",
+  "agenda",
+  "peta",
+  "pembangunan",
   "galeri",
   "galeri-detail",
   "dokumen",
@@ -46,6 +49,9 @@ export const THEME_SLOT_LABELS: Record<ThemeSlot, string> = {
   perangkat: "Pemerintahan / Perangkat",
   berita: "Daftar Berita",
   "berita-detail": "Detail Berita",
+  agenda: "Agenda Kegiatan",
+  peta: "Peta Desa",
+  pembangunan: "Pembangunan Desa",
   galeri: "Daftar Galeri",
   "galeri-detail": "Detail Album Galeri",
   dokumen: "Informasi Publik / Dokumen",
@@ -90,13 +96,14 @@ export const HOME_SECTION_LABELS: Record<HomeSectionId, string> = {
 };
 
 /** Pilihan font yang disediakan tema (dipetakan ke CSS variable). */
-export const FONT_CHOICES = ["system", "serif", "sans"] as const;
+export const FONT_CHOICES = ["system", "serif", "sans", "aksesibel"] as const;
 export type FontChoice = (typeof FONT_CHOICES)[number];
 
 export const FONT_LABELS: Record<FontChoice, string> = {
   system: "Bawaan sistem",
   sans: "Sans-serif modern",
   serif: "Serif klasik",
+  aksesibel: "Mudah dibaca (Atkinson Hyperlegible)",
 };
 
 /** Pola header: logo+nama, atau dengan latar berwarna. */
@@ -167,8 +174,12 @@ export const themeOptionsSchema = z.object({
     .trim()
     .regex(/^#[0-9a-fA-F]{6}$/, "Warna harus format heks seperti #0f5132.")
     .default("#0f5132"),
-  /** Preset font; nilainya dipetakan ke CSS variable oleh tema. */
-  font: z.enum(FONT_CHOICES).default("system"),
+  /**
+   * Preset font; nilainya dipetakan ke CSS variable oleh tema.
+   * Bawaan "aksesibel" karena mayoritas pembaca portal desa adalah warga
+   * umum dan lansia; operator tetap dapat memilih gaya lain.
+   */
+  font: z.enum(FONT_CHOICES).default("aksesibel"),
   /** Ukuran kaca (border radius) dalam rem, 0–2. */
   kelengkungan: z.coerce.number().min(0).max(2).default(0.75),
   /** Judul besar beranda; kosong = pakai nama desa. */
@@ -279,21 +290,65 @@ export function themeCssVars(opsi: ThemeOptions): Record<string, string> {
   return {
     "--pub-primary": opsi.warnaPrimer,
     "--pub-primary-foreground": kontrasTeks(opsi.warnaPrimer),
+    "--pub-primary-text": warnaTeksAksen(opsi.warnaPrimer),
     "--pub-secondary": opsi.warnaSekunder,
     "--pub-radius": `${opsi.kelengkungan}rem`,
     "--pub-font": fontFamily(opsi.font),
   };
 }
 
-/** Pilih warna teks (putih/hitam) agar kontras terhadap latar. */
+/**
+ * Pilih warna teks (putih/hitam) agar kontras terhadap latar.
+ *
+ * Memakai rasio kontras WCAG, bukan perkiraan luminansi BT.601, supaya warna
+ * desa di rentang tengah (mis. hijau `#16a34a`) mendapat teks gelap yang
+ * benar-benar lolos 4,5:1, bukan teks putih yang hanya mencapai 3,3:1.
+ */
 export function kontrasTeks(heks: string): string {
+  return rasioKontras(heks, "#0b0b0b") >= rasioKontras(heks, "#ffffff") ? "#0b0b0b" : "#ffffff";
+}
+
+/**
+ * Warna aksen yang aman dipakai sebagai **teks** di atas latar terang.
+ *
+ * `warnaPrimer` bebas dipilih operator, sehingga bisa jadi hijau terang atau
+ * kuning yang gagal 4,5:1 bila dipakai sebagai warna teks kecil (label, tautan,
+ * kategori). Fungsi ini mempertahankan warna desa tetapi menggelapkannya
+ * bertahap sampai rasio kontras terhadap latar memenuhi ambang teks normal.
+ * Warna tombol tetap `warnaPrimer` apa adanya.
+ */
+export function warnaTeksAksen(heks: string, latar = "#ffffff"): string {
+  let warna = heks;
+  for (let langkah = 0; langkah < 32 && rasioKontras(warna, latar) < 4.5; langkah += 1) {
+    warna = gelapkan(warna, 0.88);
+  }
+  return warna;
+}
+
+/** Luminans relatif sRGB (WCAG 2.x). */
+function luminansRelatif(heks: string): number {
   const bersih = heks.replace("#", "");
-  const r = Number.parseInt(bersih.slice(0, 2), 16);
-  const g = Number.parseInt(bersih.slice(2, 4), 16);
-  const b = Number.parseInt(bersih.slice(4, 6), 16);
-  // Luminansi perseptual sederhana (ITU-R BT.601).
-  const luminansi = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminansi > 0.6 ? "#0b0b0b" : "#ffffff";
+  const kanal = [0, 2, 4].map((mulai) => Number.parseInt(bersih.slice(mulai, mulai + 2), 16) / 255);
+  const [r = 0, g = 0, b = 0] = kanal.map((nilai) =>
+    nilai <= 0.03928 ? nilai / 12.92 : ((nilai + 0.055) / 1.055) ** 2.4,
+  );
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Rasio kontras WCAG antara dua warna heks. */
+export function rasioKontras(a: string, b: string): number {
+  const nilai = [luminansRelatif(a), luminansRelatif(b)].sort((x, y) => y - x);
+  const terang = nilai[0] ?? 0;
+  const gelap = nilai[1] ?? 0;
+  return (terang + 0.05) / (gelap + 0.05);
+}
+
+function gelapkan(heks: string, faktor: number): string {
+  const bersih = heks.replace("#", "");
+  const kanal = [0, 2, 4].map((mulai) =>
+    Math.max(0, Math.round(Number.parseInt(bersih.slice(mulai, mulai + 2), 16) * faktor)),
+  );
+  return `#${kanal.map((nilai) => nilai.toString(16).padStart(2, "0")).join("")}`;
 }
 
 function fontFamily(font: FontChoice): string {
@@ -302,6 +357,8 @@ function fontFamily(font: FontChoice): string {
       return 'ui-serif, Georgia, "Times New Roman", serif';
     case "sans":
       return 'ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    case "aksesibel":
+      return 'var(--font-atkinson, "Atkinson Hyperlegible", ui-sans-serif, system-ui, sans-serif)';
     default:
       return "var(--font-geist-sans, ui-sans-serif, system-ui, sans-serif)";
   }

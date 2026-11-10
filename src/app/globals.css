@@ -117,6 +117,70 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/**
+ * Di dalam tema publik, warna aksi mengikuti warna desa.
+ *
+ * Komponen shadcn (`Button`, filter aktif, ring fokus) memakai `--primary`.
+ * Tanpa pemetaan ini tombol submit di halaman warga tampil hitam netral di
+ * tengah halaman yang berwarna, sehingga terasa seperti komponen admin yang
+ * ditempel. `--pub-primary` selalu dipasang wrapper situs publik.
+ */
+[data-theme] {
+  --primary: var(--pub-primary);
+  --primary-foreground: var(--pub-primary-foreground);
+  --ring: var(--pub-primary);
+}
+
+/** Tombol aksi kecil di halaman bertema (cari, terapkan, cetak). */
+[data-theme] .tema-button-primary {
+  border-radius: var(--pub-radius);
+  background-color: var(--pub-primary);
+  /* Gradasi ke warna sekunder desa: tetap gelap, jadi kontras teks aman. */
+  background-image: linear-gradient(
+    135deg,
+    var(--pub-primary),
+    color-mix(in srgb, var(--pub-primary) 70%, var(--pub-secondary))
+  );
+  color: var(--pub-primary-foreground);
+  font-weight: 600;
+  box-shadow: 0 8px 18px -12px color-mix(in srgb, var(--pub-primary) 75%, transparent);
+  transition:
+    opacity 150ms ease,
+    box-shadow 150ms ease;
+}
+
+[data-theme] .tema-button-primary:hover {
+  opacity: 0.9;
+}
+
+/**
+ * Fokus keyboard eksplisit 3 px pada semua kontrol dalam tema publik.
+ * Memakai warna aksen yang sudah dikontraskan, bukan warna primer mentah,
+ * karena outline samar adalah kegagalan aksesibilitas yang paling sering luput.
+ */
+[data-theme] :focus-visible {
+  outline: 3px solid var(--pub-primary-text);
+  outline-offset: 2px;
+}
+
+/** Target sentuh minimal 44 px untuk kontrol isian di halaman warga. */
+[data-theme] input:not([type="checkbox"]):not([type="radio"]),
+[data-theme] select {
+  min-height: 2.75rem;
+}
+
+/** Hormati preferensi gerak minimal pengguna (termasuk zoom gambar saat hover). */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme] *,
+  [data-theme] *::before,
+  [data-theme] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -678,6 +678,15 @@ export const MODULE_SEEDS: readonly ModuleSeed[] = [
     parentSlug: "konten",
   },
   {
+    slug: "agenda",
+    name: "Agenda Kegiatan",
+    url: "/konten/agenda",
+    icon: "calendar-days",
+    sortOrder: 11,
+    isGroup: false,
+    parentSlug: "konten",
+  },
+  {
     slug: "dokumen-publik",
     name: "Dokumen Publik",
     url: "/konten/dokumen",

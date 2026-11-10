@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
 
+import type { AgendaPublikRow } from "@/features/agenda/domain/agenda";
 import type { StatistikDesa, SuratPublikRow } from "@/features/desa/application/statistik-desa";
 import type { StatistikPublik } from "@/features/desa/application/statistik-publik";
 import type { IdentitasDesa } from "@/features/desa/infrastructure/desa-repository";
+import type { getPetaPublik } from "@/features/gis/application/use-cases";
 import type { TriwulanBaris, TriwulanTotal } from "@/features/keuangan/domain/laporan-triwulan";
+import type { PembangunanPublik } from "@/features/pembangunan/application/use-cases";
 import type { HasilSurveiPublik, SurveiPublik } from "@/features/publik/application/survei-publik";
 import type { DokumenKategoriFilter, KelompokArsipDokumen } from "@/features/publik/domain/dokumen";
 import type { FilterInventarisPublik } from "@/features/publik/domain/inventaris-publik";
@@ -11,7 +14,6 @@ import type { PublicNavItem } from "@/features/publik/domain/menu";
 import type { RekapInventaris } from "@/features/publik/domain/ringkasan-publik";
 import type { ThemeOptions } from "@/features/publik/domain/theme";
 import type {
-  AgendaPublikRingkas,
   BeritaDetail,
   BeritaRingkas,
 } from "@/features/publik/infrastructure/content-repository";
@@ -54,7 +56,23 @@ export interface HomeProps {
   widget: { id: number; judul: string | null; isi: string | null; jenis: number }[];
   berita: BeritaRingkas[];
   surat: SuratPublikRow[];
-  agenda: AgendaPublikRingkas[];
+  agenda: AgendaPublikRow[];
+}
+
+export interface AgendaProps {
+  ctx: ThemeContext;
+  agenda: AgendaPublikRow[];
+}
+
+export interface PetaProps {
+  ctx: ThemeContext;
+  peta: Awaited<ReturnType<typeof getPetaPublik>>;
+}
+
+export interface PembangunanProps {
+  ctx: ThemeContext;
+  tahun: number | null;
+  data: PembangunanPublik;
 }
 
 export interface ProfilProps {

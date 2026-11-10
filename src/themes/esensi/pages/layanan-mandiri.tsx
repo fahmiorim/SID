@@ -36,7 +36,7 @@ export function EsensiLayananMandiri({ ctx }: LayananMandiriProps) {
           className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
           style={{
             backgroundColor: "color-mix(in srgb, var(--pub-primary) 14%, transparent)",
-            color: "var(--pub-primary)",
+            color: "var(--pub-primary-text)",
           }}
         >
           Untuk Warga

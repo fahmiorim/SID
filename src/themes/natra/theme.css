@@ -11,7 +11,7 @@
 }
 
 [data-theme="natra"] .tema-natra-header {
-  background-color: var(--pub-primary);
+  background-color: var(--pub-primary-text);
   color: var(--pub-primary-foreground);
 }
 
@@ -42,11 +42,11 @@
 
 [data-theme="natra"] .tema-natra-chip {
   background-color: color-mix(in srgb, var(--pub-primary) 12%, transparent);
-  color: var(--pub-primary);
+  color: var(--pub-primary-text);
 }
 
 [data-theme="natra"] .tema-link-primary {
-  color: var(--pub-primary);
+  color: var(--pub-primary-text);
 }
 
 /** Teks berjalan: dua salinan identik digeser -50% agar mulus tanpa jeda. */

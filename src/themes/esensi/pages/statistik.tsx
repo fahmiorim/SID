@@ -17,7 +17,7 @@ export function EsensiStatistik({ ctx, statistik, periode }: StatistikProps) {
       <div className="flex flex-wrap items-center gap-2">
         <a
           href="/desa/statistik/ekspor"
-          className="tema-link-primary inline-flex min-h-10 items-center gap-2 border px-4 text-sm font-medium hover:underline"
+          className="tema-link-primary inline-flex min-h-11 items-center gap-2 border px-4 text-sm font-medium hover:underline"
         >
           <Download className="size-4" aria-hidden="true" />
           Unduh CSV

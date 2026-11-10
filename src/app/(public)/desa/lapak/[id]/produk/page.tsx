@@ -149,7 +149,7 @@ export default async function ProdukLapakPage({
   const { rows: products, total, page: currentPage, pageCount } = productsPage;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
+    <div>
       <header className="mb-6">
         <Link
           href="/desa/lapak"
