@@ -9,7 +9,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -57,12 +57,12 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
     createIdleActionState(),
   );
 
-  if (disposisiState.status === "success") {
-    toast.success(disposisiState.message);
-  }
-  if (disposisiState.status === "error") {
-    toast.error(disposisiState.message);
-  }
+  // Efek, bukan badan render: memanggil toast saat render membuat pesan yang
+  // sama muncul berkali-kali pada setiap render ulang.
+  useEffect(() => {
+    if (disposisiState.status === "success") toast.success(disposisiState.message);
+    if (disposisiState.status === "error") toast.error(disposisiState.message);
+  }, [disposisiState]);
 
   function handleDelete() {
     setError(null);

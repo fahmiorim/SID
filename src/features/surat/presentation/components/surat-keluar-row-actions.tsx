@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Loader2, MoreHorizontal, Pencil, Send, Trash2, Upload } from "lucide-react";
-import { useActionState, useState, useTransition } from "react";
+import { useActionState, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -48,12 +48,12 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
     createIdleActionState(),
   );
 
-  if (ekspedisiState.status === "success") {
-    toast.success(ekspedisiState.message);
-  }
-  if (ekspedisiState.status === "error") {
-    toast.error(ekspedisiState.message);
-  }
+  // Efek, bukan badan render: memanggil toast saat render membuat pesan yang
+  // sama muncul berkali-kali pada setiap render ulang.
+  useEffect(() => {
+    if (ekspedisiState.status === "success") toast.success(ekspedisiState.message);
+    if (ekspedisiState.status === "error") toast.error(ekspedisiState.message);
+  }, [ekspedisiState]);
 
   function handleDelete() {
     setError(null);
