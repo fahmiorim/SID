@@ -159,6 +159,7 @@ belum memenuhi Definition of Done.
 | OS-WEB-007 | Peta dan wilayah administratif | `fweb/Peta.php`, `fweb/WilayahAdministratif.php` |
 | OS-WEB-008 | Pembangunan dan dokumentasi proyek | `fweb/Pembangunan.php` |
 | OS-WEB-009 | Pengaduan publik, widget, daftar terpublikasi, dan detail | `fweb/Pengaduan.php` |
+| OS-WEB-020 | Agenda kegiatan desa: jadwal, lokasi, keterangan, dan status tayang | `fweb/Utama.php` (agenda beranda), `Agenda.php` |
 | OS-WEB-010 | Kelompok, lembaga, dan anggota yang boleh dipublikasikan | `fweb/Kelompok.php`, `fweb/Lembaga.php` |
 | OS-WEB-011 | Inventaris/aset yang boleh ditampilkan secara publik | `fweb/Inventaris.php` |
 | OS-WEB-012 | Bantuan, suplemen, kesehatan, dan DPT publik | `internal_api/BantuanPeserta.php`, `fweb/{Suplemen,Kesehatan,Dpt}.php` |

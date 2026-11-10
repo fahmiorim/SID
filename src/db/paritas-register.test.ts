@@ -18,7 +18,8 @@ describe("dokumentasi scope dan status", () => {
     expect(scope).toContain("SMS");
     expect(scope).toContain("Covid-19");
     expect(scope).toContain("Vaksin Covid");
-    expect(scope).toContain("Katalog lama memuat 111 ID");
+    expect(scope).toContain("Katalog aktif memuat 112 ID");
+    expect(scope).toContain("111 ID audit awal");
     expect(scope).toContain("bukan jumlah total fitur");
   });
 
@@ -58,7 +59,7 @@ describe("dokumentasi scope dan status", () => {
     const status = baca("STATUS-MODUL.md");
 
     const idKatalog = [...new Set(katalog.match(/OS-[A-Z]+-\d+/g) ?? [])].sort();
-    expect(idKatalog).toHaveLength(111);
+    expect(idKatalog).toHaveLength(112);
 
     const baris = (isi: string) =>
       new Set(

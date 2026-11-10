@@ -22,6 +22,6 @@ Tidak ada pengecualian lain yang ditetapkan. Email, WhatsApp, TTE, API, Siskeude
 
 ## Status inventaris
 
-Katalog lama memuat 111 ID. Angka itu adalah jumlah kebutuhan yang sudah dipetakan pada katalog tersebut, bukan jumlah total fitur OpenSID dan bukan batas akhir pekerjaan. Inventaris menyeluruh belum selesai. Audit lanjutan perlu menelusuri modul, route, halaman, alur, keluaran, dan dependensi fitur di snapshot di atas; folder atau controller saja tidak cukup untuk menyatakan suatu fitur telah dipetakan.
+Katalog aktif memuat 112 ID: 111 ID audit awal ditambah `OS-WEB-020` (agenda kegiatan desa) yang dipetakan 10 November 2026. Angka itu adalah jumlah kebutuhan yang sudah dipetakan pada katalog tersebut, bukan jumlah total fitur OpenSID dan bukan batas akhir pekerjaan. Inventaris menyeluruh belum selesai. Audit lanjutan perlu menelusuri modul, route, halaman, alur, keluaran, dan dependensi fitur di snapshot di atas; folder atau controller saja tidak cukup untuk menyatakan suatu fitur telah dipetakan.
 
 Status kode dan test yang dapat dibuktikan saat ini diringkas di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Prioritas perbaikan dan pengujian ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md). Aturan teknis tetap ada di [`ARCHITECTURE.md`](./ARCHITECTURE.md); dokumen status lama disimpan di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/).

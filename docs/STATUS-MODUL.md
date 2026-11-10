@@ -1,12 +1,12 @@
 # Audit Status Modul
 
-Tanggal audit struktur: 9 November 2026; pembaruan verifikasi: 10 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID yang tersimpan di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/). Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
+Tanggal audit struktur: 9 November 2026; pembaruan verifikasi: 10 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID pada audit awal; katalog aktif kini memuat **112 ID** setelah `OS-WEB-020` (agenda kegiatan desa) dipetakan 10 November 2026. Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
 Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026 dan 10 November 2026; hasil terbaru dicatat di bagian [Pembaruan 10 November 2026](#pembaruan-10-november-2026--p0-dan-suite-e2e-build-produksi).
 
 ## Metode audit
 
-1. Mengambil 111 ID dari katalog historis dan 102 baris register per-ID. Sembilan ID tidak memiliki baris register: `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011`, `OS-MOD-001`, `OS-MOD-003`.
+1. Mengambil 111 ID dari katalog historis dan 102 baris register per-ID (katalog aktif 112 ID setelah `OS-WEB-020` ditambahkan). Sembilan ID tidak memiliki baris register: `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011`, `OS-MOD-001`, `OS-MOD-003`.
 2. Memeriksa keberadaan path yang dirujuk register (halaman, route handler, action/use case, repository, migrasi, test) dengan pemindaian filesystem. Temuan "path hilang" pada skrip awal berasal dari pemetaan route-group dan ekstensi test, bukan path yang benar-benar tidak ada.
 3. Menghitung kedalaman E2E dengan AST TypeScript: jumlah `test()`, jumlah test yang memuat aksi UI (`.fill`, `.tap`, `.click`, `.setInputFiles`, `.selectOption`, `.press`, `.check`, `.uncheck`), dan jumlah aksi. Jumlah test saja **bukan bukti perilaku**.
 4. Menelusuri otorisasi dan tenant secara spot-check: halaman admin mengambil `villageId` dari sesi, halaman publik dari host; use case memanggil `requirePermission`; halaman warga memakai `requireWarga`.
@@ -25,22 +25,22 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 
 | Ukuran | Jumlah | Catatan |
 |---|---:|---|
-| ID katalog | 111 | 111 ID unik; tidak ada duplikat |
+| ID katalog | 112 | 112 ID unik; 111 ID audit awal + `OS-WEB-020` yang dipetakan 10 November 2026 |
 | Baris register per-ID | 102 | 48 ✅ dan 54 🟡 menurut register historis |
 | ID tanpa baris register | 9 | 7 terverifikasi struktur, 1 bug (`OS-MOD-001`; UUID diperbaiki 9 November 2026), 1 terverifikasi (`OS-MOD-003`) |
-| Folder fitur `src/features` | 52 | Termasuk fitur lokal mandiri |
-| File test unit/integrasi di fitur | 183 | Bukan jumlah skenario |
-| Halaman `page.tsx` | 204 | Belum dikelompokkan admin/publik/warga |
-| Route handler `route.ts` | 78 | Termasuk API publik/eksternal |
-| Berkas E2E | 62 | `tests/**/*.e2e.ts` |
-| Test E2E | 195 | Runner menjalankan **195 test**; rincian aksi per berkas ada di tabel kedalaman E2E |
-| Deklarasi `test(` di berkas E2E | 193 | Runner melaporkan 195 karena beberapa berkas memperluas test/fixture |
-| Test E2E yang berinteraksi UI | 109 (56%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
-| Test E2E non-interaktif | 84 (44%) | Belum membuktikan aksi pengguna secara langsung |
-| Aksi UI literal di E2E | 908 | Bukan coverage dan bukan bukti paritas |
+| Folder fitur `src/features` | 53 | Termasuk fitur lokal mandiri dan `agenda` |
+| File test unit/integrasi di fitur | 184 | Bukan jumlah skenario; `npm run test` 10 November 2026 menjalankan 1.489 test |
+| Halaman `page.tsx` | 206 | Belum dikelompokkan admin/publik/warga |
+| Route handler `route.ts` | 79 | Termasuk API publik/eksternal |
+| Berkas E2E | 63 | `tests/**/*.e2e.ts` |
+| Test E2E | 195 | Hitungan AST atas `test()` di berkas E2E; runner terakhir menjalankan 195 test pada 62 berkas sebelum berkas agenda ditambahkan |
+| Deklarasi `test(` di berkas E2E | 195 | Sama dengan hitungan `test()`; runner dapat berbeda bila fixture memperluas test |
+| Test E2E yang berinteraksi UI | 111 (57%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
+| Test E2E non-interaktif | 84 (43%) | Belum membuktikan aksi pengguna secara langsung |
+| Aksi UI literal di E2E | 927 | Bukan coverage dan bukan bukti paritas |
 | Impor infrastruktur langsung | 0 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Route lampiran pengaduan memakai `bacaLampiranPengaduan` (validasi jalur ada di use case); `api/penduduk/nik` memakai use case penduduk |
 
-Angka inventaris di atas dihitung ulang 10 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai deklarasi `test(` di awal baris; runner melaporkan 195 test karena beberapa berkas memperluas test/fixture. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
+Angka inventaris di atas dihitung ulang 10 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai AST TypeScript atas deklarasi `test()` di berkas `tests/**/*.e2e.ts`; run penuh terakhir masih 62 berkas/195 test karena berkas `agenda-publik.e2e.ts` ditambahkan setelahnya. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -55,13 +55,15 @@ Delapan ID berstatus ✅ historis memiliki E2E yang menjalankan aksi UI; beberap
 | `survei-publik` | 2 | 1 | 1 | `OS-ANA-006` |
 | `surat-flow` | 6 | 5 | 24 | `OS-SUR-002` |
 | `pengaturan-lampiran` | 1 | 1 | 4 | `OS-SUR-014` |
-| `analisis-survei` | 7 | 4 | 34 | `OS-ANA-001`–`OS-ANA-006` |
+| `analisis-survei` | 8 | 4 | 34 | `OS-ANA-001`–`OS-ANA-006` |
 | `surat-lengkap` | 4 | 4 | 18 | `OS-SUR-001`, `OS-SUR-003`, `OS-SUR-004`, `OS-SUR-006` |
 | `web-berita-galeri` | 3 | 2 | 16 | `OS-WEB-002`, `OS-WEB-004` |
 | `web-dokumen` | 1 | 1 | 16 | `OS-WEB-005` |
 | `dokumen-publik` | 2 | 2 | 14 | `OS-GOV-010` |
 | `idm` | 3 | 2 | 16 | `OS-GOV-006` |
 | `pendapat` | 2 | 2 | 7 | `OS-POP-014` |
+| `agenda-publik` | 1 | 1 | 6 | `OS-WEB-020` |
+| `disposisi-ekspedisi-agenda` | 1 | 1 | 24 | `OS-SUR-009`, `OS-SUR-010` |
 | `lapak-keranjang` | 1 | 1 | 13 | `OS-MOD-004` |
 | `arsip-nomor-surat` | 1 | 1 | 12 | `OS-SUR-006` |
 | `pelanggan-kerjasama` | 3 | 1 | 12 | `OS-MOD-005` |
@@ -197,6 +199,7 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `survei-publik` | 2 | 1 | Survei aktif tampil + dapat dibuka; survei nonaktif disembunyikan | `OS-ANA-006` |
 | `gis-pertanahan` | 7 | 30 | Area/garis/point/polygon, persil/CDESA/mutasi, peta cetak, simbol | `OS-WIL-006` |
 | `web-publik` | 23 | 10 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak, suplemen, analisis publik; tautan lewati + `aria-current` filter kategori | `OS-WEB-001`–`OS-WEB-019` |
+| `agenda-publik` | 1 | 1 | Agenda tayang tampil di `/desa/agenda` dan beranda; draf tidak; admin menambah agenda lewat dialog | `OS-WEB-020` |
 | `web-berita-galeri` | 3 | 16 | Berita buat/tampil/detail/cari, galeri album + detail | `OS-WEB-002`, `OS-WEB-004` |
 | `umpan-balik` | 2 | 8 | Warga kirim umpan balik; admin menandai baru → dibaca → ditindaklanjuti | `OS-WEB-009`, `OS-WEB-015` |
 | `pengaduan` | 1 | 17 | Kirim pengaduan tanpa akun, lacak dengan nomor tiket + identitas, operator menanggapi, status dan tanggapan terlihat pelapor | `OS-WEB-009` |
@@ -227,7 +230,7 @@ Berkas E2E yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`, 
 
 Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
-## Status per ID (111 ID)
+## Status per ID (112 ID)
 
 Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "Smoke" berarti tidak ada aksi UI di berkas itu. Angka per-ID dapat lebih tinggi daripada hitungan literal di tabel inventaris karena aksi melalui helper juga dihitung. Status pada kolom kedua adalah hasil audit struktur, bukan status penyelesaian fitur.
 
@@ -311,6 +314,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WEB-017 | Struktur lengkap; ada E2E interaktif | Opsi warna primer/sekunder, tipografi, kelengkungan sudut, gaya header, judul/tombol hero, teks berjalan, dan sosmed tersimpan setelah muat ulang serta terpakai di situs publik (`--pub-primary`, `--pub-secondary`, `--pub-radius`, `--pub-font`, header berwarna, tombol hero); nilai awal dipulihkan. | `tema` 1 test/1 beraksi |
 | OS-WEB-018 | Struktur lengkap; ada E2E interaktif | Sitemap memakai origin host untuk setiap `<loc>`, memuat halaman turunan dan produk lapak dinamis, serta tidak memuat rute admin dan tidak mengulang `<loc>` yang sama; robots menolak area privat termasuk `/layanan-mandiri` dan menunjuk sitemap host; setiap halaman publik punya title/description dan OG title/description yang sama, OG image absolut per host yang benar-benar terunduh sebagai PNG 1200×630. | `sitemap` 3 test/3 beraksi |
 | OS-WEB-019 | Struktur lengkap; ada E2E interaktif | Form token (jalur kode QR) mengalihkan ke halaman token publik; token valid 64 hex menampilkan jenis, nomor, dan status surat; token berformat salah maupun token yang sudah dihapus menampilkan "Surat Tidak Ditemukan" tanpa membocorkan data. | `publik-verifikasi` 3 test/2 beraksi |
+| OS-WEB-020 | Struktur lengkap; ada E2E interaktif | Agenda kegiatan bersumber dari `agenda_kegiatan` (bukan `bumindes_agenda`); admin menambah agenda lewat `/konten/agenda`; `/desa/agenda` dan beranda hanya menampilkan agenda `tayang` dengan label rentang tanggal dan lokasi, sedangkan draf tetap tersembunyi. | `agenda-publik` 1 test/1 beraksi; `agenda.test` 7 test |
 | OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-002 | Struktur terverifikasi | Login `/masuk`, sesi warga, PIN, OTP faktor kedua, rate limit; test `warga.test.ts`, `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
 | OS-WGA-003 | Struktur terverifikasi | Beranda/profil/ringkasan layanan warga di `/layanan-mandiri`; test `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
@@ -350,7 +354,7 @@ Catatan tabel:
 - `OS-MOD-001` dan `OS-MOD-003` tidak memiliki baris register; statusnya diisi dari pemeriksaan kode dan test pada audit ini.
 - Kolom E2E kosong berarti register tidak merujuk berkas E2E untuk ID tersebut. Itu bukan berarti tidak ada test unit/integrasi.
 
-## Modul di luar 111 ID
+## Modul di luar 112 ID
 
 Audit register tidak mencakup controller OpenSID `Periksa`. Sebagai gantinya dibangun modul **Pemeriksaan Data** (`/periksa`, resource RBAC `periksa`) yang bersifat baca saja: lima pemeriksaan penduduk (NIK kosong, NIK bukan 16 angka, tanggal lahir kosong, tanpa KK, tanpa hubungan keluarga), tiga pemeriksaan keluarga (KK tanpa anggota, tanpa kepala, kepala ganda), dan satu pemeriksaan menu (menu tanpa induk). Setiap temuan menautkan ke halaman perbaikan yang sudah ada (`/penduduk`, `/keluarga`, `/pengaturan/modul`). Path: `src/features/periksa/**`, halaman `src/app/(admin)/periksa/page.tsx`, seed modul di `src/db/seed/data/modules.ts`. Belum ada E2E, dan menu baru muncul setelah seed dijalankan ulang.
 
@@ -375,7 +379,7 @@ Tabel sebaran impor lama dihapus karena sudah tidak berlaku setelah migrasi ke u
 
 ### 4. Cakupan E2E tidak merata
 
-Pada hitung ulang 10 November 2026, 109 dari 193 deklarasi test E2E memuat aksi UI literal; suite penuh 62 berkas/195 test dijalankan terhadap build produksi. Alur berisiko tinggi yang sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, penduduk/keluarga/RTM, keuangan, pemerintahan/kelompok, bantuan, analisis/survei, GIS, berita/galeri, umpan balik, pengaduan, tema, warga mandiri, pemilihan, dan anjungan/kiosk. Klaim "sudah diuji E2E" pada ID lain tetap perlu diperiksa terhadap kolom E2E di atas.
+Pada hitung ulang 10 November 2026, 111 dari 195 deklarasi test E2E memuat aksi UI literal; runner kini mencakup 63 berkas, dan run penuh terakhir (62 berkas/195 test) dijalankan terhadap build produksi. Alur berisiko tinggi yang sudah punya bukti interaktif: verifikasi berjenjang, permohonan warga, penduduk/keluarga/RTM, keuangan, pemerintahan/kelompok, bantuan, analisis/survei, GIS, berita/galeri, umpan balik, pengaduan, tema, warga mandiri, pemilihan, dan anjungan/kiosk. Klaim "sudah diuji E2E" pada ID lain tetap perlu diperiksa terhadap kolom E2E di atas.
 
 ## Audit vertikal: Anjungan (`OS-MOD-001`)
 
@@ -396,12 +400,12 @@ Pada hitung ulang 10 November 2026, 109 dari 193 deklarasi test E2E memuat aksi 
 
 ## Hal yang belum bisa disimpulkan
 
-1. **Eksekusi suite E2E**: sudah dijalankan 10 November 2026 terhadap build produksi, 57 berkas/180 test; dua run paralel masing-masing 179/180 dengan flake berbeda yang lulus sendiri. Test P0 Anjungan 2/2 lulus. Flake suite penuh masih perlu distabilkan.
-2. **Pemeriksaan visual seluruh 204 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
+1. **Eksekusi suite E2E**: run penuh terakhir pada 10 November 2026 dijalankan terhadap build produksi, 62 berkas/195 test lulus; runner kini mencakup 63 berkas/195 `test()` dan berkas agenda serta test formulir eksternal bertoken belum ikut run penuh. Test P0 Anjungan 2/2 lulus.
+2. **Pemeriksaan visual seluruh 206 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
 3. **Provider eksternal nyata**: tidak diuji tanpa kredensial.
 4. **Isolasi tenant pada route yang dipindahkan**: route sensitif yang diuji (lampiran pengaduan, NIK, TTE eksternal, surat eksternal) sudah punya bukti; belum semua route diperiksa satu per satu.
 5. **Persentase paritas**: tidak dihitung; jumlah ID atau test bukan ukuran paritas.
 
 ## Kesimpulan
 
-Audit struktur selesai untuk seluruh 111 ID. Tidak ada ID yang dinyatakan selesai penuh. Per 10 November 2026, 89 dari 178 deklarasi test E2E memuat aksi UI literal dan suite penuh 57 berkas/180 test dijalankan terhadap build produksi; belasan ID yang sebelumnya hanya smoke (penduduk, keluarga, RTM, keuangan, pemerintahan, kelompok, pembangunan, bantuan, analisis, berita/galeri, umpan balik, pengaduan, tema, warga mandiri) kini punya bukti interaktif. P0 Anjungan sudah ditutup dengan E2E CRUD/tenant/kiosk. Prioritas berikutnya adalah menstabilkan flake suite penuh, memverifikasi provider nyata bila kredensial tersedia, menutup kebocoran lapisan yang tersisa, dan menulis ulang berkas yang masih smoke (`kesehatan`, `modul-tambahan`, dan daftar di bagian pembaruan). Daftar kerja berurutan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
+Audit struktur selesai untuk seluruh 112 ID. Tidak ada ID yang dinyatakan selesai penuh. Per 10 November 2026, 111 dari 195 deklarasi test E2E memuat aksi UI literal; runner kini mencakup 63 berkas dan run penuh terakhir (62 berkas/195 test) lulus terhadap build produksi; belasan ID yang sebelumnya hanya smoke (penduduk, keluarga, RTM, keuangan, pemerintahan, kelompok, pembangunan, bantuan, analisis, berita/galeri, umpan balik, pengaduan, tema, warga mandiri) kini punya bukti interaktif. P0 Anjungan sudah ditutup dengan E2E CRUD/tenant/kiosk. Prioritas berikutnya adalah menstabilkan flake suite penuh, memverifikasi provider nyata bila kredensial tersedia, menutup kebocoran lapisan yang tersisa, dan menulis ulang berkas yang masih smoke (`kesehatan`, `modul-tambahan`, dan daftar di bagian pembaruan). Daftar kerja berurutan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).

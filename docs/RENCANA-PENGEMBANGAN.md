@@ -2,7 +2,7 @@
 
 Tujuan: menuntaskan rebuild orisinal semua fitur OpenSID dalam scope pada [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md). Fase kerja dan status milestone ada di [`RENCANA-PERBAIKAN.md`](./RENCANA-PERBAIKAN.md); dokumen ini memuat backlog teknis per prioritas. Status per ID ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md), bukti strukturnya di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Dokumen di `arsip/status-sebelum-audit/` hanya catatan sejarah, bukan backlog yang sudah diverifikasi.
 
-audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum selesai adalah **perbaikan gap dan pengujian perilaku**. Setiap perbaikan harus dibuktikan dengan uji unit, uji integrasi, dan uji E2E yang relevan.
+audit inventaris dan audit struktur sudah selesai untuk 111 ID audit awal; katalog aktif kini 112 ID setelah `OS-WEB-020` ditambahkan. Yang belum selesai adalah **perbaikan gap dan pengujian perilaku**. Setiap perbaikan harus dibuktikan dengan uji unit, uji integrasi, dan uji E2E yang relevan.
 
 ## Prinsip kerja
 
@@ -15,12 +15,12 @@ audit inventaris dan audit struktur sudah selesai untuk 111 ID. Yang belum seles
 
 ## Status audit
 
-- 111 ID katalog, 102 baris register historis, 9 ID tanpa baris register yang kini dipetakan eksplisit.
-- 52 folder fitur, 183 file test unit/integrasi, 204 `page.tsx`, 78 `route.ts`, 62 berkas E2E.
-- Hitung ulang 10 November 2026: 62 berkas, **195 test**; rincian kedalaman aksi per berkas dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
+- 112 ID katalog, 102 baris register historis (dari 111 ID audit awal), 9 ID tanpa baris register yang kini dipetakan eksplisit.
+- 53 folder fitur, 184 file test unit/integrasi (1.489 test), 206 `page.tsx`, 79 `route.ts`, 63 berkas E2E.
+- Hitung ulang 10 November 2026: 63 berkas, **195 `test()`**; rincian kedalaman aksi per berkas dicatat di [`STATUS-MODUL.md`](./STATUS-MODUL.md). Aksi melalui helper tidak selalu terhitung, jadi angka ini bukan coverage.
 - 8 ID berstatus ✅ historis punya E2E interaktif, 8 ID hanya smoke, 32 ID berstatus ✅ historis tanpa rujukan E2E.
 - 0 impor infrastruktur di `src/app/**` dan `src/features/*/presentation/**`; route publik desa, API publik, dan sitemap juga 0.
-- Tidak ada ID yang dinyatakan selesai penuh. P0 selesai 10 November 2026 dengan bukti E2E Anjungan 2/2 dan uji adapter/route; suite penuh 57 berkas/180 test dijalankan terhadap build produksi, dengan satu flake berbeda pada dua run paralel yang keduanya lulus saat dijalankan sendiri. Pengujian provider nyata dan pemeriksaan visual seluruh halaman belum dilakukan.
+- Tidak ada ID yang dinyatakan selesai penuh. P0 selesai 10 November 2026 dengan bukti E2E Anjungan 2/2 dan uji adapter/route; run penuh terakhir 62 berkas/195 test lulus terhadap build produksi, dan runner kini mencakup 63 berkas setelah berkas agenda ditambahkan. Pengujian provider nyata dan pemeriksaan visual seluruh halaman belum dilakukan.
 - **Tampilan publik (9 November 2026):** menu header dikelompokkan dari 11 tautan datar menjadi 7 menu teratas dengan dropdown; header publik dirombak menjadi bilah kontak, identitas pemerintah desa, dan navigasi berwarna yang menempel; beranda memakai hero berita utama, akses cepat, kolom berita, dan sidebar data/agenda/kontak; footer menjadi empat kolom; menu mobile bertingkat; overflow horizontal pada lebar 1024 px dihilangkan; duplikasi bagian Kontak di beranda dihapus. Bukti: `src/features/publik/domain/menu.test.ts`, `src/themes/esensi/pages/home.tsx`, `src/themes/esensi/layout.tsx`, dan pemeriksaan render 1440/1024/390 px. Status `OS-WEB-001` tetap **Sebagian** karena cakupan E2E publik belum menyeluruh; `OS-WEB-016`/`OS-WEB-017` sudah punya E2E tema interaktif.
 - **Aksesibilitas publik (10 November 2026):** audit halaman publik yang baru diuji menambahkan tautan "Lewati ke konten utama" + `main#konten-utama` pada tema `esensi`/`natra` (`ThemeSkipLink`), `aria-current` pada filter kategori berita, `alt=""` untuk sampul berita/galeri yang berada di dalam tautan berjudul, `aria-hidden` untuk batang progres pembangunan dan ikon dekoratif, `role="region"` + label desa pada peta Leaflet, serta `ThemePageHeader` pada halaman IDM publik agar tipografinya setara halaman publik lain. Rincian dan bukti E2E ada di [`STATUS-MODUL.md`](./STATUS-MODUL.md).
 - **Aksesibilitas admin (10 November 2026):** kerangka admin mendapat tautan "Lewati ke konten utama" + `main#konten-utama` lewat komponen `SkipLink` bersama (dipakai juga tema publik), `scope="col"` sebagai default `TableHead`, `aria-label` pada tabel penduduk/surat, nama aksesibel untuk tombol ikon tabel rentang umur, `role="alert"` pada galat validasi field penduduk, teks tutup dialog berbahasa Indonesia, dan `aria-disabled` tanpa atribut `disabled` pada tautan paginasi. Bukti: test aksesibilitas admin di `tests/penduduk.e2e.ts`; rincian di [`STATUS-MODUL.md`](./STATUS-MODUL.md).
@@ -109,8 +109,8 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 
 - `prettier --check .`: lulus (10 November 2026).
 - `npm run lint`: 0 error (2 warning `no-console` historis di `tests/umpan-balik.e2e.ts`).
-- `npm run test`: 183 berkas / 1.474 test lulus.
+- `npm run test`: 184 berkas / 1.489 test lulus.
 - `npm run check` (typegen + tsc + ESLint + format + unit): lulus.
-- Suite E2E penuh: 62 berkas / 195 test terhadap build produksi (`npm run build` + `npm start`). Run terakhir lulus penuh 195/195 setelah lima flake ditutup di akarnya (DPT, unduh PDF, beranda/tema, peta, toast pembangunan). Tujuh berkas P1/P2 terfokus lulus 32/32.
+- Suite E2E penuh: 63 berkas / 195 `test()`; run penuh terakhir (62 berkas/195 test) lulus penuh 195/195 terhadap build produksi (`npm run build` + `npm start`) setelah lima flake ditutup di akarnya (DPT, unduh PDF, beranda/tema, peta, toast pembangunan). Tujuh berkas P1/P2 terfokus lulus 32/32.
 - `npm run build`: lulus.
 

@@ -1,6 +1,6 @@
 # Paritas OpenSID — Status per ID
 
-Dokumen ini menyalin **tabel Status per ID (111 ID)** dari [`STATUS-MODUL.md`](./STATUS-MODUL.md) pada
+Dokumen ini menyalin **tabel Status per ID (112 ID)** dari [`STATUS-MODUL.md`](./STATUS-MODUL.md) pada
 10 November 2026. Katalog kebutuhannya ada di [`KATALOG-FITUR-OPENSID.md`](./KATALOG-FITUR-OPENSID.md).
 Sumber kebenaran baris adalah `STATUS-MODUL.md`; salinan ini dijaga `src/db/paritas-register.test.ts`
 agar setiap ID katalog punya baris di kedua dokumen.
@@ -27,14 +27,14 @@ persentase paritas dan bukan klaim "fitur selesai penuh".
 
 | Status audit | Jumlah ID |
 |---|---:|
-| Struktur lengkap; ada E2E interaktif | 72 |
+| Struktur lengkap; ada E2E interaktif | 73 |
 | Struktur lengkap; E2E tidak dirujuk | 18 |
 | Struktur terverifikasi | 12 |
 | Sebagian | 4 |
 | Struktur lengkap; E2E hanya smoke | 2 |
 | Struktur terverifikasi; ada E2E interaktif | 2 |
 | Struktur lengkap; E2E hanya penolakan | 1 |
-| **Total** | **111** |
+| **Total** | **112** |
 
 Tidak ada ID yang dinyatakan selesai penuh. 18 ID belum punya rujukan E2E dan
 4 ID berstatus Sebagian; rincian gap ada di kolom terakhir tabel.
@@ -47,7 +47,7 @@ Tidak ada ID yang dinyatakan selesai penuh. 18 ID belum punya rujukan E2E dan
 | OS-POP-002 | Struktur lengkap; ada E2E interaktif | Alur CRUD, pencarian, dan cetak biodata | `penduduk` 9 test (termasuk audit aksesibilitas) |
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
-| OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap | `penduduk` 9 test (termasuk audit aksesibilitas) |
+| OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap; **daftar publik tidak lagi memuat NIK dan hanya mencari nama** (redaksi di use case, bukan hanya tampilan) | `penduduk` 9 test (termasuk audit aksesibilitas) + `dpt.test` |
 | OS-POP-006 | Struktur terverifikasi | Impor CSV menautkan RTM, menyalin anggota, dan idempoten | `dtks-impor` 1 test/1 beraksi |
 | OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-POP-008 | Struktur lengkap; ada E2E interaktif | Posyandu, KIA, ibu hamil, anak, ekspor CSV | `kesehatan` 2 test/1 beraksi |
@@ -111,6 +111,7 @@ Tidak ada ID yang dinyatakan selesai penuh. 18 ID belum punya rujukan E2E dan
 | OS-WEB-007 | Struktur lengkap; ada E2E interaktif | Peta interaktif menampilkan layer polygon (area), garis, dan titik buatan desa; kontrol layer memuat ketiga kelompok, masing-masing dapat disembunyikan/ditampilkan kembali; peta cetak memuat geometri SVG dan legenda area, "Garis / Jalan", serta "Titik Lokasi". Peta ber-`role="region"` dengan label desa; ikon marker memakai aset bundling `/_next/static/media/` (bukan path halaman yang 404) dan terbukti termuat. | `web-publik` 23 test |
 | OS-WEB-008 | Struktur lengkap; ada E2E interaktif | Dua proyek berbeda tahun tampil di halaman publik; filter tahun lewat pilihan + "Terapkan" hanya menampilkan proyek tahun itu; "Semua tahun" (parameter tahun kosong) mengembalikan daftar penuh, dan tahun tidak valid jatuh ke semua tahun. | `pembangunan-buku` 1 test/1 beraksi |
 | OS-WEB-009 | Struktur lengkap; ada E2E interaktif | — | `pengaduan` 1 test/1 beraksi; `umpan-balik` 2 test/2 beraksi |
+| OS-WEB-020 | Struktur lengkap; ada E2E interaktif | Agenda kegiatan bersumber dari `agenda_kegiatan` dengan status tayang eksplisit; draf tidak tampil di `/desa/agenda` maupun beranda; admin menambah agenda lewat `/konten/agenda` | `agenda-publik` 1 test/1 beraksi; `agenda.test` 7 test |
 | OS-WEB-010 | Struktur lengkap; ada E2E interaktif | Kelompok uji beserta anggota tampil di `/desa/kelompok`; "Daftar anggota (1)" membuka daftar publik; tombol "Cetak daftar anggota" benar-benar memanggil `window.print()` (dipalsukan di test untuk membuktikan pemanggilan). | `kelompok-laporan` 3 test/1 beraksi |
 | OS-WEB-011 | Struktur lengkap; ada E2E interaktif | Filter kata kunci lewat formulir menampilkan pesan hasil; ekspor CSV mengikuti filter yang sama (`text/csv` + `Content-Disposition`); barang desa lain tidak tampil di daftar maupun CSV. | `web-publik` 23 test/11 beraksi |
 | OS-WEB-012 | Struktur terverifikasi; ada E2E interaktif | Daftar dan detail suplemen tampil dengan sasaran serta jumlah data; hanya nama kolom isian yang dipublikasikan, nilai isian tidak; slug yang sudah dihapus 404. | `web-publik` 23 test/11 beraksi |
@@ -118,7 +119,7 @@ Tidak ada ID yang dinyatakan selesai penuh. 18 ID belum punya rujukan E2E dan
 | OS-WEB-014 | Struktur lengkap; ada E2E interaktif | Katalog publik menampilkan lapak hasil pencarian, jumlah produk, tautan produk; halaman peta menampilkan produk berkoordinat di peta Leaflet. | `web-publik` 23 test/11 beraksi |
 | OS-WEB-015 | Struktur lengkap; ada E2E interaktif | — | `umpan-balik` 2 test/2 beraksi |
 | OS-WEB-016 | Struktur lengkap; ada E2E interaktif | — | `tema` 1 test/1 beraksi |
-| OS-WEB-017 | Struktur lengkap; ada E2E interaktif | Opsi warna primer/sekunder, tipografi, kelengkungan sudut, gaya header, judul/tombol hero, teks berjalan, dan sosmed tersimpan setelah muat ulang serta terpakai di situs publik (`--pub-primary`, `--pub-secondary`, `--pub-radius`, `--pub-font`, header berwarna, tombol hero); nilai awal dipulihkan. | `tema` 1 test/1 beraksi |
+| OS-WEB-017 | Struktur lengkap; ada E2E interaktif | Opsi warna primer/sekunder, tipografi (bawaan sistem, sans-serif, serif, dan **Atkinson Hyperlegible** sebagai bawaan), kelengkungan sudut, gaya header, judul/tombol hero, teks berjalan, dan sosmed tersimpan setelah muat ulang serta terpakai di situs publik (`--pub-primary`, `--pub-primary-text`, `--pub-secondary`, `--pub-radius`, `--pub-font`, header berwarna, tombol hero); nilai awal dipulihkan. | `tema` 1 test/1 beraksi; `theme.test` 21 test |
 | OS-WEB-018 | Struktur lengkap; ada E2E interaktif | Sitemap memakai origin host untuk setiap `<loc>`, memuat halaman turunan dan produk lapak dinamis, serta tidak memuat rute admin dan tidak mengulang `<loc>` yang sama; robots menolak area privat termasuk `/layanan-mandiri` dan menunjuk sitemap host; setiap halaman publik punya title/description dan OG title/description yang sama, OG image absolut per host yang benar-benar terunduh sebagai PNG 1200×630. | `sitemap` 3 test/3 beraksi |
 | OS-WEB-019 | Struktur lengkap; ada E2E interaktif | Form token (jalur kode QR) mengalihkan ke halaman token publik; token valid 64 hex menampilkan jenis, nomor, dan status surat; token berformat salah maupun token yang sudah dihapus menampilkan "Surat Tidak Ditemukan" tanpa membocorkan data. | `publik-verifikasi` 3 test/2 beraksi |
 | OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
