@@ -1,7 +1,7 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-import { hapusKelompokDariNama } from "./support/database";
+import { hapusKelompokDariNama, hapusPerangkatDariNama } from "./support/database";
 
 function namaUnik(prefix: string): string {
   return `${prefix} ${Date.now()}-${Math.floor(Math.random() * 1_000)}`;
@@ -113,5 +113,63 @@ test(
 
     await app.open("/desa/pemerintahan");
     await expect(browser.locator("h1, h2").first()).toBeVisible();
+  },
+);
+
+/**
+ * Katalog: OS-GOV-003 — Bagan SOTK admin: perangkat aktif yang baru ditambah
+ * masuk ke bagian pelaksana, dan tombol cetak benar-benar memanggil
+ * window.print() (dipalsukan agar pemanggilannya terbukti).
+ */
+test(
+  "bagan SOTK: perangkat baru masuk bagan dan tombol cetak bekerja",
+  { session: "admin", timeout: 120_000 },
+  async ({ app, screen, browser }) => {
+    const nama = namaUnik("Perangkat SOTK");
+
+    try {
+      await app.open("/konten/perangkat");
+      await expect(screen.getByRole("heading", { name: "Perangkat Desa" })).toBeVisible();
+
+      await screen.getByRole("button", { name: "Tambah Perangkat" }).tap();
+      await expect(screen.getByRole("dialog", { name: "Tambah Perangkat" })).toBeVisible();
+      await screen.getByLabel("Nama").fill(nama);
+      // "Kaur Keuangan" berasal dari seed dan bukan kepala/sekretaris, jadi
+      // perangkat ini harus muncul pada bagian pelaksana bagan.
+      await screen.getByLabel("Jabatan").tap();
+      await screen.getByRole("option", { name: "Kaur Keuangan" }).tap();
+      await screen.getByLabel("Urutan").fill("1");
+      await screen.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("Perangkat ditambahkan.")).toBeVisible({ timeout: 10_000 });
+      await expect(screen.getByRole("row").filter({ hasText: nama })).toBeVisible();
+
+      await app.open("/konten/perangkat/sotk");
+      await expect(screen.getByRole("heading", { name: "Bagan SOTK Desa" })).toBeVisible();
+      for (const bagian of ["Kepala Desa", "Sekretariat", "Perangkat Pelaksana"]) {
+        await expect(screen.getByText(bagian, { exact: true }).first()).toBeVisible();
+      }
+      await expect(screen.getByText(nama)).toBeVisible();
+      await expect(screen.getByText("Kaur Keuangan", { exact: true }).first()).toBeVisible();
+
+      await browser.evaluate(() => {
+        (window as unknown as { __cetakSotk?: boolean }).__cetakSotk = false;
+        window.print = () => {
+          (window as unknown as { __cetakSotk?: boolean }).__cetakSotk = true;
+        };
+      });
+      await screen.getByRole("button", { name: "Cetak" }).tap();
+      const memanggilCetak = await browser.evaluate(() =>
+        Boolean((window as unknown as { __cetakSotk?: boolean }).__cetakSotk),
+      );
+      expect(memanggilCetak).toBe(true);
+
+      await app.open("/konten/perangkat");
+      await screen.getByRole("button", { name: `Hapus ${nama}` }).tap();
+      await expect(screen.getByText("Hapus perangkat ini?")).toBeVisible();
+      await screen.getByRole("button", { name: "Hapus", exact: true }).tap();
+      await expect(screen.getByText("Perangkat dihapus.")).toBeVisible({ timeout: 10_000 });
+    } finally {
+      await hapusPerangkatDariNama(nama);
+    }
   },
 );

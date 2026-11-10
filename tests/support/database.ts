@@ -96,6 +96,13 @@ export async function hapusWilayahDariDusun(dusun: string): Promise<void> {
   });
 }
 
+/** Hapus perangkat desa uji berdasarkan nama (pembersihan alur bagan SOTK). */
+export async function hapusPerangkatDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM perangkat_desa WHERE nama = ?", [nama]);
+  });
+}
+
 /** Hapus kelompok/lembaga uji berdasarkan nama. */
 export async function hapusKelompokDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
