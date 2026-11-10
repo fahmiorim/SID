@@ -53,6 +53,11 @@ export async function catatPermintaanRateLimit(
     }
 
     const aktif = saringPermintaanAktif(tersimpan as number[], sekarang, jendelaMs);
+    // Permintaan saat ini ikut dihitung, tetapi hanya disimpan selama kuota
+    // masih tersedia. Menyimpan percobaan yang sudah ditolak akan membuat
+    // array tumbuh tanpa batas, sedangkan tidak menghitungnya membuat
+    // permintaan ke-(batas+1) tetap lolos (kuota tidak pernah terlampaui).
+    const jumlah = aktif.length + 1;
     if (aktif.length < batas) aktif.push(sekarang);
 
     const resetMs = milidetikKeKuotaBerikutnya(aktif, sekarang, jendelaMs);
@@ -66,7 +71,7 @@ export async function catatPermintaanRateLimit(
     await connection.commit();
 
     bersihkanRateLimitKedaluwarsa(sekarang);
-    return { jumlah: aktif.length, resetMs };
+    return { jumlah, resetMs };
   } catch (error) {
     if (transactionStarted) {
       try {

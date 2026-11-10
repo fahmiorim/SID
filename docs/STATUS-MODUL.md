@@ -102,6 +102,8 @@ Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), 
 
 **P2 — `OS-WEB-003` dan `OS-WEB-014` ditutup 10 November 2026.** Profil & pemerintahan publik diuji dengan fixture yang dipulihkan lagi setelah test: `/desa/profil` menampilkan "Identitas Wilayah", visi, dan setiap butir misi dari data desa; `/desa/pemerintahan` menampilkan bagan SOTK serta perangkat aktif (kepala, sekretaris, staf) beserta jabatannya. Lapak publik diuji dengan satu lapak dan satu produk berkoordinat: pencarian menampilkan "1 lapak ditemukan", "1 produk tersedia", tautan "Lihat Produk" membuka halaman produk dengan harga `Rp 12.500`, dan `/desa/lapak/peta` menampilkan produk, nama lapak, koordinat, serta peta Leaflet. Test ini menemukan dua bug nyata: (1) `PetaProdukMap` mengimpor Leaflet di modul yang dirender server sehingga halaman gagal dengan `ReferenceError: window is not defined`, kini dibungkus `next/dynamic` dengan `ssr: false`; (2) query peta mengembalikan produk aktif tanpa koordinat sehingga `parseFloat(null)` menjadi `NaN` dan Leaflet melempar `Invalid LatLng object`, kini produk tanpa koordinat disaring di repository. Verifikasi: `web-publik` 22/22 + setup sesi pada build produksi, `npm run build` lulus, `tsc --noEmit` lulus, `npm run lint` 0 error, Prettier bersih.
 
+**P2 — `OS-OPS-011` ditutup 10 November 2026.** `api-publik` (5 test) kini membuktikan kontrak HTTP nyata alih-alih smoke: `/api/publik/informasi` mengembalikan profil/berita/dokumen dengan `dokumenPagination` yang konsisten dan menolak `pageSize=101` dengan `400`; `/api/publik/dokumen` tetap mengembalikan `data` array + `pagination` dan menolak `page=0` maupun kategori tak dikenal; `/api/publik/inventaris?search=...` hanya memuat barang desa pemilik host (barang desa fixture lain tidak ikut); `/api/publik/surat?limit=1` membatasi agenda dan menyertakan `jenisSurat`; `/api/publik/openapi` menyajikan OpenAPI 3.1 dengan `servers` dari origin host, lima jalur, respons `429`, dan skema galat; permintaan ke-61 per menit per IP per endpoint benar-benar menghasilkan `429`. E2E ini menemukan bug produksi: `catatPermintaanRateLimit` hanya menambahkan permintaan saat kuota belum penuh, sehingga `jumlah` tidak pernah melebihi batas dan rate limit tidak pernah menolak permintaan; penghitungan kini menyertakan permintaan saat ini dan hanya menyimpan percobaan yang lolos agar array tidak tumbuh tanpa batas. `publik-apbdes` (1 test) juga tidak lagi smoke: ringkasan, realisasi per bidang, dan triwulan tampil, sedangkan `?tahun=abc` atau tahun tanpa data jatuh ke tahun tersedia terakhir tanpa halaman galat. Verifikasi: E2E build produksi `api-publik` 5/5 dan `publik-apbdes` 1/1, `npm run build` lulus, `npm run check` lulus, Prettier bersih.
+
 **Perbaikan hitungan tabel anak 10 November 2026.** Test `OS-WEB-013` menemukan pola subquery berkorelasi yang dirender Drizzle tanpa kualifikasi tabel (`where \`survey_id\` = \`id\``), sehingga `id` menunjuk tabel dalam dan hitungan selalu 0. Pola yang sama diperbaiki di daftar survei admin (soal/responden per survei, jawaban per responden), anggota per KK, terdata per suplemen, anggota per DTKS, perangkat per jabatan, foto per album admin, dan foto aktif per album publik — semuanya kini memakai query agregat `GROUP BY` yang dibatasi id induk. Daftar survei admin dibuktikan E2E: setelah satu pertanyaan dibuat baris menampilkan 1 soal dan 0 responden, dan setelah warga mengisi menjadi 1 soal dan 1 responden.
 
 ## Pembaruan 10 November 2026 — audit tampilan & aksesibilitas publik
@@ -193,7 +195,7 @@ Bug produksi yang ditemukan dan diperbaiki:
 
 Quality gate sebelum P0: `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console` di `umpan-balik`), `npm run check` (typegen + tsc + ESLint) lulus. Setelah P0/P1/P2, hasil terbaru ada di bagian pembaruan di atas (183 berkas/1.474 test unit; 58 berkas/179 test E2E).
 
-Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `publik-apbdes`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Sisa kelompok yang belum ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Gap verifikasi surat sudah ditutup: `verifySuratData` memanggil `validateVerification`, sehingga pembuat tidak dapat menyetujui tahap sekdes/kades. Tahap operator tetap boleh karena operator menyusun konsep (alur OpenSID). Bukti: unit `verifikasi.test.ts` dan E2E 8/8.
 
@@ -223,7 +225,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WIL-004 | Sebagian | E2E. | `gis-layer` 4 test/4 beraksi |
 | OS-WIL-005 | Sebagian | E2E GIS lebih luas. | `gis-layer` 4 test/4 beraksi |
 | OS-WIL-006 | Struktur lengkap; ada E2E interaktif | — | `gis-pertanahan` 7 test/1 beraksi |
-| OS-WIL-007 | Sebagian | E2E halaman cetak peta. | `peta-publik` 1 test/smoke |
+| OS-WIL-007 | Struktur lengkap; ada E2E interaktif | Peta publik menampilkan layer polygon, garis, dan titik buatan desa; kontrol layer dapat menyembunyikan lalu menampilkan kembali tiap kelompok; peta cetak memuat geometri SVG dan legenda ketiga kelompok. | `web-publik` 23 test |
 | OS-WIL-008 | Sebagian | E2E. | tidak dirujuk |
 | OS-GOV-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 | OS-GOV-002 | Struktur lengkap; ada E2E interaktif | — | `pemerintahan` 3 test/2 beraksi |
@@ -312,7 +314,7 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-OPS-007 | Sebagian | Gap: E2E restore. | `backup-database` 1 test/smoke |
 | OS-OPS-008 | Struktur lengkap; ada E2E interaktif | Aktivasi ditolak saat env wajib kosong | `plugin` 1 test/1 beraksi |
 | OS-OPS-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-OPS-011 | Sebagian | E2E. | tidak dirujuk |
+| OS-OPS-011 | Struktur lengkap; ada E2E interaktif | Informasi dan dokumen memakai paginasi `page`/`pageSize` (bawaan 20, maksimum 100) serta menolak nilai salah dengan `400`; dokumen mengembalikan `data` array + metadata; inventaris mendukung `search` dan hanya memuat barang desa pemilik host; surat membatasi agenda lewat `limit` dan menyertakan jenis surat; OpenAPI 3.1 memakai origin host dan memuat seluruh jalur; permintaan ke-61 per menit per IP per endpoint ditolak `429`. | `api-publik` 5 test/5 beraksi |
 | OS-OPS-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
 Catatan tabel:
 

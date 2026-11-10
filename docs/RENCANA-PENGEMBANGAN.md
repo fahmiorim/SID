@@ -40,7 +40,7 @@ Bug produksi yang ditemukan dan diperbaiki: `optionalDigits` di `src/lib/forms.t
 
 Verifikasi 9 November 2026 (historis): `prettier --check tests src` bersih, `npm run lint` 0 error (2 warning `no-console`), `npm run check` lulus, suite E2E 190/194. Hasil ini digantikan pembaruan 10 November 2026: suite produksi 178/178 lulus dan `npm run build` lulus.
 
-Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `publik-apbdes`, `api-publik`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
+Berkas yang masih perlu ditulis ulang menjadi alur interaktif penuh: `ops`/`ops-sistem`, `surat-konten`, `backup-database`, `disposisi-ekspedisi-agenda`, `email-webhook`, `surat-dinas`. `modul-tambahan` dan `kesehatan` sudah ditulis ulang; `sinergi`, `lapak-keranjang`, dan `pelanggan-kerjasama` sudah memiliki aksi UI.
 
 Catatan `dtks-impor`: berkas CSV dibuat dari RTM fixture di `tests/support/database.ts`; alur menguji ringkasan impor, baris hasil, metadata/anggota di dialog Kelola, perubahan status, dan impor ulang `0 formulir dibuat; 1 dilewati`.
 
@@ -81,7 +81,7 @@ Gap per ID yang belum tertutup tercantum pada kolom "Gap tersisa" di `STATUS-MOD
 - **Alur publik:** seluruh alur utama kini punya bukti interaksi. Peta (`OS-WEB-007`, layer polygon/garis/titik + cetak), statistik (`OS-WEB-006`, termasuk unduhan CSV per tenant), cakupan tema (`OS-WEB-017`), inventaris (`OS-WEB-011`), pembangunan (`OS-WEB-008`, filter tahun), berita, galeri, dokumen, pengaduan/lacak, umpan balik, suplemen (`OS-WEB-012`), analisis publik (`OS-WEB-013`), profil/pemerintahan (`OS-WEB-003`), lapak + peta produk (`OS-WEB-014`), dan tema (`OS-WEB-016`) terverifikasi; kedalaman tiap ID tetap dicatat di `STATUS-MODUL.md`.
 - **GIS:** cetak peta dan CRUD layer (`OS-WIL-002`–`OS-WIL-008`); E2E interaktif sudah mencakup layer, pertanahan (persil/CDESA/mutasi), peta cetak, dan simbol.
 - **Analisis/survei:** kategori/indikator/survei, alur jawaban warga → rekap admin, dan laporan skor beserta CSV-nya sudah beraksi (`OS-ANA-001`–`OS-ANA-006`); sisa jalur sukses formulir eksternal bertoken (baru penolakan tanpa token yang diuji).
-- **Operasional:** preferensi menu, pengaturan, OTP, inbox email, cakupan audit, restore, dan API publik (`OS-OPS-002`–`OS-OPS-007`, `OS-OPS-011`); plugin (`OS-OPS-008`) sudah beraksi.
+- **Operasional:** preferensi menu, pengaturan, OTP, inbox email, cakupan audit, dan restore (`OS-OPS-002`–`OS-OPS-007`); API publik (`OS-OPS-011`) dibuktikan `api-publik` 5 test (paginasi, filter, tenant, OpenAPI, dan `429`), termasuk perbaikan bug rate limit yang tidak pernah menolak permintaan; plugin (`OS-OPS-008`) sudah beraksi.
 - **Layanan warga:** adapter provider (`OS-WGA-009`) sudah diuji dengan server lokal; bukti provider nyata masih menunggu kredensial. Unduh dokumen kerja sama (`OS-MOD-005`) kini dibuktikan E2E: PDF tersaji `inline`, ID tidak valid `400`, pelanggan desa lain `404`, akun tanpa izin `403`, dan tanpa sesi dialihkan ke `/masuk`. Pembatalan permohonan (`OS-WGA-004`) sudah beraksi.
 - **Di luar katalog:** Pemeriksaan Data `/periksa` (padanan controller `Periksa` OpenSID) selesai 9 November 2026 sebagai pemeriksaan baca-saja; belum ada E2E dan menu baru aktif setelah seed ulang.
 
