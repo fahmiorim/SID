@@ -156,7 +156,10 @@ export async function createAreaAction(
       path: formText(formData, "path"),
       foto: formText(formData, "foto"),
       desk: formText(formData, "desk"),
-      enabled: formData.get("enabled") === "on",
+      // Formulir area tidak menyediakan sakelar aktif, jadi area baru harus
+      // langsung tampil di peta. Tanpa ini setiap area buatan UI selalu
+      // nonaktif dan tidak pernah muncul di peta publik maupun peta cetak.
+      enabled: formData.get("enabled") === null || formData.get("enabled") === "on",
       sortOrder: formNumber(formData, "sortOrder"),
     });
     const _newArea = await createArea(input);
@@ -184,7 +187,7 @@ export async function updateAreaAction(
       path: formText(formData, "path"),
       foto: formText(formData, "foto"),
       desk: formText(formData, "desk"),
-      enabled: formData.get("enabled") === "on",
+      enabled: formData.get("enabled") === null || formData.get("enabled") === "on",
       sortOrder: formNumber(formData, "sortOrder"),
     });
     await updateArea(id, input);
