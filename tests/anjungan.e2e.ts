@@ -142,6 +142,20 @@ test(
       timeout: 15_000,
     });
     await expect(screen.getByText(/Nomor antrian Anda:/)).toBeVisible();
+    await expect(screen.getByText(kiosk.ipAddressPortPrinter, { exact: true })).toBeVisible();
+
+    // Konfigurasi printer perangkat dipakai pada bukti cetak kiosk.
+    await browser.evaluate(() => {
+      const target = window as unknown as { __cetak?: number };
+      target.__cetak = 0;
+      window.print = () => {
+        target.__cetak = (target.__cetak ?? 0) + 1;
+      };
+    });
+    await screen.getByRole("button", { name: "Cetak bukti" }).tap();
+    expect(
+      await browser.evaluate(() => (window as unknown as { __cetak?: number }).__cetak ?? 0),
+    ).toBe(1);
     await expect.poll(() => anjungan.jumlahPermohonan()).toBe(1);
 
     // Perangkat yang tidak mengizinkan surat tanpa akun harus 404.

@@ -15,7 +15,22 @@ function isActivePath(pathname: string, url: string | null): boolean {
 }
 
 const itemBase =
-  "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+  "group flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] font-medium transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+
+function IconBox({ name, active }: { name: string | null; active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+        active
+          ? "bg-white/10 text-current"
+          : "bg-black/[0.035] text-muted-foreground group-hover:bg-black/[0.055] group-hover:text-foreground",
+      )}
+    >
+      <MenuIcon name={name} className="size-4" />
+    </span>
+  );
+}
 
 function NavItem({ node }: { node: MenuNode }) {
   const pathname = usePathname();
@@ -32,19 +47,24 @@ function NavItem({ node }: { node: MenuNode }) {
           aria-expanded={open}
           className={cn(
             itemBase,
-            "font-medium text-muted-foreground hover:bg-muted hover:text-foreground",
+            childActive
+              ? "bg-white text-[var(--brand)] shadow-[0_1px_2px_rgb(0_0_0/0.04)] ring-1 ring-black/[0.04]"
+              : "text-muted-foreground hover:bg-black/[0.035] hover:text-foreground",
           )}
         >
-          <MenuIcon name={node.icon} className="size-4 shrink-0" />
-          <span className="flex-1 text-left">{node.label}</span>
+          <IconBox name={node.icon} active={childActive} />
+          <span className="flex-1 truncate text-left">{node.label}</span>
           <ChevronRight
             aria-hidden="true"
-            className={cn("size-4 shrink-0 transition-transform", open && "rotate-90")}
+            className={cn(
+              "size-3.5 shrink-0 opacity-60 transition-transform duration-200",
+              open && "rotate-90",
+            )}
           />
         </button>
 
         {open ? (
-          <ul className="mt-1 ml-4 space-y-1 border-l border-border pl-2">
+          <ul className="mt-1 ml-5 space-y-0.5 border-l border-black/[0.07] pl-2">
             {node.children.map((child) => (
               <NavItem key={child.id} node={child} />
             ))}
@@ -64,12 +84,12 @@ function NavItem({ node }: { node: MenuNode }) {
         className={cn(
           itemBase,
           active
-            ? "bg-primary/10 font-medium text-primary"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            ? "bg-[var(--brand)] text-[var(--brand-foreground)] shadow-[0_12px_24px_-16px_var(--brand)]"
+            : "text-muted-foreground hover:bg-black/[0.035] hover:text-foreground",
         )}
       >
-        <MenuIcon name={node.icon} className="size-4 shrink-0" />
-        <span>{node.label}</span>
+        <IconBox name={node.icon} active={active} />
+        <span className="truncate">{node.label}</span>
       </Link>
     </li>
   );

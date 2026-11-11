@@ -32,7 +32,7 @@ yang benar-benar dijalankan. Keberadaan folder, route, atau smoke test bukan buk
 | F1 | P0: otorisasi/tenant, kebocoran lapisan, bug yang terbukti | Selesai 10 November 2026 | Anjungan (`OS-MOD-001`) CRUD/tenant/kiosk; 0 impor infrastruktur di route & presentation; adapter notifikasi/BSrE diuji dengan server lokal |
 | F2 | P1: E2E perilaku alur inti | Selesai 10 November 2026 | 8 berkas P1, 32/32 test pada build produksi |
 | F3 | P2: gap fungsional dan keluaran per ID | Berjalan | Keluaran utama tertutup (lihat daftar di bawah); 0 ID tanpa rujukan E2E |
-| F4 | Stabilitas suite E2E | Selesai 10 November 2026 | 5 flake ditutup di akar; run penuh terakhir 62 berkas/195 test lulus berturut-turut; runner kini 63 berkas |
+| F4 | Stabilitas suite E2E | Selesai 10 November 2026 | 5 flake ditutup di akar; run penuh terakhir 78 berkas/221 test lulus (2 worker, 16m23s) |
 | F5 | P3: konsistensi dokumen dan guard | Selesai untuk dokumen; guard perlu diperluas | Katalog/paritas/rencana aktif, `RENCANA-PENGEMBANGAN.md` disinkronkan, guard dokumen + lapisan publik |
 | F6 | Provider eksternal nyata dan pemeriksaan visual | Terblokir / Belum | `OS-WGA-009`, `OS-SUR-013` menunggu kredensial; 206 halaman belum diperiksa visual |
 
@@ -41,7 +41,7 @@ yang benar-benar dijalankan. Keberadaan folder, route, atau smoke test bukan buk
 Selesai. Hasil yang dipakai sebagai dasar fase lain:
 
 - 112 ID katalog, 53 folder fitur, 206 `page.tsx`, 79 `route.ts`, 184 berkas test unit/integrasi.
-- 63 berkas E2E, 195 `test()`, 927 aksi UI literal; 111 dari 195 deklarasi test memuat aksi UI.
+- 78 berkas E2E, 219 `test()`, 1201 aksi UI literal; 132 dari 219 deklarasi test memuat aksi UI.
 - 0 impor infrastruktur langsung dari `src/app/**` dan `src/features/*/presentation/**`.
 
 ## F1 — P0 keamanan, otorisasi, dan bug terbukti
@@ -69,10 +69,10 @@ diuji jalur penolakan. Tidak ada ID yang dinyatakan selesai penuh.
 
 Gap P2 yang masih terbuka:
 
-1. **Persuratan:** notifikasi email perubahan status belum diuji karena provider belum dikonfigurasi. PDF per varian sudah diuji; `OS-SUR-014` membuktikan penolakan MIME lewat UI, sedangkan batas ukuran dan sanitasi nama masih unit/integrasi.
-2. **Warga:** OTP/email (butuh provider) dan rate limit OTP belum E2E; ubah PIN sudah dibuktikan lewat UI.
+1. **Persuratan:** notifikasi email perubahan status belum diuji karena provider belum dikonfigurasi. PDF per varian sudah diuji; `OS-SUR-014` membuktikan penolakan MIME, batas ukuran, dan sanitasi nama berkas traversal lewat UI.
+2. **Warga:** pengiriman OTP/email lewat provider dan rate limit OTP belum E2E; login faktor kedua dengan kode fixture, ubah PIN, dan login PIN baru sudah dibuktikan lewat UI.
 3. **Sebagian:** `OS-SUR-002`, `OS-SUR-013`, `OS-WGA-009`; rincian gap per ID ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
-4. **Anjungan:** konfigurasi printer/IP belum dipakai di alur cetak; verifikasi visual varian orientasi belum dilakukan.
+4. **Anjungan:** alamat printer/IP kini dipakai pada bukti cetak kiosk, tetapi cetak langsung ke IP tetap memerlukan print bridge; verifikasi visual varian orientasi belum dilakukan.
 
 Ditutup 11 November 2026: laporan/ekspor DTKS, ekspor CSV/Excel keuangan, dokumen APBDes publik, kandidat pemilihan lewat UI, balasan operator `/pesan-warga`, keputusan izin `/kehadiran/izin`, ubah PIN warga, PDF per varian, dan penolakan MIME disposisi.
 
@@ -83,7 +83,7 @@ dialog DPT tidak lagi memuat ulang halaman, locator PDF mengikuti menu `Aksi sur
 test beranda tidak merebut `heroJudul` global, test peta menunggu geometri Leaflet,
 dan toast pembangunan tidak lagi ambigu. Pemuatan ulang penuh terakhir di aplikasi
 (Reset pengaturan lampiran) diganti `router.refresh()` dan dijaga
-`tests/pengaturan-lampiran.e2e.ts`. Run penuh terakhir pada build produksi: 62 berkas/195 test lulus; runner kini mencakup 63 berkas setelah `agenda-publik.e2e.ts` ditambahkan.
+`tests/pengaturan-lampiran.e2e.ts`. Run penuh terakhir pada build produksi: 78 berkas/221 test lulus dengan 2 worker (16m23s); kegagalan resource pada run 4 worker tidak terulang.
 
 ## F5 — Konsistensi dokumen dan guard
 
@@ -231,8 +231,8 @@ sidebar terhitung `position: sticky`, dan footer menempel di dasar viewport.
 
 ## Urutan kerja berikutnya
 
-1. Tutup 4 ID berstatus Sebagian sebelum menambah fitur baru.
-2. Lengkapi keluaran yang belum diuji (PDF per varian, notifikasi email) dan penolakan unggahan surat lewat UI.
+1. Tutup 3 ID berstatus Sebagian sebelum menambah fitur baru.
+2. Lengkapi keluaran yang belum diuji (notifikasi email) dan penolakan unggahan surat lewat UI.
 3. Setelah kredensial tersedia, jalankan verifikasi provider nyata lalu naikkan status ID terkait.
 4. Jalankan gate (`npm run lint`, `npm run format:check`, `npm run test`, `npm run check`, `npm run build`) dan suite E2E pada build produksi sebelum setiap commit.
 

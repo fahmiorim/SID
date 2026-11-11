@@ -66,6 +66,8 @@ import {
   nextVerificationStep,
   renderSuratTemplate,
   roleCanVerifyStep,
+  SURAT_MAKS_PER_HALAMAN,
+  SURAT_PER_HALAMAN,
   SURAT_RESOURCE,
   VERIFICATION_STEP_LABELS,
   type AnggotaKeluargaSurat,
@@ -224,12 +226,22 @@ async function ensureResident(
   if (!penduduk) throw conflict("Penduduk yang dipilih tidak ditemukan pada desa ini.");
 }
 
-export async function listSuratWithMeta(params: { search: string; status: LetterStatus | null }) {
+export async function listSuratWithMeta(params: {
+  search: string;
+  status: LetterStatus | null;
+  page?: number;
+  pageSize?: number;
+}) {
   const user = await requirePermission(SURAT_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
+  const page = params.page && params.page > 0 ? Math.trunc(params.page) : 1;
+  const pageSize = Math.min(
+    SURAT_MAKS_PER_HALAMAN,
+    Math.max(1, Math.trunc(params.pageSize ?? SURAT_PER_HALAMAN)),
+  );
 
   const [result, jenis, penduduk, recap, syarat] = await Promise.all([
-    listSurat({ villageId, ...params }),
+    listSurat({ villageId, search: params.search, status: params.status, page, pageSize }),
     listJenisSurat(villageId),
     listPendudukOptions(villageId),
     recapSuratByStatus(villageId),

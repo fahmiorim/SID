@@ -19,7 +19,8 @@ test("elemen beranda tema dirender benar", async ({ app, browser }) => {
   await expect(browser.locator('[data-theme="esensi"]')).toBeVisible();
   await expect(browser.locator("h1").first()).toBeVisible();
   await expect(browser.locator("header")).toBeVisible();
-  await expect(browser.locator("body")).toContainText("Selamat datang di portal resmi desa.");
+  await expect(browser.locator("main")).toBeVisible();
+  await expect(browser.locator("footer")).toBeVisible();
 });
 
 /**

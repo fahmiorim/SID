@@ -184,7 +184,7 @@ function Hero({ ctx, statistik, berita, slider }: HomeProps) {
           </dl>
         </div>
 
-        <figure className="relative min-w-0 lg:h-full">
+        <figure className="group/hero relative min-w-0 lg:h-full">
           <div
             className="relative aspect-[4/3] overflow-hidden bg-muted ring-1 ring-white/40 sm:aspect-[16/10] lg:aspect-auto lg:h-full lg:min-h-[28rem]"
             style={{
@@ -198,7 +198,7 @@ function Hero({ ctx, statistik, berita, slider }: HomeProps) {
               <img
                 src={gambar}
                 alt={unggulan?.judul ?? `Sorotan ${nama}`}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover/hero:scale-[1.025]"
               />
             ) : (
               <div
@@ -232,6 +232,20 @@ function Hero({ ctx, statistik, berita, slider }: HomeProps) {
                 </p>
               </div>
             )}
+
+            <span className="ui-fade absolute top-4 left-4 z-10 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-[10px] font-semibold tracking-[0.12em] text-[var(--pub-primary-text)] uppercase shadow-sm ring-1 ring-black/5 backdrop-blur sm:top-5 sm:left-5">
+              <span className="relative flex size-2" aria-hidden="true">
+                <span
+                  className="absolute inline-flex size-full rounded-full opacity-60"
+                  style={{ backgroundColor: "var(--pub-primary)" }}
+                />
+                <span
+                  className="relative inline-flex size-2 rounded-full"
+                  style={{ backgroundColor: "var(--pub-primary)" }}
+                />
+              </span>
+              Portal aktif
+            </span>
 
             {unggulan && gambar ? (
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/55 to-transparent p-5 sm:p-6">
@@ -348,39 +362,63 @@ function QuickLinks() {
   ];
 
   return (
-    <section aria-label="Akses cepat" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {tautan.map((item) => {
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="tema-kartu tema-kartu-interaktif group flex items-start gap-3 p-4"
-          >
-            <span
-              className="flex size-10 shrink-0 items-center justify-center ring-1 ring-[color-mix(in_srgb,var(--pub-primary)_18%,transparent)] transition-transform ring-inset group-hover:scale-105"
-              style={{
-                backgroundImage:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--pub-primary) 16%, transparent), color-mix(in srgb, var(--pub-secondary) 8%, transparent))",
-                color: "var(--pub-primary-text)",
-                borderRadius: "calc(var(--pub-radius) * 0.9)",
-              }}
+    <section aria-labelledby="akses-cepat" className="space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div>
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-[var(--pub-primary-text)] uppercase">
+            Layanan warga
+          </p>
+          <h2 id="akses-cepat" className="mt-1 text-xl font-bold tracking-[-0.02em]">
+            Akses cepat
+          </h2>
+        </div>
+        <Link
+          href="/layanan-mandiri"
+          className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
+        >
+          Semua layanan
+          <ArrowRight
+            className="size-3.5 transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        </Link>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {tautan.map((item, indeks) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="tema-kartu tema-kartu-interaktif ui-reveal ui-hover-lift group flex items-start gap-3 p-4"
+              style={{ animationDelay: `${indeks * 45}ms` }}
             >
-              <Icon className="size-[18px]" aria-hidden="true" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="flex items-center justify-between gap-2">
-                <span className="truncate text-sm font-semibold">{item.label}</span>
-                <ChevronRight
-                  className="size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-[var(--pub-primary-text)]"
-                  aria-hidden="true"
-                />
+              <span
+                className="flex size-10 shrink-0 items-center justify-center ring-1 ring-[color-mix(in_srgb,var(--pub-primary)_18%,transparent)] transition-transform duration-300 ring-inset group-hover:scale-105 group-hover:-rotate-3"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, color-mix(in srgb, var(--pub-primary) 16%, transparent), color-mix(in srgb, var(--pub-secondary) 8%, transparent))",
+                  color: "var(--pub-primary-text)",
+                  borderRadius: "calc(var(--pub-radius) * 0.9)",
+                }}
+              >
+                <Icon className="size-[18px]" aria-hidden="true" />
               </span>
-              <span className="mt-1 block text-xs text-muted-foreground">{item.description}</span>
-            </span>
-          </Link>
-        );
-      })}
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-2">
+                  <span className="truncate text-sm font-semibold">{item.label}</span>
+                  <ChevronRight
+                    className="size-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-[var(--pub-primary-text)]"
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="mt-1 block text-xs text-muted-foreground">{item.description}</span>
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </section>
   );
 }

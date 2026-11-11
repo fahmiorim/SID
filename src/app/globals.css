@@ -49,6 +49,20 @@
 }
 
 :root {
+  /* Identitas ruang kerja (login + admin): hijau tua tenang dengan aksen gading. */
+  --brand: oklch(0.32 0.052 166);
+  --brand-strong: oklch(0.245 0.045 166);
+  --brand-soft: oklch(0.955 0.018 166);
+  --brand-accent: oklch(0.83 0.13 88);
+  --brand-foreground: oklch(0.985 0.006 95);
+  --warm-paper: oklch(0.982 0.006 92);
+  --shadow-soft:
+    0 1px 2px color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 14px 34px -24px color-mix(in srgb, var(--brand) 45%, transparent);
+  --shadow-lift:
+    0 2px 4px color-mix(in srgb, var(--foreground) 5%, transparent),
+    0 26px 60px -30px color-mix(in srgb, var(--brand) 55%, transparent);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -72,7 +86,7 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -84,6 +98,12 @@
 }
 
 .dark {
+  --brand: oklch(0.74 0.09 166);
+  --brand-strong: oklch(0.82 0.08 166);
+  --brand-soft: oklch(0.24 0.025 166);
+  --brand-accent: oklch(0.84 0.12 88);
+  --brand-foreground: oklch(0.17 0.025 166);
+  --warm-paper: oklch(0.19 0.012 92);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -178,6 +198,124 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/**
+ * Gerak bersama untuk login, admin, dan permukaan publik.
+ * Semua animasi memakai transform/opacity agar tidak memicu layout ulang.
+ */
+@keyframes ui-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ui-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes ui-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes ui-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0);
+  }
+}
+
+@keyframes ui-soft-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.08);
+  }
+}
+
+.ui-reveal {
+  animation: ui-rise 560ms var(--ease-out-soft) both;
+  animation-delay: var(--ui-delay, 0ms);
+}
+
+.ui-reveal-scale {
+  animation: ui-scale-in 500ms var(--ease-out-soft) both;
+  animation-delay: var(--ui-delay, 0ms);
+}
+
+.ui-fade {
+  animation: ui-fade 420ms ease both;
+  animation-delay: var(--ui-delay, 0ms);
+}
+
+.ui-float {
+  animation: ui-float 7s ease-in-out infinite;
+}
+
+.ui-soft-pulse {
+  animation: ui-soft-pulse 5s ease-in-out infinite;
+}
+
+/** Kartu yang mengangkat sedikit saat pointer/fokus masuk. */
+.ui-hover-lift {
+  transition:
+    transform 260ms var(--ease-out-soft),
+    box-shadow 260ms var(--ease-out-soft),
+    border-color 200ms ease;
+}
+
+.ui-hover-lift:hover,
+.ui-hover-lift:focus-within {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
+}
+
+/** Latar bergaris halus untuk panel brand login. */
+.ui-grid-lines {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, white 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, white 7%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: linear-gradient(to bottom, black, transparent 82%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-reveal,
+  .ui-reveal-scale,
+  .ui-fade,
+  .ui-float,
+  .ui-soft-pulse {
+    animation: none !important;
+  }
+
+  .ui-hover-lift:hover,
+  .ui-hover-lift:focus-within {
+    transform: none;
   }
 }
 

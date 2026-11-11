@@ -18,11 +18,16 @@ export interface ListSuratParams {
   villageId: number;
   search: string;
   status: LetterStatus | null;
+  page: number;
+  pageSize: number;
 }
 
 export interface SuratListResult {
   rows: SuratListRow[];
   total: number;
+  page: number;
+  pageSize: number;
+  pageCount: number;
 }
 
 const listColumns = {
@@ -69,32 +74,40 @@ function buildWhere(villageId: number, search: string, status: LetterStatus | nu
 }
 
 export async function listSurat(params: ListSuratParams): Promise<SuratListResult> {
-  const { villageId, search, status } = params;
+  const { villageId, search, status, pageSize } = params;
   const where = buildWhere(villageId, search, status);
 
-  const [rows, totalRows] = await Promise.all([
-    db
-      .select(listColumns)
-      .from(letters)
-      .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
-      .leftJoin(residents, eq(letters.residentId, residents.id))
-      .where(where)
-      .orderBy(desc(letters.createdAt), desc(letters.id))
-      .limit(200),
-    db
-      .select({ value: count() })
-      .from(letters)
-      .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
-      .leftJoin(residents, eq(letters.residentId, residents.id))
-      .where(where),
-  ]);
+  // Hitung total dulu agar nomor halaman di luar rentang dapat dijepit ke
+  // halaman terakhir, bukan menghasilkan daftar kosong yang membingungkan.
+  const totalRows = await db
+    .select({ value: count() })
+    .from(letters)
+    .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
+    .leftJoin(residents, eq(letters.residentId, residents.id))
+    .where(where);
+  const total = Number(totalRows[0]?.value ?? 0);
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(Math.max(1, Math.trunc(params.page)), pageCount);
+
+  const rows = await db
+    .select(listColumns)
+    .from(letters)
+    .leftJoin(letterTypes, eq(letters.typeId, letterTypes.id))
+    .leftJoin(residents, eq(letters.residentId, residents.id))
+    .where(where)
+    .orderBy(desc(letters.createdAt), desc(letters.id))
+    .limit(pageSize)
+    .offset((currentPage - 1) * pageSize);
 
   return {
     rows: rows.map((row) => ({
       ...row,
       typeCode: row.typeCode ?? "",
     })),
-    total: totalRows[0]?.value ?? 0,
+    total,
+    page: currentPage,
+    pageSize,
+    pageCount,
   };
 }
 

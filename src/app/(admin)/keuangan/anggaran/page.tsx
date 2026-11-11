@@ -1,11 +1,11 @@
-import { BookOpen, Scale, Wallet } from "lucide-react";
+import { BookOpen, Scale, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AdminListPanel, AdminStat } from "@/components/layout/admin-list";
 import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getIdentitas } from "@/features/desa/application/get-identitas";
 import { listKeuangan } from "@/features/keuangan/application/keuangan-use-cases";
 import {
@@ -59,8 +59,11 @@ export default async function AnggaranPage({
               <Link
                 key={item}
                 href={`/keuangan/anggaran?tahun=${item}`}
-                className={`rounded-md border px-3 py-1.5 text-sm tabular-nums transition-colors ${
-                  item === tahun ? "bg-primary text-primary-foreground" : "hover:bg-accent/40"
+                aria-current={item === tahun ? "page" : undefined}
+                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium tabular-nums transition-colors ${
+                  item === tahun
+                    ? "border-transparent bg-[var(--brand)] text-[var(--brand-foreground)] shadow-sm"
+                    : "border-black/10 bg-white/70 text-muted-foreground hover:border-[var(--brand)]/25 hover:bg-[var(--brand-soft)] hover:text-[var(--brand)]"
                 }`}
               >
                 {item}
@@ -104,40 +107,64 @@ export default async function AnggaranPage({
         <p className="text-sm">Tahun Anggaran {tahun}</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: "Pendapatan", value: ringkas.pendapatan },
-          { label: "Belanja", value: ringkas.belanja },
-          { label: "Pembiayaan (netto)", value: ringkas.pembiayaan },
-          { label: "Surplus / Defisit", value: ringkas.surplus },
-        ].map((item) => (
-          <Card key={item.label}>
-            <CardHeader className="pb-1">
-              <CardTitle className="text-sm font-normal text-muted-foreground">
-                {item.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xl font-semibold tabular-nums">{formatRupiah(item.value)}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <AdminStat
+          utama
+          label="Pendapatan"
+          nilai={formatRupiah(ringkas.pendapatan)}
+          keterangan={`Tahun anggaran ${tahun}`}
+          ikon={TrendingUp}
+        />
+        <AdminStat
+          label="Belanja"
+          nilai={formatRupiah(ringkas.belanja)}
+          keterangan="Pagu belanja daerah"
+          ikon={TrendingDown}
+        />
+        <AdminStat
+          label="Pembiayaan (netto)"
+          nilai={formatRupiah(ringkas.pembiayaan)}
+          keterangan="Penerimaan dikurangi pengeluaran"
+          ikon={Scale}
+        />
+        <AdminStat
+          label="Surplus / Defisit"
+          nilai={formatRupiah(ringkas.surplus)}
+          keterangan="Pendapatan − belanja + pembiayaan"
+          ikon={Wallet}
+        />
+      </section>
 
-      <Card>
-        <CardContent className="pt-6">
-          {rows.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
-              <Wallet className="size-5" />
-              <p className="text-sm">
-                Pohon rekening belum tersedia. Jalankan <code>npm run db:seed</code>.
+      <AdminListPanel
+        toolbar={
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+                Rincian APBDes
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Pagu dan realisasi per rekening tahun {tahun}.
               </p>
             </div>
-          ) : (
-            <AnggaranTable tahun={tahun} rows={rows} canManage={canManage} />
-          )}
-        </CardContent>
-      </Card>
+            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-semibold text-[var(--brand)] ring-1 ring-black/[0.05]">
+              {rows.length.toLocaleString("id-ID")} baris rekening
+            </span>
+          </div>
+        }
+      >
+        {rows.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-16 text-muted-foreground">
+            <span className="flex size-10 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand)]">
+              <Wallet className="size-5" aria-hidden="true" />
+            </span>
+            <p className="text-sm">
+              Pohon rekening belum tersedia. Jalankan <code>npm run db:seed</code>.
+            </p>
+          </div>
+        ) : (
+          <AnggaranTable tahun={tahun} rows={rows} canManage={canManage} />
+        )}
+      </AdminListPanel>
     </div>
   );
 }

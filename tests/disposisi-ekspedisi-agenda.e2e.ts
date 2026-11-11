@@ -1,11 +1,18 @@
+import { mkdtemp, rm, unlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
 import {
   bacaDisposisiTerakhirSuratMasuk,
   bacaEkspedisiTerakhirSuratKeluar,
+  bacaLampiranDisposisiTerakhir,
+  bacaPengaturanLampiranUji,
   hapusSuratKeluarDariNomor,
   hapusSuratMasukDariNomor,
+  pulihkanPengaturanLampiranUji,
+  setelBatasUkuranLampiranUji,
 } from "./support/database";
 
 /**
@@ -31,6 +38,13 @@ test(
     const nomorMasuk = `M-${cap}`;
     const nomorKeluar = `K-${cap}`;
     const instruksi = `Tindak lanjuti undangan ${cap}`;
+    const pengaturanSurat = await bacaPengaturanLampiranUji("surat");
+    // Batas 1 MB menjaga body Server Action tetap di bawah batas 10 MB Next.js.
+    await setelBatasUkuranLampiranUji("surat", 1024 * 1024);
+    const folderBerkas = await mkdtemp(path.join(tmpdir(), "sid-e2e-lampiran-"));
+    const berkasBesar = path.join(folderBerkas, "berkas-besar.pdf");
+    await writeFile(berkasBesar, Buffer.alloc(2 * 1024 * 1024));
+    let jalurLampiran: string | null = null;
 
     try {
       // --- OS-SUR-009: catat surat masuk lewat dialog ---
@@ -70,7 +84,7 @@ test(
         timeout: 15_000,
       });
 
-      // Tutup dan buka lagi agar input berkas kembali kosong, lalu simpan tanpa lampiran.
+      // Tutup dan buka lagi agar input berkas kembali kosong.
       await screen.getByRole("button", { name: "Batal" }).tap();
       await barisMasuk
         .getByRole("button", { name: new RegExp(`Aksi surat masuk ${nomorMasuk}`) })
@@ -79,6 +93,37 @@ test(
       await screen.getByLabel("Instruksi").fill(instruksi);
       await screen.getByLabel("Kepada (peran/pengguna)").fill("Sekretaris Desa");
       await screen.getByLabel("Batas waktu").fill("2026-11-20");
+
+      // Berkas melebihi batas ukuran juga ditolak sebelum disposisi tersimpan.
+      await browser.locator('input[type="file"]').setInputFiles(berkasBesar);
+      await screen.getByRole("button", { name: "Simpan disposisi" }).tap();
+      await expect(screen.getByText(/Ukuran file maksimal \d+ MB\./).first()).toBeVisible({
+        timeout: 15_000,
+      });
+
+      // Buka ulang dengan form bersih, lalu simpan tanpa lampiran.
+      await screen.getByRole("button", { name: "Batal" }).tap();
+      await barisMasuk
+        .getByRole("button", { name: new RegExp(`Aksi surat masuk ${nomorMasuk}`) })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Disposisi" }).tap();
+      await screen.getByLabel("Instruksi").fill(instruksi);
+      await screen.getByLabel("Kepada (peran/pengguna)").fill("Sekretaris Desa");
+      await screen.getByLabel("Batas waktu").fill("2026-11-20");
+      // Nama berkas jahat harus dibersihkan sebelum menjadi jalur di disk;
+      // ekstensi tetap ditentukan MIME, bukan nama kiriman.
+      await browser.evaluate(() => {
+        const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+        if (!input) throw new Error("Input lampiran tidak ditemukan.");
+        const transfer = new DataTransfer();
+        transfer.items.add(
+          new File(["%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n"], "../../../laporan.php.pdf", {
+            type: "application/pdf",
+          }),
+        );
+        input.files = transfer.files;
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
       await screen.getByRole("button", { name: "Simpan disposisi" }).tap();
       await expect(screen.getByText("Disposisi surat masuk ditambahkan.")).toBeVisible({
         timeout: 10_000,
@@ -89,6 +134,13 @@ test(
         toRole: "Sekretaris Desa",
         dueDate: "2026-11-20",
       });
+
+      const lampiran = await bacaLampiranDisposisiTerakhir(nomorMasuk);
+      expect(lampiran).toHaveLength(1);
+      jalurLampiran = lampiran[0].path;
+      expect(jalurLampiran).not.toContain("..");
+      expect(jalurLampiran).not.toContain(".php");
+      expect(jalurLampiran).toMatch(/^\d+\/surat\/\d+-laporan-php\.pdf$/);
 
       // Cetak daftar: tombol memanggil window.print, bukan hanya tampil.
       await browser.evaluate(() => {
@@ -156,6 +208,11 @@ test(
     } finally {
       await hapusSuratMasukDariNomor(nomorMasuk);
       await hapusSuratKeluarDariNomor(nomorKeluar);
+      if (jalurLampiran) {
+        await unlink(path.join(process.cwd(), "storage", "media", jalurLampiran)).catch(() => {});
+      }
+      await rm(folderBerkas, { recursive: true, force: true });
+      await pulihkanPengaturanLampiranUji("surat", pengaturanSurat);
     }
   },
 );

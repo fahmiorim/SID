@@ -109,19 +109,30 @@ test(
   async ({ app, browser }) => {
     await app.open("/");
     const asal = await browser.evaluate(() => location.origin);
+    const judulBeranda = await browser.evaluate(() => document.title);
+    const namaDesa = judulBeranda.match(/^Beranda · (.+) · Sistem Informasi Desa$/)?.[1];
+    if (!namaDesa) throw new Error(`Judul beranda tidak dikenali: ${judulBeranda}`);
 
     const halaman = [
-      { path: "/", judul: "Beranda · Desa Contoh", deskripsi: "Website resmi Desa Contoh" },
+      {
+        path: "/",
+        judul: `Beranda · ${namaDesa}`,
+        deskripsi: `Website resmi ${namaDesa}.`,
+      },
       {
         path: "/desa/statistik",
-        judul: "Statistik Desa · Desa Contoh",
-        deskripsi: "Data kependudukan",
+        judul: `Statistik Desa · ${namaDesa}`,
+        deskripsi: `Data kependudukan, bantuan, dan keuangan ${namaDesa}`,
       },
-      { path: "/desa/berita", judul: "Berita Desa · Desa Contoh", deskripsi: "Kabar terbaru" },
+      {
+        path: "/desa/berita",
+        judul: `Berita Desa · ${namaDesa}`,
+        deskripsi: `Kabar terbaru, pengumuman, dan kegiatan ${namaDesa}.`,
+      },
       {
         path: "/desa/peta",
-        judul: "Peta Desa Contoh",
-        deskripsi: "Peta interaktif desa Desa Contoh",
+        judul: `Peta ${namaDesa}`,
+        deskripsi: `Peta interaktif desa ${namaDesa}`,
       },
     ] as const;
 

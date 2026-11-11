@@ -25,7 +25,11 @@ export function SuratCreateButton({
 
   return (
     <>
-      <Button onClick={() => setOpen(true)} disabled={jenis.length === 0}>
+      <Button
+        onClick={() => setOpen(true)}
+        disabled={jenis.length === 0}
+        className="bg-[var(--brand)] text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
+      >
         <Plus className="size-4" />
         Buat Surat
       </Button>

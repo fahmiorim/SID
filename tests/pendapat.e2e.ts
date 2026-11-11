@@ -26,7 +26,7 @@ test(
 
     try {
       await app.open("/jajak-pendapat");
-      await expect(browser.locator("h1")).toHaveText("Pendapat Warga");
+      await expect(browser.locator("h1")).toHaveText("Jajak Pendapat");
 
       await screen.getByLabel("Nama (opsional)").fill(pengguna);
       await screen.getByRole("radio", { name: "Puas", exact: true }).tap();

@@ -57,19 +57,15 @@ export function MenuUtama({ menu, varian = "esensi" }: { menu: PublicNavItem[]; 
 
   const esensi = varian === "esensi";
   const tautanAtas = esensi
-    ? "relative inline-flex h-14 items-center gap-1 px-3 text-[13.5px] font-medium tracking-[0.01em] transition-colors after:absolute after:inset-x-2 after:bottom-0 after:h-[3px] after:rounded-t-full after:bg-current after:transition-opacity after:content-['']"
-    : "inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-medium transition-colors";
+    ? "relative inline-flex h-10 items-center gap-1 rounded-full px-3.5 text-[13.5px] font-medium tracking-[0.01em] transition-all duration-200"
+    : "inline-flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium transition-all duration-200";
   const keadaan = (aktifItem: boolean) =>
-    esensi
-      ? aktifItem
-        ? "after:opacity-100"
-        : "opacity-80 after:opacity-0 hover:opacity-100"
-      : aktifItem
-        ? "bg-white/15"
-        : "opacity-85 hover:bg-white/10 hover:opacity-100";
+    aktifItem
+      ? "bg-white/14 text-current shadow-[inset_0_1px_0_rgb(255_255_255/0.08)]"
+      : "text-current opacity-75 hover:bg-white/10 hover:opacity-100";
 
   return (
-    <nav ref={navRef} className="hidden items-center gap-0.5 lg:flex" aria-label="Menu utama">
+    <nav ref={navRef} className="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
       {menu.map((item, indeks) => {
         const punyaAnak = Boolean(item.children && item.children.length > 0);
         const iniTerbuka = terbuka === item.href;
@@ -128,9 +124,13 @@ export function MenuUtama({ menu, varian = "esensi" }: { menu: PublicNavItem[]; 
 
             <div
               id={idPanel}
-              className={`absolute top-full z-50 pt-2 transition-opacity duration-150 ${
+              className={`absolute top-full z-50 pt-2 transition-all duration-200 ${
                 rataKanan ? "right-0" : "left-0"
-              } ${iniTerbuka ? "visible opacity-100" : "invisible opacity-0"}`}
+              } ${
+                iniTerbuka
+                  ? "visible translate-y-0 opacity-100"
+                  : "invisible -translate-y-1 opacity-0"
+              }`}
             >
               <ul
                 className={`w-max max-w-[calc(100vw-2rem)] min-w-60 space-y-0.5 border p-2 shadow-xl ${
@@ -146,7 +146,7 @@ export function MenuUtama({ menu, varian = "esensi" }: { menu: PublicNavItem[]; 
                       href={anak.href}
                       aria-current={aktif(anak.href) ? "page" : undefined}
                       onClick={tutup}
-                      className={`block rounded-md px-3 py-2.5 text-sm whitespace-nowrap transition-colors hover:bg-accent ${
+                      className={`block rounded-lg px-3 py-2.5 text-sm whitespace-nowrap transition-colors hover:bg-accent ${
                         aktif(anak.href)
                           ? "bg-accent font-semibold text-[var(--pub-primary-text)]"
                           : ""

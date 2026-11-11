@@ -1,6 +1,6 @@
 "use client";
 
-import { Landmark, LogOut, Menu as MenuIcon, UserRound } from "lucide-react";
+import { ChevronDown, Landmark, LogOut, Menu as MenuIcon, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
@@ -35,13 +35,23 @@ export interface ShellDesa {
 
 function Brand({ desa }: { desa: ShellDesa }) {
   return (
-    <div className="flex items-center gap-2.5 px-3 py-1">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-        <Landmark className="size-5" />
+    <div className="flex items-center gap-3 px-5">
+      <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--brand)] text-[var(--brand-foreground)] shadow-[0_10px_24px_-14px_var(--brand)]">
+        {desa.logo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- logo diunggah dinamis
+          <img src={desa.logo} alt="" className="size-full object-contain p-1.5" />
+        ) : (
+          <Landmark className="size-5" aria-hidden="true" />
+        )}
       </div>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold">{desa.nama}</p>
-        <p className="truncate text-xs text-muted-foreground">{APP_NAME}</p>
+        <p className="text-[10px] font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+          Pemerintah Desa
+        </p>
+        <p className="mt-0.5 truncate text-sm leading-tight font-bold tracking-[-0.01em]">
+          {desa.nama}
+        </p>
+        <p className="mt-1 truncate text-[10px] text-muted-foreground">{APP_NAME}</p>
       </div>
     </div>
   );
@@ -57,9 +67,22 @@ function Sidebar({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col gap-4 py-4">
+    <div className="relative flex h-full flex-col py-5">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--brand)_12%,transparent),transparent_70%)]"
+      />
       <Brand desa={desa} />
-      <nav aria-label="Navigasi utama" className="flex-1 overflow-y-auto px-2" onClick={onNavigate}>
+
+      <p className="mt-7 px-5 text-[10px] font-semibold tracking-[0.16em] text-muted-foreground/80 uppercase">
+        Menu utama
+      </p>
+
+      <nav
+        aria-label="Navigasi utama"
+        className="relative mt-2 flex-1 overflow-y-auto px-3 pb-4"
+        onClick={onNavigate}
+      >
         <SidebarNav items={menu} />
       </nav>
     </div>
@@ -73,27 +96,45 @@ function initials(name: string): string {
 
 function Header({ user, onOpenSidebar }: { user: ShellUser; onOpenSidebar: () => void }) {
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-black/[0.06] bg-white/80 px-4 backdrop-blur-xl supports-[backdrop-filter]:bg-white/70 md:px-6">
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="rounded-xl md:hidden"
         onClick={onOpenSidebar}
         aria-label="Buka menu"
       >
         <MenuIcon className="size-5" />
       </Button>
 
+      <span className="truncate text-sm font-semibold md:hidden">{APP_NAME}</span>
+
+      <div className="hidden items-center gap-2 md:flex">
+        <span className="relative flex size-2" aria-hidden="true">
+          <span className="absolute inline-flex size-full rounded-full bg-[var(--brand)] opacity-25" />
+          <span className="relative inline-flex size-2 rounded-full bg-[var(--brand)]" />
+        </span>
+        <span className="text-xs font-medium text-muted-foreground">Ruang kerja aktif</span>
+      </div>
+
       <div className="flex-1" />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="gap-2 px-2">
-            <Avatar className="size-7">
-              <AvatarFallback className="text-xs">{initials(user.name)}</AvatarFallback>
+          <Button variant="ghost" className="h-10 gap-2 rounded-xl px-2" aria-label="Menu pengguna">
+            <Avatar className="size-8 ring-2 ring-[var(--brand-soft)]">
+              <AvatarFallback className="bg-[var(--brand)] text-[11px] font-semibold text-[var(--brand-foreground)]">
+                {initials(user.name)}
+              </AvatarFallback>
             </Avatar>
-            <span className="hidden text-sm font-medium sm:inline">{user.name}</span>
+            <span className="hidden max-w-36 truncate text-sm font-medium sm:inline">
+              {user.name}
+            </span>
+            <ChevronDown
+              className="hidden size-3.5 text-muted-foreground sm:block"
+              aria-hidden="true"
+            />
           </Button>
         </DropdownMenuTrigger>
 
@@ -156,12 +197,12 @@ export function AppShell({
     <div className="flex min-h-svh w-full">
       <SkipLink />
 
-      <aside className="hidden w-72 shrink-0 border-r bg-sidebar md:block">
+      <aside className="hidden w-[17.5rem] shrink-0 overflow-hidden border-r border-black/[0.06] bg-[var(--warm-paper)] md:block">
         <Sidebar menu={menu} desa={desa} />
       </aside>
 
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-72 p-0">
+        <SheetContent side="left" className="w-[17.5rem] bg-[var(--warm-paper)] p-0">
           <SheetTitle className="sr-only">Navigasi utama</SheetTitle>
           <SheetDescription className="sr-only">
             Pilih menu untuk berpindah halaman.
@@ -172,8 +213,12 @@ export function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <Header user={user} onOpenSidebar={() => setMobileOpen(true)} />
-        <main id="konten-utama" tabIndex={-1} className="flex-1 p-4 md:p-6">
-          {children}
+        <main
+          id="konten-utama"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[100rem] flex-1 p-4 md:p-6 lg:p-8"
+        >
+          <div className="ui-fade">{children}</div>
         </main>
       </div>
     </div>

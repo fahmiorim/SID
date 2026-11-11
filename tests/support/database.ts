@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { mkdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { hashPassword } from "better-auth/crypto";
@@ -1661,6 +1661,27 @@ export async function bacaPengaturanLampiranUji(kategori: string): Promise<{
   });
 }
 
+/** Setel batas ukuran sementara untuk kategori lampiran tertentu. */
+export async function setelBatasUkuranLampiranUji(
+  kategori: string,
+  maxSizeBytes: number,
+): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const villageId = Number(users[0]?.village_id);
+    if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    await pool.execute(
+      `INSERT INTO media_settings (village_id, kategori, max_size_bytes)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE max_size_bytes = VALUES(max_size_bytes)`,
+      [villageId, kategori, maxSizeBytes],
+    );
+  });
+}
+
 /** Pulihkan override pengaturan lampiran ke keadaan sebelum uji. */
 export async function pulihkanPengaturanLampiranUji(
   kategori: string,
@@ -1709,6 +1730,8 @@ export async function buatSuratUjiDenganStatus(input: {
   status: "draft" | "verifikasi" | "issued";
   jenis: string;
   pemohon?: string;
+  /** Keperluan khusus, mis. penanda pencarian untuk uji paginasi. */
+  purpose?: string;
 }): Promise<{ id: number; nomor: string }> {
   return denganPool(async (pool) => {
     const [users] = await pool.query<RowDataPacket[]>(
@@ -1728,13 +1751,14 @@ export async function buatSuratUjiDenganStatus(input: {
       `INSERT INTO letters
          (village_id, type_id, type_name, number, status, letter_date, year, purpose,
           pemohon, issued_at)
-       VALUES (?, ?, ?, ?, ?, '2026-11-10', 2026, 'Uji E2E unduh PDF per status', ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, '2026-11-10', 2026, ?, ?, ?)`,
       [
         villageId,
         typeId,
         input.jenis,
         input.nomor,
         input.status,
+        input.purpose ?? "Uji E2E unduh PDF per status",
         input.pemohon ?? null,
         input.status === "issued" ? new Date() : null,
       ],
@@ -2438,5 +2462,160 @@ export async function adaAuditEventUji(event: string, resourceId: string): Promi
       [event, resourceId],
     );
     return Boolean(rows[0]);
+  });
+}
+
+/** Urutan shortcut beranda milik admin E2E (untuk dipulihkan setelah uji). */
+export async function bacaShortcutAdmin(): Promise<string[]> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT ps.href FROM pengguna_shortcut ps
+         JOIN users u ON u.id = ps.user_id
+        WHERE u.username = 'admin'
+        ORDER BY ps.urut, ps.id`,
+    );
+    return rows.map((row) => String(row.href));
+  });
+}
+
+/** Ganti seluruh shortcut admin E2E agar uji drag-and-drop tidak meninggalkan data. */
+export async function setelShortcutAdmin(hrefs: readonly string[]): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM users WHERE username = 'admin' LIMIT 1",
+    );
+    const userId = users[0]?.id;
+    if (!userId) throw new Error("Akun admin E2E tidak ditemukan.");
+
+    await pool.execute("DELETE FROM pengguna_shortcut WHERE user_id = ?", [userId]);
+    for (const [urut, href] of hrefs.entries()) {
+      await pool.execute("INSERT INTO pengguna_shortcut (user_id, href, urut) VALUES (?, ?, ?)", [
+        userId,
+        href,
+        urut,
+      ]);
+    }
+  });
+}
+
+/** Lampiran disposisi terakhir, untuk memeriksa nama berkas yang disimpan. */
+export async function bacaLampiranDisposisiTerakhir(
+  nomor: string,
+): Promise<{ path: string; name: string; mime: string; size: number }[]> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT d.lampiran FROM incoming_letter_dispositions d
+         JOIN incoming_letters s ON s.id = d.incoming_letter_id
+        WHERE s.letter_number = ?
+        ORDER BY d.id DESC LIMIT 1`,
+      [nomor],
+    );
+    const raw = rows[0]?.lampiran;
+    if (!raw) return [];
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    return Array.isArray(parsed) ? parsed : [];
+  });
+}
+
+/** Nilai baris penanda yang dibuat oleh SQL restore E2E. */
+export async function bacaPenandaRestoreUji(): Promise<string | null> {
+  return denganPool(async (pool) => {
+    const [tables] = await pool.query<RowDataPacket[]>("SHOW TABLES LIKE 'e2e_restore_uji'");
+    if (tables.length === 0) return null;
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT catatan FROM e2e_restore_uji WHERE id = 1 LIMIT 1",
+    );
+    return rows[0]?.catatan === undefined ? null : String(rows[0].catatan);
+  });
+}
+
+/** Hapus tabel penanda restore E2E. */
+export async function hapusPenandaRestoreUji(): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DROP TABLE IF EXISTS e2e_restore_uji");
+  });
+}
+
+/** Sisipkan kode OTP fixture untuk login faktor kedua. */
+export async function sisipkanKodeOtpUji(username: string, kode: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [users] = await pool.query<RowDataPacket[]>(
+      "SELECT id, email FROM users WHERE username = ? LIMIT 1",
+      [username],
+    );
+    const user = users[0];
+    if (!user?.id || !user.email) throw new Error(`Akun OTP ${username} tidak ditemukan.`);
+
+    await pool.execute("DELETE FROM login_otp WHERE user_id = ?", [user.id]);
+    await pool.execute(
+      `INSERT INTO login_otp (user_id, kanal, target, kode_hash, kedaluwarsa, percobaan)
+       VALUES (?, 'email', ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE), 0)`,
+      [user.id, String(user.email), createHash("sha256").update(kode).digest("hex")],
+    );
+  });
+}
+
+/** Hapus kode OTP fixture milik akun uji. */
+export async function hapusKodeOtpUji(username: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute(
+      "DELETE FROM login_otp WHERE user_id = (SELECT id FROM users WHERE username = ? LIMIT 1)",
+      [username],
+    );
+  });
+}
+
+/** Setel status OTP login akun uji tanpa lewat UI (dipakai untuk pemulihan). */
+export async function setelOtpLoginUji(username: string, aktif: boolean): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("UPDATE users SET otp_login_aktif = ? WHERE username = ?", [
+      aktif,
+      username,
+    ]);
+  });
+}
+
+/** Buat akun staf sementara khusus uji login OTP, tanpa menyentuh sesi admin. */
+export async function buatPenggunaOtpUji(): Promise<{
+  username: string;
+  email: string;
+  password: string;
+}> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [roles] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM roles WHERE village_id = ? AND slug = 'operator' LIMIT 1",
+      [villageId],
+    );
+    const roleId = roles[0]?.id;
+    if (!roleId) throw new Error("Role operator E2E tidak ditemukan.");
+
+    const suffix = randomUUID().slice(0, 8);
+    const username = `otp-e2e-${suffix}`;
+    const email = `${username}@e2e.invalid`;
+    const password = "Otp#12345";
+    const userId = randomUUID();
+
+    await pool.execute(
+      `INSERT INTO users
+         (id, name, email, email_verified, username, display_username, village_id,
+          role_id, active, must_change_pin)
+       VALUES (?, ?, ?, 1, ?, ?, ?, ?, 1, 0)`,
+      [userId, `Pengguna OTP ${suffix}`, email, username, username, villageId, roleId],
+    );
+    await pool.execute(
+      `INSERT INTO accounts (id, account_id, provider_id, user_id, password)
+       VALUES (?, ?, 'credential', ?, ?)`,
+      [randomUUID(), userId, userId, await hashPassword(password)],
+    );
+
+    return { username, email, password };
+  });
+}
+
+/** Hapus akun OTP sementara beserta sesi dan kodenya. */
+export async function hapusPenggunaOtpUji(username: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM users WHERE username = ?", [username]);
   });
 }

@@ -41,6 +41,48 @@ test(
 );
 
 test(
+  "letter list paginates on the server and keeps filters in page links",
+  { session: "admin", timeout: 90_000 },
+  async ({ app, screen, browser }) => {
+    const cap = Date.now().toString().slice(-8);
+    const purpose = `E2E Paginasi ${cap}`;
+    const dibuat: { id: number; nomor: string }[] = [];
+
+    try {
+      for (let i = 1; i <= 21; i++) {
+        dibuat.push(
+          await buatSuratUjiDenganStatus({
+            nomor: `E2E-PAGE-${cap}-${String(i).padStart(2, "0")}`,
+            status: "draft",
+            jenis: "Surat Keterangan Uji",
+            purpose,
+          }),
+        );
+      }
+
+      await app.open(`/persuratan/surat?q=${encodeURIComponent(purpose)}`);
+      await expect(screen.getByText("Menampilkan 1–20 dari 21 surat")).toBeVisible();
+      await expect(screen.getByText("1 / 2")).toBeVisible();
+      expect(await screen.getByRole("button", { name: /^Aksi surat / }).count()).toBe(20);
+
+      await screen.getByRole("link", { name: "Berikutnya" }).tap();
+      await expect(browser).toHaveURL(/page=2/);
+      await expect(screen.getByText("Menampilkan 21–21 dari 21 surat")).toBeVisible();
+      await expect(screen.getByText("2 / 2")).toBeVisible();
+      expect(await screen.getByRole("button", { name: /^Aksi surat / }).count()).toBe(1);
+
+      // Kembali ke halaman pertama tanpa menyisakan parameter page.
+      await screen.getByRole("link", { name: "Sebelumnya" }).tap();
+      await expect(browser).toHaveURL(/\/persuratan\/surat\?.*q=/);
+      await expect(browser).not.toHaveURL(/page=2/);
+      await expect(screen.getByText("Menampilkan 1–20 dari 21 surat")).toBeVisible();
+    } finally {
+      for (const surat of dibuat) await hapusSuratDariId(surat.id);
+    }
+  },
+);
+
+test(
   "letter number archive prevents duplicate numbers",
   { session: "admin" },
   async ({ app, screen }) => {

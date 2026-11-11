@@ -27,7 +27,7 @@
  * Dipakai bersama oleh beranda, header bagian, dan panel samping agar kedalaman
  * permukaan konsisten alih-alih campuran kotak bergaris 1 px tanpa bayangan.
  */
-[data-theme="esensi"] .tema-kartu {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-kartu {
   background-color: var(--card);
   border: 1px solid var(--pub-garis);
   border-radius: calc(var(--pub-radius) * 1.15);
@@ -38,7 +38,7 @@
     border-color 200ms ease;
 }
 
-[data-theme="esensi"] .tema-kartu-interaktif:hover {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-kartu-interaktif:hover {
   border-color: color-mix(in srgb, var(--pub-primary) 32%, transparent);
   box-shadow: var(--pub-bayang-naik);
   transform: translateY(-2px);
@@ -49,7 +49,7 @@
  * Tujuannya memberi satu bidang fokus yang lebih "mahal" daripada putih polos,
  * sambil tetap menyisakan kontras tinggi untuk teks.
  */
-[data-theme="esensi"] .tema-hero {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-hero {
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -78,7 +78,7 @@
 }
 
 /** Cahaya lembut di belakang panel hero; murni dekoratif. */
-[data-theme="esensi"] .tema-hero-glow {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-hero-glow {
   position: absolute;
   border-radius: 999px;
   filter: blur(48px);
@@ -91,7 +91,7 @@
  * navigasi: arah gelapnya ke warna sekunder desa agar kontras teks tetap aman
  * (tidak pernah lebih terang daripada warna dasar).
  */
-[data-theme="esensi"] .tema-gradien {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-gradien {
   background-image: linear-gradient(
     135deg,
     var(--pub-primary-text) 0%,
@@ -103,7 +103,7 @@
  * Judul hero bergradasi: tetap gelap dari ujung ke ujung karena warna sekunder
  * dicampur hitam, sehingga kontrasnya tidak bergantung pada warna desa.
  */
-[data-theme="esensi"] .tema-judul-gradien {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-judul-gradien {
   background-image: linear-gradient(
     112deg,
     var(--pub-primary-text) 0%,
@@ -116,7 +116,7 @@
 }
 
 /** Garis aksen bergradasi untuk judul bagian. */
-[data-theme="esensi"] .tema-garis-gradien {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-garis-gradien {
   background-image: linear-gradient(
     90deg,
     var(--pub-primary),
@@ -125,7 +125,7 @@
 }
 
 /** Chip label kecil di atas gambar/kartu. */
-[data-theme="esensi"] .tema-chip {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-chip {
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
@@ -173,7 +173,7 @@
 }
 
 /** Kelas kecil yang dipakai bersama beberapa bagian tema. */
-[data-theme="esensi"] .tema-link-primary {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-link-primary {
   color: var(--pub-primary-text);
 }
 
@@ -221,24 +221,24 @@
   }
 }
 
-[data-theme="esensi"] #konten-utama > * {
+:is([data-theme="esensi"], [data-theme="natra"]) #konten-utama > * {
   animation: tema-masuk-halus 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-theme="esensi"] #konten-utama > * {
+  :is([data-theme="esensi"], [data-theme="natra"]) #konten-utama > * {
     animation: none;
   }
 }
 
 /** Bayangan kartu sedikit lebih modern dan lembut. */
-[data-theme="esensi"] .tema-kartu {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-kartu {
   box-shadow:
     0 1px 2px color-mix(in srgb, var(--foreground) 4%, transparent),
     0 8px 24px -16px color-mix(in srgb, var(--pub-primary) 28%, transparent);
 }
 
-[data-theme="esensi"] .tema-kartu-interaktif:hover {
+:is([data-theme="esensi"], [data-theme="natra"]) .tema-kartu-interaktif:hover {
   box-shadow:
     0 2px 4px color-mix(in srgb, var(--foreground) 5%, transparent),
     0 18px 40px -18px color-mix(in srgb, var(--pub-primary) 45%, transparent);

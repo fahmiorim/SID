@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, CheckCircle2, Loader2, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Printer, Upload } from "lucide-react";
 import Link from "next/link";
 import { useActionState } from "react";
 
@@ -26,6 +26,8 @@ export interface FormAjukanSuratProps {
   action?: typeof ajukanSuratWargaAction;
   tautanRiwayat?: string;
   tautanAjukanLain?: string;
+  /** Alamat printer kiosk (host:port) yang ditampilkan pada bukti cetak. */
+  printer?: string | null;
 }
 
 /** Form ajukan surat dengan isian dinamis + unggah syarat. */
@@ -34,6 +36,7 @@ export function FormAjukanSurat({
   action = ajukanSuratWargaAction,
   tautanRiwayat = "#riwayat",
   tautanAjukanLain = "/layanan-mandiri/surat",
+  printer = null,
 }: FormAjukanSuratProps) {
   const [state, formAction, isPending] = useActionState(action, idleActionState);
   const fieldErrors = state.status === "error" ? state.fieldErrors : undefined;
@@ -50,14 +53,32 @@ export function FormAjukanSurat({
             Nomor antrian Anda: <strong className="font-mono">{sukses.noAntrian}</strong>. Pantau
             status di halaman ini atau menu Pesan.
           </p>
-          <div className="flex flex-wrap gap-2">
+          {printer ? (
+            <p className="text-sm">
+              Printer tujuan: <span className="font-mono">{printer}</span>
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2 print:hidden">
             <Button asChild size="sm">
               <Link href={tautanRiwayat}>Lihat riwayat</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href={tautanAjukanLain}>Ajukan surat lain</Link>
             </Button>
+            {printer ? (
+              <Button type="button" size="sm" variant="outline" onClick={() => window.print()}>
+                <Printer className="size-4" />
+                Cetak bukti
+              </Button>
+            ) : null}
           </div>
+          {printer ? (
+            <div className="hidden print:block">
+              <p>Bukti permohonan surat</p>
+              <p>Nomor antrian: {sukses.noAntrian}</p>
+              <p>Printer tujuan: {printer}</p>
+            </div>
+          ) : null}
         </AlertDescription>
       </Alert>
     );

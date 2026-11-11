@@ -26,6 +26,7 @@ export interface AnjunganFixture {
     uuid: string;
     uuidTanpaIzin: string;
     namaTanpaIzin: string;
+    ipAddressPortPrinter: string;
   };
   jumlahPermohonan(): Promise<number>;
   hapus(): Promise<void>;
@@ -55,6 +56,7 @@ export async function buatFixtureAnjungan(): Promise<AnjunganFixture> {
   const namaJenis = `Surat Kiosk ${run}`;
   const uuid = randomUUID();
   const uuidTanpaIzin = randomUUID();
+  const ipAddressPortPrinter = "127.0.0.1:9100";
 
   let desaLainId: number | null = null;
   let pendudukId: number | null = null;
@@ -134,9 +136,9 @@ export async function buatFixtureAnjungan(): Promise<AnjunganFixture> {
       const [hasil] = await pool.execute<ResultSetHeader>(
         `INSERT INTO anjungan
            (village_id, nama, uuid, aktif, urutan, keyboard, orientasi_layar,
-            permohonan_surat_tanpa_akun, status)
-         VALUES (?, ?, ?, 1, 0, 0, 1, ?, 'aktif')`,
-        [input.villageId, input.nama, input.uuid, input.izinSurat],
+            permohonan_surat_tanpa_akun, ip_address_port_printer, status)
+         VALUES (?, ?, ?, 1, 0, 0, 1, ?, ?, 'aktif')`,
+        [input.villageId, input.nama, input.uuid, input.izinSurat, ipAddressPortPrinter],
       );
       return hasil.insertId;
     }
@@ -172,6 +174,7 @@ export async function buatFixtureAnjungan(): Promise<AnjunganFixture> {
         uuid,
         uuidTanpaIzin,
         namaTanpaIzin,
+        ipAddressPortPrinter,
       },
       async jumlahPermohonan() {
         if (jenisId === null) return 0;

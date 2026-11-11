@@ -146,6 +146,7 @@ export default async function AnjunganPermohonanPage({
               action={ajukanSuratKioskAction}
               tautanRiwayat={`${JALUR_PERMOHONAN}#riwayat`}
               tautanAjukanLain={JALUR_PERMOHONAN}
+              printer={perangkat.ipAddressPortPrinter}
             />
           </CardContent>
         </Card>

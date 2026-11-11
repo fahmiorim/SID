@@ -9,6 +9,6 @@ test(
     await app.open("/desa/peta");
     await expect(browser).toHaveURL("/desa/peta");
     await expect(browser.locator("body")).toBeVisible();
-    await expect(screen.getByRole("heading", { name: /Peta Desa/i })).toBeVisible();
+    await expect(screen.getByRole("heading", { name: /^Peta /i })).toBeVisible();
   },
 );

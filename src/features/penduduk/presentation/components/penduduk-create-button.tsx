@@ -14,7 +14,10 @@ export function PendudukCreateButton({ reference }: { reference: PendudukReferen
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button
+        onClick={() => setOpen(true)}
+        className="bg-[var(--brand)] text-[var(--brand-foreground)] hover:bg-[var(--brand-strong)]"
+      >
         <Plus className="size-4" />
         Tambah Penduduk
       </Button>

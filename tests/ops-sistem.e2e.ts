@@ -1,7 +1,19 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
-import { buatPesanMailboxUji, hapusPesanMailboxDariSubjek } from "./support/database";
+import {
+  bacaPenandaRestoreUji,
+  bacaShortcutAdmin,
+  buatPenggunaOtpUji,
+  buatPesanMailboxUji,
+  hapusKodeOtpUji,
+  hapusPenandaRestoreUji,
+  hapusPenggunaOtpUji,
+  hapusPesanMailboxDariSubjek,
+  setelOtpLoginUji,
+  setelShortcutAdmin,
+  sisipkanKodeOtpUji,
+} from "./support/database";
 
 // Katalog: OS-OPS-002 — Shortcut personal di beranda: dialog berisi pilihan
 // menu, penyimpanan berjalan, dan kartu shortcut tetap tampil setelah muat ulang.
@@ -26,6 +38,49 @@ test(
     await app.open("/beranda");
     await expect(screen.getByRole("heading", { name: "Shortcut saya" })).toBeVisible();
     expect(await screen.getByRole("link", { name: "Buka" }).count()).toBe(jumlahKartu);
+  },
+);
+
+// Katalog: OS-OPS-002 — Urutan shortcut dapat diubah dengan drag-and-drop,
+// disimpan, dan tetap sama setelah beranda dimuat ulang.
+test(
+  "shortcut beranda: drag-and-drop mengubah urutan dan tersimpan",
+  { session: "admin", timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    const awal = await bacaShortcutAdmin();
+
+    try {
+      await app.open("/beranda");
+      const tautan = screen.getByRole("link", { name: "Buka" });
+      const jumlah = await tautan.count();
+      const urutanAwal: string[] = [];
+      for (let i = 0; i < jumlah; i++) {
+        const href = await tautan.nth(i).getAttribute("href");
+        if (href) urutanAwal.push(href);
+      }
+      expect(urutanAwal.length).toBeGreaterThanOrEqual(2);
+
+      await screen.getByRole("button", { name: /Atur shortcut/i }).tap();
+      const dialog = screen.getByRole("dialog", { name: "Atur shortcut beranda" });
+      await expect(dialog).toBeVisible();
+
+      const baris = browser.locator('[draggable="true"]');
+      expect(await baris.count()).toBe(urutanAwal.length);
+      await baris.nth(0).dragTo(baris.nth(urutanAwal.length - 1));
+
+      await screen.getByRole("button", { name: "Simpan shortcut" }).tap();
+      await expect(screen.getByText("Shortcut beranda disimpan.")).toBeVisible({
+        timeout: 10_000,
+      });
+
+      await app.open("/beranda");
+      const tautanBaru = screen.getByRole("link", { name: "Buka" });
+      expect(await tautanBaru.count()).toBe(urutanAwal.length);
+      expect(await tautanBaru.nth(0).getAttribute("href")).toBe(urutanAwal[1]);
+      expect(await tautanBaru.nth(urutanAwal.length - 1).getAttribute("href")).toBe(urutanAwal[0]);
+    } finally {
+      await setelShortcutAdmin(awal);
+    }
   },
 );
 
@@ -64,31 +119,67 @@ test(
   },
 );
 
-// Katalog: OS-OPS-004 — OTP login sebagai faktor kedua: aktivasi dari halaman
-// profil mengubah status, dan dapat dinonaktifkan kembali.
+// Katalog: OS-OPS-004 — OTP login sebagai faktor kedua: aktivasi, keluar, login
+// dengan kode, dan penonaktifan. Akun sementara dipakai agar sesi admin yang
+// tersimpan untuk test lain tidak ikut di-logout.
 test(
-  "pengaturan profil: OTP login dapat diaktifkan dan dinonaktifkan",
-  { session: "admin", timeout: 60_000 },
+  "pengaturan profil: OTP login dapat diaktifkan, dipakai masuk, lalu dinonaktifkan",
+  { timeout: 120_000 },
   async ({ app, screen, browser }) => {
-    await app.open("/pengaturan/profil");
-    await expect(screen.getByRole("heading", { name: "Profil Saya" })).toBeVisible();
-    await expect(screen.getByText("OTP Login")).toBeVisible();
+    const pengguna = await buatPenggunaOtpUji();
+    const kode = "246810";
 
-    const tombolAktifkan = screen.getByRole("button", { name: "Aktifkan OTP" });
-    if ((await tombolAktifkan.count()) === 0) {
-      // Seed admin tanpa nomor HP/email hanya boleh menampilkan penjelasan.
-      await expect(screen.getByText(/Nomor HP dan email belum tersedia/)).toBeVisible();
-      return;
+    async function isiCaptcha() {
+      const labelCaptcha = await browser.locator('label[for="jawaban"]').textContent();
+      const cocok = labelCaptcha?.match(/(\d+)\s*([+\u2212-])\s*(\d+)/);
+      if (!cocok) throw new Error(`Label captcha tidak dikenali: ${labelCaptcha}`);
+      const jawaban =
+        cocok[2] === "+"
+          ? Number(cocok[1]) + Number(cocok[3])
+          : Number(cocok[1]) - Number(cocok[3]);
+      await browser.locator('input[name="jawaban"]').fill(String(jawaban));
     }
 
-    await tombolAktifkan.tap();
-    await expect(browser).toHaveURL(/otp=aktif/);
-    await expect(screen.getByText("OTP login diaktifkan.")).toBeVisible();
-    await expect(screen.getByText("Aktif", { exact: true }).last()).toBeVisible();
+    try {
+      await app.clearState();
+      await app.open("/masuk");
+      await screen.getByLabel("Username atau NIK").fill(pengguna.username);
+      await screen.getByLabel("Kata sandi / PIN").fill(pengguna.password);
+      await isiCaptcha();
+      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await expect(browser).toHaveURL("/beranda", { timeout: 15_000 });
 
-    await screen.getByRole("button", { name: "Nonaktifkan OTP" }).tap();
-    await expect(browser).toHaveURL(/otp=nonaktif/);
-    await expect(screen.getByText("OTP login dinonaktifkan.")).toBeVisible();
+      await app.open("/pengaturan/profil");
+      await expect(screen.getByRole("heading", { name: "Profil Saya" })).toBeVisible();
+      await expect(screen.getByText("OTP Login")).toBeVisible();
+      await screen.getByRole("button", { name: "Aktifkan OTP" }).tap();
+      await expect(browser).toHaveURL(/otp=aktif/);
+      await expect(screen.getByText("OTP login diaktifkan.")).toBeVisible();
+      await expect(screen.getByText("Aktif", { exact: true }).last()).toBeVisible();
+
+      // Kode fixture menggantikan pengiriman provider; yang diuji adalah
+      // verifikasi faktor kedua dan pembuatan sesi setelah kode benar.
+      await sisipkanKodeOtpUji(pengguna.username, kode);
+      await screen.getByRole("button", { name: "Menu pengguna" }).tap();
+      await screen.getByRole("menuitem", { name: "Keluar" }).tap();
+      await expect(browser).toHaveURL(/\/masuk/);
+
+      await screen.getByLabel("Username atau NIK").fill(pengguna.username);
+      await screen.getByLabel("Kata sandi / PIN").fill(pengguna.password);
+      await isiCaptcha();
+      await screen.getByLabel("Kode OTP (bila aktif)").fill(kode);
+      await screen.getByRole("button", { name: "Masuk" }).tap();
+      await expect(browser).toHaveURL("/beranda", { timeout: 15_000 });
+
+      await app.open("/pengaturan/profil");
+      await screen.getByRole("button", { name: "Nonaktifkan OTP" }).tap();
+      await expect(browser).toHaveURL(/otp=nonaktif/);
+      await expect(screen.getByText("OTP login dinonaktifkan.")).toBeVisible();
+    } finally {
+      await hapusKodeOtpUji(pengguna.username);
+      await setelOtpLoginUji(pengguna.username, false);
+      await hapusPenggunaOtpUji(pengguna.username);
+    }
   },
 );
 
@@ -186,6 +277,27 @@ test(
     });
     expect(restore.status).toBe(400);
     expect(restore.isi).toMatch(/\.sql/i);
+
+    // Berkas SQL valid dijalankan oleh mysql, skema inti diverifikasi ulang,
+    // lalu route mengalihkan ke halaman dengan penanda restored=1.
+    try {
+      const restoreValid = await browser.evaluate(async () => {
+        const sql = [
+          "CREATE TABLE IF NOT EXISTS e2e_restore_uji (id INT PRIMARY KEY, catatan VARCHAR(50) NOT NULL);",
+          "REPLACE INTO e2e_restore_uji (id, catatan) VALUES (1, 'restore-valid');",
+        ].join("\n");
+        const data = new FormData();
+        data.set("berkas", new File([sql], "restore-valid.sql", { type: "application/sql" }));
+        data.set("konfirmasi", "1");
+        const respons = await fetch("/api/database/restore", { method: "POST", body: data });
+        return { status: respons.status, url: respons.url, isi: await respons.text() };
+      });
+      expect(restoreValid.status).toBe(200);
+      expect(restoreValid.url).toContain("restored=1");
+      expect(await bacaPenandaRestoreUji()).toBe("restore-valid");
+    } finally {
+      await hapusPenandaRestoreUji();
+    }
   },
 );
 

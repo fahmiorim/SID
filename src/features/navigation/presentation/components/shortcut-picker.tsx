@@ -84,6 +84,10 @@ export function ShortcutPicker({
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
+          {/* Urutan hidden mengikuti hasil drag, bukan urutan opsi di DOM. */}
+          {ordered.map((href) => (
+            <input key={href} type="hidden" name="href" value={href} />
+          ))}
           <p className="text-sm text-muted-foreground">
             Pilih hingga enam menu yang sering Anda pakai. Seret untuk mengurutkan. Bila tidak ada
             yang dipilih, beranda memakai tiga menu pertama.
@@ -114,7 +118,6 @@ export function ShortcutPicker({
                   )}
                   <Checkbox
                     id={`shortcut-${item.href}`}
-                    name="href"
                     value={item.href}
                     checked={isSelected}
                     onCheckedChange={(checked) => {

@@ -16,6 +16,10 @@ export const SURAT_DINAS_RESOURCE = RESOURCES.suratDinas;
 // --- Status surat ----------------------------------------------------------
 
 export const LETTER_STATUSES = ["draft", "verifikasi", "issued", "cancelled"] as const;
+
+/** Ukuran halaman daftar surat; dipakai halaman dan use case agar konsisten. */
+export const SURAT_PER_HALAMAN = 20;
+export const SURAT_MAKS_PER_HALAMAN = 100;
 export type LetterStatus = (typeof LETTER_STATUSES)[number];
 
 export const LETTER_STATUS_LABELS: Readonly<Record<LetterStatus, string>> = {
