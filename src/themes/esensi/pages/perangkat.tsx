@@ -69,22 +69,41 @@ export function EsensiPerangkat({ ctx, perangkat }: PerangkatProps) {
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {perangkat.map((orang) => {
               const foto = urlMedia(orang.foto);
+              const inisial =
+                orang.nama
+                  .trim()
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((bagian) => bagian.charAt(0))
+                  .join("")
+                  .toUpperCase() || "?";
               return (
-                <ThemeCard as="li" key={orang.id}>
+                <ThemeCard
+                  as="li"
+                  key={orang.id}
+                  className="flex items-center gap-4 p-4 sm:block sm:p-0"
+                >
                   {foto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={foto}
                       alt={orang.nama}
-                      className="aspect-square w-full object-cover"
+                      className="size-24 shrink-0 rounded-[calc(var(--pub-radius)*0.8)] object-cover sm:aspect-square sm:h-auto sm:w-full sm:rounded-none"
                     />
                   ) : (
-                    <div className="flex aspect-square w-full items-center justify-center bg-muted text-3xl font-semibold text-muted-foreground">
-                      {(orang.nama.charAt(0) || "?").toUpperCase()}
+                    <div
+                      className="flex size-24 shrink-0 items-center justify-center rounded-[calc(var(--pub-radius)*0.8)] text-2xl font-bold text-white sm:aspect-square sm:h-auto sm:w-full sm:rounded-none sm:text-4xl"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(140deg, var(--pub-primary-text), color-mix(in srgb, var(--pub-primary) 68%, #000000))",
+                      }}
+                      aria-hidden="true"
+                    >
+                      {inisial}
                     </div>
                   )}
-                  <div className="p-4">
-                    <p className="font-medium">{orang.nama}</p>
+                  <div className="min-w-0 sm:p-4">
+                    <p className="leading-snug font-medium">{orang.nama}</p>
                     <p className="tema-link-primary text-sm">{orang.jabatan ?? "—"}</p>
                     {orang.nip ? (
                       <p className="mt-1 text-xs text-muted-foreground">NIP {orang.nip}</p>

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { apiKeys } from "@/db/schema/api-keys";
 
-import { verifyApiKey } from "./api-key";
+import { hash, verifyApiKey } from "./api-key";
 
 type ApiKeyRecord = typeof apiKeys.$inferSelect;
 
@@ -13,9 +13,8 @@ export type AuthResult =
 export async function authenticateApiKey(key: string): Promise<AuthResult> {
   if (!key.startsWith("SID_")) return { ok: false, status: 401, message: "Kunci API tidak valid." };
 
-  const prefix = "SID_";
   const apiKeyRecord = await db.query.apiKeys.findFirst({
-    where: eq(apiKeys.prefix, prefix),
+    where: eq(apiKeys.hashedKey, hash(key).toString("hex")),
   });
 
   if (!apiKeyRecord) return { ok: false, status: 401, message: "Kunci API tidak valid." };

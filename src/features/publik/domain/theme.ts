@@ -291,7 +291,13 @@ export function themeCssVars(opsi: ThemeOptions): Record<string, string> {
     "--pub-primary": opsi.warnaPrimer,
     "--pub-primary-foreground": kontrasTeks(opsi.warnaPrimer),
     "--pub-primary-text": warnaTeksAksen(opsi.warnaPrimer),
+    // Teks untuk permukaan yang memakai `--pub-primary-text` sebagai latar
+    // (header berwarna, bilah navigasi). Dihitung dari latar tersebut, bukan
+    // dari warna primer asli, agar palet terang tidak menghasilkan teks gelap
+    // di atas latar gelap.
+    "--pub-primary-text-foreground": kontrasTeks(warnaTeksAksen(opsi.warnaPrimer)),
     "--pub-secondary": opsi.warnaSekunder,
+    "--pub-secondary-foreground": kontrasTeks(opsi.warnaSekunder),
     "--pub-radius": `${opsi.kelengkungan}rem`,
     "--pub-font": fontFamily(opsi.font),
   };

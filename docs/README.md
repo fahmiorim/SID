@@ -9,7 +9,7 @@ Mulai dari dokumen kerja ini:
 5. [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md) — backlog teknis: urutan audit, perbaikan, dan pengujian.
 6. [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md) — target rebuild, pengecualian, dan snapshot acuan.
 
-Dokumen teknis tetap menjadi referensi implementasi: [`ARCHITECTURE.md`](./ARCHITECTURE.md) dan [`RUNBOOK-PEMULIHAN.md`](./RUNBOOK-PEMULIHAN.md). Bahan riset ada di [`riset/`](./riset/).
+Dokumen teknis tetap menjadi referensi implementasi: [`ARCHITECTURE.md`](./ARCHITECTURE.md) dan [`RUNBOOK-PEMULIHAN.md`](./RUNBOOK-PEMULIHAN.md). Bahan riset ada di [`riset/`](./riset/), termasuk [riset kompetitor SID](./riset/kompetitor/README.md).
 
 Versi katalog, paritas, roadmap, dan log sebelum audit disimpan utuh di [`arsip/status-sebelum-audit/`](./arsip/status-sebelum-audit/) sebagai riwayat. Gunakan arsip hanya untuk melihat keputusan/klaim pada waktu itu, **bukan** untuk menentukan scope/status terkini: katalog dan paritas aktif ada di atas, dan baris status per ID di `STATUS-MODUL.md` adalah sumber yang diperiksa test. Pengecualian scope saat ini: OpenDK, SMS, serta Covid-19 dan Vaksin Covid.
 

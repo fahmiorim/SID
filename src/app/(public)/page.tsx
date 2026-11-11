@@ -6,9 +6,11 @@ import {
   getStatistikDesa,
   listSuratTerbitTerbaru,
 } from "@/features/desa/application/statistik-desa";
+import { getLaporanApbdesPublik } from "@/features/keuangan/application/laporan-publik-use-cases";
 import { bacaPengaturan } from "@/features/pengaturan/application/pengaturan-use-cases";
 import {
   daftarBerita,
+  daftarPerangkatDesa,
   daftarSliderBeranda,
   daftarWidgetPublik,
   profilDesaPublik,
@@ -32,15 +34,18 @@ export default async function BerandaPage() {
 
   const pengaturan = await bacaPengaturan(desa.id);
 
-  const [statistik, surat, slider, berita, profil, widget, agenda] = await Promise.all([
-    getStatistikDesa(desa.id),
-    listSuratTerbitTerbaru(desa.id, 5),
-    daftarSliderBeranda(desa.id),
-    daftarBerita(desa.id, { limit: pengaturan.beritaBeranda }),
-    profilDesaPublik(desa.id),
-    daftarWidgetPublik(desa.id),
-    agendaMendatang(desa.id, 5),
-  ]);
+  const [statistik, surat, slider, berita, profil, widget, agenda, apbdes, perangkat] =
+    await Promise.all([
+      getStatistikDesa(desa.id),
+      listSuratTerbitTerbaru(desa.id, 5),
+      daftarSliderBeranda(desa.id),
+      daftarBerita(desa.id, { limit: pengaturan.beritaBeranda }),
+      profilDesaPublik(desa.id),
+      daftarWidgetPublik(desa.id),
+      agendaMendatang(desa.id, 5),
+      getLaporanApbdesPublik(desa.id),
+      daftarPerangkatDesa(desa.id),
+    ]);
 
   const Home = tema.home;
 
@@ -54,6 +59,8 @@ export default async function BerandaPage() {
       berita={berita}
       surat={surat}
       agenda={agenda}
+      apbdes={apbdes}
+      perangkat={perangkat}
     />
   );
 }

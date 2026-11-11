@@ -1,4 +1,5 @@
 import { bacaBerkasSyaratAdmin } from "@/features/layanan-mandiri/application/admin-use-cases";
+import { CSP_MEDIA_SANDBOX } from "@/features/publik/domain/media";
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { RESOURCES } from "@/features/rbac/domain/resources";
 import { getCurrentUser } from "@/lib/dal";
@@ -30,11 +31,14 @@ export async function GET(
     const berkas = await bacaBerkasSyaratAdmin(permohonanId, syarat);
     const nama = berkas.namaAsli.replace(/[^\w.\- ]+/g, "_") || "berkas";
 
+    const mime = berkas.mime || "application/octet-stream";
     return new Response(new Uint8Array(berkas.isi), {
       headers: {
-        "Content-Type": berkas.mime || "application/octet-stream",
+        "Content-Type": mime,
         "Content-Disposition": `inline; filename="${nama}"`,
         "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        ...(mime === "image/svg+xml" ? { "Content-Security-Policy": CSP_MEDIA_SANDBOX } : {}),
       },
     });
   } catch (error) {

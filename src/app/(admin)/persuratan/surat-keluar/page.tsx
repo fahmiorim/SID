@@ -1,4 +1,4 @@
-import { Send } from "lucide-react";
+import { History, Send } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -48,6 +48,12 @@ export default async function SuratKeluarPage({
         description="Buku agenda surat yang dikirim desa."
         actions={
           <div className="flex flex-wrap items-center gap-2 print:hidden">
+            <Button variant="outline" asChild>
+              <Link href="/persuratan/log-surat">
+                <History className="size-4" />
+                Log Surat
+              </Link>
+            </Button>
             <PrintButton />
             {canManage ? <SuratKeluarCreateButton classifications={classifications} /> : null}
           </div>

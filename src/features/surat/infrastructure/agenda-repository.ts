@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, like, max, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, like, max, or, type SQL } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -367,4 +367,88 @@ export async function listLogAgenda(villageId: number, type: "masuk" | "keluar",
       ),
     )
     .orderBy(desc(letterAgendaLogs.createdAt));
+}
+
+export interface LogSuratRow {
+  id: number;
+  type: string;
+  letterId: number;
+  action: string;
+  note: string | null;
+  actorId: string | null;
+  createdAt: Date;
+  nomorSurat: string | null;
+  perihal: string | null;
+  lawan: string | null;
+}
+
+/** Log aksi surat lintas jenis, dengan nomor/perihal surat asal. */
+export async function listLogSurat(
+  villageId: number,
+  type?: "masuk" | "keluar",
+): Promise<LogSuratRow[]> {
+  const kondisi = [eq(letterAgendaLogs.villageId, villageId)];
+  if (type) kondisi.push(eq(letterAgendaLogs.type, type));
+
+  const logs = await db
+    .select()
+    .from(letterAgendaLogs)
+    .where(and(...kondisi))
+    .orderBy(desc(letterAgendaLogs.createdAt), desc(letterAgendaLogs.id))
+    .limit(500);
+
+  const idMasuk = [
+    ...new Set(logs.filter((log) => log.type === "masuk").map((log) => log.letterId)),
+  ];
+  const idKeluar = [
+    ...new Set(logs.filter((log) => log.type === "keluar").map((log) => log.letterId)),
+  ];
+
+  const [masuk, keluar] = await Promise.all([
+    idMasuk.length > 0
+      ? db
+          .select({
+            id: incomingLetters.id,
+            nomorSurat: incomingLetters.letterNumber,
+            perihal: incomingLetters.summary,
+            lawan: incomingLetters.sender,
+          })
+          .from(incomingLetters)
+          .where(
+            and(eq(incomingLetters.villageId, villageId), inArray(incomingLetters.id, idMasuk)),
+          )
+      : Promise.resolve([]),
+    idKeluar.length > 0
+      ? db
+          .select({
+            id: outgoingLetters.id,
+            nomorSurat: outgoingLetters.letterNumber,
+            perihal: outgoingLetters.summary,
+            lawan: outgoingLetters.recipient,
+          })
+          .from(outgoingLetters)
+          .where(
+            and(eq(outgoingLetters.villageId, villageId), inArray(outgoingLetters.id, idKeluar)),
+          )
+      : Promise.resolve([]),
+  ]);
+
+  const petaMasuk = new Map(masuk.map((row) => [row.id, row]));
+  const petaKeluar = new Map(keluar.map((row) => [row.id, row]));
+
+  return logs.map((log) => {
+    const surat = log.type === "masuk" ? petaMasuk.get(log.letterId) : petaKeluar.get(log.letterId);
+    return {
+      id: log.id,
+      type: log.type,
+      letterId: log.letterId,
+      action: log.action,
+      note: log.note,
+      actorId: log.actorId,
+      createdAt: log.createdAt,
+      nomorSurat: surat?.nomorSurat ?? null,
+      perihal: surat?.perihal ?? null,
+      lawan: surat?.lawan ?? null,
+    };
+  });
 }

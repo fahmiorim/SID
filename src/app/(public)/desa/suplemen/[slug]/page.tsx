@@ -7,6 +7,7 @@ import {
   detailSuplemenPublik,
   labelSasaranPublik,
 } from "@/features/penduduk/application/suplemen-publik-use-cases";
+import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -30,22 +31,28 @@ export default async function SuplemenDetailPage({ params }: PageProps<"/desa/su
   if (!detail) notFound();
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <div className="mx-auto max-w-3xl space-y-6">
       <nav className="text-sm">
-        <Link href="/desa/suplemen" className="text-primary underline-offset-4 hover:underline">
+        <Link
+          href="/desa/suplemen"
+          className="text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
+        >
           ← Semua suplemen
         </Link>
       </nav>
 
-      <header className="space-y-2">
-        <h1 className="text-2xl font-bold">{detail.nama}</h1>
-        <p className="text-sm text-muted-foreground">
-          Sasaran: {labelSasaranPublik(detail.sasaran)} · {detail.jumlahTerdata} data terhimpun
-        </p>
-        {detail.keterangan ? <p className="text-sm">{detail.keterangan}</p> : null}
-      </header>
+      <ThemePageHeader
+        title={detail.nama}
+        description={`Sasaran: ${labelSasaranPublik(detail.sasaran)} · ${detail.jumlahTerdata.toLocaleString(
+          "id-ID",
+        )} data terhimpun`}
+      />
 
-      <section className="rounded-lg border p-4">
+      {detail.keterangan ? (
+        <p className="text-sm leading-relaxed text-muted-foreground">{detail.keterangan}</p>
+      ) : null}
+
+      <ThemeCard className="p-4">
         <h2 className="font-semibold">Kolom data</h2>
         {detail.kolomIsian.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">Belum ada isian yang tercatat.</p>
@@ -56,7 +63,7 @@ export default async function SuplemenDetailPage({ params }: PageProps<"/desa/su
             ))}
           </ul>
         )}
-      </section>
+      </ThemeCard>
 
       <p className="text-xs text-muted-foreground">
         Data pribadi warga tidak ditampilkan pada halaman publik. Hubungi kantor desa untuk

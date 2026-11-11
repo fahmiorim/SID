@@ -6,6 +6,7 @@ import { resolveVillageId } from "@/features/desa/application/resolve-village";
 import { getMediaSettings } from "@/features/kebijakan-berkas/domain/pengaturan-berkas";
 import type { BerkasUnggahan } from "@/features/publik/domain/media";
 import { simpanUnggahanMediaDenganPengaturan } from "@/features/publik/infrastructure/media-storage";
+import { validasiUnggahanLampiranDenganPengaturan } from "@/features/surat/domain/lampiran-surat";
 import {
   SURAT_KELUAR_RESOURCE,
   SURAT_MASUK_RESOURCE,
@@ -23,6 +24,7 @@ import {
   listDisposisiSuratMasuk,
   listEkspedisiSuratKeluar,
   listLogAgenda,
+  listLogSurat,
   listSuratKeluar,
   listSuratMasuk,
   nextAgendaNumberKeluar,
@@ -208,6 +210,12 @@ export async function tambahDisposisiSuratMasukData(
     const pengaturan = await getMediaSettings(villageId, "surat");
     const hasil: { path: string; name: string; mime: string; size: number }[] = [];
     for (const berkas of input.lampiran) {
+      const pesan = validasiUnggahanLampiranDenganPengaturan(
+        pengaturan,
+        berkas.mime,
+        berkas.ukuran,
+      );
+      if (pesan) throw conflict(pesan);
       const saved = await simpanUnggahanMediaDenganPengaturan(villageId, "surat", berkas, {
         mimeAllowlist: pengaturan.mimeAllowlist,
         maxSizeBytes: pengaturan.maxSizeBytes,
@@ -267,6 +275,12 @@ export async function tambahEkspedisiSuratKeluarData(
     const pengaturan = await getMediaSettings(villageId, "surat");
     const hasil: { path: string; name: string; mime: string; size: number }[] = [];
     for (const berkas of input.lampiran) {
+      const pesan = validasiUnggahanLampiranDenganPengaturan(
+        pengaturan,
+        berkas.mime,
+        berkas.ukuran,
+      );
+      if (pesan) throw conflict(pesan);
       const saved = await simpanUnggahanMediaDenganPengaturan(villageId, "surat", berkas, {
         mimeAllowlist: pengaturan.mimeAllowlist,
         maxSizeBytes: pengaturan.maxSizeBytes,
@@ -305,4 +319,27 @@ export async function listLogSuratKeluarData(outgoingLetterId: number) {
   const user = await requirePermission(SURAT_KELUAR_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
   return listLogAgenda(villageId, "keluar", outgoingLetterId);
+}
+
+/** Log aksi lintas surat masuk/keluar untuk halaman `/persuratan/log-surat`. */
+export async function listLogSuratData(params: { type?: string; q?: string } = {}) {
+  const user = await requirePermission(SURAT_MASUK_RESOURCE, "read");
+  await requirePermission(SURAT_KELUAR_RESOURCE, "read");
+  const villageId = await resolveVillageId(user);
+
+  const type = params.type === "masuk" || params.type === "keluar" ? params.type : "all";
+  const q = params.q?.trim().toLowerCase() ?? "";
+  const rows = await listLogSurat(villageId, type === "all" ? undefined : type);
+
+  if (!q) return { rows, type, q };
+
+  return {
+    rows: rows.filter((row) =>
+      [row.action, row.note, row.nomorSurat, row.perihal, row.lawan]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLowerCase().includes(q)),
+    ),
+    type,
+    q,
+  };
 }

@@ -32,22 +32,26 @@ export function StatistikPengunjungWidget({ desaId }: StatistikPengunjungWidgetP
   }, [desaId]);
 
   if (loading) {
-    return <div className="h-24 animate-pulse rounded-lg bg-muted" />;
+    return (
+      <div className="h-24 animate-pulse rounded-[var(--pub-radius)] bg-muted motion-reduce:animate-none" />
+    );
   }
 
   if (!data) {
     return null;
   }
 
+  const maksTren = Math.max(1, ...data.tren.map((t) => t.jumlah));
+
   return (
     <div className="space-y-4">
       <h2 className="text-base font-semibold">Statistik Pengunjung</h2>
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border p-4 text-center">
+        <div className="rounded-[var(--pub-radius)] border p-4 text-center">
           <p className="text-2xl font-bold">{data.totalPengunjung.toLocaleString("id-ID")}</p>
           <p className="text-xs text-muted-foreground">Total Pengunjung</p>
         </div>
-        <div className="rounded-lg border p-4 text-center">
+        <div className="rounded-[var(--pub-radius)] border p-4 text-center">
           <p className="text-2xl font-bold">{data.rataRataHarian.toFixed(1)}</p>
           <p className="text-xs text-muted-foreground">Rata-rata/Hari</p>
         </div>
@@ -64,9 +68,10 @@ export function StatistikPengunjungWidget({ desaId }: StatistikPengunjungWidgetP
                   <span className="w-12 text-muted-foreground">{t.tanggal.slice(5)}</span>
                   <div className="h-2 flex-1 rounded-full bg-muted">
                     <div
-                      className="h-2 rounded-full bg-primary"
+                      className="h-2 rounded-full"
                       style={{
-                        width: `${Math.min(100, (t.jumlah / Math.max(...data.tren.map((x) => x.jumlah))) * 100)}%`,
+                        backgroundColor: "var(--pub-primary)",
+                        width: `${Math.min(100, (t.jumlah / maksTren) * 100)}%`,
                       }}
                     />
                   </div>

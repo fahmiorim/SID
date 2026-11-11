@@ -5,7 +5,10 @@ import { PageHeader } from "@/components/layout/page-header";
 import { NoAccess } from "@/components/shared/no-access";
 import { Button } from "@/components/ui/button";
 import { resolveVillageId } from "@/features/desa/application/resolve-village";
-import { daftarKehadiran } from "@/features/kehadiran/application/kehadiran-use-cases";
+import {
+  daftarKehadiran,
+  daftarPerangkatDesa,
+} from "@/features/kehadiran/application/kehadiran-use-cases";
 import { KEHADIRAN_RESOURCE } from "@/features/kehadiran/domain/kehadiran";
 import { KehadiranTable } from "@/features/kehadiran/presentation/components/kehadiran-table";
 import { hasPermission } from "@/features/rbac/application/authorization";
@@ -25,7 +28,10 @@ export default async function KehadiranPage() {
     );
   }
   const villageId = await resolveVillageId(user);
-  const items = await daftarKehadiran(villageId);
+  const [items, perangkatList] = await Promise.all([
+    daftarKehadiran(villageId),
+    daftarPerangkatDesa(villageId),
+  ]);
   return (
     <div className="space-y-6">
       <PageHeader title="Kehadiran Perangkat" description="Daftar kehadiran perangkat desa" />
@@ -37,7 +43,7 @@ export default async function KehadiranPage() {
           </Link>
         </Button>
       </div>
-      <KehadiranTable items={items} />
+      <KehadiranTable items={items} perangkatList={perangkatList} />
     </div>
   );
 }

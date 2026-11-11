@@ -1,9 +1,9 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { residents } from "@/db/schema";
+import { residentMutations, residents } from "@/db/schema";
 /* -------------------------------------------------------------------------- */
 /* OS-FIN-010: Riwayat mutasi penduduk dalam buku resmi                        */
 /* -------------------------------------------------------------------------- */ import {
@@ -19,7 +19,11 @@ import { residents } from "@/db/schema";
   tabelPeraturan,
   tabelTanahKas,
 } from "@/features/bumindes/domain/buku-resmi";
-import { nomorUrutBerikutnya, type ItemBukuInput } from "@/features/bumindes/domain/bumindes";
+import {
+  KETERANGAN_SINKRONISASI_PENDUDUK,
+  nomorUrutBerikutnya,
+  type ItemBukuInput,
+} from "@/features/bumindes/domain/bumindes";
 /* -------------------------------------------------------------------------- */
 /* OS-FIN-012: Pembangunan & Kader                                             */
 /* -------------------------------------------------------------------------- */
@@ -202,15 +206,12 @@ export async function hapusItemBukuData(id: number): Promise<{ bukuId: number }>
   return { bukuId: existing.bukuId };
 }
 
-/** Sinkronisasi item buku dari data penduduk.
- * Fungsi ini mengisi item-item buku inti (B1-B5) berdasarkan data penduduk
- * yang terdaftar di sistem. Setiap buku akan diisi dengan ringkasan data:
- * - B1: Jumlah penduduk per jenis kelamin dan status
- * - B2: Data KTP/KK yang terdaftar
- * - B3: Ringkasan mutasi (lahir/mati/pindah/datang)
- * - B4: Total populasi per wilayah
- * - B5: Penduduk sementara/tamu
- * Item yang sudah terisi akan dijaga, hanya item yang masih kosong yang diisi.
+/** Sinkronisasi ringkasan buku inti (B1-B5) dari data penduduk.
+ *
+ * Ringkasan disimpan sebagai satu item bertanda `KETERANGAN_SINKRONISASI_PENDUDUK`.
+ * Item itu diperbarui pada sinkronisasi berikutnya; catatan manual pada buku
+ * yang sama tidak disentuh. Buku kosong mendapat item baru, sehingga tombol ini
+ * benar-benar mengisi buku — bukan hanya memperbarui item yang sudah ada.
  */
 export async function sinkronisasiBumindesDariPenduduk(): Promise<{
   sukses: boolean;
@@ -220,125 +221,113 @@ export async function sinkronisasiBumindesDariPenduduk(): Promise<{
   const user = await requirePermission(RESOURCES.bumindes, "update");
   const villageId = await resolveVillageId(user);
 
-  const allResidents = await db
-    .select({
-      id: residents.id,
-      name: residents.name,
-      gender: residents.gender,
-      lifeStatus: residents.lifeStatus,
-      residenceStatus: residents.residenceStatus,
-      familyId: residents.familyId,
-      nationalId: residents.nationalId,
-    })
-    .from(residents)
-    .where(and(eq(residents.villageId, villageId)));
+  const [allResidents, allMutations, daftarBuku] = await Promise.all([
+    db
+      .select({
+        gender: residents.gender,
+        lifeStatus: residents.lifeStatus,
+        residenceStatus: residents.residenceStatus,
+        familyId: residents.familyId,
+        nationalId: residents.nationalId,
+      })
+      .from(residents)
+      .where(eq(residents.villageId, villageId)),
+    db
+      .select({ type: residentMutations.type })
+      .from(residentMutations)
+      .where(eq(residentMutations.villageId, villageId)),
+    listBumindesBuku(villageId),
+  ]);
 
-  const daftarBuku = await listBumindesBuku(villageId);
   const bukuMap = new Map(daftarBuku.map((buku) => [buku.kodeBuku, buku.id]));
   const detail: Record<string, number> = {};
-  const lahir = 0;
-  const mati = 0;
-  const pindah = 0;
-  const datang = 0;
+  const mutasi = { birth: 0, death: 0, move_out: 0, move_in: 0, change: 0 };
+  for (const row of allMutations) mutasi[row.type]++;
+
   let lakiLaki = 0;
   let perempuan = 0;
   let permanent = 0;
   let temporary = 0;
-  let withKK = 0;
-  let withoutKK = 0;
-  const total = allResidents.length;
+  let withKtp = 0;
+  let withKk = 0;
+  let tanpaKk = 0;
+  let total = 0;
 
   for (const resident of allResidents) {
-    if (resident.lifeStatus === "alive") {
-      lakiLaki += resident.gender === "male" ? 1 : 0;
-      permanent++;
-    }
-    perempuan += resident.gender === "female" ? 1 : 0;
-    temporary += resident.residenceStatus === "temporary" ? 1 : 0;
-    if (resident.nationalId) withKK++;
-    else withoutKK++;
+    if (resident.lifeStatus !== "alive") continue;
+    total++;
+    if (resident.gender === "male") lakiLaki++;
+    else perempuan++;
+    if (resident.residenceStatus === "temporary") temporary++;
+    else permanent++;
+    if (resident.nationalId) withKtp++;
+    if (resident.familyId) withKk++;
+    else tanpaKk++;
   }
 
-  const sinkronisasi: Array<{ bukuId: number; uraian: string }> = [];
-
-  const bukuB1 = bukuMap.get("B1");
-  if (bukuB1 !== undefined) {
-    const items = await listBumindesItem(villageId, bukuB1);
-    const existingUraian = items.find((item) => item.uraian)?.uraian.toLowerCase() ?? "";
-    let newUraian = "";
-    if (!existingUraian.includes("laki-laki")) newUraian += `Total ${lakiLaki} laki-laki, `;
-    if (!existingUraian.includes("perempuan")) newUraian += `${perempuan} perempuan, `;
-    if (!existingUraian.includes("total")) newUraian += `total ${total} orang`;
-    if (newUraian) sinkronisasi.push({ bukuId: bukuB1, uraian: newUraian.trim() });
-    detail["B1"] = total;
-  }
-
-  const bukuB2 = bukuMap.get("B2");
-  if (bukuB2 !== undefined) {
-    const items = await listBumindesItem(villageId, bukuB2);
-    const existingUraian = items.find((item) => item.uraian)?.uraian.toLowerCase() ?? "";
-    let newUraian = "";
-    if (!existingUraian.includes("ktp")) newUraian += `${withKK} penduduk punya KTP, `;
-    if (!existingUraian.includes("kk")) newUraian += `${withKK} KK terdaftar, `;
-    if (withoutKK > 0) newUraian += `${withoutKK} tanpa KK`;
-    if (newUraian) sinkronisasi.push({ bukuId: bukuB2, uraian: newUraian.trim() });
-    detail["B2"] = withKK;
-  }
-
-  const bukuB3 = bukuMap.get("B3");
-  if (bukuB3 !== undefined) {
-    const items = await listBumindesItem(villageId, bukuB3);
-    const existingUraian = items.find((item) => item.uraian)?.uraian.toLowerCase() ?? "";
-    let newUraian = "";
-    if (!existingUraian.includes("lahir")) newUraian += `${lahir} lahir, `;
-    if (!existingUraian.includes("mati")) newUraian += `${mati} mati, `;
-    if (!existingUraian.includes("pindah")) newUraian += `${pindah} pindah, `;
-    if (!existingUraian.includes("datang")) newUraian += `${datang} datang`;
-    if (newUraian) sinkronisasi.push({ bukuId: bukuB3, uraian: newUraian.trim() });
-    detail["B3"] = lahir + mati + pindah + datang;
-  }
-
-  const bukuB4 = bukuMap.get("B4");
-  if (bukuB4 !== undefined) {
-    const items = await listBumindesItem(villageId, bukuB4);
-    const existingUraian = items.find((item) => item.uraian)?.uraian.toLowerCase() ?? "";
-    let newUraian = "";
-    if (!existingUraian.includes("total")) newUraian += `total ${total} orang, `;
-    if (!existingUraian.includes("laki-laki")) newUraian += `${lakiLaki} laki-laki, `;
-    if (!existingUraian.includes("perempuan")) newUraian += `${perempuan} perempuan, `;
-    if (!existingUraian.includes("permanent")) newUraian += `${permanent} tetap, `;
-    if (!existingUraian.includes("temporary")) newUraian += `${temporary} sementara`;
-    if (newUraian) sinkronisasi.push({ bukuId: bukuB4, uraian: newUraian.trim() });
-    detail["B4"] = total;
-  }
-
-  const bukuB5 = bukuMap.get("B5");
-  if (bukuB5 !== undefined) {
-    sinkronisasi.push({
-      bukuId: bukuB5,
-      uraian: `${temporary} penduduk sementara dari total ${total}`,
-    });
-    detail["B5"] = temporary;
-  }
+  const sinkronisasi = [
+    {
+      kode: "B1",
+      uraian: `Total ${total} orang: ${lakiLaki} laki-laki, ${perempuan} perempuan.`,
+      jumlah: total,
+    },
+    {
+      kode: "B2",
+      uraian: `${withKtp} penduduk punya KTP, ${withKk} KK terdaftar, ${tanpaKk} tanpa KK.`,
+      jumlah: withKtp,
+    },
+    {
+      kode: "B3",
+      uraian: `${mutasi.birth} lahir, ${mutasi.death} mati, ${mutasi.move_out} pindah keluar, ${mutasi.move_in} datang, ${mutasi.change} perubahan data.`,
+      jumlah: allMutations.length,
+    },
+    {
+      kode: "B4",
+      uraian: `Total ${total} orang: ${lakiLaki} laki-laki, ${perempuan} perempuan, ${permanent} tetap, ${temporary} sementara.`,
+      jumlah: total,
+    },
+    {
+      kode: "B5",
+      uraian: `${temporary} penduduk sementara dari total ${total} orang.`,
+      jumlah: temporary,
+    },
+  ];
 
   const tanggal = new Date().toISOString().slice(0, 10);
-  for (const { bukuId, uraian } of sinkronisasi) {
+  let jumlahBuku = 0;
+
+  for (const ringkasan of sinkronisasi) {
+    const bukuId = bukuMap.get(ringkasan.kode);
+    if (bukuId === undefined) continue;
+
     const items = await listBumindesItem(villageId, bukuId);
-    const item = items[0];
-    const existingUraian = items.find((row) => row.uraian)?.uraian.trim() ?? "";
-    if (item && !existingUraian) {
-      await updateBumindesItem(villageId, item.id, {
-        uraian,
+    const existing = items.find((item) => item.keterangan === KETERANGAN_SINKRONISASI_PENDUDUK);
+
+    if (existing) {
+      await updateBumindesItem(villageId, existing.id, {
+        uraian: ringkasan.uraian,
         tanggal,
-        nomorUrut: item.nomorUrut,
-        keterangan: item.keterangan,
+        nomorUrut: existing.nomorUrut,
+        keterangan: KETERANGAN_SINKRONISASI_PENDUDUK,
+      });
+    } else {
+      const nomorUrut = Math.max(0, ...items.map((item) => item.nomorUrut)) + 1;
+      await insertBumindesItem(villageId, {
+        bukuId,
+        nomorUrut,
+        tanggal,
+        uraian: ringkasan.uraian,
+        keterangan: KETERANGAN_SINKRONISASI_PENDUDUK,
       });
     }
+
+    detail[ringkasan.kode] = ringkasan.jumlah;
+    jumlahBuku++;
   }
 
   return {
-    sukses: sinkronisasi.length > 0,
-    pesan: `Sinkronisasi selesai untuk ${sinkronisasi.length} buku`,
+    sukses: jumlahBuku > 0,
+    pesan: `Sinkronisasi selesai untuk ${jumlahBuku} buku`,
     detail,
   };
 }
@@ -867,8 +856,10 @@ export async function exportBukuAparatCsvData() {
 export async function getBukuAgendaCetakData(jenis?: string) {
   const user = await requirePermission(RESOURCES.bumindes, "read");
   const villageId = await resolveVillageId(user);
+  // Cetak tanpa parameter adalah Buku Agenda (surat masuk), bukan gabungan.
+  const jenisBuku = jenis === "keluar" ? "keluar" : "masuk";
   const [items, desa] = await Promise.all([
-    listBumindesAgenda(villageId, jenis),
+    listBumindesAgenda(villageId, jenisBuku),
     getIdentitasByVillage(villageId),
   ]);
   const baris = items.map((item, idx) => ({
@@ -880,16 +871,18 @@ export async function getBukuAgendaCetakData(jenis?: string) {
     perihal: item.perihal,
     keterangan: item.keterangan,
   }));
-  const namaBuku = jenis === "keluar" ? "BUKU EKSPEDISI" : "BUKU AGENDA";
-  const kode = jenis === "keluar" ? "A7" : "A6";
+  const namaBuku = jenisBuku === "keluar" ? "BUKU EKSPEDISI" : "BUKU AGENDA";
+  const kode = jenisBuku === "keluar" ? "A7" : "A6";
   return { desa, tabel: tabelAgenda(kode, namaBuku, baris) };
 }
 
 export async function exportBukuAgendaCsvData(jenis?: string) {
   const user = await requirePermission(RESOURCES.bumindes, "read");
   const villageId = await resolveVillageId(user);
+  // Ekspor tanpa parameter mengikuti Buku Agenda (surat masuk).
+  const jenisBuku = jenis === "keluar" ? "keluar" : "masuk";
   const [items, desa] = await Promise.all([
-    listBumindesAgenda(villageId, jenis),
+    listBumindesAgenda(villageId, jenisBuku),
     getIdentitasByVillage(villageId),
   ]);
   const baris = items.map((item, idx) => ({
@@ -901,8 +894,8 @@ export async function exportBukuAgendaCsvData(jenis?: string) {
     perihal: item.perihal,
     keterangan: item.keterangan,
   }));
-  const namaBuku = jenis === "keluar" ? "BUKU EKSPEDISI" : "BUKU AGENDA";
-  const kode = jenis === "keluar" ? "A7" : "A6";
+  const namaBuku = jenisBuku === "keluar" ? "BUKU EKSPEDISI" : "BUKU AGENDA";
+  const kode = jenisBuku === "keluar" ? "A7" : "A6";
   const tabel = tabelAgenda(kode, namaBuku, baris);
   return { csv: bukuResmiCsv(tabel), filename: namaBerkasBuku(kode, desa?.namaDesa ?? null) };
 }

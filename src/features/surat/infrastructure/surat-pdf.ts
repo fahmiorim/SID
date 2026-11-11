@@ -110,17 +110,19 @@ export async function buildSuratPdf(input: SuratPdfInput): Promise<Uint8Array> {
     }
   }
 
-  // Default page settings
-  const orientasi = (layout.orientasi as string) ?? "potrait";
+  // Determin posisi elemen berdasarkan varian template
+  const variant = input.templateVariant ?? "default";
+
+  // Default page settings; varian landscape ikut menentukan orientasi kertas
+  // bila konfigurasi layout tidak menyebutkannya secara eksplisit.
+  const orientasi =
+    (layout.orientasi as string) ?? (variant === "landscape" ? "landscape" : "potrait");
   const isLandscape = orientasi === "landscape";
   const PAGE_WIDTH = isLandscape ? 841.89 : 595.28;
   const PAGE_HEIGHT = isLandscape ? 595.28 : 841.89;
   const MARGIN = typeof layout.margin === "number" ? layout.margin : 56;
   const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
   const LINE_HEIGHT = 15;
-
-  // Determin posisi elemen berdasarkan varian template
-  const variant = input.templateVariant ?? "default";
   const variantPos =
     variant === "landscape"
       ? { ttdXOffset: 20, stampXOffset: 10, qrPosition: "header", qrMargin: 5 }

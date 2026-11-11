@@ -12,7 +12,7 @@
 
 [data-theme="natra"] .tema-natra-header {
   background-color: var(--pub-primary-text);
-  color: var(--pub-primary-foreground);
+  color: var(--pub-primary-text-foreground);
 }
 
 [data-theme="natra"] .tema-natra-header a {
@@ -21,17 +21,25 @@
 
 [data-theme="natra"] .tema-natra-hero {
   background:
+    /* Aksen sekunder dijaga rendah: teks hero memakai putih, jadi lapisan ini
+       tidak boleh cukup terang untuk menurunkan kontras di palet terang. */
     radial-gradient(
       circle at 15% 15%,
-      color-mix(in srgb, var(--pub-secondary) 85%, transparent),
+      color-mix(in srgb, var(--pub-secondary) 18%, transparent),
       transparent 55%
     ),
     linear-gradient(
       135deg,
-      var(--pub-primary),
-      color-mix(in srgb, var(--pub-primary) 55%, var(--pub-secondary))
+      var(--pub-primary-text),
+      color-mix(in srgb, var(--pub-primary-text) 82%, #000000)
     );
-  color: var(--pub-primary-foreground);
+  color: var(--pub-primary-text-foreground);
+  border-radius: calc(var(--pub-radius) * 2);
+}
+
+/* Samakan kelengkungan kartu dengan opsi tema desa. */
+[data-theme="natra"] .tema-natra-card {
+  border-radius: calc(var(--pub-radius) * 1.15);
 }
 
 [data-theme="natra"] .tema-natra-card {

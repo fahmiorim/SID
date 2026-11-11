@@ -53,7 +53,11 @@ export function DtksTable({
                 </Badge>
               </TableCell>
               <TableCell>{row.anggotaCount}</TableCell>
-              <TableCell>{new Date(row.updatedAt).toLocaleDateString()}</TableCell>
+              <TableCell>
+                {new Date(row.updatedAt).toLocaleDateString("id-ID", {
+                  timeZone: "Asia/Jakarta",
+                })}
+              </TableCell>
               <TableCell className="text-right">
                 {canManage ? <DtksRowActions id={row.id} /> : "-"}
               </TableCell>

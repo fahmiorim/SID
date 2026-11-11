@@ -164,19 +164,25 @@ export function KehadiranFormDialog({
 
           <DialogFooter className="flex justify-between">
             {isEdit && item ? (
-              <form action={deleteAction}>
-                <input type="hidden" name="id" value={item.id} />
-                <Button type="submit" variant="destructive" disabled={isDeletePending}>
-                  {isDeletePending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Menghapus...
-                    </>
-                  ) : (
-                    "Hapus"
-                  )}
-                </Button>
-              </form>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isDeletePending}
+                onClick={() => {
+                  const data = new FormData();
+                  data.set("id", String(item.id));
+                  deleteAction(data);
+                }}
+              >
+                {isDeletePending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Menghapus...
+                  </>
+                ) : (
+                  "Hapus"
+                )}
+              </Button>
             ) : (
               <div />
             )}

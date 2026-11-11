@@ -21,7 +21,38 @@ export function EsensiSurat({ ctx, jenis }: SuratProps) {
         <ThemeEmpty>Jenis surat belum tersedia. Silakan hubungi kantor desa.</ThemeEmpty>
       ) : (
         <ThemeCard>
-          <div className="overflow-x-auto">
+          <ul className="divide-y md:hidden">
+            {jenis.map((item) => (
+              <li key={item.id} className="px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-[11px] tracking-wide text-muted-foreground">
+                      {item.kode}
+                    </p>
+                    <p className="mt-1 leading-snug font-medium">{item.nama}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap">
+                    {item.masaBerlakuBulan > 0
+                      ? `${item.masaBerlakuBulan.toLocaleString("id-ID")} bulan`
+                      : "Tanpa masa berlaku"}
+                  </span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <dt className="text-muted-foreground">Klasifikasi</dt>
+                    <dd className="mt-0.5 font-medium">{item.klasifikasi ?? "-"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">Pemohon</dt>
+                    <dd className="mt-0.5 font-medium">
+                      {item.butuhPenduduk ? "Penduduk terdaftar" : "Umum"}
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-muted/50 text-left">
                 <tr>

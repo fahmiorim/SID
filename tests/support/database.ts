@@ -1,4 +1,7 @@
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { hashPassword } from "better-auth/crypto";
 import { createPool, type Pool, type ResultSetHeader, type RowDataPacket } from "mysql2/promise";
 
 /**
@@ -17,6 +20,37 @@ async function denganPool<T>(fn: (pool: Pool) => Promise<T>): Promise<T> {
   } finally {
     await pool.end();
   }
+}
+
+/** Desa milik akun admin E2E. */
+async function desaAdmin(pool: Pool): Promise<number> {
+  const [users] = await pool.query<RowDataPacket[]>(
+    "SELECT village_id FROM users WHERE username = 'admin' LIMIT 1",
+  );
+  const villageId = Number(users[0]?.village_id);
+  if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
+  return villageId;
+}
+
+/** Penduduk hidup ber-NIK 16 digit untuk setup E2E kontak/suplemen. */
+export async function pendudukBernikUji(
+  jumlah = 2,
+): Promise<{ id: number; nik: string; nama: string }[]> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, national_id, name FROM residents
+        WHERE village_id = ? AND life_status = 'alive'
+          AND national_id REGEXP '^[0-9]{16}$'
+        ORDER BY id LIMIT 10`,
+      [villageId],
+    );
+    return rows.slice(0, jumlah).map((row) => ({
+      id: Number(row.id),
+      nik: String(row.national_id),
+      nama: String(row.name),
+    }));
+  });
 }
 
 /** Ambil ID penduduk berdasarkan NIK (hasil pembuatan lewat UI). */
@@ -71,6 +105,275 @@ export async function hapusPendudukDariNik(nik: string): Promise<void> {
 export async function hapusKategoriKelompokDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM kelompok_master WHERE name = ?", [nama]);
+  });
+}
+
+/** Angka yang harus tampil pada ringkasan buku penduduk B1–B5. */
+export interface RingkasanBukuPenduduk {
+  total: number;
+  lakiLaki: number;
+  perempuan: number;
+  permanent: number;
+  temporary: number;
+  withKtp: number;
+  withKk: number;
+  tanpaKk: number;
+  lahir: number;
+  mati: number;
+  pindahKeluar: number;
+  datang: number;
+  perubahan: number;
+}
+
+/** Hitung ringkasan dari tabel sumber, bukan dari teks halaman. */
+export async function ringkasanBukuPenduduk(): Promise<RingkasanBukuPenduduk> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [penduduk] = await pool.query<RowDataPacket[]>(
+      `SELECT gender, residence_status, family_id, national_id
+       FROM residents WHERE village_id = ? AND life_status = 'alive'`,
+      [villageId],
+    );
+    const [mutasi] = await pool.query<RowDataPacket[]>(
+      "SELECT type, COUNT(*) AS jumlah FROM resident_mutations WHERE village_id = ? GROUP BY type",
+      [villageId],
+    );
+
+    const hasil: RingkasanBukuPenduduk = {
+      total: penduduk.length,
+      lakiLaki: 0,
+      perempuan: 0,
+      permanent: 0,
+      temporary: 0,
+      withKtp: 0,
+      withKk: 0,
+      tanpaKk: 0,
+      lahir: 0,
+      mati: 0,
+      pindahKeluar: 0,
+      datang: 0,
+      perubahan: 0,
+    };
+
+    for (const row of penduduk) {
+      if (row.gender === "male") hasil.lakiLaki++;
+      else hasil.perempuan++;
+      if (row.residence_status === "temporary") hasil.temporary++;
+      else hasil.permanent++;
+      if (row.national_id) hasil.withKtp++;
+      if (row.family_id) hasil.withKk++;
+      else hasil.tanpaKk++;
+    }
+
+    const kunci = {
+      birth: "lahir",
+      death: "mati",
+      move_out: "pindahKeluar",
+      move_in: "datang",
+      change: "perubahan",
+    } as const;
+    for (const row of mutasi) {
+      const nama = kunci[row.type as keyof typeof kunci];
+      if (nama) hasil[nama] = Number(row.jumlah);
+    }
+
+    return hasil;
+  });
+}
+
+/** Hapus item ringkasan yang dibuat tombol sinkronisasi buku penduduk. */
+export async function hapusItemSinkronisasiBukuPenduduk(): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_item WHERE keterangan = ?", [
+      "Ringkasan otomatis data penduduk",
+    ]);
+  });
+}
+
+/** Buat persil tanah kas uji beserta satu mutasi. */
+export async function buatTanahKasUji(input: {
+  nomorPersil: string;
+  asal: string;
+  luas: string;
+  lokasi: string;
+  status: string;
+  nilai: string;
+  jenisMutasi: string;
+  uraianMutasi: string;
+}): Promise<number> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO bumindes_tanah_kas
+       (village_id, nomor_persil, asal, luas, lokasi, status, nilai)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        villageId,
+        input.nomorPersil,
+        input.asal,
+        input.luas,
+        input.lokasi,
+        input.status,
+        input.nilai,
+      ],
+    );
+    await pool.execute(
+      `INSERT INTO bumindes_tanah_kas_mutasi
+       (village_id, tanah_kas_id, tanggal, jenis, uraian, luas_perubahan, nilai_perubahan)
+       VALUES (?, ?, '2026-02-03', ?, ?, '2.50', '1500000.00')`,
+      [villageId, hasil.insertId, input.jenisMutasi, input.uraianMutasi],
+    );
+    return hasil.insertId;
+  });
+}
+
+/** Hapus persil tanah kas uji (mutasi ikut terhapus lewat foreign key). */
+export async function hapusTanahKasDariNomorPersil(nomorPersil: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM bumindes_tanah_kas WHERE nomor_persil = ?",
+      [nomorPersil],
+    );
+    for (const row of rows) {
+      await pool.execute("DELETE FROM bumindes_tanah_kas_mutasi WHERE tanah_kas_id = ?", [
+        Number(row.id),
+      ]);
+      await pool.execute("DELETE FROM bumindes_tanah_kas WHERE id = ?", [Number(row.id)]);
+    }
+  });
+}
+
+/** Buat kegiatan pada Buku Pembangunan (bukan proyek publik). */
+export async function buatBukuPembangunanUji(input: {
+  namaKegiatan: string;
+  tahun: number;
+  lokasi: string;
+  sumberDana: string;
+  biaya: string;
+  status: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    await pool.execute(
+      `INSERT INTO bumindes_pembangunan
+       (village_id, tahun, nama_kegiatan, lokasi, sumber_dana, biaya, status)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        villageId,
+        input.tahun,
+        input.namaKegiatan,
+        input.lokasi,
+        input.sumberDana,
+        input.biaya,
+        input.status,
+      ],
+    );
+  });
+}
+
+/** Hapus kegiatan Buku Pembangunan uji. */
+export async function hapusBukuPembangunanDariNama(namaKegiatan: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_pembangunan WHERE nama_kegiatan = ?", [namaKegiatan]);
+  });
+}
+
+/** Buat kader pembangunan uji. */
+export async function buatKaderPembangunanUji(input: {
+  nama: string;
+  jabatan: string;
+  bidang: string;
+  alamat: string;
+  noHp: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    await pool.execute(
+      `INSERT INTO bumindes_kader (village_id, nama, jabatan, bidang, alamat, no_hp)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [villageId, input.nama, input.jabatan, input.bidang, input.alamat, input.noHp],
+    );
+  });
+}
+
+/** Hapus kader pembangunan uji. */
+export async function hapusKaderPembangunanDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_kader WHERE nama = ?", [nama]);
+  });
+}
+
+/** Buat peraturan/keputusan desa uji. */
+export async function buatPeraturanUji(input: {
+  nomor: string;
+  jenis: string;
+  tentang: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    await pool.execute(
+      `INSERT INTO bumindes_peraturan
+       (village_id, jenis, nomor, tahun, tentang, tanggal_ditetapkan, tanggal_diundangkan)
+       VALUES (?, ?, ?, 2026, ?, '2026-03-04', '2026-03-05')`,
+      [villageId, input.jenis, input.nomor, input.tentang],
+    );
+  });
+}
+
+/** Hapus peraturan/keputusan desa uji. */
+export async function hapusPeraturanDariNomor(nomor: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_peraturan WHERE nomor = ?", [nomor]);
+  });
+}
+
+/** Buat aparat pemerintah desa uji. */
+export async function buatAparatUji(input: {
+  nama: string;
+  nip: string;
+  jabatan: string;
+  pendidikan: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    await pool.execute(
+      `INSERT INTO bumindes_aparat
+       (village_id, nama, nip, jabatan, pendidikan, tanggal_pengangkatan)
+       VALUES (?, ?, ?, ?, ?, '2026-04-06')`,
+      [villageId, input.nama, input.nip, input.jabatan, input.pendidikan],
+    );
+  });
+}
+
+/** Buat satu baris agenda/ekspedisi uji. */
+export async function buatAgendaBukuUji(input: {
+  jenis: "masuk" | "keluar";
+  nomorSurat: string;
+  asalTujuan: string;
+  perihal: string;
+}): Promise<void> {
+  await denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    await pool.execute(
+      `INSERT INTO bumindes_agenda
+       (village_id, jenis, tanggal, nomor_surat, asal_tujuan, perihal)
+       VALUES (?, ?, '2026-05-07', ?, ?, ?)`,
+      [villageId, input.jenis, input.nomorSurat, input.asalTujuan, input.perihal],
+    );
+  });
+}
+
+/** Hapus agenda/ekspedisi uji berdasarkan nomor surat. */
+export async function hapusAgendaBukuDariNomor(nomorSurat: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_agenda WHERE nomor_surat = ?", [nomorSurat]);
+  });
+}
+
+/** Hapus aparat pemerintah desa uji. */
+export async function hapusAparatDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_aparat WHERE nama = ?", [nama]);
   });
 }
 
@@ -141,6 +444,33 @@ export async function hapusPesanMailboxDariSubjek(subjek: string): Promise<void>
   });
 }
 
+/** Perangkat desa pertama untuk setup E2E kehadiran. */
+export async function perangkatUntukKehadiranUji(): Promise<{ id: number; nama: string }> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id, nama FROM perangkat_desa WHERE village_id = ? ORDER BY id LIMIT 1",
+      [villageId],
+    );
+    const row = rows[0];
+    if (!row) throw new Error("Perangkat desa E2E tidak ditemukan.");
+    return { id: Number(row.id), nama: String(row.nama) };
+  });
+}
+
+/** Hapus catatan kehadiran uji berdasarkan perangkat dan tanggal. */
+export async function hapusKehadiranDariPerangkatTanggal(
+  perangkatId: number,
+  tanggal: string,
+): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM kehadiran_perangkat WHERE perangkat_id = ? AND tanggal = ?", [
+      perangkatId,
+      tanggal,
+    ]);
+  });
+}
+
 /** Hapus perangkat desa uji berdasarkan nama (pembersihan alur bagan SOTK). */
 export async function hapusPerangkatDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
@@ -191,10 +521,88 @@ export async function hapusSisaLebihDariKeterangan(keterangan: string): Promise<
   });
 }
 
+/** Logo desa admin saat ini; dipakai untuk memulihkan identitas setelah unggah uji. */
+export async function bacaLogoDesaUji(): Promise<{ villageId: number; logo: string | null }> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT logo FROM villages WHERE id = ?", [
+      villageId,
+    ]);
+    return { villageId, logo: rows[0]?.logo ? String(rows[0].logo) : null };
+  });
+}
+
+/** Pulihkan kolom logo desa setelah unggahan uji. */
+export async function pulihkanLogoDesaUji(villageId: number, logo: string | null): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("UPDATE villages SET logo = ? WHERE id = ?", [logo, villageId]);
+  });
+}
+
+/** Jalur absolut berkas media uji; menolak jalur yang keluar dari storage/media. */
+function jalurBerkasMediaUji(relatif: string): string {
+  const akar = path.resolve(process.cwd(), "storage", "media");
+  const absolut = path.resolve(akar, relatif);
+  if (!absolut.startsWith(akar + path.sep)) throw new Error("Jalur media uji di luar storage.");
+  return absolut;
+}
+
+/** Tulis berkas media uji (mis. kategori privat) tanpa lewat UI. */
+export async function tulisBerkasMediaUji(relatif: string, isi: Buffer): Promise<void> {
+  const absolut = jalurBerkasMediaUji(relatif);
+  await mkdir(path.dirname(absolut), { recursive: true });
+  await writeFile(absolut, isi);
+}
+
+/** Hapus berkas media uji dari disk. */
+export async function hapusBerkasMediaUji(relatif: string): Promise<void> {
+  try {
+    await unlink(jalurBerkasMediaUji(relatif));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+  }
+}
+
 /** Hapus definisi suplemen uji berdasarkan nama. */
 export async function hapusSuplemenDariNama(nama: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM suplemen WHERE nama = ?", [nama]);
+  });
+}
+
+/** Hapus rentang umur uji berdasarkan nama. */
+export async function hapusRentangUmurDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM rentang_umur WHERE nama = ?", [nama]);
+  });
+}
+
+/** Hapus kontak uji beserta keanggotaan grupnya. */
+export async function hapusKontakDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>("SELECT id FROM kontak WHERE nama = ?", [
+      nama,
+    ]);
+    for (const row of rows) {
+      const id = Number(row.id);
+      await pool.execute("DELETE FROM anggota_grup_kontak WHERE kontak_id = ?", [id]);
+      await pool.execute("DELETE FROM kontak WHERE id = ?", [id]);
+    }
+  });
+}
+
+/** Hapus grup kontak uji beserta anggotanya. */
+export async function hapusGrupKontakDariNama(namaGrup: string): Promise<void> {
+  await denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM kontak_grup WHERE nama_grup = ?",
+      [namaGrup],
+    );
+    for (const row of rows) {
+      const id = Number(row.id);
+      await pool.execute("DELETE FROM anggota_grup_kontak WHERE grup_id = ?", [id]);
+      await pool.execute("DELETE FROM kontak_grup WHERE id = ?", [id]);
+    }
   });
 }
 
@@ -830,6 +1238,12 @@ export async function buatPendudukStatistikUji(input: {
   nama: string;
   nik: string;
   dusun: string;
+  rw?: string;
+  rt?: string;
+  gender?: "male" | "female";
+  birthDate?: string;
+  /** Pakai wilayah yang sudah dibuat agar beberapa penduduk berbagi dusun. */
+  regionId?: number;
 }): Promise<{ id: number; regionId: number }> {
   return denganPool(async (pool) => {
     const [users] = await pool.query<RowDataPacket[]>(
@@ -838,16 +1252,20 @@ export async function buatPendudukStatistikUji(input: {
     const villageId = Number(users[0]?.village_id);
     if (!villageId) throw new Error("Desa admin E2E tidak ditemukan.");
 
-    const [wilayah] = await pool.execute<ResultSetHeader>(
-      "INSERT INTO regions (village_id, dusun) VALUES (?, ?)",
-      [villageId, input.dusun],
-    );
+    let regionId = input.regionId;
+    if (!regionId) {
+      const [wilayah] = await pool.execute<ResultSetHeader>(
+        "INSERT INTO regions (village_id, dusun, rw, rt) VALUES (?, ?, ?, ?)",
+        [villageId, input.dusun, input.rw ?? null, input.rt ?? null],
+      );
+      regionId = wilayah.insertId;
+    }
     const [penduduk] = await pool.execute<ResultSetHeader>(
-      `INSERT INTO residents (village_id, national_id, name, gender, region_id)
-       VALUES (?, ?, ?, 'male', ?)`,
-      [villageId, input.nik, input.nama, wilayah.insertId],
+      `INSERT INTO residents (village_id, national_id, name, gender, birth_date, region_id)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [villageId, input.nik, input.nama, input.gender ?? "male", input.birthDate ?? null, regionId],
     );
-    return { id: penduduk.insertId, regionId: wilayah.insertId };
+    return { id: penduduk.insertId, regionId };
   });
 }
 
@@ -984,6 +1402,20 @@ export async function hapusLayerPetaUji(layer: LayerPetaUji): Promise<void> {
 export async function hapusInventarisDariNama(namaBarang: string): Promise<void> {
   await denganPool(async (pool) => {
     await pool.execute("DELETE FROM inventaris WHERE nama_barang = ?", [namaBarang]);
+  });
+}
+
+/** Hapus kategori inventaris uji setelah barang yang memakainya dibersihkan. */
+export async function hapusKategoriInventarisDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM inventaris_kategori WHERE nama = ?", [nama]);
+  });
+}
+
+/** Hapus item buku administrasi uji berdasarkan uraiannya. */
+export async function hapusItemBukuDariUraian(uraian: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM bumindes_item WHERE uraian = ?", [uraian]);
   });
 }
 
@@ -1276,6 +1708,7 @@ export async function buatSuratUjiDenganStatus(input: {
   nomor: string;
   status: "draft" | "verifikasi" | "issued";
   jenis: string;
+  pemohon?: string;
 }): Promise<{ id: number; nomor: string }> {
   return denganPool(async (pool) => {
     const [users] = await pool.query<RowDataPacket[]>(
@@ -1293,19 +1726,41 @@ export async function buatSuratUjiDenganStatus(input: {
 
     const [hasil] = await pool.execute<ResultSetHeader>(
       `INSERT INTO letters
-         (village_id, type_id, type_name, number, status, letter_date, year, purpose, issued_at)
-       VALUES (?, ?, ?, ?, ?, '2026-11-10', 2026, 'Uji E2E unduh PDF per status', ?)`,
+         (village_id, type_id, type_name, number, status, letter_date, year, purpose,
+          pemohon, issued_at)
+       VALUES (?, ?, ?, ?, ?, '2026-11-10', 2026, 'Uji E2E unduh PDF per status', ?, ?)`,
       [
         villageId,
         typeId,
         input.jenis,
         input.nomor,
         input.status,
+        input.pemohon ?? null,
         input.status === "issued" ? new Date() : null,
       ],
     );
 
     return { id: hasil.insertId, nomor: input.nomor };
+  });
+}
+
+/** Identitas desa milik akun admin E2E, untuk assertion yang tidak bergantung seed. */
+export async function bacaIdentitasDesaUji(): Promise<{ nama: string; email: string | null }> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT v.name, v.email
+         FROM villages v
+         JOIN users u ON u.village_id = v.id
+        WHERE u.username = 'admin'
+        LIMIT 1`,
+    );
+    const row = rows[0];
+    if (!row) throw new Error("Desa admin E2E tidak ditemukan.");
+
+    return {
+      nama: String(row.name),
+      email: typeof row.email === "string" ? row.email : null,
+    };
   });
 }
 
@@ -1700,5 +2155,288 @@ export async function buatSurveiDenganSoalUji(input: {
       [survei.insertId, input.pertanyaan, JSON.stringify(input.pilihan)],
     );
     return { id: survei.insertId, soalId: soal.insertId };
+  });
+}
+
+/** Identitas desa lengkap yang dapat diubah lewat `/pengaturan/desa`. */
+export interface IdentitasDesaLengkapUji {
+  villageId: number;
+  name: string | null;
+  code: string | null;
+  postalCode: string | null;
+  district: string | null;
+  districtCode: string | null;
+  regency: string | null;
+  regencyCode: string | null;
+  province: string | null;
+  provinceCode: string | null;
+  officeAddress: string | null;
+  headName: string | null;
+  headNip: string | null;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  logo: string | null;
+  signature: string | null;
+  stamp: string | null;
+  penomoranSurat: number;
+}
+
+/** Baca identitas desa admin untuk assertion dan pemulihan data uji. */
+export async function bacaIdentitasDesaLengkapUji(): Promise<IdentitasDesaLengkapUji> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT name, code, postal_code, district, district_code, regency, regency_code,
+              province, province_code, office_address, head_name, head_nip, email, phone,
+              website, logo, signature, stamp, penomoran_surat
+         FROM villages WHERE id = ? LIMIT 1`,
+      [villageId],
+    );
+    const row = rows[0];
+    if (!row) throw new Error("Identitas desa admin E2E tidak ditemukan.");
+    return {
+      villageId,
+      name: row.name === null ? null : String(row.name),
+      code: row.code === null ? null : String(row.code),
+      postalCode: row.postal_code === null ? null : String(row.postal_code),
+      district: row.district === null ? null : String(row.district),
+      districtCode: row.district_code === null ? null : String(row.district_code),
+      regency: row.regency === null ? null : String(row.regency),
+      regencyCode: row.regency_code === null ? null : String(row.regency_code),
+      province: row.province === null ? null : String(row.province),
+      provinceCode: row.province_code === null ? null : String(row.province_code),
+      officeAddress: row.office_address === null ? null : String(row.office_address),
+      headName: row.head_name === null ? null : String(row.head_name),
+      headNip: row.head_nip === null ? null : String(row.head_nip),
+      email: row.email === null ? null : String(row.email),
+      phone: row.phone === null ? null : String(row.phone),
+      website: row.website === null ? null : String(row.website),
+      logo: row.logo === null ? null : String(row.logo),
+      signature: row.signature === null ? null : String(row.signature),
+      stamp: row.stamp === null ? null : String(row.stamp),
+      penomoranSurat: Number(row.penomoran_surat),
+    };
+  });
+}
+
+/** Pulihkan seluruh kolom identitas desa setelah test. */
+export async function pulihkanIdentitasDesaLengkapUji(
+  data: IdentitasDesaLengkapUji,
+): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute(
+      `UPDATE villages
+          SET name = ?, code = ?, postal_code = ?, district = ?, district_code = ?,
+              regency = ?, regency_code = ?, province = ?, province_code = ?,
+              office_address = ?, head_name = ?, head_nip = ?, email = ?, phone = ?,
+              website = ?, logo = ?, signature = ?, stamp = ?, penomoran_surat = ?
+        WHERE id = ?`,
+      [
+        data.name,
+        data.code,
+        data.postalCode,
+        data.district,
+        data.districtCode,
+        data.regency,
+        data.regencyCode,
+        data.province,
+        data.provinceCode,
+        data.officeAddress,
+        data.headName,
+        data.headNip,
+        data.email,
+        data.phone,
+        data.website,
+        data.logo,
+        data.signature,
+        data.stamp,
+        data.penomoranSurat,
+        data.villageId,
+      ],
+    );
+  });
+}
+
+/** Setel ulang sandi/PIN akun uji ke nilai yang diketahui (mis. pemulihan setelah test gagal). */
+export async function setelSandiPengguna(username: string, sandi: string): Promise<void> {
+  const hash = await hashPassword(sandi);
+  await denganPool(async (pool) => {
+    await pool.execute(
+      `UPDATE accounts SET password = ?
+        WHERE provider_id = 'credential'
+          AND user_id = (SELECT id FROM users WHERE username = ? LIMIT 1)`,
+      [hash, username],
+    );
+  });
+}
+
+/** Hapus pengguna uji beserta akun/sesi (kaskade). */
+export async function hapusPenggunaDariUsername(username: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM users WHERE username = ?", [username]);
+  });
+}
+
+/** Hapus grup akses uji beserta izinnya (kaskade). */
+export async function hapusGrupDariNama(nama: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM roles WHERE name = ?", [nama]);
+  });
+}
+
+/** Hapus modul uji berdasarkan slug. */
+export async function hapusModulDariSlug(slug: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM modules WHERE slug = ?", [slug]);
+  });
+}
+
+/** Baca tingkat akses satu grup pada satu slug modul; `null` bila tidak ada. */
+export async function bacaIzinGrupUji(namaGrup: string, slugModul: string): Promise<string | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT rp.access
+         FROM roles r
+         JOIN role_permissions rp ON rp.role_id = r.id
+         JOIN modules m ON m.id = rp.module_id
+        WHERE r.name = ? AND m.slug = ?
+        LIMIT 1`,
+      [namaGrup, slugModul],
+    );
+    return rows[0] ? String(rows[0].access) : null;
+  });
+}
+
+/** Buat API key eksternal untuk desa admin (atau desa tertentu) dan kembalikan kunci mentah. */
+export async function buatApiKeyUji(input?: {
+  name?: string;
+  villageId?: number;
+}): Promise<{ id: number; key: string; villageId: number }> {
+  return denganPool(async (pool) => {
+    const villageId = input?.villageId ?? (await desaAdmin(pool));
+    const key = `SID_${randomBytes(24).toString("hex")}`;
+    const hashedKey = createHash("sha256").update(key).digest("hex");
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      `INSERT INTO api_keys (village_id, name, hashed_key, prefix, rate_limit, active)
+       VALUES (?, ?, ?, 'SID_', 100, 1)`,
+      [villageId, input?.name ?? `E2E ${Date.now()}`, hashedKey],
+    );
+    return { id: hasil.insertId, key, villageId };
+  });
+}
+
+/** Buat desa fixture untuk menguji scoping beberapa API key. */
+export async function buatDesaLainApiKeyUji(): Promise<number> {
+  return denganPool(async (pool) => {
+    const kode = `AK${Date.now().toString().slice(-8)}`;
+    const [hasil] = await pool.execute<ResultSetHeader>(
+      "INSERT INTO villages (name, code, slug, active) VALUES (?, ?, ?, 1)",
+      [`Desa API Lain ${kode}`, kode, `desa-api-${kode.toLowerCase()}`],
+    );
+    return hasil.insertId;
+  });
+}
+
+/** Hapus desa fixture API key; key harus sudah dihapus lebih dulu. */
+export async function hapusDesaLainApiKeyUji(id: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM villages WHERE id = ?", [id]);
+  });
+}
+
+/** Hapus API key uji. */
+export async function hapusApiKeyUji(id: number): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM api_keys WHERE id = ?", [id]);
+  });
+}
+
+/** Penduduk dan jenis surat tanpa syarat untuk uji API eksternal. */
+export interface KonteksSuratEksternalUji {
+  villageId: number;
+  residentId: number;
+  nik: string;
+  namaPenduduk: string;
+  letterTypeId: number;
+  letterTypeName: string;
+}
+
+/** Siapkan konteks permohonan surat lewat API tanpa bergantung pada urutan seed. */
+export async function siapkanSuratEksternalUji(): Promise<KonteksSuratEksternalUji> {
+  return denganPool(async (pool) => {
+    const villageId = await desaAdmin(pool);
+    const [penduduk] = await pool.query<RowDataPacket[]>(
+      `SELECT id, national_id, name FROM residents
+        WHERE village_id = ? AND national_id REGEXP '^[0-9]{16}$'
+        ORDER BY id LIMIT 1`,
+      [villageId],
+    );
+    const [jenis] = await pool.query<RowDataPacket[]>(
+      `SELECT id, name FROM letter_types
+        WHERE village_id = ? AND is_active = 1
+          AND COALESCE(JSON_LENGTH(syarat_surat), 0) = 0
+        ORDER BY sort_order, id LIMIT 1`,
+      [villageId],
+    );
+    if (!penduduk[0]?.national_id)
+      throw new Error("Penduduk NIK 16 digit desa E2E tidak ditemukan.");
+    if (!jenis[0]?.id) throw new Error("Jenis surat tanpa syarat desa E2E tidak ditemukan.");
+    return {
+      villageId,
+      residentId: Number(penduduk[0].id),
+      nik: String(penduduk[0].national_id),
+      namaPenduduk: String(penduduk[0].name),
+      letterTypeId: Number(jenis[0].id),
+      letterTypeName: String(jenis[0].name),
+    };
+  });
+}
+
+/** Baca permohonan yang dibuat API eksternal berdasarkan keterangan unik. */
+export async function bacaPermohonanEksternalUji(keterangan: string): Promise<{
+  id: number;
+  villageId: number;
+  residentId: number;
+  letterTypeId: number;
+  noAntrian: string | null;
+  isianForm: string | null;
+  syarat: string | null;
+} | null> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, village_id, resident_id, letter_type_id, no_antrian, isian_form, syarat
+         FROM permohonan_surat WHERE keterangan = ? ORDER BY id DESC LIMIT 1`,
+      [keterangan],
+    );
+    const row = rows[0];
+    if (!row) return null;
+    return {
+      id: Number(row.id),
+      villageId: Number(row.village_id),
+      residentId: Number(row.resident_id),
+      letterTypeId: Number(row.letter_type_id),
+      noAntrian: row.no_antrian === null ? null : String(row.no_antrian),
+      isianForm: row.isian_form === null ? null : String(row.isian_form),
+      syarat: row.syarat === null ? null : String(row.syarat),
+    };
+  });
+}
+
+/** Hapus permohonan uji API eksternal berdasarkan keterangan. */
+export async function hapusPermohonanEksternalUji(keterangan: string): Promise<void> {
+  await denganPool(async (pool) => {
+    await pool.execute("DELETE FROM permohonan_surat WHERE keterangan = ?", [keterangan]);
+  });
+}
+
+/** Apakah audit event tertentu sudah tercatat untuk resource tertentu. */
+export async function adaAuditEventUji(event: string, resourceId: string): Promise<boolean> {
+  return denganPool(async (pool) => {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT id FROM audit_logs WHERE event = ? AND resource_id = ? LIMIT 1",
+      [event, resourceId],
+    );
+    return Boolean(rows[0]);
   });
 }

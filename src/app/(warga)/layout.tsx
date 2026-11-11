@@ -66,7 +66,7 @@ export default async function WargaLayout({ children }: { children: ReactNode })
           </form>
         </div>
 
-        <nav className="mx-auto flex w-full max-w-5xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
+        <nav className="mx-auto flex w-full max-w-5xl flex-wrap gap-1 px-4 pb-2 sm:px-6">
           {NAV.map((item) => (
             <Button key={item.href} variant="ghost" size="sm" asChild>
               <Link href={item.href}>

@@ -29,6 +29,9 @@ export const JENIS_MEDIA: Record<string, JenisMedia> = {
 
 export type HasilValidasiMedia = { ok: true; jenis: JenisMedia } | { ok: false; pesan: string };
 
+/** CSP untuk dokumen media aktif (SVG) yang disajikan inline. */
+export const CSP_MEDIA_SANDBOX = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+
 /** Kategori media yang boleh disajikan lewat route publik. */
 export const KATEGORI_MEDIA_PUBLIK = [
   "berita",

@@ -20,10 +20,8 @@ import {
  * Disposisi dan ekspedisi diverifikasi ulang dari database karena toast saja
  * hanya membuktikan aksi UI berjalan.
  *
- * OS-SUR-012 (buku agenda/ekspedisi) tidak dirujuk di sini: buku A6/A7 di
- * `/bumindes/sekretariat/agenda` membaca tabel manual `bumindes_agenda` yang
- * tidak diisi oleh surat masuk/keluar, dan log `letter_agenda_logs` belum punya
- * halaman. Gap itu dicatat di STATUS-MODUL, bukan ditutupi assertion lain.
+ * OS-SUR-012 diuji terpisah di `agenda-log-surat.e2e.ts`: buku A6/A7 membaca
+ * surat masuk/keluar dan halaman log menampilkan disposisi/ekspedisi.
  */
 test(
   "surat masuk + disposisi dan surat keluar + ekspedisi lewat UI, lalu cetak daftar",
@@ -60,6 +58,24 @@ test(
       await expect(
         screen.getByRole("alertdialog", { name: "Disposisi surat masuk" }),
       ).toBeVisible();
+      await screen.getByLabel("Instruksi").fill(instruksi);
+      await screen.getByLabel("Kepada (peran/pengguna)").fill("Sekretaris Desa");
+      await screen.getByLabel("Batas waktu").fill("2026-11-20");
+
+      // MIME yang tidak didukung ditolak sebelum disposisi tersimpan.
+      const inputLampiran = browser.locator('input[type="file"]');
+      await inputLampiran.setInputFiles("tests/fixtures/jahat.html");
+      await screen.getByRole("button", { name: "Simpan disposisi" }).tap();
+      await expect(screen.getByText(/Tipe file tidak didukung/).first()).toBeVisible({
+        timeout: 15_000,
+      });
+
+      // Tutup dan buka lagi agar input berkas kembali kosong, lalu simpan tanpa lampiran.
+      await screen.getByRole("button", { name: "Batal" }).tap();
+      await barisMasuk
+        .getByRole("button", { name: new RegExp(`Aksi surat masuk ${nomorMasuk}`) })
+        .tap();
+      await screen.getByRole("menuitem", { name: "Disposisi" }).tap();
       await screen.getByLabel("Instruksi").fill(instruksi);
       await screen.getByLabel("Kepada (peran/pengguna)").fill("Sekretaris Desa");
       await screen.getByLabel("Batas waktu").fill("2026-11-20");

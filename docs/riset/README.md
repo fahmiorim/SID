@@ -4,6 +4,10 @@ Folder ini berisi hasil reverse engineering terhadap source OpenSID lokal. Isiny
 menjelaskan perilaku, alur, keluaran, risiko, dan struktur sistem acuan. Dokumen
 ini **bukan status proyek** dan bukan roadmap aktif.
 
+Sejak 10 November 2026, folder ini juga memuat riset kompetitor pasar di
+[`kompetitor/`](./kompetitor/README.md). Riset tersebut menjelaskan nama produk,
+fitur, harga, dan posisi proyek — bukan status implementasi fitur.
+
 ## Aturan penggunaan
 
 - Scope fitur aktif ada di [`../CAKUPAN-OPENSID.md`](../CAKUPAN-OPENSID.md).
@@ -34,6 +38,8 @@ ini **bukan status proyek** dan bukan roadmap aktif.
 | Inventaris/aset dan bug source acuan | [`LAMPIRAN-11-DEEP-DIVE-INVENTARIS.md`](./LAMPIRAN-11-DEEP-DIVE-INVENTARIS.md) |
 | Bantuan sosial dan DTKS | [`LAMPIRAN-12-BANTUAN-DTKS.md`](./LAMPIRAN-12-BANTUAN-DTKS.md) |
 | Mesin analisis/survei dan scoring | [`LAMPIRAN-13-DEEP-DIVE-ANALISIS.md`](./LAMPIRAN-13-DEEP-DIVE-ANALISIS.md) |
+| Riset kompetitor SID: nama, fitur, harga, posisi pasar | [`kompetitor/README.md`](./kompetitor/README.md) |
+| Audit tampilan publik: konten, warna, tata letak, rencana perbaikan | [`kompetitor/TAMPILAN-PUBLIK.md`](./kompetitor/TAMPILAN-PUBLIK.md) |
 
 ## Artefak historis
 

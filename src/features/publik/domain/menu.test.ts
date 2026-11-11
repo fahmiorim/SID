@@ -17,21 +17,31 @@ const menuLama: MenuRowInput[] = [
 ];
 
 describe("susunMenu", () => {
-  it("mengelompokkan menu datar lama menjadi tujuh menu teratas", () => {
+  it("meng-upgrade menu seed lama ke navigasi bawaan baru", () => {
     const hasil = susunMenu(menuLama);
 
     expect(hasil.map((item) => item.label)).toEqual([
       "Beranda",
       "Profil",
+      "Layanan",
       "Informasi",
       "Transparansi",
-      "Potensi",
-      "Partisipasi",
+      "Warga",
       "Kontak",
     ]);
     expect(
       hasil.find((item) => item.label === "Informasi")?.children?.map((item) => item.label),
-    ).toEqual(["Berita", "Galeri", "Informasi Publik"]);
+    ).toEqual(["Berita", "Agenda", "Galeri", "Informasi Publik", "Suplemen"]);
+    expect(
+      hasil.find((item) => item.label === "Layanan")?.children?.map((item) => item.href),
+    ).toEqual([
+      "/layanan-mandiri",
+      "/desa/surat",
+      "/desa/kesehatan/kia",
+      "/desa/bantuan",
+      "/desa/anjungan",
+      "/desa/verifikasi-surat",
+    ]);
   });
 
   it("mempertahankan menu yang sudah bertingkat", () => {

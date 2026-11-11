@@ -54,10 +54,14 @@ export function SdgsTable({ rows, tahun, canManage }: SdgsTableProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-16">No</TableHead>
-              <TableHead>Tujuan</TableHead>
+              <TableHead className={canManage ? undefined : "whitespace-normal"}>Tujuan</TableHead>
               <TableHead>Skor</TableHead>
-              <TableHead>Keterangan</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead className={canManage ? undefined : "hidden md:table-cell"}>
+                Keterangan
+              </TableHead>
+              <TableHead className={`text-right ${canManage ? "" : "hidden md:table-cell"}`}>
+                Aksi
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -66,12 +70,18 @@ export function SdgsTable({ rows, tahun, canManage }: SdgsTableProps) {
               return (
                 <TableRow key={goal.nomor}>
                   <TableCell className="tabular-nums">{goal.nomor}</TableCell>
-                  <TableCell>{goal.nama}</TableCell>
+                  <TableCell className={canManage ? undefined : "whitespace-normal"}>
+                    {goal.nama}
+                  </TableCell>
                   <TableCell>{row ? formatSkor(normalisasiSkor(row.skor)) : "—"}</TableCell>
-                  <TableCell className="max-w-64 truncate text-muted-foreground">
+                  <TableCell
+                    className={`max-w-64 truncate text-muted-foreground ${canManage ? "" : "hidden md:table-cell"}`}
+                  >
                     {row?.keterangan ?? "Belum diisi"}
                   </TableCell>
-                  <TableCell className="space-x-2 text-right">
+                  <TableCell
+                    className={`space-x-2 text-right ${canManage ? "" : "hidden md:table-cell"}`}
+                  >
                     {canManage ? (
                       <>
                         <Button variant="outline" size="sm" onClick={() => setTerpilih(goal.nomor)}>

@@ -57,6 +57,10 @@ export interface HomeProps {
   berita: BeritaRingkas[];
   surat: SuratPublikRow[];
   agenda: AgendaPublikRow[];
+  /** Ringkasan APBDes tahun terakhir; `null` bila desa belum punya data. */
+  apbdes: ApbdesProps["laporan"] | null;
+  /** Perangkat aktif untuk blok pemerintahan di beranda. */
+  perangkat: PerangkatProps["perangkat"];
 }
 
 export interface AgendaProps {
@@ -234,6 +238,14 @@ export interface TriwulanProps {
 
 export interface ApbdesProps {
   ctx: ThemeContext;
+  /** Dokumen APBDes yang sudah diserahkan dan boleh diunduh publik. */
+  dokumen: {
+    id: number;
+    judul: string;
+    tahun: number;
+    semesterLabel: string;
+    diserahkanPada: string;
+  }[];
   laporan: {
     tahun: number;
     tersedia: number[];

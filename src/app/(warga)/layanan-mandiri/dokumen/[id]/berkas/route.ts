@@ -1,4 +1,5 @@
 import { bacaBerkasDokumenWarga } from "@/features/layanan-mandiri/application/warga-use-cases";
+import { CSP_MEDIA_SANDBOX } from "@/features/publik/domain/media";
 import { getCurrentUser } from "@/lib/dal";
 import { appErrorStatus, isAppError } from "@/lib/errors";
 
@@ -24,11 +25,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const dokumen = await bacaBerkasDokumenWarga(dokumenId);
     const nama = dokumen.namaAsli.replace(/[^\w.\- ]+/g, "_") || "dokumen";
 
+    const mime = dokumen.mime || "application/octet-stream";
     return new Response(new Uint8Array(dokumen.isi), {
       headers: {
-        "Content-Type": dokumen.mime || "application/octet-stream",
+        "Content-Type": mime,
         "Content-Disposition": `inline; filename="${nama}"`,
         "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        ...(mime === "image/svg+xml" ? { "Content-Security-Policy": CSP_MEDIA_SANDBOX } : {}),
       },
     });
   } catch (error) {

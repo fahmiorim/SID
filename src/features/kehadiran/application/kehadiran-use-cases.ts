@@ -43,6 +43,12 @@ export async function daftarKehadiran(
     };
   });
 }
+/** Daftar perangkat untuk pilihan formulir kehadiran. */
+export async function daftarPerangkatDesa(villageId: number) {
+  await requirePermission(KEHADIRAN_RESOURCE, "read");
+  return listPerangkatDesa(villageId);
+}
+
 export interface RekapKehadiranDTO {
   perangkatId: number;
   nama: string;

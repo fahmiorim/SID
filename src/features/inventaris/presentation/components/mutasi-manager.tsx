@@ -2,7 +2,7 @@
 
 import { Check, Circle, Loader2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -404,29 +404,43 @@ function AjukanMutasiForm({
 
 function MutasiRowActions({ id, step }: { id: number; step: MutasiStep }) {
   const router = useRouter();
-  const [approveState, approveAction, approving] = useActionState(
-    setujuiMutasiAction,
-    idleActionState,
-  );
-  const [rejectState, rejectAction, rejecting] = useActionState(tolakMutasiAction, idleActionState);
+  const [approving, startApprove] = useTransition();
+  const [rejecting, startReject] = useTransition();
+  const [approveError, setApproveError] = useState<string | null>(null);
+  const [rejectError, setRejectError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (approveState.status === "success") {
-      toast.success(approveState.message);
-      router.refresh();
-    }
-  }, [approveState, router]);
+  // Tampilkan toast sebelum refresh/penghilangan tombol. Bila memakai status
+  // `useActionState`, komponen ini bisa unmount sebelum efek toast berjalan
+  // ketika tahap terakhir disetujui.
+  function handleApprove(formData: FormData) {
+    setApproveError(null);
+    startApprove(async () => {
+      const result = await setujuiMutasiAction(idleActionState, formData);
+      if (result.status === "success") {
+        toast.success(result.message);
+        router.refresh();
+        return;
+      }
+      setApproveError(result.status === "error" ? result.message : "Gagal menyetujui mutasi.");
+    });
+  }
 
-  useEffect(() => {
-    if (rejectState.status === "success") {
-      toast.success(rejectState.message);
-      router.refresh();
-    }
-  }, [rejectState, router]);
+  function handleReject(formData: FormData) {
+    setRejectError(null);
+    startReject(async () => {
+      const result = await tolakMutasiAction(idleActionState, formData);
+      if (result.status === "success") {
+        toast.success(result.message);
+        router.refresh();
+        return;
+      }
+      setRejectError(result.status === "error" ? result.message : "Gagal menolak mutasi.");
+    });
+  }
 
   return (
     <div className="space-y-2">
-      <form action={approveAction}>
+      <form action={handleApprove}>
         <input type="hidden" name="id" value={id} />
         <Button type="submit" size="sm" variant="secondary" disabled={approving}>
           {approving ? <Loader2 className="animate-spin" /> : <Check className="size-3" />}
@@ -436,7 +450,7 @@ function MutasiRowActions({ id, step }: { id: number; step: MutasiStep }) {
 
       <details>
         <summary className="cursor-pointer text-xs text-muted-foreground">Tolak</summary>
-        <form action={rejectAction} className="mt-2 space-y-2 text-left">
+        <form action={handleReject} className="mt-2 space-y-2 text-left">
           <input type="hidden" name="id" value={id} />
           <Input
             name="catatanPenolakan"
@@ -452,8 +466,8 @@ function MutasiRowActions({ id, step }: { id: number; step: MutasiStep }) {
         </form>
       </details>
 
-      <ActionMessage state={approveState} compact />
-      <ActionMessage state={rejectState} compact />
+      {approveError ? <p className="text-xs text-destructive">{approveError}</p> : null}
+      {rejectError ? <p className="text-xs text-destructive">{rejectError}</p> : null}
     </div>
   );
 }

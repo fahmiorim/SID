@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { APP_NAME } from "@/lib/app-config";
 import { buatCaptcha } from "@/lib/captcha";
@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/masuk">) {
         <div className="mx-auto mb-2 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <Landmark className="size-6" />
         </div>
-        <CardTitle className="text-lg">{APP_NAME}</CardTitle>
+        <h1 className="font-heading text-lg leading-snug font-medium">{APP_NAME}</h1>
         <CardDescription>
           Masuk untuk mengelola data desa atau memakai layanan mandiri warga.
         </CardDescription>

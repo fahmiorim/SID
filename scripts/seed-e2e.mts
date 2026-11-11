@@ -6,6 +6,7 @@ import { createConnection, type RowDataPacket } from "mysql2/promise";
  * Siapkan akun fixture E2E yang dipakai `e2e.config.ts`:
  *
  * - `warga-e2e`          → akun warga (punya `resident_id`, PIN sudah aktif)
+ * - `warga-pin`          → akun warga dengan PIN enam digit untuk uji ubah PIN
  * - `warga-e2e-operator` → role operator
  * - `sekdes-e2e`         → role sekretaris desa
  * - `kades-e2e`          → role kepala desa
@@ -17,6 +18,8 @@ import { createConnection, type RowDataPacket } from "mysql2/promise";
  */
 const PASSWORD = process.env.E2E_WARGA_PASSWORD ?? "TestWarga#12345";
 const WARGA_NIK = "3201010101010001";
+const PIN_PASSWORD = "123456";
+const PIN_NIK = "3201010101010002";
 
 interface UserRow extends RowDataPacket {
   id: string;
@@ -68,6 +71,22 @@ async function main(): Promise<void> {
     const residentId = residentRows[0]?.id;
     if (typeof residentId !== "number") throw new Error("Penduduk fixture E2E tidak ditemukan.");
 
+    // Penduduk terpisah untuk akun uji ubah PIN (PIN harus 6 digit).
+    await db.execute(
+      `INSERT INTO residents (village_id, national_id, name, gender, address)
+       VALUES (?, ?, ?, 'female', ?)
+       ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id), name = VALUES(name)`,
+      [villageId, PIN_NIK, "Warga PIN Uji E2E", "Jl. Uji PIN No. 2"],
+    );
+    const [pinRows] = await db.query<RowDataPacket[]>(
+      "SELECT id FROM residents WHERE village_id = ? AND national_id = ? LIMIT 1",
+      [villageId, PIN_NIK],
+    );
+    const pinResidentId = pinRows[0]?.id;
+    if (typeof pinResidentId !== "number") {
+      throw new Error("Penduduk fixture PIN E2E tidak ditemukan.");
+    }
+
     // Domain `localhost` dipetakan ke desa utama agar resolusi host tetap
     // bekerja ketika test membuat desa fixture tambahan (mode multi-desa).
     await db.execute(
@@ -77,31 +96,52 @@ async function main(): Promise<void> {
       [villageId],
     );
 
-    const passwordHash = await hashPassword(PASSWORD);
-
     const akun: Array<{
       username: string;
       name: string;
       roleId: number | null;
       residentId: number | null;
+      password: string;
     }> = [
-      { username: "warga-e2e", name: "Warga Uji E2E", roleId: null, residentId },
+      {
+        username: "warga-e2e",
+        name: "Warga Uji E2E",
+        roleId: null,
+        residentId,
+        password: PASSWORD,
+      },
+      {
+        username: "warga-pin",
+        name: "Warga PIN Uji E2E",
+        roleId: null,
+        residentId: pinResidentId,
+        password: PIN_PASSWORD,
+      },
       {
         username: "warga-e2e-operator",
         name: "Operator Uji E2E",
         roleId: operatorRoleId,
         residentId: null,
+        password: PASSWORD,
       },
       {
         username: "sekdes-e2e",
         name: "Sekretaris Desa Uji E2E",
         roleId: sekdesRoleId,
         residentId: null,
+        password: PASSWORD,
       },
-      { username: "kades-e2e", name: "Kepala Desa Uji E2E", roleId: kadesRoleId, residentId: null },
+      {
+        username: "kades-e2e",
+        name: "Kepala Desa Uji E2E",
+        roleId: kadesRoleId,
+        residentId: null,
+        password: PASSWORD,
+      },
     ];
 
     for (const item of akun) {
+      const passwordHash = await hashPassword(item.password);
       const email = `${item.username}@e2e.invalid`;
       const [existing] = await db.query<UserRow[]>(
         "SELECT id FROM users WHERE username = ? LIMIT 1",

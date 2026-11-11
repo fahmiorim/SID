@@ -1,11 +1,12 @@
 import { hasPermission } from "@/features/rbac/application/authorization";
 import { getSuratPdfBytes } from "@/features/surat/application/surat-use-cases";
 import { SURAT_RESOURCE } from "@/features/surat/domain/surat";
+import { parseVarianCetak } from "@/features/surat/domain/varian-cetak";
 import { getCurrentUser } from "@/lib/dal";
 import { isAppError } from "@/lib/errors";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: RouteContext<"/persuratan/surat/[id]/pdf">,
 ) {
   const user = await getCurrentUser();
@@ -23,7 +24,8 @@ export async function GET(
   }
 
   try {
-    const { surat, pdf } = await getSuratPdfBytes(suratId);
+    const varian = parseVarianCetak(new URL(request.url).searchParams.get("varian") ?? undefined);
+    const { surat, pdf } = await getSuratPdfBytes(suratId, varian);
     const filename = `surat-${(surat.number ?? String(surat.id)).replace(/[^a-zA-Z0-9._-]+/g, "-")}.pdf`;
 
     return new Response(Buffer.from(pdf), {

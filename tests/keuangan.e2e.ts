@@ -100,7 +100,7 @@ test(
       await expect(screen.getByRole("heading", { name: "Sisa Lebih Pembiayaan" })).toBeVisible();
 
       await screen.getByRole("button", { name: "Tambah Data" }).tap();
-      await screen.getByLabel("Tahun").fill("2098");
+      await screen.getByLabel("Tahun Anggaran").fill("2098");
       await screen.getByLabel("Jumlah").fill("7500000");
       await screen.getByLabel("Tanggal").fill("2026-01-15");
       await screen.getByLabel("Keterangan").fill(keterangan);

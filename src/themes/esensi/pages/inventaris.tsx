@@ -163,26 +163,54 @@ export function EsensiInventaris({
           </ThemeEmpty>
         ) : (
           <ThemeCard>
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-left">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Kategori</th>
-                  <th className="px-4 py-3 text-right font-medium">Jenis</th>
-                  <th className="px-4 py-3 text-right font-medium">Unit</th>
-                  <th className="px-4 py-3 text-right font-medium">Nilai</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rekap.perKategori.map((row) => (
-                  <tr key={row.nama} className="border-t">
-                    <td className="px-4 py-3">{row.nama}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{row.jumlah}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatJumlah(row.unit)}</td>
-                    <td className="px-4 py-3 text-right tabular-nums">{formatRupiah(row.nilai)}</td>
+            <ul className="divide-y md:hidden">
+              {rekap.perKategori.map((row) => (
+                <li key={row.nama} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 font-medium">{row.nama}</p>
+                    <span className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap">
+                      {row.jumlah} jenis
+                    </span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <dt className="text-muted-foreground">Unit</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatJumlah(row.unit)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Nilai</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatRupiah(row.nilai)}</dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-left">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Kategori</th>
+                    <th className="px-4 py-3 text-right font-medium">Jenis</th>
+                    <th className="px-4 py-3 text-right font-medium">Unit</th>
+                    <th className="px-4 py-3 text-right font-medium">Nilai</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rekap.perKategori.map((row) => (
+                    <tr key={row.nama} className="border-t">
+                      <td className="px-4 py-3">{row.nama}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{row.jumlah}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {formatJumlah(row.unit)}
+                      </td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {formatRupiah(row.nilai)}
+                      </td>
+                    </tr>
+                  ))}{" "}
+                </tbody>
+              </table>
+            </div>
           </ThemeCard>
         )}
       </section>
@@ -193,7 +221,40 @@ export function EsensiInventaris({
           <ThemeEmpty>Belum ada barang inventaris yang tercatat.</ThemeEmpty>
         ) : (
           <ThemeCard>
-            <div className="overflow-x-auto">
+            <ul className="divide-y md:hidden">
+              {inventaris.map((item) => (
+                <li key={item.id} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="leading-snug font-medium">{item.nama}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{item.kategori ?? "-"}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap">
+                      {INVENTARIS_KONDISI_LABELS[item.kondisi as InventarisKondisi] ?? item.kondisi}
+                    </span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <dt className="text-muted-foreground">Jumlah</dt>
+                      <dd className="mt-0.5 font-medium">
+                        {formatJumlah(item.jumlah)} {item.satuan ?? ""}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Lokasi</dt>
+                      <dd className="mt-0.5 font-medium">{item.lokasi ?? "-"}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Nilai</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">
+                        {item.nilai ? formatRupiah(item.nilai) : "-"}
+                      </dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[720px] text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr>

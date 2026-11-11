@@ -2,6 +2,7 @@ import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
 import {
+  bacaIdentitasDesaUji,
   buatInventarisDesaLainUji,
   buatInventarisPublikUji,
   buatLapakPublikUji,
@@ -10,6 +11,7 @@ import {
   buatPendudukStatistikUji,
   buatProfilDanPerangkatPublikUji,
   buatSuplemenPublikUji,
+  buatSuratUjiDenganStatus,
   buatSurveiAnalisisPublikUji,
   buatSurveiDesaLainUji,
   hapusInventarisUji,
@@ -18,6 +20,7 @@ import {
   hapusPendudukStatistikUji,
   hapusProfilDanPerangkatUji,
   hapusSuplemenPublikUji,
+  hapusSuratDariId,
   hapusSurveiDesaLainUji,
   hapusSurveyDariJudul,
 } from "./support/database";
@@ -42,10 +45,10 @@ test(
     for (const label of [
       "Beranda",
       "Profil",
+      "Layanan",
       "Informasi",
       "Transparansi",
-      "Potensi",
-      "Partisipasi",
+      "Warga",
       "Kontak",
     ]) {
       await expect(menu.getByRole("link", { name: label, exact: true })).toBeVisible();
@@ -56,12 +59,27 @@ test(
     for (const anak of ["Berita", "Galeri", "Informasi Publik"]) {
       await expect(menu.getByRole("link", { name: anak, exact: true })).toBeVisible();
     }
+
+    // Kursor pergi walau fokus masih tertinggal di induk: panel ikut tertutup.
+    await menu.getByRole("link", { name: "Informasi", exact: true }).focus();
+    await browser.locator("h1").first().hover();
+    await expect(menu.getByRole("link", { name: "Berita", exact: true })).toBeHidden();
+
+    // Pindah ke menu tanpa dropdown juga harus menutup panel sebelumnya.
+    await menu.getByRole("link", { name: "Informasi", exact: true }).hover();
+    await menu.getByRole("link", { name: "Beranda", exact: true }).hover();
+    await expect(menu.getByRole("link", { name: "Berita", exact: true })).toBeHidden();
+
+    await menu.getByRole("link", { name: "Informasi", exact: true }).hover();
     await menu.getByRole("link", { name: "Galeri", exact: true }).tap();
     await expect(browser).toHaveURL(/\/desa\/galeri$/);
 
-    // Bilah kontak header dan tautan akses cepat beranda.
+    // Bilah kontak header dan tautan akses cepat beranda. Identitas dibaca dari
+    // DB agar test tidak bergantung pada nama/email seed tertentu.
+    const identitas = await bacaIdentitasDesaUji();
+    if (!identitas.email) throw new Error("Desa uji tidak punya email untuk bilah kontak.");
     await app.open("/");
-    await expect(screen.getByRole("link", { name: "desa@contoh.id" }).first()).toBeVisible();
+    await expect(screen.getByRole("link", { name: identitas.email }).first()).toBeVisible();
     // Nama aksesibel tautan memuat judul dan keterangannya, mis.
     // "Layanan Surat Ajukan surat online", jadi dicocokkan dengan regex.
     for (const label of [/^Layanan Surat/, /^APBDes/, /^Statistik/, /^Lapak Desa/]) {
@@ -78,7 +96,68 @@ test(
       "href",
       "/desa/profil",
     );
-    await expect(footer).toContainText("Desa Contoh");
+    await expect(footer).toContainText(identitas.nama);
+  },
+);
+
+/**
+ * Katalog: OS-WEB-001 — Navigasi bawah khusus mobile; tersembunyi di desktop.
+ */
+test(
+  "navigasi bawah mobile: tautan terlihat dan status aktif mengikuti halaman",
+  { timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    await browser.setViewport({ width: 390, height: 844 });
+    await app.open("/");
+
+    const nav = screen.getByRole("navigation", { name: "Navigasi bawah" });
+    await expect(nav).toBeVisible();
+    for (const label of ["Beranda", "Profil", "APBDes", "Layanan", "Kontak"]) {
+      await expect(nav.getByRole("link", { name: label, exact: true })).toBeVisible();
+    }
+    await expect(nav.getByRole("link", { name: "Beranda", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await nav.getByRole("link", { name: "Kontak", exact: true }).tap();
+    await expect(browser).toHaveURL(/\/desa\/kontak$/);
+    await expect(nav.getByRole("link", { name: "Kontak", exact: true })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+
+    await browser.setViewport({ width: 1280, height: 900 });
+    await expect(nav).toBeHidden();
+  },
+);
+
+/**
+ * Katalog: OS-WEB-001 — Privasi beranda: surat terbit ditampilkan sebagai
+ * agregat, bukan daftar nama pemohon.
+ */
+test(
+  "beranda publik: nama pemohon surat tidak dipublikasikan",
+  { timeout: 90_000 },
+  async ({ app, screen }) => {
+    const cap = Date.now();
+    const namaPemohon = `Nama Rahasia E2E ${cap}`;
+    const jenis = `Surat Keterangan Uji Privasi ${cap}`;
+    const surat = await buatSuratUjiDenganStatus({
+      nomor: `E2E/PRIV/${cap}`,
+      status: "issued",
+      jenis,
+      pemohon: namaPemohon,
+    });
+
+    try {
+      await app.open("/");
+      await expect(screen.getByText(/surat terbit terbaru/)).toBeVisible();
+      await expect(screen.getByText(new RegExp(`Jenis terbaru:.*${jenis}`))).toBeVisible();
+      await expect(screen.getByText(namaPemohon, { exact: false })).toHaveCount(0);
+    } finally {
+      await hapusSuratDariId(surat.id);
+    }
   },
 );
 
@@ -267,7 +346,7 @@ test(
 
     try {
       await app.open("/desa/peta");
-      await expect(browser.locator("h1")).toContainText("Peta Desa");
+      await expect(browser.locator("h1")).toContainText(/^Peta /);
       await expect(browser.locator(".leaflet-container")).toBeVisible();
 
       // Kontrol layer hanya dirender setelah Leaflet selesai dimuat; tunggu
@@ -340,7 +419,7 @@ test(
       // Peta cetak memuat geometri SVG dan legenda untuk area, garis, dan titik.
       await screen.getByRole("link", { name: "Cetak Peta" }).tap();
       await expect(browser).toHaveURL(/\/desa\/peta\/cetak$/);
-      await expect(browser.locator("h1")).toContainText("Peta Desa");
+      await expect(browser.locator("h1")).toContainText(/^Peta /);
       await expect(browser.locator('svg[role="img"]')).toBeVisible();
       await expect(browser.locator("body")).toContainText(/\d+ layer/);
       await expect(screen.getByText("Legenda")).toBeVisible();
@@ -656,12 +735,18 @@ test(
 );
 
 /**
- * Katalog: OS-WEB-015 — Kontak publik
+ * Katalog: OS-WEB-015 — Kontak publik, termasuk widget statistik pengunjung.
  */
-test("kontak publik: informasi kontak desa", { timeout: 60_000 }, async ({ app, browser }) => {
-  await app.open("/desa/kontak");
-  await expect(browser.locator("h1")).toContainText("Kontak");
-});
+test(
+  "kontak publik: informasi kontak desa dan statistik pengunjung",
+  { timeout: 60_000 },
+  async ({ app, screen, browser }) => {
+    await app.open("/desa/kontak");
+    await expect(browser.locator("h1")).toContainText("Kontak");
+    await expect(screen.getByRole("heading", { name: "Statistik Pengunjung" })).toBeVisible();
+    await expect(screen.getByText("Total Pengunjung", { exact: true })).toBeVisible();
+  },
+);
 
 /**
  * Katalog: OS-WEB-016 — Pengaturan tema

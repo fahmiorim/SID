@@ -145,6 +145,15 @@ describe("themeCssVars", () => {
     // Warna tombol tetap warna desa apa adanya.
     expect(vars["--pub-primary"]).toBe("#16a34a");
   });
+
+  it("menyediakan teks yang aman di atas permukaan primary-text", () => {
+    for (const warnaPrimer of ["#ffd400", "#16a34a", "#0f5132"]) {
+      const vars = themeCssVars({ ...THEME_DEFAULT_OPTIONS, warnaPrimer });
+      expect(
+        rasioKontras(vars["--pub-primary-text"] ?? "", vars["--pub-primary-text-foreground"] ?? ""),
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
 });
 
 describe("warnaTeksAksen", () => {

@@ -8,6 +8,7 @@ import {
   hapusLapakDariNama,
   hapusRegistrasiWargaDariNik,
   hapusSuratDariToken,
+  setelSandiPengguna,
 } from "./support/database";
 import { masukDenganKredensial } from "./support/login";
 
@@ -25,6 +26,7 @@ test(
   async ({ app, screen, browser }) => {
     const cap = Date.now();
     const pesan = `Pesan E2E ${cap}: mohon info jam layanan surat.`;
+    const balasan = `Balasan operator E2E ${cap}.`;
     const namaLapak = `Lapak Warga E2E ${cap}`;
     const alamatAwal = "Dusun Melati RT 01";
     const alamatBaru = "Dusun Melati RT 02";
@@ -51,7 +53,19 @@ test(
       await masukDenganKredensial(screen, browser, warga.username, warga.password);
       await expect(browser).toHaveURL("/layanan-mandiri/beranda");
       await expect(screen.getByText("Selamat datang,")).toBeVisible();
+      const namaWarga = (await browser.locator("h1").textContent())?.trim() ?? "";
+      expect(namaWarga).not.toBe("");
       await expect(screen.getByText("Permohonan terbaru")).toBeVisible();
+      await expect(screen.getByText("Total permohonan")).toBeVisible();
+      await expect(screen.getByText("Sedang diproses")).toBeVisible();
+      await expect(screen.getByText("Surat siap/ambil")).toBeVisible();
+
+      // Identitas dan ringkasan layanan pada beranda, lalu profil warga.
+      await browser.locator('main a[href="/layanan-mandiri/profil"]').tap();
+      await expect(browser).toHaveURL("/layanan-mandiri/profil");
+      await expect(screen.getByRole("heading", { name: "Profil Saya" })).toBeVisible();
+      await expect(screen.getByText("Data warga")).toBeVisible();
+      await expect(screen.getByText("Username")).toBeVisible();
 
       // 2. Pesan warga → operator tampil di percakapan.
       await app.open("/layanan-mandiri/pesan");
@@ -156,6 +170,32 @@ test(
         ),
       ).toBeVisible({ timeout: 15_000 });
 
+      // Operator menerima pesan dan memutuskan izin lewat UI admin.
+      await app.clearState();
+      await app.open("/masuk");
+      const operator = credentials.user("warga-e2e-operator");
+      await masukDenganKredensial(screen, browser, operator.username, operator.password);
+      await expect(browser).toHaveURL("/beranda");
+      await app.open("/pesan-warga");
+      await screen.getByRole("link").filter({ hasText: namaWarga }).first().tap();
+      await expect(screen.getByLabel("Balasan operator")).toBeVisible();
+      await expect(screen.getByText(pesan).first()).toBeVisible();
+      await screen.getByLabel("Balasan operator").fill(balasan);
+      await screen.getByRole("button", { name: "Kirim balasan" }).tap();
+      await expect(screen.getByText("Balasan terkirim ke warga.")).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(screen.getByText(balasan).first()).toBeVisible();
+
+      await app.open("/kehadiran/izin?bulan=12&tahun=2026");
+      const kartuIzin = browser
+        .locator("div[data-slot='card']")
+        .filter({ hasText: alasanIzin })
+        .first();
+      await expect(kartuIzin).toBeVisible();
+      await kartuIzin.getByRole("button", { name: "Setujui", exact: true }).tap();
+      await expect(kartuIzin.getByText("Disetujui")).toBeVisible({ timeout: 15_000 });
+
       await app.clearState();
       await app.open("/masuk");
       const admin = credentials.user("admin");
@@ -181,6 +221,70 @@ test(
       await hapusIzinDariAlasan(alasanIzin);
       await hapusSuratDariToken(tokenSurat);
       await hapusRegistrasiWargaDariNik(nikRegistrasi);
+    }
+  },
+);
+
+/**
+ * Katalog: OS-WGA-002 — ubah PIN warga.
+ *
+ * Akun `warga-pin` memakai PIN enam digit (seed E2E). Validasi konfirmasi diuji
+ * lewat UI, lalu PIN diganti, login dengan PIN baru dibuktikan, dan PIN
+ * dikembalikan agar run berikutnya tetap dapat masuk.
+ */
+test(
+  "OS-WGA-002 — warga mengganti PIN dan masuk dengan PIN baru",
+  { timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const pinAwal = "123456";
+    const pinBaru = "654321";
+
+    try {
+      await app.clearState();
+      await app.open("/masuk");
+      await masukDenganKredensial(screen, browser, "warga-pin", pinAwal);
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+
+      await app.open("/layanan-mandiri/ubah-pin");
+      await expect(screen.getByRole("heading", { name: "Ubah PIN" })).toBeVisible();
+
+      // Konfirmasi yang tidak sama ditolak tanpa mengubah PIN.
+      await screen.getByLabel("PIN lama").fill(pinAwal);
+      await screen.getByLabel("PIN baru").fill(pinBaru);
+      await screen.getByLabel("Ulangi PIN baru").fill("111111");
+      await screen.getByRole("button", { name: "Simpan PIN baru" }).tap();
+      await expect(screen.getByText("Konfirmasi PIN tidak sama.")).toBeVisible({
+        timeout: 15_000,
+      });
+
+      // Muat ulang formulir agar state galat lama tidak menahan pengiriman.
+      await app.open("/layanan-mandiri/ubah-pin");
+      await screen.getByLabel("PIN lama").fill(pinAwal);
+      await screen.getByLabel("PIN baru").fill(pinBaru);
+      await screen.getByLabel("Ulangi PIN baru").fill(pinBaru);
+      await screen.getByRole("button", { name: "Simpan PIN baru" }).tap();
+      await expect(screen.getByText("PIN berhasil diperbarui")).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+
+      // PIN lama tidak lagi berlaku; PIN baru membuka sesi.
+      await app.clearState();
+      await app.open("/masuk");
+      await masukDenganKredensial(screen, browser, "warga-pin", pinBaru);
+      await expect(browser).toHaveURL("/layanan-mandiri/beranda");
+
+      // Kembalikan PIN awal lewat UI agar akun fixture stabil.
+      await app.open("/layanan-mandiri/ubah-pin");
+      await screen.getByLabel("PIN lama").fill(pinBaru);
+      await screen.getByLabel("PIN baru").fill(pinAwal);
+      await screen.getByLabel("Ulangi PIN baru").fill(pinAwal);
+      await screen.getByRole("button", { name: "Simpan PIN baru" }).tap();
+      await expect(screen.getByText("PIN berhasil diperbarui")).toBeVisible({
+        timeout: 15_000,
+      });
+    } finally {
+      await setelSandiPengguna("warga-pin", pinAwal);
     }
   },
 );

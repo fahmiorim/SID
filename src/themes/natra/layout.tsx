@@ -2,6 +2,8 @@ import { ChevronDown, Mail, MapPin, Menu, Phone } from "lucide-react";
 import Link from "next/link";
 
 import { SOSMED_LABELS } from "@/features/publik/domain/theme";
+import { MenuUtama } from "@/themes/menu-utama";
+import { NavBawah } from "@/themes/nav-bawah";
 import type { LayoutProps } from "@/themes/types";
 import { TEMA_WADAH, ThemeSkipLink } from "@/themes/ui";
 
@@ -14,7 +16,10 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
   const nama = desa.namaDesa ?? "Desa";
 
   return (
-    <div data-theme="natra" className="flex min-h-dvh flex-col bg-background text-foreground">
+    <div
+      data-theme="natra"
+      className="flex min-h-dvh flex-col bg-background pb-[calc(3.75rem+env(safe-area-inset-bottom))] text-foreground lg:pb-0 print:pb-0"
+    >
       <ThemeSkipLink />
 
       <header className="tema-natra-header sticky top-0 z-40">
@@ -33,47 +38,7 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
 
           <div className="flex-1" />
 
-          {opsi.tampilMenu ? (
-            <nav className="hidden items-center gap-1 lg:flex" aria-label="Menu utama">
-              {menu.map((item) =>
-                item.children && item.children.length > 0 ? (
-                  <div key={item.href} className="group relative">
-                    <Link
-                      href={item.href}
-                      className="inline-flex items-center gap-1 rounded-md px-2.5 py-2 text-sm font-medium opacity-90 transition-opacity hover:opacity-100"
-                    >
-                      {item.label}
-                      <ChevronDown className="size-3.5 opacity-60" aria-hidden="true" />
-                    </Link>
-                    <div className="invisible absolute top-full left-0 z-50 pt-1.5 opacity-0 transition group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100">
-                      <ul className="min-w-52 rounded-lg border bg-background p-1.5 text-foreground shadow-lg">
-                        {item.children.map((anak) => (
-                          <li key={anak.href}>
-                            <Link
-                              href={anak.href}
-                              className="block rounded-md px-3 py-2 text-sm hover:bg-accent"
-                            >
-                              {anak.label}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="rounded-md px-3 py-2 text-sm font-medium opacity-90 transition-opacity hover:opacity-100"
-                  >
-                    {item.label}
-                  </Link>
-                ),
-              )}
-            </nav>
-          ) : (
-            <div className="flex-1" />
-          )}
+          {opsi.tampilMenu ? <MenuUtama menu={menu} varian="natra" /> : <div className="flex-1" />}
 
           <Link
             href="/layanan-mandiri"
@@ -84,7 +49,7 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
 
           {opsi.tampilMenu ? (
             <details className="relative lg:hidden">
-              <summary className="flex size-9 cursor-pointer list-none items-center justify-center rounded-md bg-white/15">
+              <summary className="flex size-11 cursor-pointer list-none items-center justify-center rounded-md bg-white/15">
                 <Menu className="size-5" />
                 <span className="sr-only">Menu {nama}</span>
               </summary>
@@ -212,6 +177,9 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
               © {new Date().getFullYear()} {nama} · {tema.nama}
             </p>
             <div className="flex flex-wrap items-center gap-4">
+              <span className="hidden sm:inline">
+                Senin–Kamis 08.00–15.00 · Jumat 08.00–11.00 WIB
+              </span>
               {opsi.sosmed.map((item) => (
                 <a
                   key={item.platform}
@@ -230,6 +198,8 @@ export function NatraLayout({ ctx, children }: LayoutProps) {
           </div>
         </div>
       </footer>
+
+      <NavBawah />
     </div>
   );
 }

@@ -11,7 +11,7 @@ export default async function SisaLebihPage() {
     <div className="space-y-6">
       <PageHeader
         title="Sisa Lebih Pembiayaan"
-        description="Pengelolaan SiLPA (Sisa Lebih Pembiayaan)"
+        description="Catat SiLPA per tahun anggaran; nilainya masuk ke rekening pembiayaan 6.1.1 APBDes tahun yang sama."
       />
       <SisaLebihTable items={items} />
     </div>

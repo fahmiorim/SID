@@ -48,10 +48,11 @@ function KontakFormDialog({ kontak, trigger }: { kontak?: KontakRow; trigger: Re
           // Trigger onChange to update form state
           input.dispatchEvent(new Event("change", { bubbles: true }));
         }
-        // Auto-fill nama if empty
+        // Auto-fill nama if empty. API mengembalikan `name`, bukan `label`.
         const namaInput = document.querySelector('input[name="nama"]') as HTMLInputElement;
-        if (namaInput && !namaInput.value) {
-          namaInput.value = data.resident.label;
+        const namaPenduduk = data.resident.name ?? data.resident.label;
+        if (namaInput && !namaInput.value && namaPenduduk) {
+          namaInput.value = namaPenduduk;
           namaInput.dispatchEvent(new Event("change", { bubbles: true }));
         }
       }

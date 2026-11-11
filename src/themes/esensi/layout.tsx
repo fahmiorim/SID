@@ -2,7 +2,8 @@ import { ArrowRight, ChevronDown, Mail, MapPin, Menu, Phone } from "lucide-react
 import Link from "next/link";
 
 import { kontrasTeks, SOSMED_LABELS } from "@/features/publik/domain/theme";
-import { MenuUtama } from "@/themes/esensi/menu-utama";
+import { MenuUtama } from "@/themes/menu-utama";
+import { NavBawah } from "@/themes/nav-bawah";
 import type { LayoutProps } from "@/themes/types";
 import { TEMA_WADAH, ThemeSkipLink } from "@/themes/ui";
 
@@ -28,7 +29,7 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
   return (
     <div
       data-theme="esensi"
-      className="flex min-h-dvh flex-col text-foreground"
+      className="flex min-h-dvh flex-col pb-[calc(3.75rem+env(safe-area-inset-bottom))] text-foreground lg:pb-0 print:pb-0"
       style={{
         fontFamily: "var(--pub-font)",
         backgroundColor: "var(--pub-halaman)",
@@ -101,7 +102,7 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
 
       <header
         data-varian={opsi.headerVarian}
-        className={`tema-esensi-header border-b ${berwarna ? "text-[var(--pub-primary-foreground)]" : "text-foreground"}`}
+        className={`tema-esensi-header border-b ${berwarna ? "text-[var(--pub-primary-text-foreground)]" : "text-foreground"}`}
       >
         <div className={`${TEMA_WADAH} flex items-center gap-5 py-5 sm:py-6`}>
           <Link href="/" className="flex min-w-0 items-center gap-3.5">
@@ -117,7 +118,7 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
                 className={`flex size-12 shrink-0 items-center justify-center rounded-[calc(var(--pub-radius)*1.2)] text-base font-bold shadow-sm sm:size-14 sm:text-lg ${
                   berwarna
                     ? "bg-white/15 text-white"
-                    : "tema-gradien text-[var(--pub-primary-foreground)]"
+                    : "tema-gradien text-[var(--pub-primary-text-foreground)]"
                 }`}
               >
                 {(nama.charAt(0) || "D").toUpperCase()}
@@ -169,14 +170,10 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
       <div
         className="sticky top-0 z-40 border-b border-white/10 shadow-[0_1px_0_rgb(0_0_0_/_0.12),0_20px_40px_-24px_rgb(0_0_0_/_0.6)] backdrop-blur-xl"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--pub-primary) 88%, transparent)",
-          backgroundImage: `linear-gradient(
-            100deg,
-            color-mix(in srgb, var(--pub-primary) 92%, transparent) 0%,
-            color-mix(in srgb, var(--pub-primary) 70%, var(--pub-secondary)) 58%,
-            color-mix(in srgb, var(--pub-secondary) 90%, #000000) 100%
-          )`,
-          color: "var(--pub-primary-foreground)",
+          backgroundColor: "var(--pub-primary-text)",
+          backgroundImage:
+            "linear-gradient(100deg, var(--pub-primary-text) 0%, color-mix(in srgb, var(--pub-primary-text) 84%, #000000) 100%)",
+          color: "var(--pub-primary-text-foreground)",
         }}
       >
         <div className={`${TEMA_WADAH} flex h-14 items-center gap-2`}>
@@ -187,16 +184,16 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
               Beranda
             </Link>
           )}
+          <MobileMenu nama={nama} menu={menu} tampilMenu={opsi.tampilMenu} />
           <div className="flex-1" />
           <Link
             href="/layanan-mandiri"
-            className="hidden shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[13px] font-semibold whitespace-nowrap shadow-sm transition hover:shadow-md sm:inline-flex"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-3.5 py-2 text-xs font-semibold whitespace-nowrap shadow-sm transition hover:shadow-md sm:px-4 sm:text-[13px]"
             style={{ color: "var(--pub-primary-text)" }}
           >
             Layanan Mandiri
             <ArrowRight className="size-3.5" aria-hidden="true" />
           </Link>
-          <MobileMenu nama={nama} menu={menu} tampilMenu={opsi.tampilMenu} />
         </div>
       </div>
 
@@ -346,12 +343,17 @@ export function EsensiLayout({ ctx, children }: LayoutProps) {
             <p>
               © {new Date().getFullYear()} {nama} · {tema.nama}
             </p>
-            <Link href="/masuk" className="transition hover:text-white">
-              Masuk Pengelola
-            </Link>
+            <div className="flex flex-wrap items-center gap-4">
+              <span>Senin–Kamis 08.00–15.00 · Jumat 08.00–11.00 WIB</span>
+              <Link href="/masuk" className="transition hover:text-white">
+                Masuk Pengelola
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
+
+      <NavBawah />
     </div>
   );
 }
@@ -394,12 +396,13 @@ function MobileMenu({
 
   return (
     <details className="relative shrink-0 lg:hidden">
-      <summary className="flex size-9 cursor-pointer list-none items-center justify-center rounded-md border border-white/30">
-        <Menu className="size-5" />
-        <span className="sr-only">Menu {nama}</span>
+      <summary className="flex h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-white/30 px-3.5 text-xs font-semibold">
+        <Menu className="size-4" aria-hidden="true" />
+        Menu
+        <span className="sr-only">{nama}</span>
       </summary>
       <nav
-        className="absolute right-0 z-50 mt-2 max-h-[75vh] w-72 overflow-y-auto rounded-lg border bg-background p-2 text-foreground shadow-lg"
+        className="absolute top-full left-0 z-50 mt-2 max-h-[75vh] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border bg-background p-2 text-foreground shadow-lg"
         aria-label="Menu utama"
       >
         <Link

@@ -1,6 +1,8 @@
 import { test } from "@e2e-dev/web";
 import { expect } from "e2e";
 
+import { buatProgramBantuanDariNama, hapusProgramBantuanDariNama } from "./support/database";
+
 /**
  * Katalog: OS-POP-010 — Statistik penduduk: filter umur dan wilayah.
  */
@@ -42,6 +44,79 @@ test(
     expect(csvHref).toContain("sasaran=2");
     expect(pdfHref).toContain("/statistik/bantuan/ekspor/pdf?");
     expect(pdfHref).toContain("sasaran=2");
+  },
+);
+
+/**
+ * Katalog: OS-POP-013 — Peserta program muncul di statistik dan ekspor
+ * mengikuti filter sasaran yang dipilih lewat form.
+ */
+test(
+  "statistik bantuan: peserta program dihitung dan ekspor mengikuti filter",
+  { session: "admin", timeout: 180_000 },
+  async ({ app, screen, browser }) => {
+    const nama = `Program Statistik E2E ${Date.now()}`;
+    await buatProgramBantuanDariNama(nama);
+
+    try {
+      await app.open(`/bantuan?q=${encodeURIComponent(nama)}`);
+      await screen.getByRole("button", { name: `Aksi untuk program ${nama}` }).tap();
+      await screen.getByRole("menuitem", { name: "Peserta" }).tap();
+      const dialogPeserta = screen.getByRole("dialog").filter({ hasText: "Peserta —" });
+      await dialogPeserta.getByLabel("Penduduk").tap();
+      await screen.getByRole("option").first().tap();
+      await dialogPeserta.getByRole("button", { name: "Tambah", exact: true }).tap();
+      await expect(screen.getByText("1 peserta terdaftar.")).toBeVisible({ timeout: 30_000 });
+      await dialogPeserta.getByRole("button", { name: "Tutup dialog" }).tap();
+
+      // Statistik per program menghitung peserta yang baru ditambahkan.
+      await app.open("/statistik/bantuan");
+      await expect(screen.getByRole("heading", { name: "Statistik Bantuan" })).toBeVisible();
+      const barisProgram = screen.getByRole("row").filter({ hasText: nama });
+      await expect(barisProgram).toBeVisible();
+      await expect(barisProgram.getByRole("cell").nth(1)).toHaveText("1");
+
+      // Ubah kategori lewat form, lalu pilih sasaran Penduduk.
+      await browser.locator('select[name="kind"]').selectOption({ label: "Sasaran Bantuan" });
+      await screen.getByRole("button", { name: "Tampilkan" }).tap();
+      await expect(browser).toHaveURL(/kind=sasaran/);
+      await browser.locator('select[name="sasaran"]').selectOption({ label: "Penduduk" });
+      await screen.getByRole("button", { name: "Tampilkan" }).tap();
+      await expect(browser).toHaveURL(/sasaran=1/);
+
+      const barisPenduduk = screen.getByRole("row").filter({ hasText: "Penduduk" });
+      await expect(barisPenduduk).toBeVisible();
+      await expect(barisPenduduk.getByRole("cell").nth(1)).not.toHaveText("0");
+      await expect(screen.getByRole("link", { name: "Ekspor CSV" })).toHaveAttribute(
+        "href",
+        /sasaran=1/,
+      );
+      await expect(screen.getByRole("link", { name: "Unduh PDF" })).toHaveAttribute(
+        "href",
+        /sasaran=1/,
+      );
+
+      const unduhan = await browser.evaluate(async () => {
+        const csv = await fetch("/statistik/bantuan/ekspor?kind=sasaran&sasaran=1");
+        const pdf = await fetch("/statistik/bantuan/ekspor/pdf?kind=sasaran&sasaran=1");
+        return {
+          csv: {
+            status: csv.status,
+            type: csv.headers.get("content-type") ?? "",
+            body: await csv.text(),
+          },
+          pdf: { status: pdf.status, type: pdf.headers.get("content-type") ?? "" },
+        };
+      });
+      expect(unduhan.csv.status).toBe(200);
+      expect(unduhan.csv.type).toContain("text/csv");
+      expect(unduhan.csv.body).toContain("Penduduk");
+      expect(unduhan.csv.body).toContain("Total");
+      expect(unduhan.pdf.status).toBe(200);
+      expect(unduhan.pdf.type).toContain("application/pdf");
+    } finally {
+      await hapusProgramBantuanDariNama(nama);
+    }
   },
 );
 

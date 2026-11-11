@@ -104,7 +104,35 @@ test(
       await expect(dialog).not.toBeVisible({ timeout: 15_000 });
       await expect(baris().getByText("Terverifikasi")).toBeVisible({ timeout: 15_000 });
 
-      // 5. Impor ulang tidak membuat duplikat dan melewati RTM yang sudah ada.
+      // 5. Laporan rekap dan ekspor CSV membaca status yang baru disimpan.
+      await app.open("/penduduk/dtks/laporan");
+      await expect(screen.getByRole("heading", { name: "Laporan DTKS" })).toBeVisible();
+      await expect(screen.getByText("Formulir DTKS")).toBeVisible();
+      const barisStatus = screen.getByRole("row").filter({ hasText: "Terverifikasi" });
+      await expect(barisStatus).toBeVisible();
+      await expect(barisStatus.getByRole("cell").nth(1)).not.toHaveText("0");
+
+      const laporan = await browser.evaluate(async () => {
+        const res = await fetch("/penduduk/dtks/laporan/ekspor");
+        return {
+          status: res.status,
+          type: res.headers.get("content-type") ?? "",
+          body: await res.text(),
+        };
+      });
+      expect(laporan.status).toBe(200);
+      expect(laporan.type).toContain("text/csv");
+      expect(laporan.body).toContain("Rekapitulasi DTKS");
+      expect(laporan.body).toContain("Terverifikasi");
+
+      const daftar = await browser.evaluate(async (nomor) => {
+        const res = await fetch(`/penduduk/dtks/ekspor?search=${encodeURIComponent(nomor)}`);
+        return { status: res.status, body: await res.text() };
+      }, nomorRtm);
+      expect(daftar.status).toBe(200);
+      expect(daftar.body).toContain(nomorRtm);
+
+      // 6. Impor ulang tidak membuat duplikat dan melewati RTM yang sudah ada.
       await app.open("/penduduk/dtks");
       await screen.getByRole("button", { name: "Impor", exact: true }).tap();
       const dialogUlang = screen.getByRole("dialog");

@@ -18,6 +18,11 @@ import type { KehadiranDTO } from "@/features/kehadiran/domain/kehadiran";
 
 import { KehadiranFormDialog } from "./kehadiran-form-dialog";
 
+/** Tampilkan jam `HH:MM`; MySQL `TIME` mengembalikan `HH:MM:SS`. */
+function formatJam(nilai: string | null): string {
+  return nilai ? nilai.slice(0, 5) : "-";
+}
+
 interface KehadiranTableProps {
   items: KehadiranDTO[];
   perangkatList?: Array<{ id: number; nama: string }>;
@@ -87,8 +92,8 @@ export function KehadiranTable({ items, perangkatList }: KehadiranTableProps) {
                   <TableCell>{item.tanggal}</TableCell>
                   <TableCell>{item.perangkatNama ?? "-"}</TableCell>
                   <TableCell>{item.perangkatJabatan ?? "-"}</TableCell>
-                  <TableCell>{item.jamMasuk ?? "-"}</TableCell>
-                  <TableCell>{item.jamKeluar ?? "-"}</TableCell>
+                  <TableCell>{formatJam(item.jamMasuk)}</TableCell>
+                  <TableCell>{formatJam(item.jamKeluar)}</TableCell>
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${

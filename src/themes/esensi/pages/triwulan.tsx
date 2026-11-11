@@ -44,7 +44,67 @@ export function EsensiTriwulan({ ctx, tahun, tersedia, baris, total }: TriwulanP
           <ThemeEmpty>Data anggaran dan realisasi triwulan belum tersedia.</ThemeEmpty>
         ) : (
           <ThemeCard>
-            <div className="overflow-x-auto">
+            <ul className="divide-y md:hidden">
+              {baris.map((row) => (
+                <li key={row.kode} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="min-w-0 leading-snug font-medium">{row.uraian}</p>
+                    <span className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium tabular-nums">
+                      {row.persen.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%
+                    </span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Anggaran</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">
+                        {formatRupiah(row.anggaran)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">TW I</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatRupiah(row.tw1)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">TW II</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatRupiah(row.tw2)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">TW III</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatRupiah(row.tw3)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">TW IV</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">{formatRupiah(row.tw4)}</dd>
+                    </div>
+                    <div className="col-span-2">
+                      <dt className="text-muted-foreground">Realisasi</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">
+                        {formatRupiah(row.realisasi)}
+                      </dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end border-t bg-muted/30 px-4 py-4 md:hidden">
+              <div className="grid w-full grid-cols-3 gap-3 text-sm">
+                <div>
+                  <p className="text-xs text-muted-foreground">Anggaran</p>
+                  <p className="font-semibold tabular-nums">{formatRupiah(total.anggaran)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Realisasi</p>
+                  <p className="font-semibold tabular-nums">{formatRupiah(total.realisasi)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Serapan</p>
+                  <p className="font-semibold tabular-nums">
+                    {total.persen.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[760px] text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr>

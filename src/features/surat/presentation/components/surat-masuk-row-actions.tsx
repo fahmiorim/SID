@@ -9,7 +9,8 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -33,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { KlasifikasiSuratDTO, SuratMasukDTO } from "@/features/surat/domain/surat";
-import { createIdleActionState, idleActionState } from "@/lib/action-state";
+import { idleActionState } from "@/lib/action-state";
 
 import { deleteSuratMasukAction, tambahDisposisiSuratMasukAction } from "../agenda-actions";
 import { SuratMasukFormDialog } from "./surat-masuk-form-dialog";
@@ -47,22 +48,32 @@ interface SuratMasukRowActionsProps {
 }
 
 export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowActionsProps) {
+  const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [disposisiOpen, setDisposisiOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [disposisiError, setDisposisiError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [disposisiState, disposisiAction, disposisiPending] = useActionState(
-    tambahDisposisiSuratMasukAction,
-    createIdleActionState(),
-  );
+  const [disposisiPending, startDisposisi] = useTransition();
 
-  // Efek, bukan badan render: memanggil toast saat render membuat pesan yang
-  // sama muncul berkali-kali pada setiap render ulang.
-  useEffect(() => {
-    if (disposisiState.status === "success") toast.success(disposisiState.message);
-    if (disposisiState.status === "error") toast.error(disposisiState.message);
-  }, [disposisiState]);
+  function handleDisposisi(formData: FormData) {
+    setDisposisiError(null);
+    startDisposisi(async () => {
+      const result = await tambahDisposisiSuratMasukAction(idleActionState, formData);
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        setDisposisiOpen(false);
+        router.refresh();
+        return;
+      }
+
+      const message = result.status === "error" ? result.message : "Gagal menyimpan disposisi.";
+      setDisposisiError(message);
+      toast.error(message);
+    });
+  }
 
   function handleDelete() {
     setError(null);
@@ -124,7 +135,7 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
               Tambahkan instruksi disposisi untuk surat masuk ini.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <form action={disposisiAction} className="space-y-3" encType="multipart/form-data">
+          <form action={handleDisposisi} className="space-y-3" encType="multipart/form-data">
             <input type="hidden" name="incomingLetterId" value={surat.id} />
             <div className="space-y-2">
               <Label htmlFor={`instruksi-${surat.id}`}>Instruksi</Label>
@@ -159,9 +170,9 @@ export function SuratMasukRowActions({ surat, classifications }: SuratMasukRowAc
                 Format: JPG, PNG, WEBP, atau PDF. Maksimal 10 MB per berkas.
               </p>
             </div>
-            {disposisiState.status === "error" ? (
+            {disposisiError ? (
               <Alert variant="destructive">
-                <AlertDescription>{disposisiState.message}</AlertDescription>
+                <AlertDescription>{disposisiError}</AlertDescription>
               </Alert>
             ) : null}
             <AlertDialogFooter>

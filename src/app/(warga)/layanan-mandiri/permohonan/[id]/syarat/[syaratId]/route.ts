@@ -1,4 +1,5 @@
 import { bacaBerkasSyaratWarga } from "@/features/layanan-mandiri/application/warga-use-cases";
+import { CSP_MEDIA_SANDBOX } from "@/features/publik/domain/media";
 import { getCurrentUser } from "@/lib/dal";
 import { appErrorStatus, isAppError } from "@/lib/errors";
 
@@ -32,11 +33,14 @@ export async function GET(
     const berkas = await bacaBerkasSyaratWarga(permohonanId, syarat);
     const nama = berkas.namaAsli.replace(/[^\w.\- ]+/g, "_") || "berkas";
 
+    const mime = berkas.mime || "application/octet-stream";
     return new Response(new Uint8Array(berkas.isi), {
       headers: {
-        "Content-Type": berkas.mime || "application/octet-stream",
+        "Content-Type": mime,
         "Content-Disposition": `inline; filename="${nama}"`,
         "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
+        ...(mime === "image/svg+xml" ? { "Content-Security-Policy": CSP_MEDIA_SANDBOX } : {}),
       },
     });
   } catch (error) {

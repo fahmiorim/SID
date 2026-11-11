@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { daftarKiaPublik } from "@/features/kesehatan/application/kesehatan-publik-use-cases";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
+import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -15,34 +16,33 @@ export default async function KiaPublikPage() {
   const rows = await daftarKiaPublik(desa.id);
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold">Kesehatan Ibu dan Anak (KIA)</h1>
-        <p className="text-sm text-muted-foreground">
-          {desa.namaDesa ?? "Desa"} — Data Kartu Identitas Anak
-        </p>
-      </header>
-      <div className="rounded-md border">
+    <div className="space-y-8">
+      <ThemePageHeader
+        title="Kesehatan Ibu dan Anak (KIA)"
+        description={`Data Kartu Identitas Anak ${desa.namaDesa ?? "desa"}.`}
+      />
+
+      <ThemeCard className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="p-2 text-left">No KIA</th>
-                <th className="p-2 text-left">Ibu</th>
-                <th className="p-2 text-left">Posyandu</th>
+            <thead className="bg-muted/50 text-left">
+              <tr>
+                <th className="px-3 py-3 font-medium sm:px-4">No KIA</th>
+                <th className="px-3 py-3 font-medium sm:px-4">Ibu</th>
+                <th className="px-3 py-3 font-medium sm:px-4">Posyandu</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0">
-                  <td className="p-2">{row.noKia}</td>
-                  <td className="p-2">{row.ibuName ?? "-"}</td>
-                  <td className="p-2">{row.posyanduId ?? "-"}</td>
+                <tr key={row.id} className="border-t">
+                  <td className="px-3 py-3 sm:px-4">{row.noKia}</td>
+                  <td className="px-3 py-3 sm:px-4">{row.ibuName ?? "-"}</td>
+                  <td className="px-3 py-3 sm:px-4">{row.posyanduId ?? "-"}</td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td className="p-4 text-center text-muted-foreground" colSpan={3}>
+                  <td className="px-3 py-8 text-center text-muted-foreground sm:px-4" colSpan={3}>
                     Belum ada data KIA.
                   </td>
                 </tr>
@@ -50,11 +50,12 @@ export default async function KiaPublikPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </ThemeCard>
+
       <div className="flex justify-end">
         <a
           href="/desa/kesehatan/kia/ekspor"
-          className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm hover:bg-accent"
+          className="tema-link-primary inline-flex min-h-11 items-center rounded-[var(--pub-radius)] border px-4 text-sm font-medium hover:underline"
         >
           Ekspor CSV
         </a>

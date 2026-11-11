@@ -113,6 +113,8 @@ export interface SuratPrintData {
   desa: IdentitasDesa;
   penduduk: PendudukSuratData | null;
   content: string;
+  /** Varian cetak efektif (dari URL atau pengaturan jenis surat). */
+  varian: string;
   /** JSON konfigurasi layout (opsional). */
   layoutConfig?: string | null;
 }
@@ -788,7 +790,11 @@ export async function rejectSuratData(id: number, reason: string): Promise<void>
 }
 
 /** Susun data cetak/PDF untuk desa & surat tertentu (tanpa cek izin). */
-async function loadSuratPrintData(villageId: number, id: number): Promise<SuratPrintData> {
+async function loadSuratPrintData(
+  villageId: number,
+  id: number,
+  varian?: string | null,
+): Promise<SuratPrintData> {
   const surat = await getSurat(villageId, id);
   if (!surat) throw notFound("Surat tidak ditemukan.");
 
@@ -804,11 +810,10 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
   const anggotaKeluarga = await loadAnggotaKeluarga(villageId, penduduk);
   const pengikutSurat = await loadPengikutSurat(villageId, surat.nilaiIsian);
 
-  // Pilih template sesuai varian aktif
+  // Varian dari URL mengalahkan pengaturan jenis surat, sama seperti pratinjau cetak.
+  const varianAktif = varian ?? jenis.templateVariant ?? "default";
   const templateBody =
-    jenis.templateVariant && jenis.templateVariant !== "default" && jenis.templateBodyAlt
-      ? jenis.templateBodyAlt
-      : jenis.templateBody;
+    varianAktif !== "default" && jenis.templateBodyAlt ? jenis.templateBodyAlt : jenis.templateBody;
 
   const values = buildValues(
     surat,
@@ -822,14 +827,25 @@ async function loadSuratPrintData(villageId: number, id: number): Promise<SuratP
   const content =
     surat.content ?? isiTerbilangDanHitung(renderSuratTemplate(templateBody, values), values);
 
-  return { surat, jenis, desa, penduduk, content, layoutConfig: jenis.layoutConfig };
+  return {
+    surat,
+    jenis,
+    desa,
+    penduduk,
+    content,
+    varian: varianAktif,
+    layoutConfig: jenis.layoutConfig,
+  };
 }
 
 /** Data lengkap untuk halaman cetak & PDF (konsep memakai render sementara). */
-export async function getSuratPrintData(id: number): Promise<SuratPrintData> {
+export async function getSuratPrintData(
+  id: number,
+  varian?: string | null,
+): Promise<SuratPrintData> {
   const user = await requirePermission(SURAT_RESOURCE, "read");
   const villageId = await resolveVillageId(user);
-  return loadSuratPrintData(villageId, id);
+  return loadSuratPrintData(villageId, id, varian);
 }
 
 /**
@@ -893,7 +909,7 @@ async function bangunPdfSurat(data: SuratPrintData): Promise<Uint8Array> {
       ? buildVerificationUrl(origin, data.surat.verificationToken)
       : null,
     layoutConfig: data.layoutConfig,
-    templateVariant: data.jenis.templateVariant,
+    templateVariant: data.varian,
     templateBodyAlt: data.jenis.templateBodyAlt,
   });
 }
@@ -901,8 +917,9 @@ async function bangunPdfSurat(data: SuratPrintData): Promise<Uint8Array> {
 /** PDF surat untuk admin (memeriksa izin baca surat). */
 export async function getSuratPdfBytes(
   id: number,
+  varian?: string | null,
 ): Promise<{ surat: SuratDetail; pdf: Uint8Array }> {
-  const data = await getSuratPrintData(id);
+  const data = await getSuratPrintData(id, varian);
   return { surat: data.surat, pdf: await bangunPdfSurat(data) };
 }
 

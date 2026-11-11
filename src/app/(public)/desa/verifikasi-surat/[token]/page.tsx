@@ -1,5 +1,6 @@
 import { verifikasiSuratPublik } from "@/features/surat/application/verifikasi-publik";
 import { VERIFICATION_STEP_LABELS } from "@/features/surat/domain/surat";
+import { ThemeButton, ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -57,10 +58,13 @@ export default async function VerifikasiSuratPage({
     : "-";
 
   return (
-    <div className="mx-auto max-w-2xl py-12">
-      <h1 className="mb-6 text-2xl font-bold">Verifikasi Surat</h1>
+    <div className="mx-auto max-w-2xl space-y-6">
+      <ThemePageHeader
+        title="Verifikasi Surat"
+        description="Periksa status dan tahap verifikasi dokumen surat desa."
+      />
 
-      <div className="mb-8 rounded-lg bg-white p-6 shadow">
+      <ThemeCard className="p-6">
         <h2 className="mb-4 text-xl font-semibold">
           {surat.typeName ?? "Surat"} {surat.year}
         </h2>
@@ -106,16 +110,16 @@ export default async function VerifikasiSuratPage({
             <p>{surat.createdAt.toLocaleDateString()}</p>
           </div>
         </div>
-      </div>
+      </ThemeCard>
 
       {surat.status === "issued" && (
-        <div className="mt-8 rounded-lg bg-green-50 p-6">
-          <h2 className="mb-4 text-xl font-semibold">Surat Sudah Terbit</h2>
-          <p className="text-base">
-            Surat ini sudah selesai diverifikasi dan siap diambil. <br />
-            Anda dapat mengunduh atau mencetak surat melalui sistem desa.
+        <ThemeCard className="p-6">
+          <h2 className="mb-2 text-xl font-semibold">Surat Sudah Terbit</h2>
+          <p className="text-base leading-relaxed">
+            Surat ini sudah selesai diverifikasi dan siap diambil. Anda dapat mengunduh atau
+            mencetak surat melalui sistem desa.
           </p>
-        </div>
+        </ThemeCard>
       )}
     </div>
   );
@@ -123,17 +127,12 @@ export default async function VerifikasiSuratPage({
 
 function VerifikasiTidakDitemukan() {
   return (
-    <div className="mx-auto max-w-2xl py-12 text-center">
-      <h1 className="mb-4 text-3xl font-bold">Surat Tidak Ditemukan</h1>
-      <p className="mb-6 text-lg text-muted-foreground">
-        Surat dengan token yang Anda cari tidak ditemukan dalam sistem.
-      </p>
-      <a
-        href="/desa"
-        className="hover:bg-primary-dark inline-block rounded bg-primary px-4 py-2 text-white transition-colors"
-      >
-        Kembali ke Beranda Desa
-      </a>
+    <div className="mx-auto max-w-2xl space-y-6">
+      <ThemePageHeader
+        title="Surat Tidak Ditemukan"
+        description="Surat dengan token yang Anda cari tidak ditemukan dalam sistem."
+      />
+      <ThemeButton href="/desa">Kembali ke Beranda Desa</ThemeButton>
     </div>
   );
 }

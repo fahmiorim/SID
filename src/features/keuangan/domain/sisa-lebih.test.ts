@@ -11,7 +11,7 @@ describe("validasi SiLPA", () => {
     const hasil = sisaLebihFormSchema.parse(masukanSisaLebih({ tahun: "2025" }));
 
     expect(hasil.tahun).toBe(2025);
-    expect(hasil.jumlah).toBe("1500000");
+    expect(hasil.jumlah).toBe("1500000.00");
   });
 
   it("menormalkan keterangan dan tanggal kosong menjadi null", () => {
@@ -36,6 +36,19 @@ describe("validasi SiLPA", () => {
 
   it("menolak jumlah kosong", () => {
     expect(sisaLebihFormSchema.safeParse(masukanSisaLebih({ jumlah: "" })).success).toBe(false);
+  });
+
+  it.each([
+    ["7.500.000", "7500000.00"],
+    ["Rp 7.500.000,50", "7500000.50"],
+    ["7500000,5", "7500000.50"],
+    ["0", "0.00"],
+  ])("menormalkan jumlah %s menjadi %s", (jumlah, harapan) => {
+    expect(sisaLebihFormSchema.parse(masukanSisaLebih({ jumlah })).jumlah).toBe(harapan);
+  });
+
+  it.each(["-1", "abc", "1.234,567", "1,2,3"])("menolak jumlah %s", (jumlah) => {
+    expect(sisaLebihFormSchema.safeParse(masukanSisaLebih({ jumlah })).success).toBe(false);
   });
 
   it("menerima batas tahun 2000 dan 2100", () => {

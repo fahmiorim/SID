@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertCircle, Loader2, MoreHorizontal, Pencil, Send, Trash2, Upload } from "lucide-react";
-import { useActionState, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -24,7 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { KlasifikasiSuratDTO, SuratKeluarDTO } from "@/features/surat/domain/surat";
-import { createIdleActionState, idleActionState } from "@/lib/action-state";
+import { idleActionState } from "@/lib/action-state";
 
 import { deleteSuratKeluarAction, tambahEkspedisiSuratKeluarAction } from "../agenda-actions";
 import { SuratKeluarFormDialog } from "./surat-keluar-form-dialog";
@@ -38,22 +39,32 @@ interface SuratKeluarRowActionsProps {
 }
 
 export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRowActionsProps) {
+  const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [ekspedisiOpen, setEkspedisiOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ekspedisiError, setEkspedisiError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [ekspedisiState, ekspedisiAction, ekspedisiPending] = useActionState(
-    tambahEkspedisiSuratKeluarAction,
-    createIdleActionState(),
-  );
+  const [ekspedisiPending, startEkspedisi] = useTransition();
 
-  // Efek, bukan badan render: memanggil toast saat render membuat pesan yang
-  // sama muncul berkali-kali pada setiap render ulang.
-  useEffect(() => {
-    if (ekspedisiState.status === "success") toast.success(ekspedisiState.message);
-    if (ekspedisiState.status === "error") toast.error(ekspedisiState.message);
-  }, [ekspedisiState]);
+  function handleEkspedisi(formData: FormData) {
+    setEkspedisiError(null);
+    startEkspedisi(async () => {
+      const result = await tambahEkspedisiSuratKeluarAction(idleActionState, formData);
+
+      if (result.status === "success") {
+        toast.success(result.message);
+        setEkspedisiOpen(false);
+        router.refresh();
+        return;
+      }
+
+      const message = result.status === "error" ? result.message : "Gagal menyimpan ekspedisi.";
+      setEkspedisiError(message);
+      toast.error(message);
+    });
+  }
 
   function handleDelete() {
     setError(null);
@@ -113,7 +124,7 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
             <AlertDialogTitle>Catat ekspedisi surat keluar</AlertDialogTitle>
             <AlertDialogDescription>Tambahkan data pengiriman surat keluar.</AlertDialogDescription>
           </AlertDialogHeader>
-          <form action={ekspedisiAction} className="space-y-3" encType="multipart/form-data">
+          <form action={handleEkspedisi} className="space-y-3" encType="multipart/form-data">
             <input type="hidden" name="outgoingLetterId" value={surat.id} />
             <div className="space-y-2">
               <Label htmlFor={`tgl-kirim-${surat.id}`}>Tanggal kirim</Label>
@@ -148,9 +159,9 @@ export function SuratKeluarRowActions({ surat, classifications }: SuratKeluarRow
                 Format: JPG, PNG, WEBP, atau PDF. Maksimal 10 MB per berkas.
               </p>
             </div>
-            {ekspedisiState.status === "error" ? (
+            {ekspedisiError ? (
               <Alert variant="destructive">
-                <AlertDescription>{ekspedisiState.message}</AlertDescription>
+                <AlertDescription>{ekspedisiError}</AlertDescription>
               </Alert>
             ) : null}
             <AlertDialogFooter>

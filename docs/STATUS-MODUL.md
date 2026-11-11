@@ -1,8 +1,8 @@
 # Audit Status Modul
 
-Tanggal audit struktur: 9 November 2026; pembaruan verifikasi: 10 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID pada audit awal; katalog aktif kini memuat **112 ID** setelah `OS-WEB-020` (agenda kegiatan desa) dipetakan 10 November 2026. Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
+Tanggal audit struktur: 9 November 2026; pembaruan verifikasi: 11 November 2026. Dokumen ini adalah **hasil audit struktur dan bukti pengujian** terhadap 111 ID katalog OpenSID pada audit awal; katalog aktif kini memuat **112 ID** setelah `OS-WEB-020` (agenda kegiatan desa) dipetakan 10 November 2026. Scope produk dan pengecualian ada di [`CAKUPAN-OPENSID.md`](./CAKUPAN-OPENSID.md); backlog perbaikan ada di [`RENCANA-PENGEMBANGAN.md`](./RENCANA-PENGEMBANGAN.md).
 
-Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026 dan 10 November 2026; hasil terbaru dicatat di bagian [Pembaruan 10 November 2026](#pembaruan-10-november-2026--p0-dan-suite-e2e-build-produksi).
+Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `Vaksin_covid`, dan halaman `fweb/Vaksin` tidak dihitung sebagai gap. Audit ini **tidak** menyatakan ada fitur yang selesai penuh. Yang diperiksa adalah keberadaan dan keterhubungan UI/route, aksi/use case, otorisasi/tenant, keluaran, serta bukti test. Pengujian provider eksternal nyata dan pemeriksaan manual setiap halaman **belum dilakukan**. Suite E2E sudah dijalankan pada 9 November 2026, 10 November 2026, dan 11 November 2026; hasil terbaru dicatat di bagian media dan unggahan serta SiLPA antartahun.
 
 ## Metode audit
 
@@ -30,17 +30,17 @@ Covid-19 dan Vaksin Covid berada di luar scope, sehingga controller `Covid19`, `
 | ID tanpa baris register | 9 | 7 terverifikasi struktur, 1 bug (`OS-MOD-001`; UUID diperbaiki 9 November 2026), 1 terverifikasi (`OS-MOD-003`) |
 | Folder fitur `src/features` | 53 | Termasuk fitur lokal mandiri dan `agenda` |
 | File test unit/integrasi di fitur | 184 | Bukan jumlah skenario; `npm run test` 10 November 2026 menjalankan 1.489 test |
-| Halaman `page.tsx` | 206 | Belum dikelompokkan admin/publik/warga |
-| Route handler `route.ts` | 79 | Termasuk API publik/eksternal |
-| Berkas E2E | 63 | `tests/**/*.e2e.ts` |
-| Test E2E | 195 | Hitungan AST atas `test()` di berkas E2E; runner terakhir menjalankan 195 test pada 62 berkas sebelum berkas agenda ditambahkan |
-| Deklarasi `test(` di berkas E2E | 195 | Sama dengan hitungan `test()`; runner dapat berbeda bila fixture memperluas test |
-| Test E2E yang berinteraksi UI | 111 (57%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
-| Test E2E non-interaktif | 84 (43%) | Belum membuktikan aksi pengguna secara langsung |
-| Aksi UI literal di E2E | 927 | Bukan coverage dan bukan bukti paritas |
+| Halaman `page.tsx` | 207 | Belum dikelompokkan admin/publik/warga |
+| Route handler `route.ts` | 80 | Termasuk API publik/eksternal |
+| Berkas E2E | 78 | `tests/**/*.e2e.ts` |
+| Test E2E | 218 | Hitungan AST atas `test()` di seluruh berkas E2E |
+| Deklarasi `test(` di berkas E2E | 218 | Sama dengan hitungan `test()`; runner dapat berbeda bila fixture memperluas test |
+| Test E2E yang berinteraksi UI | 131 (60%) | Memuat minimal satu aksi UI literal (`.fill`, `.tap`, `.click`, `.selectOption`, dst.); aksi lewat helper tidak selalu terhitung |
+| Test E2E non-interaktif | 87 (40%) | Belum membuktikan aksi pengguna secara langsung |
+| Aksi UI literal di E2E | 1182 | Bukan coverage dan bukan bukti paritas |
 | Impor infrastruktur langsung | 0 impor di `src/app/**`; `src/features/*/presentation/**` 0 | Route lampiran pengaduan memakai `bacaLampiranPengaduan` (validasi jalur ada di use case); `api/penduduk/nik` memakai use case penduduk |
 
-Angka inventaris di atas dihitung ulang 10 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai AST TypeScript atas deklarasi `test()` di berkas `tests/**/*.e2e.ts`; run penuh terakhir masih 62 berkas/195 test karena berkas `agenda-publik.e2e.ts` ditambahkan setelahnya. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
+Angka inventaris di atas dihitung ulang 11 November 2026, bukan persentase paritas dan bukan coverage. Hitungan E2E memakai AST TypeScript atas deklarasi `test()` di 78 berkas `tests/**/*.e2e.ts`; run penuh terakhir yang tercatat masih 62 berkas/195 test, sedangkan berkas yang berubah pada penutupan gap dijalankan terfokus terhadap build produksi. Hitungan aksi hanya mencakup pemanggilan literal, sehingga aksi melalui helper bisa tidak terhitung. Pengukuran ulang setelah pemindahan ke use case menemukan 0 impor di `src/app/**` dan 0 di `src/features/*/presentation/**`; `ARCHITECTURE.md` sudah disinkronkan dengan angka ini.
 
 ## Kedalaman E2E: bukti yang benar-benar berinteraksi
 
@@ -73,7 +73,7 @@ Contoh berkas yang masih perlu diperluas (10 November 2026):
 
 | Berkas E2E | Test | Test beraksi | Temuan |
 |---|---:|---:|---|
-| `modul-tambahan` | 2 | 1 | Buku tamu CRUD lewat UI (termasuk jam masuk/keluar); rekap kehadiran dicek sebagai smoke |
+| `modul-tambahan` | 2 | 1 | Buku tamu CRUD lewat UI; kehadiran dicatat/dihapus lewat UI, rekap difilter, CSV diperiksa |
 | `kesehatan` | 2 | 1 | Posyandu → KIA → ibu hamil → pemantauan anak lewat dialog, lalu ekspor CSV; satu test publik |
 
 ## Pembaruan 10 November 2026 — P0 dan suite E2E build produksi
@@ -90,7 +90,7 @@ Suite penuh dijalankan terhadap build produksi (`npm run build` + `npm start`, b
 
 Bug produksi yang diperbaiki: (1) form pemilihan DPT memakai `value` tanpa `onChange` sehingga tidak bisa diisi, kini `defaultValue` + `key`; (2) jam masuk/keluar buku tamu dibaca dari form tetapi tidak pernah diteruskan ke repository, dan tampilan kini dinormalisasi `HH:MM`; (3) dialog buku tamu memiliki form bersarang dan tombol hapus mengirim objek, kini satu form + aksi menerima `id`; (4) impor peserta melewatkan field kartu opsional sehingga `pesertaFormSchema.parse` melempar ZodError, kini field kosong dinormalisasi sebelum dilengkapi dari data master; (5) tombol Impor peserta kini tetap tersedia saat program belum punya peserta.
 
-Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/kesehatan.e2e.ts` (2/1), `tests/modul-tambahan.e2e.ts` (2/1), `tests/penduduk.e2e.ts` (DPT), `tests/web-publik.e2e.ts` (peta/statistik/inventaris), `tests/web-berita-galeri.e2e.ts` (status berita + cetak album), dan `tests/pembangunan-buku.e2e.ts` (proyek tampil publik).
+Test baru/diperluas: `tests/bantuan-impor-peserta.e2e.ts` (1 test), `tests/kesehatan.e2e.ts` (2/1), `tests/modul-tambahan.e2e.ts` (2/2), `tests/penduduk.e2e.ts` (DPT), `tests/web-publik.e2e.ts` (peta/statistik/inventaris), `tests/web-berita-galeri.e2e.ts` (status berita + cetak album), dan `tests/pembangunan-buku.e2e.ts` (proyek tampil publik).
 
 Quality gate 10 November 2026: `npm run lint` 0 error (2 warning `no-console`), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, dan `npm run build` lulus.
 
@@ -153,6 +153,181 @@ Bukti E2E baru pada `web-publik`: (a) tautan lewati + `main#konten-utama` `tabin
 
 Verifikasi: `npm run lint` 0 error (2 warning `no-console` lama), `npm run format:check` lulus, `npm run test` 183 berkas/1.474 test lulus, `npm run check` lulus, `npm run build` lulus. E2E terhadap build produksi (`npm start`, port 3010): `web-publik` 17/17, `web-berita-galeri` 3/3, `web-dokumen` 1/1.
 
+## Pembaruan 10 November 2026 — perbaikan tampilan publik dari audit kompetitor
+
+Batch P0 tampilan publik dikerjakan 10 November 2026. Ini perbaikan UI dan privasi; status fitur tetap mengikuti tabel per-ID, dan perilaku utamanya sudah dibuktikan E2E pada build produksi.
+
+1. **Privasi surat.** `SuratPublikRow` dan `listSuratTerbitTerbaru` tidak lagi memuat `namaPemohon`. Beranda kedua tema menggantinya dengan ringkasan `N surat terbit terbaru` + jenis surat terbaru dan CTA ke `/desa/surat`/layanan mandiri, bukan daftar nama warga.
+2. **Kontras warna desa.** `themeCssVars` menambah `--pub-primary-text-foreground` (dihitung dari `warnaTeksAksen`) dan `--pub-secondary-foreground`. Header/nav Esensi, hero/nav Natra, pill tahun APBDes, dan gradient dekoratif memakai pasangan token ini, sehingga palet primer terang tidak lagi menghasilkan teks gelap di atas latar gelap. CTA hero tetap memakai warna primer solid + `--pub-primary-foreground` agar opsi warna desa terverifikasi dan kontrasnya dijamin. Unit test kontras `theme.test.ts` diperluas; E2E `tema` membuktikan tombol mengikuti `#2f6fed` dan radius `1.25rem`.
+3. **Navigasi.** `PUBLIC_NAV` kini tujuh grup: Beranda, Profil, Layanan, Informasi, Transparansi, Warga, Kontak. Enam halaman yang sebelumnya tidak terjangkau masuk grup: Kesehatan/KIA, IDM & SDGs, Bansos, Suplemen, Verifikasi Surat, dan Anjungan. Seed menu bawaan menjadi 19 tautan datar yang dikelompokkan oleh `susunMenu`; menu instalasi lama yang persis seed 11 tautan dipetakan ke navigasi baru tanpa migrasi data, sedangkan menu yang sudah disesuaikan admin tetap dihormati. Beranda Esensi dan Natra menampilkan delapan tile akses cepat. Target sentuh item menu dinaikkan ke 44 px. Dropdown desktop memakai satu komponen state eksplisit untuk kedua tema: panel menutup saat kursor meninggalkan grup (walau fokus masih di induk), pindah ke menu tanpa dropdown, tautan diklik, klik di luar, Escape, atau halaman berganti; padding panel dan jarak antaritem dirapikan, dan dua grup terakhir dirata-kanan agar tidak keluar viewport.
+4. **Beranda.** `/` mengambil `getLaporanApbdesPublik` dan `daftarPerangkatDesa`, lalu meneruskan `apbdes` + `perangkat` melalui `HomeProps`. Kedua tema menampilkan ringkasan APBDes (total anggaran, realisasi, persentase, bar per bidang), sambutan kepala desa, dan perangkat desa. Blok APBDes disembunyikan bila desa belum punya tahun anggaran (`tersedia` kosong), karena `baris` selalu memuat seluruh template rekening dan sempat menampilkan Rp 0. Radius Natra mengikuti `--pub-radius`.
+5. **Kepercayaan dan kontak.** Widget statistik pengunjung 30 hari dirender di `/desa/kontak`; lebar bar aman ketika semua kunjungan nol (tidak lagi `NaN`); footer menampilkan jam pelayanan yang sama dengan halaman kontak; animasi masuk menghormati `prefers-reduced-motion`.
+6. **Konsistensi halaman.** KIA, DPT, dan Pengaduan memakai `ThemePageHeader`/`ThemeCard`; badge status pengaduan memakai token tema, bukan warna Tailwind lepas. Halaman anjungan sengaja belum diubah karena tata letak kiosk berbeda.
+
+Verifikasi yang dijalankan: `npx vitest run src/features/publik/domain/theme.test.ts src/features/publik/domain/menu.test.ts` — 2 berkas/26 test lulus; `npm run check` lulus — typecheck, ESLint 0 error (5 warning `no-console`: 2 di `tests/umpan-balik.e2e.ts`, 3 di `scratch/check-db.mts`), Prettier bersih, dan 184 berkas/1.490 test lulus; `npm run build` lulus (174 halaman). E2E terhadap build produksi port 3010: `web-publik` **24/24** (25/25 termasuk setup auth; termasuk test baru nama pemohon tidak tampil dan widget pengunjung di kontak), `tema` 1/1, dan `publik-apbdes` 1/1 — total 27/27 termasuk setup auth. Identitas desa pada assertion dibaca dari DB agar tidak bergantung seed "Desa Contoh". Setelah perbaikan dropdown, `web-publik` 24/24 dan `tema` 1/1 dijalankan ulang pada build produksi; test beranda juga memastikan panel tertutup saat kursor pergi meski fokus tertinggal di induk dan saat pindah ke menu tanpa dropdown.
+
+Sisa saat itu: bottom nav mobile; header halaman anjungan; chart/PDF APBDes; migrasi gambar publik ke `next/image`; dan E2E beranda dengan data keuangan nyata (blok APBDes saat `tersedia` tidak kosong). Bottom nav kemudian ditutup pada pembaruan 11 November di bawah.
+
+## Pembaruan 11 November 2026 — audit tata letak 46 halaman publik
+
+Audit visual dijalankan di browser Chrome nyata (Playwright) pada 53 halaman publik (`page.tsx`) × lebar 1440 dan 390 px. Audit pertama mencakup 46 route, lalu 7 halaman sisa diperiksa: pertanahan, cetak peta, cetak faktur, halaman statis, detail suplemen, verifikasi surat per token, dan permohonan kiosk. Hasil akhir: 0 overflow horizontal, 0 gambar rusak, 0 error tak terduga, dan setiap halaman punya tepat satu `h1`. `/desa/anjungan/permohonan` tetap 404 tanpa sesi kiosk; itu gerbang akses, bukan cacat halaman publik. Detail suplemen dengan data nyata diuji E2E; halaman dengan slug/token palsu menampilkan 404/keadaan tidak ditemukan yang benar.
+
+Temuan dan perbaikan:
+
+1. **Navigasi mobile Esensi kosong.** Bar hanya memuat logo dan satu ikon; menu serta CTA tidak terlihat. Menu kini dipindah ke kiri dengan label "Menu", CTA "Layanan Mandiri" selalu tampil di kanan, dan bilah tidak lagi bergantung pada `lg:flex`. Dropdown desktop tetap memakai komponen bersama `src/themes/menu-utama.tsx`.
+2. **Banner Sorotan terpotong.** Slider berukuran 1600×620 dirender dalam kotak 16:9 dengan `object-cover`, sehingga sekitar sepertiga kiri-kanan terpotong. Kartu Sorotan Esensi dan slider Natra kini memakai rasio `1600/620`; judul tetap berada di bawah gambar, bukan di atas banner.
+3. **APBDes menampilkan Rp 0 seolah anggaran sah.** Ketika semua nilai nol, halaman tetap menampilkan ringkasan, bidang, dan serapan berisi nol. Kini total nol dianggap belum ada data: ringkasan, realisasi bidang, dan triwulan masing-masing memakai keadaan kosong; tabel hanya dirender saat ada nilai; kartu ringkasan/bidang dipakai di mobile dan tabel penuh hanya di `sm` ke atas.
+4. **Tabel Surat terpotong di mobile.** Tabel `min-w-[640px]` diganti daftar kartu di bawah `md`; tabel penuh tetap tampil di `md` ke atas. Masa berlaku menjadi ringkasan pill, bukan kolom terpisah yang memaksa lebar.
+5. **Kartu perangkat terlalu tinggi dan avatar kosong.** Di mobile kartu kini horizontal (foto/inisial 96 px + identitas) dan kembali menjadi kartu vertikal di desktop. Perangkat tanpa foto memakai gradasi warna tema + inisial dua huruf, bukan kotak abu-abu dengan satu huruf; kartu kesembilan tidak lagi tampak kosong.
+6. **Tabel data lain di mobile.** KIA tidak lagi memakai `min-w-[520px]`; DPT memakai kartu bertumpuk di mobile (nama, nomor, umur, jenis kelamin, dusun, RW/RT) dan tabel di `md` ke atas; tabel SDGs publik menyembunyikan kolom Keterangan/Aksi dan membiarkan nama tujuan membungkus, sedangkan tampilan admin tetap lima kolom.
+7. **Halaman autentikasi.** `/masuk` kini memakai `h1` untuk nama aplikasi, bukan `CardTitle` berbasis `div`. `/lupa-sandi` dan `/reset-sandi` tidak lagi memakai `min-h-screen` di dalam layout publik, sehingga tidak menyisakan ruang kosong setinggi viewport di atas footer.
+8. **Halaman sisa.** `/desa/pertanahan` memotong kolom Status/Keterangan di 390 px karena tabel lebar berada di wadah `overflow-hidden`; kini memakai `ThemePageHeader`/`ThemeCard`, kartu bertumpuk di mobile, dan tabel `min-w` hanya di `md+`. Detail suplemen dan verifikasi surat per token disamakan memakai primitif tema; halaman cetak peta dan faktur tetap memakai tata letak cetak khusus yang sudah terbaca di kedua lebar.
+
+Verifikasi: `npx prettier --write` pada berkas yang diubah, `npm run typecheck`, `npx eslint` pada berkas terkait, `npm run build` (174 halaman), `npm run check` (184 berkas/1.490 test), dan E2E build produksi port 3010 `web-publik` 24/24 + `publik-apbdes` 1/1 + `tema` 1/1 (27/27 termasuk setup auth). Audit ditulis ulang setelah build final; 53 halaman × 2 lebar tanpa overflow, dan URL sisa hanya menampilkan 404/keadaan tidak ditemukan pada alamat yang memang diuji sebagai tidak valid atau membutuhkan sesi kiosk.
+
+Sisa yang tercatat saat itu: bottom nav mobile, tabel lebar berdata pada inventaris dan rincian triwulan, serta audit visual Natra. Ketiganya ditutup pada pembaruan di bawah; halaman kiosk anjungan sengaja tidak diubah. Data lokal berisi baris E2E (mis. banyak "Surat E2E Test"), jadi panjang daftar surat pada tangkapan layar bukan cacat tata letak.
+
+## Pembaruan 11 November 2026 — bottom nav, tabel inventaris, dan audit Natra
+
+Tiga sisa dari audit 53 halaman publik ditutup.
+
+1. **Bottom nav mobile.** Komponen bersama baru `src/themes/nav-bawah.tsx` menampilkan lima tujuan utama (Beranda, Profil, APBDes, Layanan, Kontak) dengan ikon, label, dan `aria-current="page"` pada tautan aktif. Komponen dirender oleh layout Esensi dan Natra, hanya di bawah `lg`, memakai padding safe-area, dan `print:hidden`. Layout memberi padding bawah pada isi agar baris terakhir footer tidak tertutup; tautan lewati dan `main#konten-utama` tetap menjadi jalur navigasi pertama. E2E baru membuktikan lima tautan tampil di 390 px, tautan aktif sesuai halaman, dan bilah tersembunyi di 1280 px.
+2. **Tabel inventaris dan triwulan.** Rekap per kategori dan daftar barang inventaris kini menjadi kartu bertumpuk di bawah `md`, sedangkan tabel hanya dirender di `md+`. Komponen triwulan memakai pola yang sama (kartu per bidang + ringkasan total di mobile, tabel di desktop). Tampilan inventaris diverifikasi dengan tiga barang sementara (3 jenis, 13 unit, Rp 25.000.000): 390 px menampilkan kartu tanpa overflow, 1440 px menampilkan tabel penuh; data uji dihapus setelah tangkapan layar. Komponen triwulan belum punya route publik, jadi perubahan itu bersifat kesiapan komponen dan tidak diklaim teruji lewat URL.
+3. **Audit Natra.** 46 route Natra diaudit dengan tema aktif pada 1440 dan 390 px: 0 overflow horizontal, 0 gambar rusak, dan tepat satu `h1` per halaman. Dua temuan visual diperbaiki: blok "Kontak Desa" tampil dua kali di beranda karena daftar `urutan` dan `sisa` berisi tautan yang sama (kini dideduplikasi dengan `Set`), dan judul Sambutan/APBDes terdesak tautan pada 390 px (header kini bertumpuk di bawah `sm`). Screenshot sebelum/sesudah ada di `scratch/audit-natra/`; tema aktif dikembalikan ke Esensi setelah audit.
+
+Verifikasi: `npm run check` lulus (typecheck, ESLint 0 error, Prettier bersih, 184 berkas/1.490 test), `npm run build` lulus (174 halaman), dan E2E build produksi `web-publik` 25/25 + `publik-apbdes` 1/1 + `tema` 1/1 + setup auth 1/1 (28/28). Sisa: header anjungan, chart/PDF APBDes, migrasi gambar publik ke `next/image`, E2E beranda dengan data keuangan nyata, dan audit halaman admin/warga.
+
+## Pembaruan 11 November 2026 — surat masuk/keluar dan register E2E
+
+`OS-SUR-009` dan `OS-SUR-010` sudah punya alur E2E interaktif di `tests/disposisi-ekspedisi-agenda.e2e.ts`: surat masuk dicatat lewat dialog, ditemukan lewat pencarian, diberi disposisi (instruksi, penerima, batas waktu), lalu daftar dicetak; surat keluar dicatat, dicari, diberi ekspedisi (tanggal, penerima, cara kirim), lalu dicetak. Disposisi dan ekspedisi diverifikasi ulang dari database, bukan hanya dari toast.
+
+Run pertama pada build produksi menemukan bug nyata: dialog disposisi dan ekspedisi tetap terbuka setelah simpan berhasil karena efek hanya menampilkan toast. Kedua komponen kini menutup dialog pada status sukses. Setelah build ulang, E2E lulus **2/2 termasuk setup auth**.
+
+Dokumen register dikoreksi: `OS-SUR-009`/`010` tidak lagi dihitung "E2E tidak dirujuk". Jumlah ID tanpa rujukan E2E turun dari 18 menjadi 16, dan ID dengan E2E interaktif naik dari 73 menjadi 75. Saat audit itu, gap `OS-SUR-012` masih terbuka: buku agenda manual belum membaca surat masuk/keluar dan log surat belum punya halaman; gap tersebut ditutup pada pembaruan 11 November 2026 di atas.
+
+## Pembaruan 11 November 2026 — aset, mutasi, dan buku administrasi
+
+Tiga ID keuangan mendapat bukti E2E baru pada build produksi:
+
+1. **`OS-FIN-007`** — `tests/inventaris-aset.e2e.ts` membuat kategori golongan "Peralatan & Mesin" lewat dialog, menautkannya ke barang 3 unit senilai Rp 4.500.000, lalu memeriksa daftar barang, laporan terfilter, dan neraca. Kategori yang masih dipakai barang ditolak dihapus dengan pesan yang terlihat; tombol Cetak pada neraca memanggil `window.print()`.
+2. **`OS-FIN-008`** — test yang sama menyiapkan barang lewat fixture DB, mengajukan mutasi pindah lokasi lewat UI, lalu menyetujui tiga tahap (operator → sekretaris desa → kepala desa). Setelah tahap akhir, lokasi barang berubah dari "Gudang Lama E2E" ke "Gudang Baru E2E" dan status baris menjadi Disetujui. Test menemukan toast tahap akhir hilang karena komponen aksi langsung unmount; tombol setujui/tolak kini memakai `useTransition` dan menampilkan toast sebelum `router.refresh()`.
+3. **`OS-FIN-009`** — `tests/bumindes-buku.e2e.ts` membuka buku administrasi seed, menambah item lewat dialog, mengubah uraiannya, lalu membuka halaman cetak resmi dan memastikan uraian baru ikut tercetak.
+
+Daftar barang kini memakai `formatJumlah`, sehingga jumlah `3.00` tampil sebagai `3` dan konsisten dengan laporan. Verifikasi: E2E `inventaris-aset` 3/3 dan `bumindes-buku` 2/2 termasuk setup auth. Register: 78 ID punya E2E interaktif dan 13 ID belum dirujuk E2E.
+
+## Pembaruan 11 November 2026 — buku penduduk, tanah, pembangunan, dan sekretariat
+
+Empat ID administrasi mendapat E2E perilaku pada build produksi:
+
+1. **`OS-FIN-010`** — `tests/bumindes-penduduk.e2e.ts` membuktikan buku B1 kosong, membuat penduduk tidak tetap lewat dialog, lalu menekan **Sinkronisasi dari Penduduk**. Kelima buku B1–B5 kini terisi dan angkanya dibandingkan dengan hitungan langsung tabel `residents`/`resident_mutations`; buku mutasi B3 juga dibuka pada halaman cetak resmi.
+2. **`OS-FIN-011`** — `tests/bumindes-tanah.e2e.ts` menyiapkan persil dan mutasi tanah kas, lalu memeriksa daftar persil/mutasi, cetak buku, cetak mutasi ber-kop, serta CSV persil dan CSV mutasi.
+3. **`OS-FIN-012`** — `tests/bumindes-pembangunan.e2e.ts` memeriksa kegiatan dan kader pada daftar, halaman cetak pembangunan, halaman cetak kader, serta kedua CSV.
+4. **`OS-FIN-013`** — `tests/bumindes-sekretariat.e2e.ts` memeriksa peraturan, aparat, agenda masuk, dan ekspedisi pada daftar, cetak, serta CSV. Cetak/ekspor tanpa parameter kini berarti Buku Agenda (surat masuk saja); parameter `jenis=keluar` berarti Buku Ekspedisi.
+
+Dua bug perilaku ditemukan dan diperbaiki. Pertama, sinkronisasi penduduk hanya memperbarui item yang sudah ada sehingga buku kosong tetap kosong; sekarang ringkasan bertanda sinkronisasi dibuat bila belum ada dan diperbarui pada sinkronisasi berikutnya tanpa menimpa catatan manual. Kedua, cetak/ekspor agenda tanpa parameter mencampur surat masuk dan keluar; sekarang default-nya surat masuk, konsisten dengan tombol **Cetak Agenda** dan **Cetak Ekspedisi**.
+
+Verifikasi saat itu: typecheck/Prettier bersih, E2E empat berkas **5/5 termasuk setup auth**, `npm run build` lulus 174 halaman. Register setelah empat buku: **82 ID** punya E2E interaktif dan **9 ID** belum dirujuk E2E; pembaruan agenda/log surat menaikkannya menjadi 83/8.
+
+## Pembaruan 11 November 2026 — buku agenda terhubung ke persuratan dan log surat
+
+`OS-SUR-012` ditutup pada build produksi. Buku Agenda (A6) dan Ekspedisi (A7) di `/bumindes/sekretariat/agenda` kini membaca langsung `incoming_letters` dan `outgoing_letters`; catatan manual `bumindes_agenda` tetap digabungkan agar data lama tidak hilang. Surat tidak disalin ke tabel manual, sehingga perubahan atau penghapusan surat tidak meninggalkan salinan basi.
+
+Halaman baru `/persuratan/log-surat` menampilkan `letter_agenda_logs` lintas jenis: waktu, jenis surat, aksi (Disposisi/Ekspedisi), nomor, perihal, asal/tujuan, dan catatan. Halaman ini punya filter Semua/Surat Masuk/Surat Keluar dan pencarian nomor/perihal/aksi/catatan; tautan **Log Surat** tersedia di halaman surat masuk dan surat keluar. Izin baca kedua resource ditegakkan, dan desa diambil dari sesi.
+
+`tests/agenda-log-surat.e2e.ts` membuat surat masuk + disposisi serta surat keluar + ekspedisi lewat UI, lalu membuktikan keduanya langsung muncul di Buku Agenda/Ekspedisi, cetak A6 hanya berisi surat masuk, cetak A7 hanya berisi surat keluar, dan log menampilkan kedua aksi dengan filter serta pencarian yang benar. Verifikasi: E2E `agenda-log-surat` + `disposisi-ekspedisi-agenda` **3/3 termasuk setup auth**. Register: **83 ID** punya E2E interaktif dan **8 ID** belum dirujuk E2E.
+
+## Audit visual admin dan warga (11 November 2026)
+
+Cakupan: **129 route admin** dan **10 route warga** pada lebar 1440 dan 390 px, login sebagai admin dan warga, dengan metrik status HTTP, overflow dokumen, gambar rusak, jumlah `h1`, error konsol, dan screenshot. Lima belas halaman admin ber-segmen dinamis (`[id]`/`[slug]`) tidak masuk crawl statis dan tetap menjadi batas audit; halaman detail perlu diuji dari tautan daftar masing-masing.
+
+Temuan dan perbaikan:
+
+1. `/kesehatan/kia`, `/kesehatan/pemantauan-anak`, dan `/kesehatan/pemantauan-ibu-hamil` meluber 64–107 px di 390 px karena toolbar Tambah/Filter/Ekspor tidak membungkus. Toolbar diubah menjadi `flex-wrap`; tombol ekspor turun baris tanpa memotong halaman.
+2. `/penduduk/dtks` memicu React hydration mismatch (#418) karena `toLocaleDateString()` memakai zona waktu server dan browser. Format tanggal kini eksplisit `id-ID` dengan `timeZone: Asia/Jakarta`.
+3. Navigasi warga di 390 px memotong menu setelah “Bantuan” karena hanya bisa digeser horizontal tanpa petunjuk. Navigasi diubah menjadi `flex-wrap`, sehingga Izin, Lapak, Pesan, dan Profil tetap terlihat.
+
+Audit ulang setelah perbaikan: **0 masalah** pada 139 route × 2 lebar (tidak ada status ≥400, overflow dokumen, gambar rusak, `h1` hilang/ganda, atau error konsol). Screenshot sampel tersimpan di `scratch/audit-admin-warga/sampel/`; laporan mentah di `scratch/audit-admin-warga/laporan.json`.
+
+Verifikasi saat audit: `npm run check` lulus (`184` berkas unit test, `1490` test), `npm run build` lulus `175` halaman, dan E2E fokus **7/7 termasuk auth** (`agenda-log-surat`, `disposisi-ekspedisi-agenda`, empat buku administrasi).
+
+## SiLPA antartahun dan kesinambungan APBDes (11 November 2026)
+
+`OS-FIN-005` ditutup. Catatan `sisa_lebih` tidak lagi menjadi CRUD terpisah: setelah tambah/ubah/hapus, seluruh catatan pada tahun anggaran yang sama dijumlahkan lalu ditulis ke rekening `6.1.1` (SILPA Tahun Anggaran Sebelumnya) pada `keuangan` tahun yang sama. Penulisan memakai agregasi APBDes yang sudah ada, sehingga `6.1`, `6`, ringkasan pembiayaan, laporan realisasi, dan ekspor CSV ikut berubah. Bila tahun catatan dipindahkan, tahun lama dibersihkan dan tahun baru disinkronkan; jumlah dinormalisasi ke format uang kanonik dan nilai negatif/nonangka ditolak.
+
+Halaman `/keuangan/sisa-lebih` memberi tautan **APBDes {tahun}** pada setiap baris. E2E `tests/sisa-lebih-antartahun.e2e.ts` membentuk surplus Rp3.000.000 pada APBDes 2087, mencatatnya sebagai SiLPA 2088, lalu membuktikan angka itu muncul di rekening 6.1.1 APBDes 2088 dan laporan realisasi resmi; setelah jumlah diubah menjadi Rp4.000.000 APBDes ikut berubah, setelah tahun dipindahkan ke 2089 APBDes 2088 kembali nol dan APBDes 2089 menerima Rp4.000.000, dan setelah dihapus nilainya kembali nol. CRUD lama tetap diuji `keuangan.e2e.ts`. Register: **84 ID** punya E2E interaktif dan **7 ID** belum dirujuk E2E.
+
+Verifikasi: `npm run check` lulus (`184` berkas unit test, `1498` test; unit SiLPA 16 test), `npm run build` lulus `175` halaman, dan E2E `sisa-lebih-antartahun` + `keuangan` **7/7 termasuk setup auth**.
+
+## Media, unggahan, dan akses berkas (11 November 2026)
+
+`OS-OPS-010` ditutup dengan E2E `tests/media-unggah-akses.e2e.ts`. Test mengunggah PNG 1×1 melalui `/pengaturan/desa`, membaca jalur logo dari DB, lalu memastikan `/api/publik/media/<desa>/umum/<berkas>` mengembalikan `200`, `image/png`, `X-Content-Type-Options: nosniff`, dan cache immutable. URL dengan desa lain dan URL kategori privat `permohonan` sama-sama `404`; berkas kategori privat sengaja dibuat di disk sebelum diuji agar penolakan membuktikan pembatasan kategori, bukan berkas yang tidak ada. Unggah `text/html` ditolak dengan pesan yang terlihat dan logo lama tidak berubah.
+
+SVG tetap diizinkan untuk media umum, tetapi route publik kini mengirim `Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; sandbox` khusus untuk `image/svg+xml`, sehingga skrip di dalam SVG tidak berjalan saat dokumen dibuka langsung. Route syarat permohonan admin/warga dan berkas dokumen warga juga mendapat `nosniff` serta CSP yang sama untuk SVG. Test kedua membuktikan lampiran pengaduan privat menolak akun warga (`403`) dan tamu (`401`), bukan hanya mengandalkan pemeriksaan kode.
+
+Saat E2E dijalankan, formulir identitas desa tidak menampilkan pesan galat unggahan karena `fieldErrors` ada tetapi tidak dirender untuk field logo; alert kini selalu menampilkan pesan galat. Data uji dipulihkan: logo desa dikembalikan ke nilai awal dan berkas unggahan uji dihapus dari `storage/media`. Register: **85 ID** punya E2E interaktif dan **6 ID** belum dirujuk E2E.
+
+Verifikasi: `npm run check` lulus (`184` berkas unit test, `1498` test), `npm run build` lulus `175` halaman, dan E2E `media-unggah-akses` + `pengaturan-lampiran` **5/5 termasuk setup auth**.
+
+## Identitas, akses, dan API eksternal (11 November 2026)
+
+`OS-GOV-001` ditutup lewat `tests/identitas-desa.e2e.ts`. Formulir `/pengaturan/desa` diubah untuk kepala desa, NIP, alamat, email, telepon, dan website; tanda tangan dan stempel diunggah ke media `umum`. Nilai dibaca ulang dari form dan DB, alamat/telepon/email tampil di `/desa/kontak`, dan email `a@b` yang lolos validasi HTML5 ditolak regex server tanpa mengubah data tersimpan. Semua nilai awal dan berkas uji dipulihkan.
+
+`OS-OPS-001` ditutup lewat `tests/pengguna-grup-akses.e2e.ts`. E2E membuat, mengubah, dan menghapus modul lewat UI; membuat grup; memberi izin baca pada modul anak “Identitas Desa”; membuat pengguna bergrup itu; lalu login sebagai pengguna tersebut. Menu induk “Pengaturan” muncul karena izin anak diwariskan, `/pengaturan/desa` terbuka, dan `/pengaturan/pengguna` menampilkan “Akses ditolak”. E2E menemukan bug nyata: `savePermissionsAction` menuntut key form empat bagian padahal key yang dikirim `perm:<id>:read` hanya tiga, sehingga semua centang izin dibuang tetapi toast sukses tetap tampil. Parser diperbaiki dan divalidasi terhadap DB.
+
+`OS-OPS-012` ditutup lewat `tests/api-eksternal.e2e.ts`. Dua API key dari desa berbeda diuji pada HTTP nyata. `POST /api/eksternal/surat` membuat permohonan pada desa milik kunci meskipun klien mengirim `villageId: 999`, menyimpan nomor antrean, dan mencatat audit `api.eksternal.surat.create`. Kontrak OpenAPI 3.1 memuat jalur surat, token, verifikasi, dan TTE. GET/POST token mengembalikan metadata surat; kunci desa lain mendapat `404`; TTE menolak berkas non-PDF dengan `415`. E2E juga menemukan autentikasi lama mencari kunci hanya berdasarkan prefix `SID_`, sehingga kunci pertama bisa dipakai untuk semua pemanggil; pencarian kini memakai hash SHA-256 kunci. Provider TTE nyata tetap belum diuji karena membutuhkan kredensial BSrE.
+
+Register: **88 ID** punya E2E interaktif dan **3 ID** belum dirujuk E2E (`OS-POP-007`, `OS-POP-010`, `OS-POP-015`). Verifikasi: `npm run check` lulus (`184` berkas/`1498` test), `npm run build` lulus `175` halaman, dan E2E tiga berkas **6/6 termasuk setup auth**. Semua user, grup, modul, API key, permohonan, surat, desa fixture, dan berkas media uji dibersihkan.
+
+## Suplemen, statistik, dan kontak (11 November 2026)
+
+`OS-POP-007` ditutup lewat `tests/suplemen-data.e2e.ts`. E2E membuat definisi lewat dialog, mengubah keterangan, menambahkan penduduk dengan kolom isian dinamis “Jenis Bantuan”, memeriksa kolom dan nilai di tabel, mengekspor CSV, mengimpor CSV untuk sasaran kedua, memastikan tombol cetak tersedia, lalu menghapus definisi lewat konfirmasi native. Semua sasaran dibuat khusus dan dihapus di `finally`.
+
+`OS-POP-010` ditutup lewat `tests/statistik-penduduk.e2e.ts`. Dua penduduk pada dusun unik (laki-laki usia 71 dan perempuan usia 26) membuktikan angka gender dan total berubah menjadi 1/1/2, filter umur 20–30 menyisakan perempuan saja, kategori rentan menghitung lansia, tautan serta unduhan CSV/PDF membawa filter yang sama, dan laporan kependudukan tetap dapat dibuka. Rentang umur kustom 200–300 dibuat, diubah, lalu dihapus lewat UI; pembersihan menghapus rentang, penduduk, dan wilayah uji.
+
+`OS-POP-015` ditutup lewat `tests/kontak-grup.e2e.ts`. Lookup NIK 16 digit lewat `/api/penduduk/nik` mengembalikan penduduk yang sama dan mengisi nama di formulir, kontak baru menampilkan tautan `tel:`, `mailto:`, dan `t.me`, kontak diubah lalu ekspor CSV memuat nilai terbaru, grup dibuat dan diberi anggota, lalu anggota, kontak, dan grup dihapus lewat UI. E2E menemukan bug nyata: komponen mengisi nama dari `data.resident.label`, padahal API mengembalikan `name`, sehingga nama menjadi teks “undefined”; fallback `name ?? label` diperbaiki.
+
+Register akhir: **91 ID ber-E2E interaktif**, **0 ID tanpa rujukan E2E**. Verifikasi: `npm run check` lulus (`184` berkas/`1498` test), `npm run build` lulus `175` halaman, dan E2E tiga berkas **4/4 termasuk setup auth**.
+
+## Kehadiran, buku tamu, statistik bantuan, dan formulir eksternal (11 November 2026)
+
+`OS-MOD-003` ditutup lewat `modul-tambahan`. Halaman `/kehadiran` ternyata tidak mengirim daftar perangkat ke dialog, sehingga formulir tambah tidak punya pilihan; daftar perangkat kini dimuat lewat use case dan diteruskan ke tabel/dialog. E2E mencatat kehadiran lewat UI untuk perangkat nyata pada `2099-12-15`, memilih status Izin, memfilter rekap lewat form bulan/tahun, memeriksa angka 0/1/0/0, mengunduh CSV yang memuat baris tersebut, lalu menghapus catatan. Dua bug tampilan ikut diperbaiki: jam `08:15:00` kini tampil `08:15`, dan tombol hapus dialog tidak lagi memakai form bersarang yang membuat aksi hapus tidak berjalan.
+
+`OS-MOD-002` ditutup dengan E2E buku tamu yang sudah berinteraksi: tambah tamu dengan instansi/jam masuk, ubah keperluan, lalu hapus. `OS-ANA-005` ditutup dengan mengambil token dari kartu embed admin, mengirim respons lewat API (`201`), dan membuktikan nama responden muncul di rekap survei. `OS-POP-013` diperkuat: peserta program dibuat lewat UI, statistik per program menghitung 1 peserta, kategori diubah ke sasaran lewat form, dan CSV/PDF mengikuti filter `sasaran=1`.
+
+Register saat itu: **95 ID ber-E2E interaktif**, **0 ID tanpa rujukan E2E**, **11 ID terverifikasi struktur**, **4 ID Sebagian**, **0 smoke**, **0 hanya penolakan**. Verifikasi: E2E `modul-tambahan` 2/2 + `analisis-survei` 8/8 + `statistik-bantuan` 4/4 = **15/15 termasuk setup auth**; `npm run check` dan build dijalankan setelah perubahan.
+
+## Audit ulang 11 ID “struktur terverifikasi” (11 November 2026)
+
+Kesebelas ID yang tersisa bukan ID tanpa E2E: semuanya sudah dirujuk test, tetapi label lama belum membedakan test yang menggerakkan UI dari test yang hanya menyentuh halaman. Audit ini mencocokkan cakupan katalog dengan isi test dan menjalankan test terkait pada build produksi.
+
+- `OS-POP-006` — `dtks-impor` mengimpor CSV lewat dialog, menautkan RTM, menampilkan anggota dan metadata, mengubah status, membuka laporan rekap, mengekspor rekap, lalu membuktikan impor ulang idempoten.
+- `OS-FIN-004` — `keuangan-lanjutan` mengimpor PDF, mengunduh berkas, mencatat penyerahan, menolak duplikat, menghapus, serta mengunduh ekspor CSV dan Excel laporan.
+- `OS-FIN-006` — pagu, realisasi, dan triwulan diisi admin lalu tampil di `/desa/apbdes` publik. Dokumen yang dicatat diserahkan tampil di bagian “Dokumen Laporan” dan dapat diunduh sebagai PDF lewat route publik berbasis host.
+- `OS-WGA-001` — registrasi mandiri dengan captcha, persetujuan operator, dan PIN sementara sudah E2E. Gap: OTP/email belum E2E.
+- `OS-WGA-002` — login warga dengan captcha dan sesi, ubah PIN, penolakan konfirmasi yang tidak sama, lalu login dengan PIN baru sudah E2E. Gap: OTP faktor kedua dan rate limit masih diuji unit/integrasi.
+- `OS-WGA-003` — test diperluas: beranda menampilkan identitas dan tiga kartu ringkasan, lalu tautan Profil membuka “Profil Saya”, data warga, dan username. Tidak ada gap E2E yang tersisa.
+- `OS-WGA-006` — warga mengirim pesan; operator membuka percakapan di `/pesan-warga` dan membalas.
+- `OS-WGA-007` — token valid menampilkan surat terbit; token tidak dikenal menampilkan pesan tidak ditemukan.
+- `OS-WGA-008` — program aktif/selesai yang menautkan warga tampil, program tanpa peserta tidak bocor.
+- `OS-WGA-010` — lapak ditambah, alamat diubah, tampil di katalog publik, lalu dihapus.
+- `OS-WGA-011` — warga mengajukan izin; operator menyetujui lewat `/kehadiran/izin` dan status berubah menjadi Disetujui.
+
+Register akhir: **107 ID ber-E2E interaktif**, **0 ID tanpa rujukan E2E**, **0 ID terverifikasi struktur**, **3 ID Sebagian**, **0 smoke**, **0 hanya penolakan**. Verifikasi: E2E `dtks-impor` + `keuangan-lanjutan` + `bantuan-warga` + `warga-mandiri` **6/6 termasuk setup auth**; `npm run check` dan `npm run build` dijalankan setelah perubahan.
+
+## Penutupan gap E2E lanjutan (11 November 2026)
+
+- `OS-POP-006`: laporan rekap DTKS dan ekspor CSV rekap/daftar diperiksa lewat UI dan endpoint; baris status `Terverifikasi` dan nomor RTM uji muncul di CSV.
+- `OS-FIN-004`: ekspor CSV dan Excel laporan APBDes diunduh dari halaman arsip dokumen; keduanya mengembalikan berkas yang dapat dibuka.
+- `OS-GOV-007`: dua kandidat dibuat lewat dialog admin pada pemilihan yang juga dibuat lewat UI; halaman publik menampilkan kandidat, 10 suara sah, dan pemenang. Status naik dari Sebagian.
+- `OS-WGA-006`: operator membuka percakapan warga dan mengirim balasan lewat `/pesan-warga`.
+- `OS-WGA-011`: operator menyetujui pengajuan izin; kartu berubah menjadi `Disetujui`.
+- `OS-SUR-014`: unggahan `text/html` pada disposisi ditolak dengan pesan MIME yang terbaca; bug produksi yang membuatnya menjadi “Terjadi kesalahan pada server” diperbaiki dengan validasi sebelum penyimpanan media.
+- `OS-FIN-006`: dokumen APBDes yang sudah diserahkan tampil di `/desa/apbdes`; unduhan memakai `villageId` dari host dan menolak draf, dokumen non-APBDes, serta dokumen desa lain.
+- `OS-WGA-002`: akun fixture PIN enam digit menguji validasi konfirmasi, perubahan PIN, dan login dengan PIN baru; PIN dikembalikan setelah uji.
+- `OS-SUR-002`: PDF membaca `?varian=`, memakai badan surat alternatif, dan mengubah orientasi kertas; E2E memeriksa ukuran halaman potrait/landscape/compact.
+
+Register: **107 ID ber-E2E interaktif**, **0 ID tanpa rujukan E2E**, **3 ID Sebagian** (`OS-SUR-002`, `OS-SUR-013`, `OS-WGA-009`). Verifikasi: E2E `dtks-impor` + `keuangan-lanjutan` + `pemilihan` + `disposisi-ekspedisi-agenda` + `warga-mandiri` + `surat-cetak-varian` **10/10 termasuk setup auth**; `npm run check` dan `npm run build` dijalankan setelah perubahan.
+
 ## Pembaruan 10 November 2026 — audit aksesibilitas admin
 
 Audit difokuskan pada kerangka admin dan halaman yang paling sering dipakai (beranda, penduduk, surat, statistik rentang umur, inventaris). Temuan dan perbaikan:
@@ -191,11 +366,11 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `kelompok-laporan` | 3 | 22 | Kategori kelompok, anggota + jabatan, keluarkan anggota, ekspor CSV | `OS-GOV-004`, `OS-GOV-005` |
 | `wilayah-pemerintahan` | 3 | 14 | Dusun CRUD + pencarian, rekap wilayah, referensi wilayah | `OS-WIL-001` |
 | `pembangunan-buku` | 1 | 17 | Tambah proyek, ubah progres, hapus | `OS-GOV-009` |
-| `pemilihan` | 2 | 3 | Admin membuat pemilihan; publik menampilkan kandidat, suara, pemenang (data disiapkan lewat DB, dibersihkan di `finally`) | `OS-GOV-007` |
+| `pemilihan` | 2 | 8 | Admin membuat pemilihan dan dua kandidat lewat dialog; publik menampilkan kandidat, 10 suara sah, dan pemenang | `OS-GOV-007` |
 | `bantuan-laporan` | 3 | 25 | Program CRUD, peserta dari dialog, laporan resmi + CSV | `OS-POP-011` |
-| `statistik-bantuan` | 3 | 5 | Filter umur/sasaran, tautan ekspor, CSV | `OS-POP-010`, `OS-POP-013` |
+| `statistik-bantuan` | 4 | 5 | Filter umur/sasaran, tautan ekspor, CSV/PDF, peserta program | `OS-POP-010`, `OS-POP-013` |
 | `ekspor-statistik` | 6 | 0 | PDF penduduk/bantuan, kind tak dikenal, filter pada tautan, penolakan tanpa sesi/warga | `OS-POP-010`, `OS-POP-013` |
-| `analisis-survei` | 7 | 34 | Kategori/indikator/survei CRUD, jawaban warga → rekap admin, ekspor, token API | `OS-ANA-001`–`OS-ANA-006` |
+| `analisis-survei` | 8 | 34 | Kategori/indikator/survei CRUD, jawaban warga → rekap admin, ekspor, token API | `OS-ANA-001`–`OS-ANA-006` |
 | `survei-publik` | 2 | 1 | Survei aktif tampil + dapat dibuka; survei nonaktif disembunyikan | `OS-ANA-006` |
 | `gis-pertanahan` | 7 | 30 | Area/garis/point/polygon, persil/CDESA/mutasi, peta cetak, simbol | `OS-WIL-006` |
 | `web-publik` | 23 | 10 | Beranda, profil, berita, galeri, dokumen, peta, pembangunan, pengaduan, APBDes, kontak, suplemen, analisis publik; tautan lewati + `aria-current` filter kategori | `OS-WEB-001`–`OS-WEB-019` |
@@ -206,10 +381,10 @@ Berkas yang ditulis ulang atau diperbaiki pada 9 November 2026:
 | `inventaris-bumindes` | 2 | 10 | Tambah barang, ubah lokasi, hapus lewat dialog konfirmasi; pintu masuk Bumindes | `OS-INV-001`, `OS-BUM-001` |
 | `tema` | 1 | 12 | Simpan warna primer/sekunder, tipografi, kelengkungan, gaya header, judul/tombol hero, teks berjalan, dan sosmed; nilai bertahan setelah muat ulang, terpakai di situs publik (CSS variable, hero, header berwarna), lalu dipulihkan | `OS-WEB-016`, `OS-WEB-017` |
 | `plugin` | 1 | 2 | Nonaktivasi plugin tersimpan; aktivasi ditolak saat environment wajib belum diisi | `OS-OPS-008` |
-| `keuangan-lanjutan` | 2 | 21 | Impor PDF tersimpan + unduh, catat penyerahan, tolak duplikat, hapus; pagu/realisasi/triwulan tampil di APBDes publik | `OS-FIN-004`, `OS-FIN-006` |
+| `keuangan-lanjutan` | 2 | 23 | Impor PDF tersimpan + unduh, penyerahan, duplikat, hapus, ekspor CSV/Excel; APBDes publik menampilkan pagu/realisasi/triwulan dan dokumen yang diserahkan | `OS-FIN-004`, `OS-FIN-006` |
 | `bantuan-warga` | 1 | 1 | Login warga, buka menu Bantuan dari beranda, program aktif/selesai tampil, program tanpa peserta tidak bocor | `OS-WGA-008` |
 | `dtks-impor` | 1 | 8 | Impor CSV menautkan nomor RTM, menyalin anggota, verifikasi status, dan impor ulang idempoten | `OS-POP-006` |
-| `warga-mandiri` | 1 | 24 | Login warga (captcha), pesan, lapak tambah/ubah/hapus + katalog publik, izin, verifikasi surat via token, dan registrasi mandiri yang disetujui admin (PIN tampil sekali) | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
+| `warga-mandiri` | 2 | 41 | Login warga (captcha), beranda/ringkasan/profil, pesan + balasan operator, lapak CRUD + katalog publik, izin + keputusan operator, verifikasi surat, registrasi mandiri, dan ubah PIN | `OS-WGA-001`, `OS-WGA-002`, `OS-WGA-003`, `OS-WGA-006`, `OS-WGA-007`, `OS-WGA-010`, `OS-WGA-011` |
 | `pendapat` | 2 | 7 | Kirim publik tercatat, kiriman kedua ditolak, rekap + ekspor CSV, hapus admin | `OS-POP-014` |
 | `idm` | 3 | 16 | Indikator tiga dimensi + rekap, ekspor CSV, capaian SDGs isi/ubah/hapus, halaman publik tanpa sesi | `OS-GOV-006` |
 | `verifikasi-berjenjang` | 8 | 77 | Operator → sekdes → kades, penolakan tiap tahap, RBAC warga, pembuat ditolak saat menyetujui tahap kades; status dicek di DB + badge, nomor surat, catatan penolakan | `OS-SUR-007` |
@@ -241,15 +416,15 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-POP-003 | Struktur lengkap; ada E2E interaktif | CRUD KK, detail, ubah alamat | `keluarga` 1 test/1 beraksi |
 | OS-POP-004 | Struktur lengkap; ada E2E interaktif | CRUD rumah tangga + anggota, laporan rekap | `rtm-dpt` 2 test/2 beraksi |
 | OS-POP-005 | Struktur lengkap; ada E2E interaktif | Pemilihan aktif, tolak aktif kedua, filter pemilih, CSV, rekap | `penduduk` 9 test (termasuk audit aksesibilitas) |
-| OS-POP-006 | Struktur terverifikasi | Impor CSV menautkan RTM, menyalin anggota, dan idempoten | `dtks-impor` 1 test/1 beraksi |
-| OS-POP-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-POP-006 | Struktur lengkap; ada E2E interaktif | Impor CSV, anggota, detail/status, laporan rekap, dan ekspor daftar sudah E2E | `dtks-impor` 1 test/8 beraksi |
+| OS-POP-007 | Struktur lengkap; ada E2E interaktif | — | `suplemen-data` 1 test/1 beraksi: definisi dan keterangan diubah, penduduk terdata dengan isian dinamis, CSV memuat kolom, impor CSV menambah sasaran, tombol cetak tersedia, hapus membersihkan data |
 | OS-POP-008 | Struktur lengkap; ada E2E interaktif | Posyandu, KIA, ibu hamil, anak, ekspor CSV | `kesehatan` 2 test/1 beraksi |
-| OS-POP-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-POP-010 | Struktur lengkap; ada E2E interaktif | — | `statistik-penduduk` 1 test/1 beraksi: dua penduduk dusun unik, filter dusun/umur mengubah total dan gender, kategori rentan menghitung lansia, ekspor CSV/PDF membawa filter, laporan kependudukan tautan CSV, rentang umur tambah/ubah/hapus |
 | OS-POP-011 | Struktur lengkap; ada E2E interaktif | — | `bantuan-laporan` 3 test/3 beraksi |
 | OS-POP-012 | Struktur lengkap; ada E2E interaktif | Impor CSV pada program kosong + impor ulang idempoten | `bantuan-impor-peserta` 1 test/1 beraksi |
-| OS-POP-013 | Struktur lengkap; E2E hanya smoke | Ekspor PDF diuji tanpa aksi UI | `ekspor-statistik` 6 test/smoke |
+| OS-POP-013 | Struktur lengkap; ada E2E interaktif | — | `statistik-bantuan` 4 test: peserta program dihitung, filter jenis/sasaran lewat form, tautan serta unduhan CSV/PDF |
 | OS-POP-014 | Struktur lengkap; ada E2E interaktif | — | `pendapat` 2 test/7 beraksi |
-| OS-POP-015 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-POP-015 | Struktur lengkap; ada E2E interaktif | — | `kontak-grup` 1 test/1 beraksi: lookup NIK mengisi nama (bug `label`/`name` diperbaiki), kontak CRUD dengan tautan telepon/email/Telegram, ekspor CSV, grup + anggota, hapus |
 | OS-WIL-001 | Struktur lengkap; ada E2E interaktif | — | `wilayah-pemerintahan` 3 test/1 beraksi |
 | OS-WIL-002 | Struktur lengkap; ada E2E interaktif | Area dibuat merujuk kategori polygon, tampil di legenda peta cetak, keterangan diubah, lalu area/polygon dihapus dan legenda ikut bersih. | `gis-area` 1 test/1 beraksi |
 | OS-WIL-003 | Struktur lengkap; ada E2E interaktif | Garis dibuat dari dialog dengan path GeoJSON LineString, keterangan diubah, lalu dihapus; tabel memperbarui tiap langkah. | `gis-layer` 4 test/4 beraksi |
@@ -258,44 +433,44 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WIL-006 | Struktur lengkap; ada E2E interaktif | — | `gis-pertanahan` 7 test/1 beraksi |
 | OS-WIL-007 | Struktur lengkap; ada E2E interaktif | Peta publik menampilkan layer polygon, garis, dan titik buatan desa; kontrol layer dapat menyembunyikan lalu menampilkan kembali tiap kelompok; peta cetak memuat geometri SVG dan legenda ketiga kelompok. | `web-publik` 23 test |
 | OS-WIL-008 | Struktur lengkap; ada E2E interaktif | Simbol dibuat dengan keterangan, keterangan diubah, lalu dihapus dari katalog global. | `gis-layer` 4 test/4 beraksi |
-| OS-GOV-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-GOV-001 | Struktur lengkap; ada E2E interaktif | Formulir `/pengaturan/desa` mengubah kepala desa, NIP, alamat, email, telepon, dan website; unggahan tanda tangan/stempel tersimpan; nilai terbaca ulang dan tampil di `/desa/kontak`; email `a@b` ditolak tanpa mengubah data. | `identitas-desa` 1 test/1 beraksi |
 | OS-GOV-002 | Struktur lengkap; ada E2E interaktif | — | `pemerintahan` 3 test/2 beraksi |
 | OS-GOV-003 | Struktur lengkap; ada E2E interaktif | Perangkat baru dari form admin muncul di bagian pelaksana bagan; bagian Kepala Desa, Sekretariat, dan Perangkat Pelaksana tampil; tombol cetak memanggil `window.print()`. | `pemerintahan` 4 test/3 beraksi |
 | OS-GOV-004 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
 | OS-GOV-005 | Struktur lengkap; ada E2E interaktif | — | `kelompok-laporan` 3 test/3 beraksi |
 | OS-GOV-006 | Struktur lengkap; ada E2E interaktif | — | `idm` 3 test/16 beraksi |
-| OS-GOV-007 | Sebagian | E2E admin + publik ada; kandidat publik memakai data DB, bukan input UI | `pemilihan` 2 test/2 beraksi |
+| OS-GOV-007 | Struktur lengkap; ada E2E interaktif | Pemilihan dan dua kandidat dibuat lewat UI; publik menampilkan kandidat, 10 suara sah, dan pemenang | `pemilihan` 2 test/8 beraksi |
 | OS-GOV-008 | Struktur lengkap; ada E2E interaktif | — | `sinergi` 4 test/1 interaktif |
 | OS-GOV-009 | Struktur lengkap; ada E2E interaktif | — | `pembangunan-buku` 1 test/1 beraksi |
 | OS-GOV-010 | Struktur lengkap; ada E2E interaktif | — | `dokumen-publik` 2 test/2 beraksi |
 | OS-SUR-001 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
-| OS-SUR-002 | Sebagian | Unduh PDF per status sudah diuji: surat terbit menampilkan menu `Unduh PDF` dengan berkas `application/pdf` `inline` berawalan `%PDF-`, surat konsep hanya menawarkan Pratinjau. Gap tersisa: notifikasi email perubahan status dan PDF per varian template. | `surat-flow` 7 test/6 interaktif; `permohonan-warga` 5 test/5 interaktif |
+| OS-SUR-002 | Sebagian | Unduh PDF per status diuji; `?varian=` kini mengubah badan surat dan orientasi PDF (potrait/landscape/compact). Gap tersisa: notifikasi email perubahan status tanpa provider. | `surat-flow` 7 test/6 interaktif; `permohonan-warga` 5 test/5 interaktif; `surat-cetak-varian` 1 test |
 | OS-SUR-003 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-004 | Struktur lengkap; ada E2E interaktif | — | `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-005 | Struktur lengkap; ada E2E interaktif | Rekap per jenis surat memuat lima kolom untuk permohonan baru, filter `?status=1` menampilkannya dan `?status=3` menyembunyikannya, serta ekspor CSV membawa filter, NIK pemohon, dan nama jenis. Notifikasi email perubahan status belum diuji karena memerlukan Resend. | `permohonan-rekap` 1 test/1 beraksi; `permohonan-warga` 5 test/5 interaktif |
 | OS-SUR-006 | Struktur lengkap; ada E2E interaktif | — | `arsip-nomor-surat` 1 test/1 interaktif; `surat-lengkap` 4 test/4 interaktif |
 | OS-SUR-007 | Struktur lengkap; ada E2E interaktif | Pembuat ditolak memverifikasi tahap sekdes/kades; status dicek di DB + badge, nomor surat dan catatan penolakan terlihat pengguna | `verifikasi-berjenjang` 8 test/8 beraksi |
 | OS-SUR-008 | Struktur lengkap; ada E2E interaktif | Pemilih "Varian" di halaman cetak mengubah tata letak: potrait `max-w-[210mm]` + `p-10`, landscape `max-w-[297mm]`, compact `p-6`; nomor surat dan kode QR verifikasi ikut tampil. PDF per varian belum diuji. | `surat-cetak-varian` 1 test/1 beraksi; `publik-verifikasi` 3 test/2 interaktif |
-| OS-SUR-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-SUR-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-SUR-009 | Struktur lengkap; ada E2E interaktif | Surat masuk dicatat, dicari, diberi disposisi, dan dicetak; disposisi dicek ulang di DB. Dialog disposisi menutup setelah simpan berhasil. | `disposisi-ekspedisi-agenda` 1 test/1 beraksi |
+| OS-SUR-010 | Struktur lengkap; ada E2E interaktif | Surat keluar dicatat, dicari, diberi ekspedisi, dan dicetak; ekspedisi dicek ulang di DB. Dialog ekspedisi menutup setelah simpan berhasil. | `disposisi-ekspedisi-agenda` 1 test/1 beraksi |
 | OS-SUR-011 | Struktur lengkap; ada E2E interaktif | Surat dinas dicatat lewat dialog (nomor, penerima, perihal, isi), ditemukan lewat pencarian, perihal diubah, lalu dihapus dengan konfirmasi. | `surat-dinas` 1 test/1 beraksi |
-| OS-SUR-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-SUR-012 | Struktur lengkap; ada E2E interaktif | Buku Agenda/Ekspedisi membaca langsung surat masuk/keluar, bukan tabel manual; cetak/ekspor tanpa parameter hanya surat masuk, `jenis=keluar` hanya surat keluar. Halaman log menampilkan disposisi/ekspedisi dengan nomor, perihal, asal/tujuan, catatan, filter jenis, dan pencarian. | `agenda-log-surat` 1 test/1 beraksi |
 | OS-SUR-013 | Sebagian | Adapter BSrE diuji server HTTP lokal (PDF langsung/JSON+unduh/nonaktif); verifikasi provider nyata belum. | `tte-server.test.ts` 3 test |
-| OS-SUR-014 | Struktur lengkap; ada E2E interaktif | Simpan dan reset pengaturan lampiran per kategori diuji lewat UI; validasi MIME/ukuran, sanitasi nama, dan penyajian berkas aman masih dibuktikan test unit/integrasi (`media.test.ts`, `media-nama.test.ts`), belum lewat E2E. | `pengaturan-lampiran` 1 test/1 beraksi |
+| OS-SUR-014 | Struktur lengkap; ada E2E interaktif | Simpan/reset pengaturan diuji; unggahan `text/html` ditolak lewat UI. Batas ukuran dan sanitasi nama masih unit/integrasi | `pengaturan-lampiran` 1 test/1 beraksi; `disposisi-ekspedisi-agenda` 1 test |
 | OS-FIN-001 | Struktur lengkap; ada E2E interaktif | Pagu/realisasi APBDes tersimpan | `keuangan` 5 test/5 beraksi |
 | OS-FIN-002 | Struktur lengkap; ada E2E interaktif | Laporan + filter bidang | `keuangan` 5 test/5 beraksi |
 | OS-FIN-003 | Struktur lengkap; ada E2E interaktif | Realisasi triwulan tersimpan | `keuangan` 5 test/5 beraksi |
-| OS-FIN-004 | Struktur terverifikasi | Impor PDF tersimpan, diunduh, diserahkan, duplikat ditolak, dan dihapus | `keuangan-lanjutan` 2 test/2 beraksi |
-| OS-FIN-005 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-006 | Struktur terverifikasi | Pagu, realisasi, dan triwulan tampil di `/desa/apbdes` | `keuangan-lanjutan` 2 test/2 beraksi |
-| OS-FIN-007 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-008 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-009 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-011 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-FIN-013 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
-| OS-WEB-001 | Struktur lengkap; ada E2E interaktif | Header publik berisi tujuh menu bergrup (Beranda, Profil, Informasi, Transparansi, Potensi, Partisipasi, Kontak); dropdown Informasi terbuka saat hover dan tautannya dapat diklik; grup aktif ditandai `aria-current`; bilah kontak (email) tampil; akses cepat beranda (Layanan Surat, APBDes, Statistik, Lapak Desa) tersedia; footer empat kolom berisi identitas, Jelajahi, Transparansi, dan Kontak; tautan "Lewati ke konten utama" + `main#konten-utama` dapat difokuskan. | `web-publik` 23 test/10 beraksi |
+| OS-FIN-004 | Struktur lengkap; ada E2E interaktif | Impor PDF, unduh, penyerahan, duplikat, hapus, serta ekspor CSV dan Excel laporan sudah E2E | `keuangan-lanjutan` 2 test/23 beraksi |
+| OS-FIN-005 | Struktur lengkap; ada E2E interaktif | CRUD SiLPA; jumlah satu tahun dijumlahkan dan ditulis ke rekening pembiayaan 6.1.1 APBDes tahun yang sama; perubahan/penghapusan memperbarui APBDes dan laporan realisasi resmi. | `sisa-lebih-antartahun` 1 test/1 beraksi; CRUD di `keuangan` |
+| OS-FIN-006 | Struktur lengkap; ada E2E interaktif | Pagu, realisasi, triwulan, dan daftar dokumen APBDes yang diserahkan tampil di `/desa/apbdes`; berkas PDF dapat diunduh publik | `keuangan-lanjutan` 2 test/23 beraksi |
+| OS-FIN-007 | Struktur lengkap; ada E2E interaktif | Kategori golongan "Peralatan & Mesin" dipakai barang; laporan terfilter dan neraca memuat nilai yang sama; kategori yang dipakai barang menolak penghapusan. | `inventaris-aset` 2 test/2 beraksi |
+| OS-FIN-008 | Struktur lengkap; ada E2E interaktif | Mutasi pindah lokasi melewati tiga tahap persetujuan; lokasi barang berubah hanya setelah tahap kades; toast tahap akhir tampil sebelum komponen aksi unmount. | `inventaris-aset` 2 test/2 beraksi |
+| OS-FIN-009 | Struktur lengkap; ada E2E interaktif | Item buku administrasi ditambah, diubah, lalu muncul di halaman cetak buku yang sama. | `bumindes-buku` 1 test/1 beraksi |
+| OS-FIN-010 | Struktur lengkap; ada E2E interaktif | Penduduk tidak tetap dibuat lewat dialog; tombol sinkronisasi kini membuat item B1–B5 pada buku kosong. Angka B1/B2/B4/B5 dibandingkan dengan tabel sumber, B3 memuat hitungan mutasi, dan buku B3 tercetak sebagai keluaran resmi. | `bumindes-penduduk` 1 test/1 beraksi |
+| OS-FIN-011 | Struktur lengkap; ada E2E interaktif | Persil tanah kas dan mutasi tampil di daftar, halaman cetak ber-kop, serta CSV; cetak mutasi menyertakan nomor persil. | `bumindes-tanah` 1 test/1 beraksi |
+| OS-FIN-012 | Struktur lengkap; ada E2E interaktif | Kegiatan buku pembangunan dan kader tampil di daftar, halaman cetak, dan CSV; data memakai tabel buku administrasi, bukan proyek publik. | `bumindes-pembangunan` 1 test/1 beraksi |
+| OS-FIN-013 | Struktur lengkap; ada E2E interaktif | Peraturan, aparat, agenda masuk, dan ekspedisi tampil di buku; cetak/ekspor agenda hanya memuat surat masuk, sedangkan ekspedisi hanya surat keluar. | `bumindes-sekretariat` 1 test/1 beraksi |
+| OS-WEB-001 | Struktur lengkap; ada E2E interaktif | Header publik berisi tujuh menu bergrup (Beranda, Profil, Layanan, Informasi, Transparansi, Warga, Kontak); dropdown Informasi terbuka saat hover dan tautannya dapat diklik; grup aktif ditandai `aria-current`; target sentuh menu ≥44 px; bilah kontak (email) tampil; beranda menampilkan hero, delapan tile akses cepat, ringkasan APBDes + bar realisasi, sambutan kepala desa, perangkat desa, dan daftar surat agregat tanpa nama pemohon; halaman kontak menampilkan widget pengunjung 30 hari; footer empat kolom memuat identitas, Jelajahi, Transparansi, Kontak, dan jam pelayanan; tautan "Lewati ke konten utama" + `main#konten-utama` dapat difokuskan. Label menu baru sudah masuk ekspektasi E2E tetapi suite belum dijalankan ulang setelah perubahan tampilan. | `web-publik` 23 test/10 beraksi |
 | OS-WEB-002 | Struktur lengkap; ada E2E interaktif | Filter kategori aktif ditandai `aria-current`; sampul kartu `alt=""` agar nama tautan tidak diumumkan ganda | `web-berita-galeri` 3 test/2 beraksi |
 | OS-WEB-003 | Struktur lengkap; ada E2E interaktif | Profil menampilkan identitas wilayah, visi, dan misi dari data desa; pemerintahan menampilkan perangkat aktif beserta jabatannya dan bagan SOTK (kepala, sekretaris, staf). | `web-publik` 23 test/11 beraksi |
 | OS-WEB-004 | Struktur lengkap; ada E2E interaktif | Album, detail, dan cetak album; sampul dekoratif, foto tanpa judul tidak lagi meminjam nama album sebagai `alt` | `web-berita-galeri` 3 test/2 beraksi |
@@ -315,29 +490,29 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-WEB-018 | Struktur lengkap; ada E2E interaktif | Sitemap memakai origin host untuk setiap `<loc>`, memuat halaman turunan dan produk lapak dinamis, serta tidak memuat rute admin dan tidak mengulang `<loc>` yang sama; robots menolak area privat termasuk `/layanan-mandiri` dan menunjuk sitemap host; setiap halaman publik punya title/description dan OG title/description yang sama, OG image absolut per host yang benar-benar terunduh sebagai PNG 1200×630. | `sitemap` 3 test/3 beraksi |
 | OS-WEB-019 | Struktur lengkap; ada E2E interaktif | Form token (jalur kode QR) mengalihkan ke halaman token publik; token valid 64 hex menampilkan jenis, nomor, dan status surat; token berformat salah maupun token yang sudah dihapus menampilkan "Surat Tidak Ditemukan" tanpa membocorkan data. | `publik-verifikasi` 3 test/2 beraksi |
 | OS-WEB-020 | Struktur lengkap; ada E2E interaktif | Agenda kegiatan bersumber dari `agenda_kegiatan` (bukan `bumindes_agenda`); admin menambah agenda lewat `/konten/agenda`; `/desa/agenda` dan beranda hanya menampilkan agenda `tayang` dengan label rentang tanggal dan lokasi, sedangkan draf tetap tersembunyi. | `agenda-publik` 1 test/1 beraksi; `agenda.test` 7 test |
-| OS-WGA-001 | Struktur terverifikasi | Registrasi mandiri `/desa/registrasi-warga`, persetujuan `/penduduk/registrasi`, captcha + OTP/email; test `captcha.test.ts`, `verifikasi-kontak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-002 | Struktur terverifikasi | Login `/masuk`, sesi warga, PIN, OTP faktor kedua, rate limit; test `warga.test.ts`, `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-003 | Struktur terverifikasi | Beranda/profil/ringkasan layanan warga di `/layanan-mandiri`; test `integrasi-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
+| OS-WGA-001 | Struktur lengkap; ada E2E interaktif | Registrasi mandiri, captcha, persetujuan admin, dan PIN sementara sudah E2E; OTP/email belum E2E | `warga-mandiri` 2 test/41 beraksi |
+| OS-WGA-002 | Struktur lengkap; ada E2E interaktif | Login captcha, sesi, validasi konfirmasi, ubah PIN, dan login dengan PIN baru sudah E2E; OTP/rate limit unit/integrasi | `warga-mandiri` 2 test/41 beraksi |
+| OS-WGA-003 | Struktur lengkap; ada E2E interaktif | Beranda menampilkan identitas dan tiga kartu ringkasan; tautan Profil membuka data warga dan username | `warga-mandiri` 2 test/41 beraksi |
 | OS-WGA-004 | Struktur lengkap; ada E2E interaktif | Pembatalan oleh warga sebelum diambil, alasan wajib | `permohonan-warga` 5 test/5 beraksi |
 | OS-WGA-005 | Struktur lengkap; ada E2E interaktif | — | `permohonan-warga` 5 test/5 interaktif |
-| OS-WGA-006 | Struktur terverifikasi | Pesan dua arah `/layanan-mandiri/pesan` + `/pesan-warga`; test `pesan-warga.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-007 | Struktur terverifikasi | Verifikasi surat area warga `/layanan-mandiri/verifikasi-surat`; test `verifikasi.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-008 | Struktur terverifikasi | Program tanpa peserta tidak tampil | `bantuan-warga` 1 test/1 beraksi |
+| OS-WGA-006 | Struktur lengkap; ada E2E interaktif | Warga mengirim pesan; operator membuka percakapan dan membalas lewat `/pesan-warga` | `warga-mandiri` 2 test/41 beraksi |
+| OS-WGA-007 | Struktur lengkap; ada E2E interaktif | Token valid menampilkan surat terbit; token tidak dikenal menampilkan pesan tidak ditemukan | `warga-mandiri` 2 test/41 beraksi |
+| OS-WGA-008 | Struktur lengkap; ada E2E interaktif | Program aktif dan selesai yang menautkan warga tampil; program tanpa peserta tidak bocor | `bantuan-warga` 1 test/1 beraksi |
 | OS-WGA-009 | Sebagian | Adapter WhatsApp diuji server HTTP lokal (lewati tanpa env, sukses, HTTP 500, DB gagal); kredensial provider nyata belum. | `kirim-notifikasi.test.ts` 4 test |
-| OS-WGA-010 | Struktur terverifikasi | Lapak warga `/layanan-mandiri/lapak` + katalog publik; test `lapak.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-WGA-011 | Struktur terverifikasi | Kehadiran `/kehadiran`, izin warga `/layanan-mandiri/izin`, keputusan `/kehadiran/izin`; test `kehadiran.test.ts` | `warga-mandiri` 1 test/1 beraksi |
-| OS-ANA-001 | Struktur lengkap; ada E2E interaktif | Kategori analisis CRUD | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-002 | Struktur lengkap; ada E2E interaktif | Indikator dibuat dengan kode, nama, dan bobot 50 lalu dihapus | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-003 | Struktur lengkap; ada E2E interaktif | Survei dibuat dengan sasaran dan periode, status `Aktif` tampil di daftar | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-004 | Struktur lengkap; ada E2E interaktif | Laporan skor menampilkan responden, rata-rata skor, distribusi klasifikasi, dan skor per responden; CSV memuat responden; ID tidak valid ditolak `400` | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-005 | Struktur lengkap; E2E hanya penolakan | Endpoint formulir eksternal diuji menolak permintaan tanpa token (`401`); jalur sukses bertoken belum diuji E2E | `analisis-survei` 7 test/4 beraksi |
-| OS-ANA-006 | Struktur lengkap; ada E2E interaktif | — | `analisis-survei` 7 test/4 beraksi; `survei-publik` 2 test/1 beraksi |
+| OS-WGA-010 | Struktur lengkap; ada E2E interaktif | Lapak ditambah, alamat diubah, tampil di katalog publik, lalu dihapus | `warga-mandiri` 2 test/41 beraksi |
+| OS-WGA-011 | Struktur lengkap; ada E2E interaktif | Warga mengajukan izin; operator menyetujui lewat `/kehadiran/izin` dan status berubah menjadi Disetujui | `warga-mandiri` 2 test/41 beraksi |
+| OS-ANA-001 | Struktur lengkap; ada E2E interaktif | Kategori analisis CRUD | `analisis-survei` 8 test/4 beraksi |
+| OS-ANA-002 | Struktur lengkap; ada E2E interaktif | Indikator dibuat dengan kode, nama, dan bobot 50 lalu dihapus | `analisis-survei` 8 test/4 beraksi |
+| OS-ANA-003 | Struktur lengkap; ada E2E interaktif | Survei dibuat dengan sasaran dan periode, status `Aktif` tampil di daftar | `analisis-survei` 8 test/4 beraksi |
+| OS-ANA-004 | Struktur lengkap; ada E2E interaktif | Laporan skor menampilkan responden, rata-rata skor, distribusi klasifikasi, dan skor per responden; CSV memuat responden; ID tidak valid ditolak `400` | `analisis-survei` 8 test/4 beraksi |
+| OS-ANA-005 | Struktur lengkap; ada E2E interaktif | — | `analisis-survei` 8 test: token embed dari halaman admin dipakai `POST`, respons `201`, responden muncul di rekap |
+| OS-ANA-006 | Struktur lengkap; ada E2E interaktif | — | `analisis-survei` 8 test/4 beraksi; `survei-publik` 2 test/1 beraksi |
 | OS-MOD-001 | Struktur lengkap; ada E2E interaktif | CRUD, aktif/nonaktif, hapus, isolasi tenant, login NIK/tanggal lahir, pengajuan surat, nomor antrian, dan gerbang perangkat tanpa izin sudah diuji. Konfigurasi printer/IP belum dipakai di alur cetak. | `anjungan` 2 test/2 beraksi; integrasi tenant; unit anjungan 31 |
-| OS-MOD-002 | Struktur lengkap; E2E hanya smoke | Buku tamu belum diuji berinteraksi | `modul-tambahan` 4 test/1 beraksi |
-| OS-MOD-003 | Struktur terverifikasi | Rekap kehadiran `/kehadiran/rekap` + ekspor; use case memakai repository yang ada; test `kehadiran.test.ts` | tidak dirujuk |
+| OS-MOD-002 | Struktur lengkap; ada E2E interaktif | — | `modul-tambahan` 2 test: buku tamu tambah/ubah/hapus dengan jam masuk dan keperluan tersimpan |
+| OS-MOD-003 | Struktur lengkap; ada E2E interaktif | — | `modul-tambahan` 2 test: kehadiran dicatat lewat UI, rekap difilter bulan/tahun, CSV memuat status, lalu catatan dihapus |
 | OS-MOD-004 | Struktur lengkap; ada E2E interaktif | — | `lapak-keranjang` 1 test/1 interaktif |
 | OS-MOD-005 | Struktur terverifikasi; ada E2E interaktif | Unduhan menyajikan PDF `inline`; ID tidak valid 400, pelanggan desa lain 404, akun warga 403, dan permintaan tanpa sesi dialihkan ke `/masuk`. | `pelanggan-kerjasama` 3 test/1 interaktif |
-| OS-OPS-001 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-OPS-001 | Struktur lengkap; ada E2E interaktif | CRUD modul lewat UI; grup baru diberi izin baca modul anak, pengguna baru dibuat lalu login, menu induk Pengaturan muncul karena pewarisan, dan modul tanpa izin menampilkan “Akses ditolak”. Bug parser key izin 3-bagian diperbaiki. | `pengguna-grup-akses` 2 test/2 beraksi; unit permission 10 |
 | OS-OPS-002 | Struktur lengkap; ada E2E interaktif | Dialog "Atur shortcut" berisi pilihan menu dan aturan enam pilihan; penyimpanan berhasil dan kartu shortcut tetap sama setelah beranda dimuat ulang. Pengurutan drag-and-drop belum diautomasi. | `ops-sistem` 9 test/6 beraksi |
 | OS-OPS-003 | Struktur lengkap; ada E2E interaktif | Jumlah berita beranda diubah lewat `/pengaturan/aplikasi`, tersimpan, dan terbaca kembali setelah muat ulang; nilai seed dipulihkan di akhir test. | `ops-sistem` 9 test/6 beraksi |
 | OS-OPS-004 | Struktur lengkap; ada E2E interaktif | Aktivasi OTP dari halaman profil mengubah status menjadi Aktif, dan penonaktifan mengembalikannya; login dengan kode OTP belum diautomasi karena kode dikirim ke provider. | `ops-sistem` 9 test/6 beraksi |
@@ -345,9 +520,9 @@ Kolom **E2E** menyebut berkas yang dirujuk register beserta hasil hitung AST. "S
 | OS-OPS-006 | Struktur lengkap; ada E2E interaktif | Perubahan pengaturan menghasilkan baris "Ubah pengaturan aplikasi" yang dapat dicari lewat `?q=pengaturan`. | `ops-sistem` 9 test/6 beraksi |
 | OS-OPS-007 | Struktur lengkap; ada E2E interaktif | `/api/database/backup?format=sql` menyajikan berkas SQL berisi `CREATE TABLE` dengan `Content-Disposition` `.sql`; restore menolak berkas non-SQL `400` tanpa menyentuh database. Restore berkas valid tetap memerlukan `mysql` di PATH. | `ops-sistem` 9 test/6 beraksi |
 | OS-OPS-008 | Struktur lengkap; ada E2E interaktif | Aktivasi ditolak saat env wajib kosong | `plugin` 1 test/1 beraksi |
-| OS-OPS-010 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-OPS-010 | Struktur lengkap; ada E2E interaktif | Unggah logo PNG lewat `/pengaturan/desa` tersimpan di kategori `umum`; route publik menyajikan `image/png` + `nosniff` + cache immutable, menolak host desa lain dan kategori `permohonan` (404) meski berkas privat ada di disk, serta menyandbox SVG dengan CSP. Unggah `text/html` ditolak dan logo lama tetap. Lampiran pengaduan privat menolak warga (403) dan tamu (401). | `media-unggah-akses` 2 test/2 beraksi |
 | OS-OPS-011 | Struktur lengkap; ada E2E interaktif | Informasi dan dokumen memakai paginasi `page`/`pageSize` (bawaan 20, maksimum 100) serta menolak nilai salah dengan `400`; dokumen mengembalikan `data` array + metadata; inventaris mendukung `search` dan hanya memuat barang desa pemilik host; surat membatasi agenda lewat `limit` dan menyertakan jenis surat; OpenAPI 3.1 memakai origin host dan memuat seluruh jalur; permintaan ke-61 per menit per IP per endpoint ditolak `429`. | `api-publik` 5 test/5 beraksi |
-| OS-OPS-012 | Struktur lengkap; E2E tidak dirujuk | Belum ada E2E perilaku | tidak dirujuk |
+| OS-OPS-012 | Struktur lengkap; ada E2E interaktif | Dua API key desa berbeda di-scope lewat hash; `POST /api/eksternal/surat` membuat permohonan di desa kunci (villageId klien diabaikan) dan mencatat audit; OpenAPI 3.1 memuat semua jalur; verifikasi token lewat GET/POST berhasil dan kunci desa lain 404; TTE menolak non-PDF 415. Provider TTE nyata belum diuji. | `api-eksternal` 2 test/2 beraksi |
 Catatan tabel:
 
 - Rekonsiliasi historis 57 ✅ / 54 🟡 **tidak diwarisi**. Register 102 baris berisi 48 ✅ dan 54 🟡; sembilan ID tanpa baris kemudian dihitung sebagai ✅ tanpa bukti per-ID. Audit ini memberi baris eksplisit untuk kesembilan ID tersebut, dan menemukan satu di antaranya bug (`OS-MOD-001`).
@@ -401,7 +576,7 @@ Pada hitung ulang 10 November 2026, 111 dari 195 deklarasi test E2E memuat aksi 
 ## Hal yang belum bisa disimpulkan
 
 1. **Eksekusi suite E2E**: run penuh terakhir pada 10 November 2026 dijalankan terhadap build produksi, 62 berkas/195 test lulus; runner kini mencakup 63 berkas/195 `test()` dan berkas agenda serta test formulir eksternal bertoken belum ikut run penuh. Test P0 Anjungan 2/2 lulus.
-2. **Pemeriksaan visual seluruh 206 halaman**: tidak dilakukan; status UI berasal dari pembacaan kode dan test.
+2. **Pemeriksaan visual seluruh 206 halaman**: belum seluruhnya. Per 11 November 2026, seluruh 53 halaman publik sudah diaudit di 1440/390 px; halaman admin dan warga masih berasal dari pembacaan kode dan test.
 3. **Provider eksternal nyata**: tidak diuji tanpa kredensial.
 4. **Isolasi tenant pada route yang dipindahkan**: route sensitif yang diuji (lampiran pengaduan, NIK, TTE eksternal, surat eksternal) sudah punya bukti; belum semua route diperiksa satu per satu.
 5. **Persentase paritas**: tidak dihitung; jumlah ID atau test bukan ukuran paritas.

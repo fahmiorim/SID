@@ -13,6 +13,22 @@ export async function listSisaLebih(villageId: number): Promise<SisaLebih[]> {
     .orderBy(desc(sisaLebih.tahun));
 }
 
+export async function getSisaLebih(villageId: number, id: number): Promise<SisaLebih | null> {
+  const [row] = await db
+    .select()
+    .from(sisaLebih)
+    .where(and(eq(sisaLebih.villageId, villageId), eq(sisaLebih.id, id)))
+    .limit(1);
+  return row ?? null;
+}
+
+export async function listSisaLebihTahun(villageId: number, tahun: number): Promise<SisaLebih[]> {
+  return db
+    .select()
+    .from(sisaLebih)
+    .where(and(eq(sisaLebih.villageId, villageId), eq(sisaLebih.tahun, tahun)));
+}
+
 export async function createSisaLebih(data: NewSisaLebih): Promise<number> {
   const result = await db.insert(sisaLebih).values(data);
   const insertId = result[0].insertId;

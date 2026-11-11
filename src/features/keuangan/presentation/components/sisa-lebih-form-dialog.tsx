@@ -71,7 +71,9 @@ export function SisaLebihFormDialog({ open, onOpenChange, item }: SisaLebihFormD
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Ubah Data SiLPA" : "Tambah Data SiLPA"}</DialogTitle>
-          <DialogDescription>Pengelolaan Sisa Lebih Pembiayaan (SiLPA)</DialogDescription>
+          <DialogDescription>
+            Nilai SiLPA menjadi penerimaan pembiayaan 6.1.1 pada APBDes tahun yang sama.
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
@@ -85,7 +87,7 @@ export function SisaLebihFormDialog({ open, onOpenChange, item }: SisaLebihFormD
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="tahun">Tahun</Label>
+            <Label htmlFor="tahun">Tahun Anggaran</Label>
             <Input
               id="tahun"
               name="tahun"
@@ -104,7 +106,8 @@ export function SisaLebihFormDialog({ open, onOpenChange, item }: SisaLebihFormD
               id="jumlah"
               name="jumlah"
               defaultValue={item?.jumlah ?? ""}
-              placeholder="Rp..."
+              placeholder="contoh: 7500000"
+              inputMode="decimal"
               required
             />
             {fieldErrors?.jumlah ? (

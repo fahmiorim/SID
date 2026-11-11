@@ -107,6 +107,9 @@ export const BUKU_INTI: readonly BukuInti[] = [
   },
 ];
 
+/** Penanda item ringkasan yang dibuat oleh sinkronisasi data penduduk. */
+export const KETERANGAN_SINKRONISASI_PENDUDUK = "Ringkasan otomatis data penduduk";
+
 /** Cari entri katalog berdasarkan kode buku. */
 export function bukuIntiByKode(kodeBuku: string): BukuInti | null {
   return BUKU_INTI.find((buku) => buku.kodeBuku === kodeBuku) ?? null;

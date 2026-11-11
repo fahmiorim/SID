@@ -80,11 +80,13 @@ export async function savePermissionsAction(
   const perms: Array<{ moduleId: number; read: boolean; write: boolean; manage: boolean }> = [];
   for (const [key, value] of formData.entries()) {
     if (!key.startsWith("perm:")) continue;
+    // Key dari matriks: `perm:<moduleId>:<read|write|manage>`.
     const parts = key.split(":");
-    if (parts.length !== 4) continue;
+    if (parts.length !== 3) continue;
     const moduleId = Number(parts[1]);
     if (!Number.isInteger(moduleId)) continue;
     const action = parts[2] as "read" | "write" | "manage";
+    if (action !== "read" && action !== "write" && action !== "manage") continue;
     const checked = value === "on" || value === "true" || value === "1";
     let entry = perms.find((p) => p.moduleId === moduleId);
     if (!entry) {

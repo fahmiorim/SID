@@ -1,6 +1,6 @@
 import { getIdentitasFromRequest } from "@/features/desa/application/resolve-village";
 import { bacaBerkasMediaPublik } from "@/features/publik/application/media-publik";
-import { isKategoriMediaPublik } from "@/features/publik/domain/media";
+import { CSP_MEDIA_SANDBOX, isKategoriMediaPublik } from "@/features/publik/domain/media";
 import { isAppError } from "@/lib/errors";
 
 /**
@@ -68,17 +68,24 @@ export async function GET(
   try {
     // Wrapper application memvalidasi jalur agar tidak keluar dari akar penyimpanan.
     const isi = await bacaBerkasMediaPublik(relatif);
+    const mime = mimeDariJalur(relatif);
+    const headers: Record<string, string> = {
+      "Content-Type": mime,
+      // URL memuat villageId, tetapi cache bersama juga harus memisahkan
+      // respons menurut host agar media satu desa tidak tersaji ke host lain.
+      Vary: "Host",
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
+    };
 
-    return new Response(Buffer.from(isi), {
-      headers: {
-        "Content-Type": mimeDariJalur(relatif),
-        // URL memuat villageId, tetapi cache bersama juga harus memisahkan
-        // respons menurut host agar media satu desa tidak tersaji ke host lain.
-        Vary: "Host",
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "X-Content-Type-Options": "nosniff",
-      },
-    });
+    // SVG adalah dokumen aktif. Berkas SVG yang dibuka langsung dapat memuat
+    // skrip pada origin aplikasi, jadi sandboxkan dokumennya tanpa merusak
+    // penggunaan SVG sebagai <img> di halaman publik.
+    if (mime === "image/svg+xml") {
+      headers["Content-Security-Policy"] = CSP_MEDIA_SANDBOX;
+    }
+
+    return new Response(Buffer.from(isi), { headers });
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
       return new Response("Media tidak ditemukan.", { status: 404 });

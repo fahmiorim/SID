@@ -1,5 +1,6 @@
 import { Mail, MapPin, Phone } from "lucide-react";
 
+import { StatistikPengunjungWidget } from "@/features/kontak/presentation/components/statistik-pengunjung-widget";
 import { UmpanBalikForm } from "@/features/umpan-balik/presentation/components/umpan-balik-form";
 import type { KontakProps } from "@/themes/types";
 import { ThemeCard, ThemePageHeader } from "@/themes/ui";
@@ -50,6 +51,11 @@ export function EsensiKontak({ ctx, captcha }: KontakProps) {
           </ul>
         </ThemeCard>
       </div>
+
+      {/* OS-WEB-015: statistik kunjungan publik. */}
+      <ThemeCard className="p-6">
+        <StatistikPengunjungWidget desaId={desa.id} />
+      </ThemeCard>
 
       {/* OS-WEB-015: umpan balik warga dengan captcha + honeypot. */}
       <ThemeCard className="space-y-4 p-6">

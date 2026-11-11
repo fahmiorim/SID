@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getDptPublik } from "@/features/penduduk/application/dpt-use-cases";
 import { DEFAULT_DPT_PER_PAGE } from "@/features/penduduk/domain/dpt";
 import { siapkanTema } from "@/features/publik/application/siapkan-tema";
+import { ThemeCard, ThemePageHeader } from "@/themes/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -33,14 +34,15 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
   };
 
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold">Daftar Pemilih Tetap</h1>
-        <p className="text-sm text-muted-foreground">
-          {desa.namaDesa ?? "Desa"}
-          {election ? ` — ${election.judul} (${election.tanggal})` : " — belum ada pemilihan aktif"}
-        </p>
-      </header>
+    <div className="space-y-8">
+      <ThemePageHeader
+        title="Daftar Pemilih Tetap"
+        description={
+          election
+            ? `${desa.namaDesa ?? "Desa"} — ${election.judul} (${election.tanggal})`
+            : `${desa.namaDesa ?? "Desa"} — belum ada pemilihan aktif`
+        }
+      />
 
       <form className="flex gap-2" action="/desa/dpt">
         <label htmlFor="dpt-search" className="sr-only">
@@ -51,13 +53,16 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
           name="search"
           defaultValue={search}
           placeholder="Cari nama pemilih"
-          className="w-full rounded-md border px-3 py-2 text-sm"
+          className="min-h-11 w-full rounded-[var(--pub-radius)] border bg-card px-3 text-sm"
         />
-        <button type="submit" className="rounded-md border px-4 py-2 text-sm font-medium">
+        <button
+          type="submit"
+          className="min-h-11 rounded-[var(--pub-radius)] border px-4 text-sm font-medium hover:bg-muted"
+        >
           Cari
         </button>
       </form>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-xs leading-relaxed text-muted-foreground">
         Untuk melindungi data pribadi, daftar publik hanya memuat nama dan wilayah. NIK hanya dapat
         dilihat petugas melalui area pengelola.
       </p>
@@ -66,51 +71,107 @@ export default async function DptPublikPage({ searchParams }: PageProps<"/desa/d
         <p className="text-sm text-muted-foreground">DPT belum tersedia.</p>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="p-2 text-left">No</th>
-                  <th className="p-2 text-left">Nama</th>
-                  <th className="p-2 text-left">Jenis Kelamin</th>
-                  <th className="p-2 text-left">Umur</th>
-                  <th className="p-2 text-left">Dusun</th>
-                  <th className="p-2 text-left">RW/RT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {result.rows.map((row, index) => (
-                  <tr key={row.id} className="border-b">
-                    <td className="p-2">{(result.page - 1) * result.perPage + index + 1}</td>
-                    <td className="p-2">{row.name}</td>
-                    <td className="p-2">{row.gender === "male" ? "Laki-laki" : "Perempuan"}</td>
-                    <td className="p-2">{row.umurPemilihan ?? "-"}</td>
-                    <td className="p-2">{row.dusun ?? "-"}</td>
-                    <td className="p-2">
-                      {row.rw ?? "-"}/{row.rt ?? "-"}
-                    </td>
-                  </tr>
-                ))}
-                {result.rows.length === 0 && (
+          <ThemeCard className="overflow-hidden">
+            <ul className="divide-y md:hidden">
+              {result.rows.map((row, index) => (
+                <li key={row.id} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="leading-snug font-medium">{row.name}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        No. {(result.page - 1) * result.perPage + index + 1}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-medium whitespace-nowrap">
+                      {row.umurPemilihan ?? "-"} tahun
+                    </span>
+                  </div>
+                  <dl className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <dt className="text-muted-foreground">Jenis kelamin</dt>
+                      <dd className="mt-0.5 font-medium">
+                        {row.gender === "male" ? "Laki-laki" : "Perempuan"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Dusun</dt>
+                      <dd className="mt-0.5 font-medium">{row.dusun ?? "-"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">RW/RT</dt>
+                      <dd className="mt-0.5 font-medium tabular-nums">
+                        {row.rw ?? "-"}/{row.rt ?? "-"}
+                      </dd>
+                    </div>
+                  </dl>
+                </li>
+              ))}
+              {result.rows.length === 0 && (
+                <li className="px-4 py-8 text-center text-muted-foreground">Tidak ada data.</li>
+              )}
+            </ul>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="bg-muted/50 text-left">
                   <tr>
-                    <td className="p-2 text-muted-foreground" colSpan={6}>
-                      Tidak ada data.
-                    </td>
+                    <th className="px-4 py-3 font-medium">No</th>
+                    <th className="px-4 py-3 font-medium">Nama</th>
+                    <th className="px-4 py-3 font-medium">Jenis Kelamin</th>
+                    <th className="px-4 py-3 font-medium">Umur</th>
+                    <th className="px-4 py-3 font-medium">Dusun</th>
+                    <th className="px-4 py-3 font-medium">RW/RT</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {result.rows.map((row, index) => (
+                    <tr key={row.id} className="border-t">
+                      <td className="px-4 py-3">
+                        {(result.page - 1) * result.perPage + index + 1}
+                      </td>
+                      <td className="px-4 py-3">{row.name}</td>
+                      <td className="px-4 py-3">
+                        {row.gender === "male" ? "Laki-laki" : "Perempuan"}
+                      </td>
+                      <td className="px-4 py-3">{row.umurPemilihan ?? "-"}</td>
+                      <td className="px-4 py-3">{row.dusun ?? "-"}</td>
+                      <td className="px-4 py-3">
+                        {row.rw ?? "-"}/{row.rt ?? "-"}
+                      </td>
+                    </tr>
+                  ))}
+                  {result.rows.length === 0 && (
+                    <tr>
+                      <td className="px-4 py-8 text-center text-muted-foreground" colSpan={6}>
+                        Tidak ada data.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </ThemeCard>
 
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
             <span className="text-muted-foreground">{result.total} pemilih</span>
-            <div className="flex items-center gap-2">
-              {result.page > 1 && <Link href={pageHref(result.page - 1)}>Sebelumnya</Link>}
-              <span>
+            <div className="flex items-center gap-3">
+              {result.page > 1 && (
+                <Link
+                  href={pageHref(result.page - 1)}
+                  className="tema-link-primary font-medium hover:underline"
+                >
+                  Sebelumnya
+                </Link>
+              )}
+              <span className="tabular-nums">
                 {result.page} / {result.pageCount}
               </span>
               {result.page < result.pageCount && (
-                <Link href={pageHref(result.page + 1)}>Selanjutnya</Link>
+                <Link
+                  href={pageHref(result.page + 1)}
+                  className="tema-link-primary font-medium hover:underline"
+                >
+                  Selanjutnya
+                </Link>
               )}
             </div>
           </div>

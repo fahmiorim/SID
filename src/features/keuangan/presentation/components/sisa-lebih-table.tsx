@@ -1,6 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatRupiah } from "@/features/keuangan/domain/keuangan";
 import type { SisaLebihDTO } from "@/features/keuangan/domain/sisa-lebih";
 
 import { SisaLebihFormDialog } from "./sisa-lebih-form-dialog";
@@ -61,10 +63,15 @@ export function SisaLebihTable({ items }: SisaLebihTableProps) {
               items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.tahun}</TableCell>
-                  <TableCell>{item.jumlah ?? "-"}</TableCell>
+                  <TableCell className="tabular-nums">
+                    {item.jumlah ? formatRupiah(item.jumlah) : "-"}
+                  </TableCell>
                   <TableCell>{item.tanggal ?? "-"}</TableCell>
                   <TableCell className="max-w-xs truncate">{item.keterangan ?? "-"}</TableCell>
                   <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link href={`/keuangan/anggaran?tahun=${item.tahun}`}>APBDes</Link>
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"

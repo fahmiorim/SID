@@ -5,9 +5,12 @@ import {
   ChevronRight,
   Clock,
   FileText,
+  HandCoins,
+  HeartPulse,
   Landmark,
   Mail,
   MapPin,
+  MessageSquareText,
   Newspaper,
   Phone,
   Store,
@@ -16,7 +19,9 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { formatRupiah } from "@/features/keuangan/domain/keuangan";
 import { formatTanggal, ringkasTeks, urlMedia } from "@/features/publik/domain/format";
+import { namaLengkap } from "@/themes/helper";
 import type { HomeProps } from "@/themes/types";
 import { KontenHtml } from "@/themes/ui";
 
@@ -45,7 +50,7 @@ const BULAN_SINGKAT = [
  * Urutan bagian tetap mengikuti `opsi.beranda` yang diatur admin.
  */
 export function EsensiHome(props: HomeProps) {
-  const { ctx, slider, berita, surat } = props;
+  const { ctx, slider, berita, surat, sambutan, perangkat, apbdes } = props;
   const urutan = [...new Set([...ctx.opsi.beranda, "kontak"])];
   const tampil = new Set(urutan);
 
@@ -74,6 +79,8 @@ export function EsensiHome(props: HomeProps) {
       {tampil.has("hero") ? <Hero {...props} /> : null}
       {tampil.has("slider") && slider.length > 0 ? <Sorotan items={slider} /> : null}
       {tampil.has("hero") ? <QuickLinks /> : null}
+      <PemerintahanSection ctx={ctx} sambutan={sambutan} perangkat={perangkat} />
+      <ApbdesSection apbdes={apbdes} />
 
       {utama.length > 0 && samping.length > 0 ? (
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]">
@@ -89,7 +96,7 @@ export function EsensiHome(props: HomeProps) {
   );
 }
 
-function Hero({ ctx, sambutan, statistik, berita, slider }: HomeProps) {
+function Hero({ ctx, statistik, berita, slider }: HomeProps) {
   const desa = ctx.desa;
   const nama = desa.namaDesa ?? "Desa";
   const judul = ctx.opsi.heroJudul.trim() || nama;
@@ -140,14 +147,14 @@ function Hero({ ctx, sambutan, statistik, berita, slider }: HomeProps) {
           ) : null}
 
           <p className="mt-6 max-w-[56ch] text-[15px] leading-[1.75] text-muted-foreground sm:text-base">
-            {ringkasTeks(sambutan, 320) ||
-              "Selamat datang di portal informasi desa. Warga dapat membaca berita, melihat transparansi anggaran, memantau data kependudukan, dan mengajukan surat secara online."}
+            Portal resmi {nama}. Warga dapat mengajukan surat, melihat transparansi anggaran,
+            memantau data kependudukan, dan membaca kabar desa.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               href={ctx.opsi.heroTombolUrl || "/layanan-mandiri"}
-              className="tema-gradien inline-flex min-h-12 items-center gap-2 px-6 text-sm font-semibold text-[var(--pub-primary-foreground)] transition hover:brightness-[1.08]"
+              className="inline-flex min-h-12 items-center gap-2 bg-[var(--pub-primary)] px-6 text-sm font-semibold text-[var(--pub-primary-foreground)] transition hover:brightness-[1.06]"
               style={{
                 borderRadius: "var(--pub-radius)",
                 boxShadow:
@@ -313,6 +320,30 @@ function QuickLinks() {
       label: "Lapak Desa",
       description: "Produk warga",
       icon: Store,
+    },
+    {
+      href: "/desa/bantuan",
+      label: "Bansos",
+      description: "Program bantuan",
+      icon: HandCoins,
+    },
+    {
+      href: "/desa/kesehatan/kia",
+      label: "KIA & Posyandu",
+      description: "Kesehatan ibu & anak",
+      icon: HeartPulse,
+    },
+    {
+      href: "/desa/idm-sdgs",
+      label: "IDM & SDGs",
+      description: "Capaian pembangunan",
+      icon: Landmark,
+    },
+    {
+      href: "/desa/pengaduan",
+      label: "Pengaduan",
+      description: "Sampaikan keluhan",
+      icon: MessageSquareText,
     },
   ];
 
@@ -505,61 +536,219 @@ function WidgetSection({ items }: { items: HomeProps["widget"] }) {
   );
 }
 
+function PemerintahanSection({
+  ctx,
+  sambutan,
+  perangkat,
+}: {
+  ctx: HomeProps["ctx"];
+  sambutan: HomeProps["sambutan"];
+  perangkat: HomeProps["perangkat"];
+}) {
+  const tampil = perangkat.slice(0, 4);
+  if (!sambutan && tampil.length === 0) return null;
+
+  return (
+    <section>
+      <SectionHeading
+        eyebrow="Pemerintahan"
+        title="Sambutan Kepala Desa"
+        description="Arahan dan perangkat yang melayani warga desa."
+        href="/desa/pemerintahan"
+        action="Profil & perangkat"
+      />
+      <div className="grid gap-4 lg:grid-cols-[1.35fr_1fr]">
+        <div className="tema-kartu flex flex-col p-6 sm:p-7">
+          <p className="text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
+            {ringkasTeks(sambutan, 700) ||
+              "Selamat datang di portal resmi desa. Semoga informasi dan layanan di sini memudahkan warga."}
+          </p>
+          <div className="mt-auto border-t border-[var(--pub-garis)] pt-4">
+            <p className="text-sm font-semibold">{ctx.desa.namaKepalaDesa ?? "Kepala Desa"}</p>
+            <p className="text-xs text-muted-foreground">Kepala Desa {ctx.desa.namaDesa ?? ""}</p>
+          </div>
+        </div>
+
+        <div className="tema-kartu p-5">
+          <h3 className="text-[10px] font-semibold tracking-[0.18em] uppercase">Perangkat Desa</h3>
+          {tampil.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">Data perangkat belum tersedia.</p>
+          ) : (
+            <ul className="mt-3.5 space-y-3">
+              {tampil.map((item) => {
+                const foto = urlMedia(item.foto);
+                return (
+                  <li key={item.id} className="flex items-center gap-3">
+                    {foto ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- foto perangkat unggahan desa
+                      <img
+                        src={foto}
+                        alt={namaLengkap(item.nama, item.gelarDepan, item.gelarBelakang)}
+                        className="size-9 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span
+                        className="flex size-9 shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+                        style={{
+                          backgroundColor:
+                            "color-mix(in srgb, var(--pub-primary) 10%, transparent)",
+                          color: "var(--pub-primary-text)",
+                        }}
+                        aria-hidden="true"
+                      >
+                        {(item.nama.charAt(0) || "P").toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-semibold">
+                        {namaLengkap(item.nama, item.gelarDepan, item.gelarBelakang)}
+                      </p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {item.jabatan ?? "Perangkat Desa"}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <Link
+            href="/desa/pemerintahan"
+            className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
+          >
+            Lihat semua perangkat
+            <ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ApbdesSection({ apbdes }: { apbdes: HomeProps["apbdes"] }) {
+  // `baris` selalu berisi seluruh template rekening, jadi tahun tanpa data
+  // tetap tampil sebagai Rp 0 bila hanya memeriksa panjang baris.
+  if (!apbdes || apbdes.tersedia.length === 0) return null;
+
+  const anggaran = Number(apbdes.total.anggaran);
+  const realisasi = Number(apbdes.total.realisasi);
+  const serapan = anggaran > 0 ? (realisasi / anggaran) * 100 : 0;
+
+  return (
+    <section>
+      <SectionHeading
+        eyebrow="Transparansi"
+        title="APBDes"
+        description={`Anggaran dan realisasi Desa ${apbdes.tahun}.`}
+        href="/desa/apbdes"
+        action="Lihat rincian"
+      />
+      <div className="tema-kartu p-5 sm:p-6">
+        <dl className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <dt className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Anggaran
+            </dt>
+            <dd className="mt-1.5 text-lg font-bold tracking-tight tabular-nums sm:text-xl">
+              {formatRupiah(apbdes.total.anggaran)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Realisasi
+            </dt>
+            <dd className="mt-1.5 text-lg font-bold tracking-tight tabular-nums sm:text-xl">
+              {formatRupiah(apbdes.total.realisasi)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-[10px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+              Serapan
+            </dt>
+            <dd className="mt-1.5 text-lg font-bold tracking-tight tabular-nums sm:text-xl">
+              {serapan.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%
+            </dd>
+          </div>
+        </dl>
+
+        <ul className="mt-5 space-y-3 border-t border-[var(--pub-garis)] pt-5">
+          {apbdes.bidang.slice(0, 4).map((row) => (
+            <li key={row.kode}>
+              <div className="flex items-baseline justify-between gap-3 text-[13px]">
+                <span className="truncate font-medium">{row.uraian}</span>
+                <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                  {row.persen.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%
+                </span>
+              </div>
+              <div
+                className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted"
+                aria-hidden="true"
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, row.persen))}%`,
+                    backgroundColor: "var(--pub-primary)",
+                  }}
+                />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
 function SuratSection({ surat }: { surat: HomeProps["surat"] }) {
+  const jenis = [
+    ...new Set(
+      surat
+        .map((item) => item.jenisSurat)
+        .filter((item): item is string => Boolean(item && item.trim())),
+    ),
+  ].slice(0, 4);
+
   return (
     <section>
       <SectionHeading
         eyebrow="Layanan Administrasi"
-        title="Surat Layanan Terbaru"
-        description="Surat yang baru diterbitkan untuk warga."
-        href="/desa/surat"
-        action="Jenis surat"
+        title="Layanan Surat"
+        description="Ajukan surat keterangan tanpa antre di kantor desa."
+        href="/layanan-mandiri"
+        action="Ajukan surat"
       />
-      <div className="tema-kartu overflow-hidden">
-        {surat.length === 0 ? (
-          <div className="flex items-center gap-3 p-5 text-sm text-muted-foreground">
-            <span
-              className="flex size-10 shrink-0 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: "color-mix(in srgb, var(--pub-primary) 8%, transparent)",
-                color: "var(--pub-primary-text)",
-              }}
-            >
-              <FileText className="size-4" aria-hidden="true" />
-            </span>
-            Belum ada surat yang diterbitkan.
+      <div className="tema-kartu p-5 sm:p-6">
+        <div className="flex items-start gap-4">
+          <span
+            className="flex size-10 shrink-0 items-center justify-center rounded-full"
+            style={{
+              backgroundColor: "color-mix(in srgb, var(--pub-primary) 8%, transparent)",
+              color: "var(--pub-primary-text)",
+            }}
+          >
+            <FileText className="size-4" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">
+              {surat.length > 0
+                ? `${surat.length} surat terbit terbaru`
+                : "Belum ada surat yang diterbitkan"}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              {jenis.length > 0
+                ? `Jenis terbaru: ${jenis.join(", ")}.`
+                : "Warga dapat mengajukan surat kapan saja melalui layanan mandiri."}
+            </p>
           </div>
-        ) : (
-          <ul className="divide-y">
-            {surat.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center justify-between gap-4 px-4 py-3.5 transition-colors hover:bg-muted/40 sm:px-5"
-              >
-                <div className="flex min-w-0 gap-3">
-                  <span
-                    className="flex size-9 shrink-0 items-center justify-center rounded-lg"
-                    style={{
-                      backgroundColor: "color-mix(in srgb, var(--pub-primary) 8%, transparent)",
-                      color: "var(--pub-primary-text)",
-                    }}
-                  >
-                    <FileText className="size-4" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{item.jenisSurat ?? "Surat"}</p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {item.namaPemohon ?? "—"}
-                    </p>
-                  </div>
-                </div>
-                <time className="shrink-0 text-[11px] text-muted-foreground">
-                  {item.tanggalLabel ?? ""}
-                </time>
-              </li>
-            ))}
-          </ul>
-        )}
+        </div>
+        <Link
+          href="/desa/surat"
+          className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--pub-primary-text)] underline-offset-4 hover:underline"
+        >
+          Lihat jenis surat
+          <ArrowRight className="size-3.5" aria-hidden="true" />
+        </Link>
       </div>
     </section>
   );
@@ -658,7 +847,7 @@ function AgendaSection({ agenda }: { agenda: HomeProps["agenda"] }) {
             return (
               <li key={item.id} className="flex gap-3">
                 <span
-                  className="tema-gradien flex size-11 shrink-0 flex-col items-center justify-center text-[var(--pub-primary-foreground)] shadow-sm"
+                  className="tema-gradien flex size-11 shrink-0 flex-col items-center justify-center text-[var(--pub-primary-text-foreground)] shadow-sm"
                   style={{ borderRadius: "calc(var(--pub-radius) * 0.8)" }}
                 >
                   <span className="text-[15px] leading-none font-bold tabular-nums">
@@ -736,7 +925,7 @@ function Sorotan({ items }: { items: HomeProps["slider"] }) {
               key={item.id}
               className="tema-kartu w-64 shrink-0 snap-start overflow-hidden sm:w-72"
             >
-              <div className="relative aspect-[4/3] bg-muted">
+              <div className="aspect-[1600/620] bg-muted">
                 {gambar ? (
                   // eslint-disable-next-line @next/next/no-img-element -- media unggahan desa
                   <img
@@ -758,12 +947,10 @@ function Sorotan({ items }: { items: HomeProps["slider"] }) {
                     />
                   </div>
                 )}
-                {item.judul ? (
-                  <p className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 text-sm font-medium text-white">
-                    {item.judul}
-                  </p>
-                ) : null}
               </div>
+              {item.judul ? (
+                <p className="p-3 text-sm leading-snug font-semibold">{item.judul}</p>
+              ) : null}
             </article>
           );
         })}

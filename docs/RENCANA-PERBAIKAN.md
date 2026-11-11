@@ -31,7 +31,7 @@ yang benar-benar dijalankan. Keberadaan folder, route, atau smoke test bukan buk
 | F0 | Inventarisasi katalog (112 ID) dan audit struktur 111 ID | Selesai 10 November 2026 | Tabel status per ID di `STATUS-MODUL.md`; katalog dan register aktif dijaga `src/db/paritas-register.test.ts` |
 | F1 | P0: otorisasi/tenant, kebocoran lapisan, bug yang terbukti | Selesai 10 November 2026 | Anjungan (`OS-MOD-001`) CRUD/tenant/kiosk; 0 impor infrastruktur di route & presentation; adapter notifikasi/BSrE diuji dengan server lokal |
 | F2 | P1: E2E perilaku alur inti | Selesai 10 November 2026 | 8 berkas P1, 32/32 test pada build produksi |
-| F3 | P2: gap fungsional dan keluaran per ID | Berjalan | Keluaran utama tertutup (lihat daftar di bawah); 18 ID belum punya rujukan E2E |
+| F3 | P2: gap fungsional dan keluaran per ID | Berjalan | Keluaran utama tertutup (lihat daftar di bawah); 0 ID tanpa rujukan E2E |
 | F4 | Stabilitas suite E2E | Selesai 10 November 2026 | 5 flake ditutup di akar; run penuh terakhir 62 berkas/195 test lulus berturut-turut; runner kini 63 berkas |
 | F5 | P3: konsistensi dokumen dan guard | Selesai untuk dokumen; guard perlu diperluas | Katalog/paritas/rencana aktif, `RENCANA-PENGEMBANGAN.md` disinkronkan, guard dokumen + lapisan publik |
 | F6 | Provider eksternal nyata dan pemeriksaan visual | Terblokir / Belum | `OS-WGA-009`, `OS-SUR-013` menunggu kredensial; 206 halaman belum diperiksa visual |
@@ -62,18 +62,19 @@ peserta gagal validasi karena field kartu opsional tidak dinormalisasi.
 
 ## F3 — P2 gap fungsional dan keluaran
 
-Berjalan. Pada 10 November 2026, register mencatat: **73 ID** punya E2E interaktif,
-**18 ID** belum dirujuk E2E, **12 ID** terverifikasi struktur tanpa E2E, **4 ID**
-Sebagian, **2 ID** hanya smoke, **2 ID** terverifikasi + E2E, dan **1 ID** hanya
+Berjalan. Per 11 November 2026, register mencatat: **107 ID** punya E2E interaktif,
+**0 ID** belum dirujuk E2E, **0 ID** terverifikasi struktur tanpa E2E, **3 ID**
+Sebagian, **0 ID** hanya smoke, **2 ID** terverifikasi + E2E, dan **0 ID** hanya
 diuji jalur penolakan. Tidak ada ID yang dinyatakan selesai penuh.
 
 Gap P2 yang masih terbuka:
 
-1. **Persuratan:** notifikasi email perubahan status (butuh Resend) dan PDF per varian template belum diuji; `OS-SUR-014` baru membuktikan simpan/reset pengaturan lampiran, belum penolakan MIME/ukuran lewat UI.
-2. **E2E belum dirujuk (18 ID):** `OS-FIN-005`, `OS-FIN-007`–`OS-FIN-013`, `OS-SUR-009`/`010`/`012`, `OS-POP-007`/`010`/`015`, `OS-OPS-001`/`010`/`012`, `OS-GOV-001`.
-3. **Smoke/hanya penolakan:** `OS-POP-013` dan `OS-MOD-002` (smoke), `OS-ANA-005` (jalur sukses bertoken belum diuji).
-4. **Sebagian:** `OS-GOV-007`, `OS-SUR-002`, `OS-SUR-013`, `OS-WGA-009`; rincian gap per ID ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
-5. **Anjungan:** konfigurasi printer/IP belum dipakai di alur cetak; verifikasi visual varian orientasi belum dilakukan.
+1. **Persuratan:** notifikasi email perubahan status belum diuji karena provider belum dikonfigurasi. PDF per varian sudah diuji; `OS-SUR-014` membuktikan penolakan MIME lewat UI, sedangkan batas ukuran dan sanitasi nama masih unit/integrasi.
+2. **Warga:** OTP/email (butuh provider) dan rate limit OTP belum E2E; ubah PIN sudah dibuktikan lewat UI.
+3. **Sebagian:** `OS-SUR-002`, `OS-SUR-013`, `OS-WGA-009`; rincian gap per ID ada di [`PARITAS-OPENSID.md`](./PARITAS-OPENSID.md).
+4. **Anjungan:** konfigurasi printer/IP belum dipakai di alur cetak; verifikasi visual varian orientasi belum dilakukan.
+
+Ditutup 11 November 2026: laporan/ekspor DTKS, ekspor CSV/Excel keuangan, dokumen APBDes publik, kandidat pemilihan lewat UI, balasan operator `/pesan-warga`, keputusan izin `/kehadiran/izin`, ubah PIN warga, PDF per varian, dan penolakan MIME disposisi.
 
 ## F4 — Stabilitas suite E2E
 
@@ -99,7 +100,7 @@ saat migrasi berjalan, dan jaga agar angka 0 impor infrastruktur tidak naik.
 Belum/terblokir. Yang dibutuhkan:
 
 - Kredensial WhatsApp/email (`OS-WGA-009`) dan BSrE/TTE (`OS-SUR-013`) untuk membuktikan pengiriman nyata, bukan hanya adapter.
-- Pemeriksaan visual seluruh halaman (206 `page.tsx`) pada lebar desktop dan seluler; status UI saat ini berasal dari pembacaan kode dan test.
+- Pemeriksaan visual: 53 halaman publik dan 139 route admin/warga sudah diaudit pada 1440/390 px; 15 halaman admin ber-segmen dinamis belum tercakup crawl statis.
 
 ## Pembaruan 10 November 2026 — privasi DPT dan agenda publik
 
@@ -230,11 +231,10 @@ sidebar terhitung `position: sticky`, dan footer menempel di dasar viewport.
 
 ## Urutan kerja berikutnya
 
-1. Tutup 18 ID tanpa rujukan E2E, dimulai dari yang berisiko tinggi: persuratan (`OS-SUR-009`/`010`/`012`) dan keuangan (`OS-FIN-005`, `OS-FIN-007`–`013`).
-2. Lengkapi jalur sukses `OS-ANA-005` dan keluaran yang belum diuji (PDF per varian, notifikasi email).
-3. Tutup gap Sebagian sebelum menambah fitur baru.
-4. Setelah kredensial tersedia, jalankan verifikasi provider nyata lalu naikkan status ID terkait.
-5. Jalankan gate (`npm run lint`, `npm run format:check`, `npm run test`, `npm run check`, `npm run build`) dan suite E2E pada build produksi sebelum setiap commit.
+1. Tutup 4 ID berstatus Sebagian sebelum menambah fitur baru.
+2. Lengkapi keluaran yang belum diuji (PDF per varian, notifikasi email) dan penolakan unggahan surat lewat UI.
+3. Setelah kredensial tersedia, jalankan verifikasi provider nyata lalu naikkan status ID terkait.
+4. Jalankan gate (`npm run lint`, `npm run format:check`, `npm run test`, `npm run check`, `npm run build`) dan suite E2E pada build produksi sebelum setiap commit.
 
 ## Aturan pembaruan
 

@@ -68,6 +68,36 @@ test(
       expect(pdf.contentType).toContain("application/pdf");
       expect(pdf.ukuran).toBeGreaterThan(0);
 
+      // Ekspor laporan APBDes memakai tahun yang sama dengan arsip dokumen.
+      await expect(screen.getByRole("link", { name: "CSV RP APBDes" })).toHaveAttribute(
+        "href",
+        `/keuangan/laporan/ekspor?tahun=${TAHUN_DOKUMEN}`,
+      );
+      const csvLaporan = await browser.evaluate(async (tahun) => {
+        const res = await fetch(`/keuangan/laporan/ekspor?tahun=${tahun}`);
+        return {
+          status: res.status,
+          type: res.headers.get("content-type") ?? "",
+          body: await res.text(),
+        };
+      }, TAHUN_DOKUMEN);
+      expect(csvLaporan.status).toBe(200);
+      expect(csvLaporan.type).toContain("text/csv");
+      expect(csvLaporan.body).toContain("Laporan Realisasi Pelaksanaan APBDes");
+      expect(csvLaporan.body).toContain(String(TAHUN_DOKUMEN));
+
+      const excelLaporan = await browser.evaluate(async (tahun) => {
+        const res = await fetch(`/keuangan/laporan/ekspor-excel?tahun=${tahun}`);
+        return {
+          status: res.status,
+          type: res.headers.get("content-type") ?? "",
+          ukuran: (await res.arrayBuffer()).byteLength,
+        };
+      }, TAHUN_DOKUMEN);
+      expect(excelLaporan.status).toBe(200);
+      expect(excelLaporan.type).toContain("excel");
+      expect(excelLaporan.ukuran).toBeGreaterThan(0);
+
       // 3. Catat tanggal penyerahan.
       await baris()
         .getByRole("button", { name: `Aksi dokumen ${judul}` })
@@ -79,6 +109,30 @@ test(
       await dialogSerah.getByRole("button", { name: "Simpan", exact: true }).tap();
       await expect(dialogSerah).not.toBeVisible({ timeout: 15_000 });
       await expect(baris().getByText("Diserahkan")).toBeVisible();
+
+      // Dokumen yang sudah diserahkan tampil di APBDes publik dan dapat diunduh.
+      await app.open(`/desa/apbdes?tahun=${TAHUN_DOKUMEN}`);
+      await expect(screen.getByRole("heading", { name: "Dokumen Laporan" })).toBeVisible({
+        timeout: 15_000,
+      });
+      const tautanPublik = screen.getByRole("link", { name: new RegExp(judul) });
+      await expect(tautanPublik).toBeVisible();
+      const hrefPublik = await tautanPublik.getAttribute("href");
+      expect(hrefPublik).toMatch(/^\/desa\/apbdes\/dokumen\/\d+\/berkas$/);
+      const pdfPublik = await browser.evaluate(async (href) => {
+        const res = await fetch(href as string);
+        return {
+          status: res.status,
+          contentType: res.headers.get("content-type"),
+          ukuran: (await res.arrayBuffer()).byteLength,
+        };
+      }, hrefPublik);
+      expect(pdfPublik.status).toBe(200);
+      expect(pdfPublik.contentType).toContain("application/pdf");
+      expect(pdfPublik.ukuran).toBeGreaterThan(0);
+
+      // Kembali ke arsip untuk melanjutkan uji duplikat.
+      await app.open(`/keuangan/laporan-dokumen?tahun=${TAHUN_DOKUMEN}`);
 
       // 4. Periode yang sama ditolak saat diimpor ulang.
       await screen.getByRole("button", { name: "Impor Dokumen" }).tap();

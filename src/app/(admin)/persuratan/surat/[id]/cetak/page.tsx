@@ -27,12 +27,14 @@ export default async function CetakSuratPage({
     return <p className="text-sm text-destructive">Surat tidak valid.</p>;
   }
 
-  const { surat, jenis, desa, content, layoutConfig } = await getSuratPrintData(suratId).catch(
-    (error) => {
-      if (isAppError(error) && error.code === "NOT_FOUND") notFound();
-      throw error;
-    },
-  );
+  const varianDiminta = parseVarianCetak(query.varian);
+  const { surat, jenis, desa, content, varian, layoutConfig } = await getSuratPrintData(
+    suratId,
+    varianDiminta,
+  ).catch((error) => {
+    if (isAppError(error) && error.code === "NOT_FOUND") notFound();
+    throw error;
+  });
 
   const origin = await getRequestOrigin();
   const verificationUrl = surat.verificationToken
@@ -70,8 +72,8 @@ export default async function CetakSuratPage({
   }
 
   // Varian dari URL mengalahkan pengaturan jenis surat agar pratinjau cetak
-  // dapat diganti tanpa mengubah data master.
-  const varian = parseVarianCetak(query.varian) ?? jenis.templateVariant ?? "default";
+  // dapat diganti tanpa mengubah data master. `varian` berasal dari use case
+  // agar isi badan surat dan PDF memakai pilihan yang sama.
   const orientasi =
     (layout.orientasi as string) ?? (varian === "landscape" ? "landscape" : "portrait");
   const isLandscape = orientasi === "landscape";
@@ -104,7 +106,11 @@ export default async function CetakSuratPage({
           </div>
           {surat.status === "issued" ? (
             <Button variant="outline" size="sm" asChild>
-              <a href={`/persuratan/surat/${surat.id}/pdf`} target="_blank" rel="noreferrer">
+              <a
+                href={`/persuratan/surat/${surat.id}/pdf?varian=${varian}`}
+                target="_blank"
+                rel="noreferrer"
+              >
                 <FileDown className="size-4" />
                 PDF
               </a>

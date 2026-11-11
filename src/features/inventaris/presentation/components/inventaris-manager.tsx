@@ -51,6 +51,7 @@ import {
   type InventarisKondisi,
   type InventarisRow,
 } from "@/features/inventaris/domain/inventaris";
+import { formatJumlah } from "@/features/publik/domain/ringkasan-publik";
 import { idleActionState } from "@/lib/action-state";
 
 import { hapusInventarisAction, saveInventarisAction } from "../actions";
@@ -462,7 +463,7 @@ export function InventarisManager({
                     )}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
-                    {row.jumlah} {row.satuan ?? ""}
+                    {formatJumlah(row.jumlah)} {row.satuan ?? ""}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     {formatRupiah(row.nilaiAkhir)}

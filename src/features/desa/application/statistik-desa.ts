@@ -54,7 +54,6 @@ export async function getStatistikDesa(villageId: number): Promise<StatistikDesa
 export interface SuratPublikRow {
   id: number;
   jenisSurat: string | null;
-  namaPemohon: string | null;
   tanggalLabel: string | null;
 }
 
@@ -69,7 +68,6 @@ export async function listSuratTerbitTerbaru(
     .select({
       id: letters.id,
       typeName: letters.typeName,
-      pemohon: letters.pemohon,
       issuedAt: letters.issuedAt,
       createdAt: letters.createdAt,
     })
@@ -84,7 +82,6 @@ export async function listSuratTerbitTerbaru(
     return {
       id: row.id,
       jenisSurat: row.typeName ?? null,
-      namaPemohon: row.pemohon ?? null,
       tanggalLabel: tanggal ? TANGGAL_FORMAT.format(tanggal) : null,
     };
   });

@@ -58,7 +58,7 @@ export function DesaForm({ desa, canManage }: DesaFormProps) {
 
   return (
     <form action={formAction} className="space-y-6">
-      {state.status === "error" && state.fieldErrors === undefined ? (
+      {state.status === "error" ? (
         <Alert variant="destructive">
           <AlertCircle />
           <AlertDescription>{state.message}</AlertDescription>

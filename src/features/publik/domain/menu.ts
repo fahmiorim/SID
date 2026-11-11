@@ -33,6 +33,18 @@ export const PUBLIC_NAV: PublicNavItem[] = [
     ],
   },
   {
+    href: "/layanan-mandiri",
+    label: "Layanan",
+    children: [
+      { href: "/layanan-mandiri", label: "Layanan Mandiri" },
+      { href: "/desa/surat", label: "Jenis Surat" },
+      { href: "/desa/kesehatan/kia", label: "KIA & Posyandu" },
+      { href: "/desa/bantuan", label: "Bansos" },
+      { href: "/desa/anjungan", label: "Anjungan" },
+      { href: "/desa/verifikasi-surat", label: "Verifikasi Surat" },
+    ],
+  },
+  {
     href: "/desa/berita",
     label: "Informasi",
     children: [
@@ -40,6 +52,7 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { href: "/desa/agenda", label: "Agenda" },
       { href: "/desa/galeri", label: "Galeri" },
       { href: "/desa/dokumen", label: "Informasi Publik" },
+      { href: "/desa/suplemen", label: "Suplemen" },
     ],
   },
   {
@@ -51,20 +64,15 @@ export const PUBLIC_NAV: PublicNavItem[] = [
       { href: "/desa/pembangunan", label: "Pembangunan" },
       { href: "/desa/inventaris", label: "Inventaris" },
       { href: "/desa/status-des", label: "Status Desa" },
+      { href: "/desa/idm-sdgs", label: "IDM & SDGs" },
     ],
   },
   {
     href: "/desa/lapak",
-    label: "Potensi",
+    label: "Warga",
     children: [
       { href: "/desa/lapak", label: "Lapak Desa" },
       { href: "/desa/sinergi-program", label: "Sinergi Program" },
-    ],
-  },
-  {
-    href: "/desa/pemilihan",
-    label: "Partisipasi",
-    children: [
       { href: "/desa/dpt", label: "DPT" },
       { href: "/desa/pemilihan", label: "Pemilihan" },
       { href: "/jajak-pendapat", label: "Jajak Pendapat" },
@@ -81,6 +89,21 @@ export interface MenuRowInput {
   parentId: number | null;
 }
 
+/** Tautan seed lama; dipakai hanya untuk mengenali menu bawaan yang belum disesuaikan. */
+const TAUTAN_SEED_LAMA = new Set([
+  "/",
+  "/desa/profil",
+  "/desa/pemerintahan",
+  "/desa/berita",
+  "/desa/galeri",
+  "/desa/statistik",
+  "/desa/apbdes",
+  "/desa/dokumen",
+  "/desa/lapak",
+  "/desa/pemilihan",
+  "/desa/kontak",
+]);
+
 /**
  * Susun menu navigasi dari baris `menu_publik` (bila ada), dengan fallback ke
  * menu statis bawaan. Menu datar hasil seed lama dipetakan ke grup bawaan
@@ -95,10 +118,17 @@ export function susunMenu(menu: MenuRowInput[]): PublicNavItem[] {
   }
 
   // Menu datar pilihan admin tetap dihormati. Hanya daftar bawaan yang panjang
-  // (seed lama 11 tautan) yang dikelompokkan agar header tidak berdesakan.
+  // yang dikelompokkan agar header tidak berdesakan.
   const hrefDikenal = new Set(
     PUBLIC_NAV.flatMap((item) => [item.href, ...(item.children ?? []).map((anak) => anak.href)]),
   );
+  // Instalasi lama belum punya tautan Layanan/Anjungan/Bansos di basis data.
+  // Bila menunya persis seed lama (tidak disesuaikan admin), pakai navigasi
+  // bawaan baru agar halaman tersebut tetap terjangkau tanpa migrasi data.
+  const seedLama =
+    menu.length === TAUTAN_SEED_LAMA.size && menu.every((item) => TAUTAN_SEED_LAMA.has(item.link));
+  if (seedLama) return PUBLIC_NAV;
+
   const menuBawaan = menu.length > 7 && menu.every((item) => hrefDikenal.has(item.link));
   if (menuBawaan) return kelompokkanMenuDatar(menu);
 
